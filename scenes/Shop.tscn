@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://dgc2dadcifuf2"]
+
+[ext_resource type="Texture2D" uid="uid://c5urpwhdwyj6r" path="res://icon.svg" id="1_rgcs7"]
+
+[sub_resource type="Environment" id="Environment_ec5oe"]
+background_energy_multiplier = 5.0
+reflected_light_source = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_ohui2"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_t4md6"]
+albedo_texture = ExtResource("1_rgcs7")
+
+[node name="Node3D" type="Node3D" unique_id=395316236]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1739411933]
+environment = SubResource("Environment_ec5oe")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=841018535]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.463422, 0)
+
+[node name="Background" type="Skeleton3D" parent="." unique_id=1029352193]
+transform = Transform3D(10.496742, 0, 0, 0, 3.3215854, 0, 0, 0, 1, 0, 2.5706012, -4)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Background" unique_id=1804701253]
+transform = Transform3D(1.0577251, 0, 0, 0, 1.8982875, 0, 0, 0, 1, 0, 0.29517978, 0)
+mesh = SubResource("QuadMesh_ohui2")
+
+[node name="Book" type="Skeleton3D" parent="." unique_id=99337713]
+transform = Transform3D(1.7751245, 0, 0, 0, 1.34561, 0, 0, 0, 1, 0, 2.5706012, -2.4507947)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Book" unique_id=316344323]
+transform = Transform3D(1.0577253, 0, 0, 0, 1.8982875, 0, 0, 0, 1, -2.5413516, 0.7349527, -0.8361771)
+material_override = SubResource("StandardMaterial3D_t4md6")
+mesh = SubResource("QuadMesh_ohui2")

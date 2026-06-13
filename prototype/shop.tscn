@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://bknplb563a441"]
+
+[ext_resource type="Script" uid="uid://c0n54p2cqeksq" path="res://prototype/shop.gd" id="1_shop"]
+[ext_resource type="PackedScene" uid="uid://bknplb563aym1" path="res://prototype/shop_ui.tscn" id="2_shopui"]
+[ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
+
+[node name="Shop" type="Control" unique_id=825471921]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shop")
+
+[node name="ShopUI" parent="." unique_id=1172006194 instance=ExtResource("2_shopui")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="DialogueBox" parent="." unique_id=1909977543 instance=ExtResource("3_dlgbox")]
+unique_name_in_owner = true
+layout_mode = 1

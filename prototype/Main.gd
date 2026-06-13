@@ -8,10 +8,10 @@ extends Control
 
 func _ready() -> void:
 	_box.finished.connect(_on_dialogue_finished)
-	# Sample lines drawn from the Grandma D1 beat in aLima.twee.
+	# Sample lines drawn from the Auntie D1 beat in aLima.twee.
 	_box.start([
 		{
-			"name": "Grandma",
+			"name": "Elderly Auntie",
 			"text": "A frail knock. She clutches a [i]cracked photo frame[/i].",
 		},
 		{
@@ -19,7 +19,7 @@ func _ready() -> void:
 			"text": "Let me see it. I can free the photo without tearing the emulsion.",
 		},
 		"With careful hands you work it loose, whole. She presses your fingers in thanks.",
-		"[b]Grandma Quest 1 complete.[/b]",
+		"[b]Elderly Auntie Quest 1 complete.[/b]",
 	])
 
 
