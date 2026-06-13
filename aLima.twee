@@ -1,0 +1,1086 @@
+:: StoryTitle
+aLima
+
+:: StoryData
+{
+  "ifid": "E567CD38-4D7C-42A2-96A1-BEDD9654F09A",
+  "format": "Chapbook",
+  "format-version": "2.3.1",
+  "start": "Intro",
+  "zoom": 1
+}
+
+:: Intro
+loop: 1
+uncleArtifacts: 1
+day: 1
+time: 7
+cash: 0
+blue: 0
+purple: 0
+gold: 0
+pileDay: 0
+pileCommon: 0
+pileUncommon: 0
+pileAntique: 0
+pileRare: 0
+pileRelic: 0
+ownsBrush: false
+ownsMagnifier: false
+ownsRust: false
+ownsPhotoKit: false
+ownsPaper: false
+grandmaQ1: false
+grandmaQ2: false
+grandmaQ3: false
+grandmaLate: false
+talkedGrandmaD1: false
+talkedGrandmaD3: false
+artisanQ1: false
+artisanQ2: false
+artisanQ3: false
+scavengerQ1: false
+scavengerQ2: false
+scavengerQ3: false
+stopsGrandmaDay5: false
+buyerTrades: 0
+buyerD1done: false
+buyerD2done: false
+buyerD4done: false
+buyerD5: false
+archeoQ1: false
+archeoQ2: false
+archeoQ3: false
+unlockedGrandmaEnding: false
+safeOpened: false
+hasScavengerInfo: false
+--
+**aLima**
+
+*"Every object remembers. Someone just has to listen."*
+
+You inherited two things from your uncle — who didn't die, but *vanished*: a worn notebook, and a single fragment of an unknown heritage artifact. The notebook's margins are full of signs meant to lead the right person to wherever, or whenever, he has gone.
+
+By day you help run the family junk shop. In the rescued hours, you restore what the scrapyard would melt down.
+
+The week runs five days. When it resets, money and stock vanish — but what you have *learned* never does.
+
+Your till is empty. You start with nothing but the fragment and the notebook.
+
+> Note: in this Twine draft, time is locked to whole hours. In Godot, every 1 real minute = 1 in-game hour (a full 07:00–20:00 day ≈ 13 minutes of real play).
+
+[[Step into the shop->Day Start]]
+
+[[Read the design notes / schedule->Design Notes]]
+
+
+:: New Loop
+loop: loop + 1
+day: 1
+time: 7
+cash: 0
+blue: 0
+purple: 0
+gold: 0
+pileDay: 0
+pileCommon: 0
+pileUncommon: 0
+pileAntique: 0
+pileRare: 0
+pileRelic: 0
+ownsBrush: false
+ownsMagnifier: false
+ownsRust: false
+ownsPhotoKit: false
+ownsPaper: false
+grandmaQ1: false
+grandmaQ2: false
+grandmaQ3: false
+grandmaLate: false
+talkedGrandmaD1: false
+talkedGrandmaD3: false
+artisanQ1: false
+artisanQ2: false
+artisanQ3: false
+scavengerQ1: false
+scavengerQ2: false
+scavengerQ3: false
+stopsGrandmaDay5: false
+buyerTrades: 0
+buyerD1done: false
+buyerD2done: false
+buyerD4done: false
+buyerD5: false
+archeoQ1: false
+archeoQ2: false
+archeoQ3: false
+unlockedGrandmaEnding: false
+safeOpened: false
+--
+The fifth day closes.
+
+The fragment hums — and the week folds back on itself.
+
+Money is gone. Stock is gone. Tools are gone.
+
+But you remember everything.
+
+[if hasScavengerInfo]
+*(You still carry the scavenger's lead to the Local Archeologist.)*
+[continue]
+
+[[Begin the next loop->Day Start]]
+
+
+:: End Day
+nextday: day + 1
+day: day < 5 ? day + 1 : day
+time: 7
+--
+[if day < 5]
+Night falls over the shop.
+
+You bank the day and lay out tomorrow's bench.
+
+[[Begin Day {nextday}->Day Start]]
+[continue]
+
+[if day >= 5]
+The fifth night.
+
+The fragment begins to hum...
+
+[[See how the week settled->Ending]]
+[continue]
+
+
+:: Ending
+endGrandma: grandmaQ1 && grandmaQ2 && grandmaQ3
+endArtisan: artisanQ1 && artisanQ2 && artisanQ3
+endScavenger: scavengerQ1 && scavengerQ2 && scavengerQ3
+endBuyer: buyerD5
+endArcheo: archeoQ1 && archeoQ2 && archeoQ3
+anyEnding: (grandmaQ1 && grandmaQ2 && grandmaQ3) || (artisanQ1 && artisanQ2 && artisanQ3) || (scavengerQ1 && scavengerQ2 && scavengerQ3) || buyerD5 || (archeoQ1 && archeoQ2 && archeoQ3)
+--
+**The week settles.**
+
+[if endGrandma]
+🕯️ **Grandma Ending** — three photos recovered; the safe gave up its code and your uncle's note.
+
+[continue]
+[if endArtisan]
+🪵 **Local Artisan Ending** — patina honored. You gained a delicate restoration tool and access to fragile objects.
+
+[continue]
+[if endScavenger]
+🗑️ **Garbage Scavenger Ending** — through the trash you earned a lead to the expert Local Archeologist.
+
+[continue]
+[if endBuyer]
+💰 **Mysterious Buyer Ending** — Mr. Maverick handed you leads on your uncle's artifacts.
+
+[continue]
+[if endArcheo]
+🏺 **Local Archeologist Ending** — Sam's map points to the Final Uncle Artifact.
+
+[continue]
+[unless anyEnding]
+🌫️ **Neutral Ending** — no route completed. The week simply loops again.
+
+[continue]
+
+---
+
+[[Begin the next loop (knowledge persists)->New Loop]]
+
+[[Restart from the very beginning->Intro]]
+
+
+:: Design Notes
+**aLima — route schedule (this draft)**
+
+Time runs 7:00–20:00. Each action = 1 hour (Grandma visits = 2). Endings are evaluated after Day 5.
+
+**Grandma** (12–14): D1 Q1 → D3 Q2 → D5 Q3. Skipping D1 makes Grandma & Artisan endings impossible this loop, and is *required* for the Scavenger path. Completing Q3 unlocks the safe (+1000).
+
+**Local Artisan** (13–14): needs Grandma Q1 + a restoration brush. D2 → D4 (stops Grandma D5) → D5.
+
+**Garbage Scavenger** (13–14): requires NOT talking to Grandma. D2 → D4 → D5 (gives the Archeologist lead, which persists across loops).
+
+**Mysterious Buyer** (D1/2/4 at 17; D5 at 7–9): trade at least once, then he returns Day 5 with leads.
+
+**Local Archeologist** (D1 15–17; D3/D5 8–11): requires the scavenger's lead — reachable on the *next* loop after a Scavenger run. D1 → D3 → D5 → Final Uncle Artifact lead.
+
+**Daily haul / rarity bench**: each morning ~5–9 artifacts arrive, weighted by glow rarity (White→Green→Blue→Purple→Gold). At the bench you choose what to restore; rarer glows pay more but show a lower success-% range. A failed restore is lost. Successful restores auto-sell for cash. *(Twine = luck roll; Godot = skill-based mini-game.)* The Mysterious Buyer is a separate collector who deals in blue/purple/gold pieces directly.
+
+**Tool shops** (5 stalls, day-gated stock):
+- Restoration Brush — Days 2–4 — needed for the Artisan route
+- Magnifier — Day 1
+- Rust Solvent — Day 2
+- Photo-Restoration Kit — Day 3
+- Paper Care Kit — Day 5
+
+> Roguelite note: "Begin the next loop" resets cash/stock/tools/route-progress but keeps knowledge (e.g. the scavenger lead) — mirroring the GDD's five-day loop.
+
+[[Back to the shop->Shop]]
+
+
+:: Shop
+**Day {day} of 5**  ·  {time}:00  ·  Loop {loop}
+
+💵 Cash: {cash}    🧩 Uncle's fragments: {uncleArtifacts}
+
+🎨 Artifacts — blue {blue} · purple {purple} · gold {gold}
+
+🧰 Tools — brush {ownsBrush} · magnifier {ownsMagnifier} · rust {ownsRust} · photo {ownsPhotoKit} · paper {ownsPaper}
+
+---
+
+[if day == 1 && time >= 12 && time < 14 && !grandmaQ1]
+A frail knock. An old woman clutches a cracked photo frame.
+
+[[Answer — Grandma (2hr)->Grandma D1]]
+[continue]
+
+[if day == 1 && time >= 15 && time < 17 && hasScavengerInfo && !archeoQ1]
+A man in a dusty field vest waits outside — the archeologist the scavenger named.
+
+[[Answer — Archeologist (1hr)->Archeo D1]]
+[continue]
+
+[if day == 1 && time >= 17 && time < 18 && !buyerD1done]
+A buyer in a sharp coat lingers by the window. "Maverick," he says.
+
+[[Answer — Mysterious Buyer (1hr)->Buyer D1]]
+[continue]
+
+[if day == 2 && time >= 13 && time < 14 && grandmaQ1 && !artisanQ1]
+An artisan named Lave steps in, eyeing your bench. "You handle these wrong."
+
+[[Answer — Local Artisan (1hr)->Artisan D1]]
+[continue]
+
+[if day == 2 && time >= 13 && time < 14 && !grandmaQ1 && !scavengerQ1]
+A scavenger drags in a sack of "treasure." "Clean these for me?"
+
+[[Answer — Garbage Scavenger (1hr)->Scavenger D1]]
+[continue]
+
+[if day == 2 && time >= 17 && time < 18 && !buyerD2done]
+The buyer returns, tapping a purple-sheened relic.
+
+[[Answer — Mysterious Buyer (1hr)->Buyer D2]]
+[continue]
+
+[if day == 3 && time >= 8 && time < 11 && hasScavengerInfo && archeoQ1 && !archeoQ2]
+The archeologist is back at dawn with another find.
+
+[[Answer — Archeologist (1hr)->Archeo D2]]
+[continue]
+
+[if day == 3 && time >= 12 && time < 14 && grandmaQ1 && !grandmaQ2]
+Grandma returns, holding a second faded photo.
+
+[[Answer — Grandma (2hr)->Grandma D2]]
+[continue]
+
+[if day == 3 && time >= 12 && time < 14 && !grandmaQ1 && !grandmaLate]
+The old woman finally finds her way to your door — late, hesitant.
+
+[[Answer — Grandma, late (2hr)->Grandma Late]]
+[continue]
+
+[if day == 4 && time >= 13 && time < 14 && artisanQ1 && !artisanQ2]
+Lave returns with a fragile, flaking panel.
+
+[[Answer — Local Artisan (1hr)->Artisan D2]]
+[continue]
+
+[if day == 4 && time >= 13 && time < 14 && scavengerQ1 && !scavengerQ2]
+The scavenger hauls in a second, ranker sack.
+
+[[Answer — Garbage Scavenger (1hr)->Scavenger D2]]
+[continue]
+
+[if day == 4 && time >= 17 && time < 18 && !buyerD4done]
+The buyer slides a gold-glinting case onto the counter.
+
+[[Answer — Mysterious Buyer (1hr)->Buyer D4]]
+[continue]
+
+[if day == 5 && time >= 7 && time < 9 && buyerTrades > 0 && !buyerD5]
+The buyer is waiting before opening. "We should talk about your uncle."
+
+[[Answer — Mysterious Buyer (1hr)->Buyer D5]]
+[continue]
+
+[if day == 5 && time >= 8 && time < 11 && hasScavengerInfo && archeoQ2 && !archeoQ3]
+The archeologist arrives with a rolled, water-stained map.
+
+[[Answer — Archeologist (1hr)->Archeo D3]]
+[continue]
+
+[if day == 5 && time >= 12 && time < 14 && grandmaQ2 && !stopsGrandmaDay5 && !grandmaQ3]
+Grandma, one last time, with a photo of her and your grandpa.
+
+[[Answer — Grandma (2hr)->Grandma D3]]
+[continue]
+
+[if day == 5 && time >= 13 && time < 14 && artisanQ2 && !artisanQ3]
+Lave returns for the final lesson.
+
+[[Answer — Local Artisan (1hr)->Artisan D3]]
+[continue]
+
+[if day == 5 && time >= 13 && time < 14 && scavengerQ2 && !scavengerQ3]
+The scavenger drops a final crate — and a name.
+
+[[Answer — Garbage Scavenger (1hr)->Scavenger D3]]
+[continue]
+
+[if unlockedGrandmaEnding && !safeOpened]
+🔓 You know the safe code now.
+
+[[Crack open the safe (1hr)->Open Safe]]
+[continue]
+
+[if time < 20]
+*What will you do?*
+
+[[Restore artifacts at the bench->Bench]]
+
+[[Visit the tool shops (1hr)->Tool Store]]
+
+[[Wait an hour->Wait]]
+[continue]
+
+[if time >= 20]
+The light is gone. Your shift is over.
+
+[[End the day->End Day]]
+[continue]
+
+
+:: Day Start
+pileCommon: 2 + Math.floor(Math.random() * 2)
+pileUncommon: 1 + Math.floor(Math.random() * 2)
+pileAntique: 1 + Math.floor(Math.random() * 2)
+pileRare: Math.floor(Math.random() * 2)
+pileRelic: Math.random() < 0.35 ? 1 : 0
+pileDay: day
+haul: pileCommon + pileUncommon + pileAntique + pileRare + pileRelic
+--
+**Day {day} — Morning Delivery**
+
+A fresh batch of scrap hits the floor. After triage, {haul} pieces look worth a closer look:
+
+⚪ {pileCommon} white · 🟢 {pileUncommon} green · 🔵 {pileAntique} blue · 🟣 {pileRare} purple · 🟡 {pileRelic} gold
+
+The brighter the glow, the more it pays — and the harder it is to restore without ruining it.
+
+[[Open the shop->Shop]]
+
+
+:: Bench [Clean-Artifact]
+**Restoration Bench**  ·  {time}:00
+
+Pick what to restore. A failed restore is lost for good, so weigh the odds.
+
+[if pileCommon > 0 && time < 20]
+⚪ White Common ×{pileCommon}  —  pays ~₱10–40  ·  success 90–98%
+[[Restore this Common (1hr)->Clean Common]]
+[continue]
+
+[if pileUncommon > 0 && time < 20]
+🟢 Green Uncommon ×{pileUncommon}  —  pays ~₱40–120  ·  success 72–85%
+[[Restore this Uncommon (1hr)->Clean Uncommon]]
+[continue]
+
+[if pileAntique > 0 && time < 20]
+🔵 Blue Antique ×{pileAntique}  —  pays ~₱120–320  ·  success 55–68%
+[[Restore this Antique (1hr)->Clean Antique]]
+[continue]
+
+[if pileRare > 0 && time < 20]
+🟣 Purple Rare ×{pileRare}  —  pays ~₱320–750  ·  success 35–50%
+[[Restore this Rare (1hr)->Clean Rare]]
+[continue]
+
+[if pileRelic > 0 && time < 20]
+🟡 Gold Relic ×{pileRelic}  —  pays ~₱750–1600  ·  success 18–32%
+[[Restore this Relic (1hr)->Clean Relic]]
+[continue]
+
+[if (pileCommon + pileUncommon + pileAntique + pileRare + pileRelic) == 0]
+The bench is clear — today's haul is all restored.
+[continue]
+
+[if (pileCommon + pileUncommon + pileAntique + pileRare + pileRelic) > 0 && time >= 20]
+Too dark to keep restoring. The rest waits for tomorrow.
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Clean Common
+chance: 0.9 + Math.random() * (0.98 - 0.9)
+success: Math.random() < chance
+gain: success ? (10 + Math.floor(Math.random() * (40 - 10 + 1))) : 0
+cash: cash + gain
+time: time + 1
+pileCommon: pileCommon - 1
+benchLeft: pileCommon + pileUncommon + pileAntique + pileRare + pileRelic
+--
+[if success]
+✨ Restoration complete! You auto-sell the ⚪ White piece for **₱{gain}**.
+[continue]
+[unless success]
+💥 The ⚪ White piece crumbled under the work. Lost.
+[continue]
+
+Cash is now {cash}.
+
+[if benchLeft > 0 && time < 20]
+[[Back to the bench->Bench]]
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Clean Uncommon
+chance: 0.72 + Math.random() * (0.85 - 0.72)
+success: Math.random() < chance
+gain: success ? (40 + Math.floor(Math.random() * (120 - 40 + 1))) : 0
+cash: cash + gain
+time: time + 1
+pileUncommon: pileUncommon - 1
+benchLeft: pileCommon + pileUncommon + pileAntique + pileRare + pileRelic
+--
+[if success]
+✨ Restoration complete! You auto-sell the 🟢 Green piece for **₱{gain}**.
+[continue]
+[unless success]
+💥 The 🟢 Green piece crumbled under the work. Lost.
+[continue]
+
+Cash is now {cash}.
+
+[if benchLeft > 0 && time < 20]
+[[Back to the bench->Bench]]
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Clean Antique
+chance: 0.55 + Math.random() * (0.68 - 0.55)
+success: Math.random() < chance
+gain: success ? (120 + Math.floor(Math.random() * (320 - 120 + 1))) : 0
+cash: cash + gain
+time: time + 1
+pileAntique: pileAntique - 1
+benchLeft: pileCommon + pileUncommon + pileAntique + pileRare + pileRelic
+--
+[if success]
+✨ Restoration complete! You auto-sell the 🔵 Blue piece for **₱{gain}**.
+[continue]
+[unless success]
+💥 The 🔵 Blue piece crumbled under the work. Lost.
+[continue]
+
+Cash is now {cash}.
+
+[if benchLeft > 0 && time < 20]
+[[Back to the bench->Bench]]
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Clean Rare
+chance: 0.35 + Math.random() * (0.5 - 0.35)
+success: Math.random() < chance
+gain: success ? (320 + Math.floor(Math.random() * (750 - 320 + 1))) : 0
+cash: cash + gain
+time: time + 1
+pileRare: pileRare - 1
+benchLeft: pileCommon + pileUncommon + pileAntique + pileRare + pileRelic
+--
+[if success]
+✨ Restoration complete! You auto-sell the 🟣 Purple piece for **₱{gain}**.
+[continue]
+[unless success]
+💥 The 🟣 Purple piece crumbled under the work. Lost.
+[continue]
+
+Cash is now {cash}.
+
+[if benchLeft > 0 && time < 20]
+[[Back to the bench->Bench]]
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Clean Relic
+chance: 0.18 + Math.random() * (0.32 - 0.18)
+success: Math.random() < chance
+gain: success ? (750 + Math.floor(Math.random() * (1600 - 750 + 1))) : 0
+cash: cash + gain
+time: time + 1
+pileRelic: pileRelic - 1
+benchLeft: pileCommon + pileUncommon + pileAntique + pileRare + pileRelic
+--
+[if success]
+✨ Restoration complete! You auto-sell the 🟡 Gold piece for **₱{gain}**.
+[continue]
+[unless success]
+💥 The 🟡 Gold piece crumbled under the work. Lost.
+[continue]
+
+Cash is now {cash}.
+
+[if benchLeft > 0 && time < 20]
+[[Back to the bench->Bench]]
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Wait
+time: time + 1
+--
+You let an hour drift past.
+
+The shop creaks. Somewhere, a hum you can't quite place.
+
+[[Back to the shop->Shop]]
+
+
+:: Open Safe [Artifact]
+time: time + 1
+cash: safeOpened ? cash : cash + 1000
+safeOpened: true
+--
+Using the code from behind Grandma's last photo, you crack the wheel mechanism.
+
+Inside: 1,000 pesos your uncle tucked away — and a note in his hand.
+
+Cash is now {cash}.
+
+[[Back to the shop->Shop]]
+
+
+:: Tool Store [Tool-Shop]
+time: time + 1
+currency: "₱"
+--
+The lane has five little stalls, each with its own specialty. Today's stock:
+
+**🖌️ Restoration Brush** — {currency}1000  ·  Required for the Local Artisan route.
+
+[if ownsBrush]
+✅ Already owned.
+[continue]
+[if !ownsBrush && (day >= 2 && day <= 4)]
+[[Buy for {currency}1000->Buy Brush]]
+[continue]
+[if !ownsBrush && !(day >= 2 && day <= 4)]
+*(Out of stock today — restocks Days 2–4.)*
+[continue]
+
+**🔍 Magnifier** — {currency}150  ·  Sharper scans of small markings.
+
+[if ownsMagnifier]
+✅ Already owned.
+[continue]
+[if !ownsMagnifier && (day == 1)]
+[[Buy for {currency}150->Buy Magnifier]]
+[continue]
+[if !ownsMagnifier && !(day == 1)]
+*(Out of stock today — restocks Day 1.)*
+[continue]
+
+**🧪 Rust Solvent** — {currency}300  ·  Lifts corrosion from metal finds.
+
+[if ownsRust]
+✅ Already owned.
+[continue]
+[if !ownsRust && (day == 2)]
+[[Buy for {currency}300->Buy Rust]]
+[continue]
+[if !ownsRust && !(day == 2)]
+*(Out of stock today — restocks Day 2.)*
+[continue]
+
+**🖼️ Photo-Restoration Kit** — {currency}500  ·  Helps with Grandma's photographs.
+
+[if ownsPhotoKit]
+✅ Already owned.
+[continue]
+[if !ownsPhotoKit && (day == 3)]
+[[Buy for {currency}500->Buy Photo Kit]]
+[continue]
+[if !ownsPhotoKit && !(day == 3)]
+*(Out of stock today — restocks Day 3.)*
+[continue]
+
+**📄 Paper Care Kit** — {currency}400  ·  For fragile paper goods.
+
+[if ownsPaper]
+✅ Already owned.
+[continue]
+[if !ownsPaper && (day == 5)]
+[[Buy for {currency}400->Buy Paper Kit]]
+[continue]
+[if !ownsPaper && !(day == 5)]
+*(Out of stock today — restocks Day 5.)*
+[continue]
+
+[[Leave the lane->Shop]]
+
+
+:: Buy Brush
+owned: ownsBrush
+inStock: day >= 2 && day <= 4
+canAfford: cash >= 1000
+bought: !ownsBrush && (day >= 2 && day <= 4) && cash >= 1000
+ownsBrush: ownsBrush || bought
+cash: bought ? cash - 1000 : cash
+--
+[if bought]
+You buy the **Restoration Brush**. Lave's quests are now possible.
+[continue]
+[if !bought && owned]
+You already own that.
+[continue]
+[if !bought && !owned && !inStock]
+That stall isn't carrying it today.
+[continue]
+[if !bought && !owned && inStock && !canAfford]
+You can't afford it ({currency}1000).
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Buy Magnifier
+owned: ownsMagnifier
+inStock: day == 1
+canAfford: cash >= 150
+bought: !ownsMagnifier && (day == 1) && cash >= 150
+ownsMagnifier: ownsMagnifier || bought
+cash: bought ? cash - 150 : cash
+--
+[if bought]
+You buy the **Magnifier**.
+[continue]
+[if !bought && owned]
+You already own that.
+[continue]
+[if !bought && !owned && !inStock]
+That stall isn't carrying it today.
+[continue]
+[if !bought && !owned && inStock && !canAfford]
+You can't afford it ({currency}150).
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Buy Rust
+owned: ownsRust
+inStock: day == 2
+canAfford: cash >= 300
+bought: !ownsRust && (day == 2) && cash >= 300
+ownsRust: ownsRust || bought
+cash: bought ? cash - 300 : cash
+--
+[if bought]
+You buy the **Rust Solvent**.
+[continue]
+[if !bought && owned]
+You already own that.
+[continue]
+[if !bought && !owned && !inStock]
+That stall isn't carrying it today.
+[continue]
+[if !bought && !owned && inStock && !canAfford]
+You can't afford it ({currency}300).
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Buy Photo Kit
+owned: ownsPhotoKit
+inStock: day == 3
+canAfford: cash >= 500
+bought: !ownsPhotoKit && (day == 3) && cash >= 500
+ownsPhotoKit: ownsPhotoKit || bought
+cash: bought ? cash - 500 : cash
+--
+[if bought]
+You buy the **Photo-Restoration Kit**.
+[continue]
+[if !bought && owned]
+You already own that.
+[continue]
+[if !bought && !owned && !inStock]
+That stall isn't carrying it today.
+[continue]
+[if !bought && !owned && inStock && !canAfford]
+You can't afford it ({currency}500).
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Buy Paper Kit
+owned: ownsPaper
+inStock: day == 5
+canAfford: cash >= 400
+bought: !ownsPaper && (day == 5) && cash >= 400
+ownsPaper: ownsPaper || bought
+cash: bought ? cash - 400 : cash
+--
+[if bought]
+You buy the **Paper Care Kit**.
+[continue]
+[if !bought && owned]
+You already own that.
+[continue]
+[if !bought && !owned && !inStock]
+That stall isn't carrying it today.
+[continue]
+[if !bought && !owned && inStock && !canAfford]
+You can't afford it ({currency}400).
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Grandma D1 [Quest]
+time: time + 2
+grandmaQ1: true
+talkedGrandmaD1: true
+--
+She wants the photo of her grandchild recovered from a warped frame.
+
+With careful hands you free it, whole. She presses your fingers in thanks.
+
+*Grandma Quest 1 complete.*
+
+Talking to her today closes the Garbage Scavenger's path — but opens Grandma's and the Local Artisan's.
+
+[[Back to the shop->Shop]]
+
+
+:: Archeo D1 [Quest]
+time: time + 1
+archeoQ1: true
+cash: cash + 1500
+--
+"The scavenger sent you? Good. Recover this for me — carefully."
+
+You do. He pays very well.
+
+*Archeologist Quest 1 complete.* Cash is now {cash}.
+
+[[Back to the shop->Shop]]
+
+
+:: Buyer D1 [Artifact]
+time: time + 1
+buyerD1done: true
+--
+"I sell, I buy. Today I'm generous."
+
+[[Buy a Blue artifact — ₱1000->Buyer D1 Buy]]
+
+[if purple > 0]
+[[Sell a Purple artifact — ₱1000->Buyer D1 Sell]]
+[continue]
+
+[[Wave him off->Shop]]
+
+
+:: Buyer D1 Buy
+ok: cash >= 1000
+blue: ok ? blue + 1 : blue
+buyerTrades: ok ? buyerTrades + 1 : buyerTrades
+cash: ok ? cash - 1000 : cash
+--
+[if ok]
+You buy the blue artifact. He marks something in a small ledger.
+[continue]
+[unless ok]
+Not enough cash.
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Buyer D1 Sell
+purple: purple - 1
+cash: cash + 1000
+buyerTrades: buyerTrades + 1
+--
+You hand over a purple artifact; he pays ₱1000 and studies its symbol too long.
+
+[[Back to the shop->Shop]]
+
+
+:: Scavenger D1 [Quest]
+time: time + 1
+scavengerQ1: true
+cash: cash + (Math.floor(Math.random() * (250 - 50 + 1)) + 50)
+--
+Most of it is honest trash. You sort it, clean the few real pieces, and he pays you for the trouble.
+
+*Garbage Scavenger Quest 1 complete.* Cash is now {cash}.
+
+[[Back to the shop->Shop]]
+
+
+:: Artisan D1 [Quest]
+time: time + 1
+artisanQ1: ownsBrush ? true : false
+--
+[unless ownsBrush]
+Lave glances at your empty bench. "Come back when you own a real brush."
+
+*(Requires a Restoration Brush.)*
+
+[[Back to the shop->Shop]]
+[continue]
+[if ownsBrush]
+You clean their work the slow way — patina kept, not scrubbed away.
+
+*Local Artisan Quest 1 complete.*
+
+[[Back to the shop->Shop]]
+[continue]
+
+
+:: Buyer D2 [Artifact]
+time: time + 1
+buyerD2done: true
+--
+"A purple, today. Or I'll take gold off your hands."
+
+[[Buy a Purple artifact — ₱2000->Buyer D2 Buy]]
+
+[if gold > 0]
+[[Sell a Gold artifact — ₱1000->Buyer D2 Sell]]
+[continue]
+
+[[Wave him off->Shop]]
+
+
+:: Buyer D2 Buy
+ok: cash >= 2000
+purple: ok ? purple + 1 : purple
+buyerTrades: ok ? buyerTrades + 1 : buyerTrades
+cash: ok ? cash - 2000 : cash
+--
+[if ok]
+The purple artifact is yours.
+[continue]
+[unless ok]
+Not enough cash.
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Buyer D2 Sell
+gold: gold - 1
+cash: cash + 1000
+buyerTrades: buyerTrades + 1
+--
+He takes the gold piece for ₱1000 — far under its worth. He knows it.
+
+[[Back to the shop->Shop]]
+
+
+:: Grandma D2 [Quest]
+time: time + 2
+grandmaQ2: true
+talkedGrandmaD3: true
+--
+This time it is her own portrait, as a young woman.
+
+You lift the silvering, steady the emulsion. She laughs at her younger face.
+
+*Grandma Quest 2 complete.*
+
+[[Back to the shop->Shop]]
+
+
+:: Grandma Late [Quest]
+time: time + 2
+grandmaLate: true
+talkedGrandmaD3: true
+--
+She came too late in the week for the full thread to be woven.
+
+You recover one picture, and she thanks you — but the deeper story stays out of reach this loop.
+
+*(Grandma & Local Artisan endings are out of reach this loop. The Garbage Scavenger's path stays open only if you keep your distance.)*
+
+[[Back to the shop->Shop]]
+
+
+:: Archeo D2 [Quest]
+time: time + 1
+archeoQ2: true
+cash: cash + 1500
+--
+A harder piece, half-fused with rust. You free it clean. He pays well again.
+
+*Archeologist Quest 2 complete.* Cash is now {cash}.
+
+[[Back to the shop->Shop]]
+
+
+:: Scavenger D2 [Quest]
+time: time + 1
+scavengerQ2: true
+cash: cash + (Math.floor(Math.random() * (250 - 50 + 1)) + 50)
+--
+More "treasure." You humor him, and again he pays.
+
+*Garbage Scavenger Quest 2 complete.* Cash is now {cash}.
+
+[[Back to the shop->Shop]]
+
+
+:: Artisan D2 [Quest]
+time: time + 1
+artisanQ2: ownsBrush ? true : false
+stopsGrandmaDay5: ownsBrush ? true : stopsGrandmaDay5
+--
+[unless ownsBrush]
+The panel is too fragile for bare hands. "Where is your brush?" Lave frowns.
+
+*(Requires a Restoration Brush.)*
+
+[[Back to the shop->Shop]]
+[continue]
+[if ownsBrush]
+You steady the flaking panel and lift the grime without lifting the paint.
+
+*Local Artisan Quest 2 complete.* Finishing this stops Grandma from visiting on Day 5.
+
+[[Back to the shop->Shop]]
+[continue]
+
+
+:: Buyer D4 [Artifact]
+time: time + 1
+buyerD4done: true
+--
+"Gold. Five thousand. Or sell me two of yours, cheap."
+
+[[Buy a Gold artifact — ₱5000->Buyer D4 Buy]]
+
+[if gold >= 2]
+[[Sell 2 Gold artifacts — ₱1000->Buyer D4 Sell]]
+[continue]
+
+[[Wave him off->Shop]]
+
+
+:: Buyer D4 Buy
+ok: cash >= 5000
+gold: ok ? gold + 1 : gold
+buyerTrades: ok ? buyerTrades + 1 : buyerTrades
+cash: ok ? cash - 5000 : cash
+--
+[if ok]
+You buy the gold artifact. His ledger fills another line.
+[continue]
+[unless ok]
+Not enough cash.
+[continue]
+
+[[Back to the shop->Shop]]
+
+
+:: Buyer D4 Sell
+gold: gold - 2
+cash: cash + 1000
+buyerTrades: buyerTrades + 1
+--
+He takes two gold pieces for a flat ₱1000. A bad deal you make anyway.
+
+[[Back to the shop->Shop]]
+
+
+:: Grandma D3 [Quest]
+time: time + 2
+grandmaQ3: true
+unlockedGrandmaEnding: true
+--
+The last photo: Grandma beside your grandpa, younger than you've ever seen him.
+
+As you reseat the backing, a strip of paper slips free — a safe code, in your uncle's writing.
+
+*Grandma Quest 3 complete. Grandma Ending unlocked — the safe will open now.*
+
+[[Back to the shop->Shop]]
+
+
+:: Artisan D3 [Quest]
+time: time + 1
+artisanQ3: true
+--
+You make the final piece look not new, but *true*. Lave nods — the hardest nod to earn.
+
+*Local Artisan Quest 3 complete. You gain a delicate restoration tool and access to fragile objects.*
+
+[[Back to the shop->Shop]]
+
+
+:: Scavenger D3 [Quest]
+time: time + 1
+scavengerQ3: true
+hasScavengerInfo: true
+cash: cash + (Math.floor(Math.random() * (250 - 50 + 1)) + 50)
+--
+In the last crate, something genuinely old. He grins.
+
+"You should meet Sam — a real archeologist. Tell him I sent you."
+
+*Garbage Scavenger Quest 3 complete. You now carry a lead to the Local Archeologist (persists across loops).*
+
+[[Back to the shop->Shop]]
+
+
+:: Archeo D3 [Quest]
+time: time + 1
+archeoQ3: true
+--
+He unrolls a restored map and taps a mark.
+
+"That is where your uncle's *final* fragment waits."
+
+*Archeologist Quest 3 complete — the lead to the Final Uncle Artifact.*
+
+[[Back to the shop->Shop]]
+
+
+:: Buyer D5 [Artifact]
+time: time + 1
+buyerD5: true
+--
+Because you dealt with him this week, he returns one last morning.
+
+"Those symbols? Your uncle was tracking them too. Here's what I know."
+
+*Mysterious Buyer Ending: leads on your uncle's artifacts.*
+
+[[Back to the shop->Shop]]
+
+
