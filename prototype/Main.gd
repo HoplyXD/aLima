@@ -1,7 +1,7 @@
 extends Control
 
 ## Temporary harness to exercise the dialogue box. Replace with the shop scene
-## once the core slice (see phasetask.md) comes online.
+## once the core slice (see docs/phase-task.md) comes online.
 
 @onready var _box: DialogueBox = $DialogueBox
 

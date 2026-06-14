@@ -4,6 +4,8 @@
 
 A Cozy AI-Powered Historical Restoration Roguelite
 
+> **Document role:** This file is the GDD and narrative/design source. For implementation, follow `CLAUDE.md` §4 first, then `docs/PRD.md`, then this GDD, then `docs/phase-task.md`.
+
 GAME DESIGN DOCUMENT — PROJECT PROPOSAL
 
 AI Game On\! • AI Fest 2026
@@ -62,7 +64,7 @@ The game’s progression is built around knowledge rather than resources. Each l
 
 As knowledge accumulates, the journal evolves into a planning tool, revealing ghostly traces of future events and helping players orchestrate increasingly efficient loops. Each recovered fragment is hidden within the city’s scrap stream through procedural placement, so every playthrough unfolds differently. To locate them, players rely on AI-generated Cultural Echoes — regional melodies, ambient sounds, and Kinaray-a phrases that intensify as they approach a fragment, culminating in the sound of a heartbeat.
 
-Ultimately, players pursue the “Perfect Loop”: a single cycle in which all five fragments are recovered in the right order and seated into the journal’s case. When the case is full and the journal’s final pages are restored, the loop the journal sustains releases, the timeline resumes its natural flow, and the uncle is finally pulled back from the void.
+Ultimately, players pursue the “Perfect Loop”: the loop in which the fifth and final fragment is recovered and seated. Fragments already seated in earlier loops remain permanently in the journal’s case; players never re-gather them. When the case is full and the journal’s final pages are restored, the loop the journal sustains releases, the timeline resumes its natural flow, and the uncle is finally pulled back from the void.
 
 aLima’s answer to the theme is structural rather than decorative. Preservation is not a side activity layered onto the experience — it is the central mechanic, the narrative foundation, and the means by which both history and time itself are restored.
 
@@ -85,7 +87,7 @@ aLima’s answer to the theme is structural rather than decorative. Preservation
 | Working Title | aLima |
 | Genre | Cozy restoration sim × narrative roguelite |
 | Platform | PC (Windows) primary; HTML5/web build planned for the AI Fest exhibit booth |
-| Engine | Godot 4.x (planned) — open-source, strong 2D toolset, audio bus control for the Cultural Echo system, exports to desktop and web |
+| Engine | Godot 4.6.3 — hybrid 3D shop environment with 2D `Control`/`CanvasLayer` gameplay interfaces, audio-bus control for Cultural Echoes, and desktop/web export targets |
 | Mode | Single-player |
 | Session Length | ≈10–13 minutes real per in-game day (1 real minute \= 1 in-game hour); ≈1 hour per five-day loop; full story arc 6–10 hours |
 | Target Audience | Teens and adults; players of Unpacking, PowerWash Simulator, Strange Horticulture, and Coffee Talk |
@@ -161,7 +163,7 @@ Candidate Artifacts *(all split naturally into five fragments and are physically
 | The Belfry Clockwork — tower-clock movement in the Jaro Belfry lineage | mainspring · gear train · escapement · dial · strike hammer | Iloilo City’s own landmark, repeatedly broken and rebuilt; the movement is bench-scale even though the tower is not. |
 | The Mariner’s Astrolabe / Nocturnal — a brass sky-clock | mater · rete · alidade · rule · throne ring | Tells the hour by sun and stars; trade-era; assembles cleanly from nested parts. |
 
- 
+
 
 Selection Criteria
 
@@ -226,7 +228,7 @@ Example. On Day 2, the Elderly Auntie asks for help restoring a faded photograph
 
 ## **9.7 Character-Driven Story Routes**
 
-Five “lima” characters knew the uncle and each hold one fragment. Four of them have a completable character ending; the Mysterious Buyer has no ending of his own but supplies the fifth fragment; the uncle’s own thread (Yuyu) is the final ending. Each route begins as an ordinary customer or buyer; attention, preparation, and the right restorations uncover a complete story.
+Five “lima” characters knew the uncle and each controls the release of one fragment. Four of them have a completable character ending; the Mysterious Buyer has no ending of his own but triggers the fifth fragment’s release; the uncle’s own thread (Yuyu) is the final ending. Characters never hand fragments directly to the player: route completion releases them into the scrap stream for the Spawn Director to place.
 
 | Route | Arc & Schedule | Completion Reward |
 | :---- | :---- | :---- |
@@ -234,14 +236,14 @@ Five “lima” characters knew the uncle and each hold one fragment. Four of th
 | Local Artisan (Lave) | An artisan teaches the hardest lesson: preservation is not making things look new — patina is part of the story.  Schedule: 1:00pm–2:00pm on Days 2, 4, 5 (appears only after you have helped the Elderly Auntie — Lave will not share a shop with the scrap hauler and replaces the Trash Scavenger).  Tie to the uncle: the Auntie’s grandchild, raised on her stories of the uncle. | Fragment released • delicate restoration tool • access to fragile objects |
 | Trash Scavenger (Ayla) | A scrap hauler convinced her junk is treasure. Humor her and clean her hauls and she pays well; keep your distance from the Elderly Auntie Grandchild and she eventually trusts you.  Schedule: 1:00pm–2:00pm on Days 2, 4, 5 (only if you have NOT helped the Elderly Auntie).  Tie to the uncle: the hauler who fed the uncle a steady stream of curios and “treasure.” Holds one of the five fragments. | Fragment released • lead to the Local Archeologist (persists across loops) |
 | Archeologist (Sam) | An archeologist recognizes your tools and tests your dedication, revealing that true mastery lies in re-forging broken pieces while honoring the soul of the original maker.  Schedule: 3:00pm–5:00pm on Day 1; 08:00am–11:00am on Days 3, 5 (requires the Scavenger’s lead, which persists across loops — so on a later/Perfect Loop he is available from Day 1).  Tie to the uncle: the last person seen with the uncle before he vanished — the one who got lost in time beside him. | Fragment released • excavation tools • access to Sturdy objects |
-| The Mysterious Buyer (Mr. Maverick) *— no ending; support route* | A buyer who overpays for objects marked with a certain symbol. Buy from or sell to him on any of Days 1–4, and on Day 5 there\`s a chance he hands over the fifth fragment.  Schedule: appears every day, 5:00pm–6:00pm (and 07:00am–09:00am on Day 5).  Tie to the uncle: the dealer who for years bought from and sold to the uncle. Holds one of the five fragments. | Fifth fragment delivered on Day 5 • encoded ledger • evidence of the uncle’s unfinished investigation |
+| The Mysterious Buyer (Mr. Maverick) *— no ending; support route* | A buyer who overpays for objects marked with a certain symbol. Deal with him at least once on Days 1–4; his qualifying Day 5 encounter deterministically releases the fifth fragment into a guaranteed special delivery. Schedule: appears every day, 5:00pm–6:00pm (and 07:00am–09:00am on Day 5). Tie to the uncle: the dealer who for years bought from and sold to the uncle. | Fifth fragment released into a Director-placed carrier • encoded ledger • evidence of the uncle’s unfinished investigation |
 | The Uncle’s Legacy (Yuyu) *— final ending* | With all five fragments gathered and seated, the journal’s hidden notes finally make sense: the uncle deliberately entrusted the fragments to people he trusted, to be returned only to someone willing to listen. | The Master Artifact made whole • the Perfect Loop • the uncle pulled back from the void |
 
 ## **9.8 Fragment Release & AI Procedural Placement (the Spawn Director)**
 
 Story gates when. AI decides where. Completing a route never hands the player a fragment directly. Instead, the fragment enters the city’s scrap stream with an in-fiction justification — the Elderly Auntie donates a box of her late husband’s things; the suspicious buyer’s goods are seized and auctioned; the artisan clears out an old workshop. From that moment, the Spawn Director takes over.
 
-• Placement space: delivery piles, shelving, locked containers, specific days and times — and nested inside restorable junk objects (a rusted biscuit tin, a hollow wooden santo, the backing of a framed photo), so discovery flows through the core restoration loop itself.
+• Placement space: delivery piles, shelving, eligible outer containers, specific days and times — and nested inside restorable junk objects (a rusted biscuit tin, a hollow wooden santo, the backing of a framed photo), so discovery flows through the core restoration loop itself. Once its code is known, the Safe may be selected as an outer container, but the fragment remains inside a promoted ordinary carrier and is never loose.
 
 • Constraint-weighted selection: weighs route state, owned tools, container compatibility, and the player’s own behavior history — deliberately favoring places the player has been neglecting.
 
@@ -264,13 +266,13 @@ When a hidden fragment is nearby, the shop begins to sound different. Echoes are
 
 ## **9.10 Portal Unlock & the Digital Museum**
 
-The found sequence: discovery → the “Artifact Found” screen (item render, name, origin, condition, fragment count) → API call → a “Portal Unlock” notification revealing the real-world historical fact → a new museum entry.
+The found sequence: discovery → the “Artifact Found” screen (item render, name, origin, condition, fragment count) → backend API call → a “Portal Unlock” notification revealing the real-world historical fact → a persisted museum record.
 
 The game posts each verified discovery (artifact ID, player ID, timestamp, condition, discovery context) to the City-Wide Portal API. Until official portal access is granted, a local mock service mirrors the documented contract one-to-one, so the integration swap is a single endpoint change.
 
 Two archives, by rarity:
 
-• The online API Museum displays the Gold finds and the Master Artifact — the publicly significant pieces, with fact cards, photographs, timelines, regional stories, and character memories.
+• The P0 slice persists the Portal response and museum record for Gold finds and Master Artifact discoveries. The polished online/in-game gallery that displays fact cards, photographs, timelines, regional stories, and character memories is P1.
 
 • The Journal holds Purple-rarity and below — the everyday restored objects and their notes.
 
@@ -286,13 +288,13 @@ Distinct from the Cultural Echoes that guide you to fragments (9.9), a Temporal 
 
 ## **9.13 The Safe & the Locked Drawer**
 
-Completing the Elderly Auntie route reveals the code to the uncle’s Safe. Because money resets each loop, the payoff lands in a later loop: once the player knows the code, they can open the Safe at any time, gaining ₱1,000 and — with a chance — a Master Artifact fragment spawned inside. The uncle’s locked drawer is a second gated cache tied to the same route’s clue, holding journal pages and investigation notes.
+Completing the Elderly Auntie route reveals the code to the uncle’s Safe. Because money resets each loop, the payoff lands in a later loop: once the player knows the code, they can open the Safe at any time and gain ₱1,000. The known code also makes the Safe eligible as a Spawn Director outer container; if selected, it contains a promoted ordinary carrier, never a loose fragment. The uncle’s locked drawer is a second gated cache tied to the same route’s clue, holding journal pages and investigation notes.
 
 ## **9.14 Endings & the Perfect Loop**
 
-There are five endings: four character endings — Elderly Auntie, Local Artisan, Trash Scavenger, Archeologist — each completed by finishing that person’s route, plus the Uncle’s Legacy (Yuyu) finale. (The Mysterious Buyer has no ending of his own; he supplies the fifth fragment.) Completing none of the routes yields the Neutral outcome: the loop simply repeats.
+There are five endings: four character endings — Elderly Auntie, Local Artisan, Trash Scavenger, Archeologist — each completed by finishing that person’s route, plus the Uncle’s Legacy (Yuyu) finale. (The Mysterious Buyer has no ending of his own; he controls the fifth fragment’s release.) Completing none of the routes yields the Neutral outcome: the loop simply repeats.
 
-The Perfect Loop (Yuyu ending) requires all five fragments, gathered in this order within a single cycle:
+The Perfect Loop (Yuyu ending) begins when all five fragments are seated. Previously seated fragments persist across resets, so the player never needs to re-gather them. The intended route order for the loop in which the final fragment is seated is:
 
 • Day 1 — Archeologist quest (available from Day 1 once his lead is known from a prior loop).
 
@@ -304,7 +306,7 @@ The Perfect Loop (Yuyu ending) requires all five fragments, gathered in this ord
 
 • Days 1–4 — buy from or sell to the Mysterious Buyer at least once.
 
-• Day 5 — the Buyer hands over the fifth fragment; the player seats it into the journal’s case, completing the Master Artifact. With the case full, the loop the journal sustains releases, the timeline resumes, and the uncle returns.
+• Day 5 — the Buyer’s qualifying encounter releases the fifth fragment into a guaranteed special delivery. The Spawn Director places it inside an ordinary carrier; the player must still find, clean, open, and seat it. With the case full, the loop the journal sustains releases, the timeline resumes, and the uncle returns.
 
 # **10\. AI Integration & Disclosure**
 
@@ -319,7 +321,7 @@ Runtime AI (in-game systems)
 | Spawn Director | Custom constraint-weighted placement logic | Hides each fragment in a new location for every player and run. |
 | Cultural Echo Mixer | Proximity-driven adaptive audio system | Mixes AI-generated regional soundscapes by distance band — the region’s sound becomes the game’s compass. |
 
- 
+
 
 Development AI (production tools, fully disclosed)
 
@@ -332,7 +334,7 @@ Development AI (production tools, fully disclosed)
 
 # **11\. Technical Overview**
 
-• Engine: Godot 4.x — open-source, excellent 2D tooling, fine-grained audio bus control for the four-band echo mixer, and one-click exports to Windows and HTML5 for the AI Fest booth.
+• Engine: Godot 4.6.3 — the shop is a 3D environment, while triage, restoration, scanner, journal, dialogue, and Portal flows use 2D `Control`/`CanvasLayer` interfaces. Godot’s audio buses drive the four-band echo mixer; Windows is primary and HTML5 is a separately verified exhibit target.
 
 • Architecture: game client ↔ a lightweight Node.js/Express service ↔ the City-Wide Portal API. LLM calls run server-side with rate limiting and cached fallbacks. The team’s lead developer ships production MERN systems, so this layer reuses proven tooling.
 
@@ -346,7 +348,7 @@ Development AI (production tools, fully disclosed)
 
 # **12\. Art & Audio Direction**
 
-Art. Warm, hand-crafted 2D in a pixel/painted hybrid. The palette is golden-hour junk shop: rust, brass, varnished wood, late-afternoon light through dusty louvers. The UI lives inside the fiction — journal paper, masking tape, ballpoint ink. Props are unmistakably Filipino: weighing scales, soft-drink crates, sari-sari signage, santo figures, capiz panels.
+Art. A warm hybrid presentation: a stylized 3D junk-shop space framed with hand-crafted, painted 2D interfaces and overlays. The palette is golden-hour junk shop: rust, brass, varnished wood, late-afternoon light through dusty louvers. The UI lives inside the fiction — journal paper, masking tape, ballpoint ink. Props are unmistakably Filipino: weighing scales, soft-drink crates, sari-sari signage, santo figures, capiz panels.
 
 Audio. An original folk-inspired score in a Western Visayas idiom — AI-generated, human-curated, and never sampling existing recordings. Kinaray-a and Hiligaynon lines are recorded with native speakers where feasible. The shop itself is an instrument: rain on the roof, the scale’s creak, a tricycle passing — and underneath it all, sometimes, a hum that should not be there.
 
@@ -357,7 +359,7 @@ The roadmap is built backwards from the official jam milestones.
 | Dates | Milestone | Focus |
 | :---- | :---- | :---- |
 | June 1 | Repo \+ proposal | GitHub initialized; concept locked; this document |
-| June 12–19 | Sprint 1 — core slice | Shop scene, delivery/triage, two cleaning mini-games, object data pipeline |
+| June 12–19 | Sprint 1 — core slice | Hybrid shop scene, delivery/triage, one complete pendant cleaning/opening interaction, object data pipeline |
 | June 20 | Official Workshop 1 | Apply feedback; artifact candidate review with mentors |
 | June 21–26 | Sprint 2 — jam mechanics | Spawn Director, Cultural Echo mixer, Artifact Found screen, mock portal API |
 | June 27 | Official Workshop 2 | Final artifact lock; ADK/API clarifications |
@@ -375,9 +377,9 @@ The 50% build is scoped around exactly what the submission requires to demonstra
 | :---- | :---- |
 | The artifact spawning in different locations | Side-by-side footage of multiple runs: the same fragment hidden in a different pile, container, nested object, and day across three or more seeds |
 | The player finding the item using the “Echo” cues | One complete discovery sequence with all four echo bands audible and captioned, plus the on-screen resonance meter |
-| The API notification showing the “Portal Unlock” | The Artifact Found screen → live API call → Portal Unlock notification with the real-world historical fact → new museum entry |
+| The API notification showing the “Portal Unlock” | The Artifact Found screen → backend call against the mock Portal → Portal Unlock notification with the real-world historical fact → persisted museum record |
 
-Included in the slice: one shop space; delivery and triage; two to three restoration mini-games; scanner v1 (cached annotations); Spawn Director v1; Cultural Echoes v1; Artifact Found screen with mock portal API; journal v1; and the Elderly-Auntie photograph beat as the emotional showcase.
+Included in the slice: one hybrid 3D shop space; 2D delivery and triage UI; one complete pendant restoration/clasp-opening interaction; scanner v1 with cached annotations; Spawn Director v1; Cultural Echoes v1; Artifact Found screen with mock Portal API; a persisted museum record; journal v1; and the Elderly-Auntie photograph beat as a scripted emotional showcase rather than a second full mini-game.
 
 Deferred to the finalist phase: the full five-day loop economy, live marketplace negotiation AI, the remaining four character routes, and museum gallery polish — all documented here so judges can evaluate the complete design alongside the playable slice.
 
@@ -411,7 +413,7 @@ The title comes from the Kinaray-a word alima — “hand.” Hidden inside it i
 
 AI in aLima finds the pattern, names the period, suggests the price. But technology alone cannot restore what has been forgotten. Someone still has to pick the object up, clean it carefully, listen to its story — and place it in another person’s hands. That is how history gets a new heartbeat.
 
-# 
+#
 
 # **Appendix A — Glossary**
 
@@ -429,5 +431,4 @@ AI in aLima finds the pattern, names the period, suggests the price. But technol
 
 • Cultural Echo — the four-band proximity audio that guides the player to a hidden fragment (9.9).
 
-• Perfect Loop — the single cycle in which all five fragments are recovered in order and seated, unlocking the Yuyu ending.
-
+• Perfect Loop — the loop in which the fifth fragment is seated, completing the persistent five-slot case and unlocking the Yuyu ending.

@@ -2,7 +2,7 @@ extends Control
 
 ## Shop screen controller. Owns the (placeholder) game state, listens to the
 ## ShopUI's intent signals, and drives the dialogue box. As the core slice grows
-## (see phasetask.md) this is where the workbench, journal, and phone screens get
+## (see docs/phase-task.md) this is where the workbench, journal, and phone screens get
 ## pushed/popped.
 
 const DAY_START_HOUR: int = 7   # Shop opens 07:00.
