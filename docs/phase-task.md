@@ -41,11 +41,41 @@ Every completed task must:
 - `[-]` Godot project scaffold exists and targets feature `4.6`, but the local CLI resolves to `4.5.1.stable`.
 - `[-]` Upstream commit `0255430` is integrated. It adds the hybrid Shop scene, HUD controller, visitor placeholder, and dialogue mouse input, but runtime behavior is not verified under 4.6.3.
 - `[-]` The first 4.5.1 headless run reported a missing imported placeholder texture after the upstream merge. A 4.5.1 editor import regenerated the cache and the subsequent headless run started cleanly; the required 4.6.3 verification remains blocked.
+- `[-]` `scenes/Shop.tscn` is the configured main scene and loads, but its `HUD` CanvasLayer is currently `visible = false`, so the integrated interface is not yet a usable production screen.
+- `[-]` Shop orchestration is duplicated across `scenes/hud.gd`, unused `scenes/shop_3d.gd`, and `prototype/shop.gd`. The production scene currently attaches `scenes/hud.gd` to the HUD rather than a controller to the Shop root.
+- `[-]` The production Shop contains an unlabeled test button (`AAAAAAAAA`) that must be removed during stabilization.
 - `[-]` Clock/day progression exists only as placeholder state in shop/HUD controllers. There is no reusable loop controller or split persistence.
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but dialogue is hardcoded in controllers.
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
 - `[ ]` Object data pipeline, real delivery/triage, restoration, carriers, Spawn Director, Cultural Echoes, cached scanner, backend, mock Portal, journal, museum record, tests, and exports are not implemented.
 - `[ ]` Print-only Workbench, Journal, and Phone actions are not complete features.
+
+## Reconciliation With the Old Tracker
+
+The deleted root `phasetask.md` is still available in Git history at commit `bab8cb9`. It contained no checked tasks, so there is no completed checklist to restore. The repository nevertheless contains useful implementation work that maps to the old tasks as follows:
+
+| Old tracker item | Evidence already in the repository | Canonical status |
+|---|---|---|
+| One shop space scene | `scenes/Shop.tscn` contains a 3D environment, camera, book prop, visitor sprite, and HUD nodes | `[-]` Partial; HUD hidden and scene needs stabilization |
+| Daily clock | Three controllers implement 07:00-20:00 hourly progression at 60 seconds/hour | `[-]` Partial; placeholder state, duplicated logic, no real reset |
+| Clock HUD | Day/time/count labels and formatting exist | `[-]` Partial; no loop counter and production HUD is hidden |
+| Door/visitor interaction | Door button, visitor sprite, dialogue queue, and pause/resume behavior exist | `[-]` Partial; hardcoded content and no visit schedule |
+| Dialogue system | Reusable typewriter dialogue supports keyboard and mouse advance | `[-]` Partial; no authored dialogue data or automated tests |
+| Workbench/Journal/Phone navigation | Buttons and placeholder responses exist | `[-]` Partial; no real screens or system integration |
+| Delivery/triage | Placeholder rarity counts only | `[ ]` Not implemented |
+| Restoration mini-game | Placeholder dialogue only | `[ ]` Not implemented |
+| Object JSON pipeline | No `data/objects` or loader | `[ ]` Not implemented |
+| Spawn Director / Echoes / Scanner / Portal / Journal | No runtime implementation | `[ ]` Not implemented |
+
+### Where Development Starts
+
+Do not rebuild the Shop from scratch. Start with **Phase 0 stabilization**:
+
+1. Install/select Godot 4.6.3 and import the project.
+2. Make the existing `scenes/Shop.tscn` HUD visible and remove the stray test button.
+3. Consolidate the duplicated controllers into one Shop controller plus one presentation-only HUD.
+4. Verify all four buttons, dialogue input, visitor visibility, and clock pause/resume.
+5. Then begin Phase 1 with typed models, JSON loading, and core autoloads.
 
 ## Stable Interfaces
 
@@ -154,6 +184,7 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 - `[-]` **P0.1 Integrate the upstream hybrid shop work.**
   - Commit `0255430` is present locally.
   - The texture cache regenerates and the production scene starts without console errors under the currently installed 4.5.1 CLI.
+  - The current Shop is not yet production-ready: reveal the hidden HUD and remove the `AAAAAAAAA` test button.
   - Import and run `scenes/Shop.tscn` under Godot 4.6.3.
   - Confirm the placeholder texture imports and the scene parses without errors.
   - Confirm Door, Workbench, Journal, and Phone receive mouse input.
