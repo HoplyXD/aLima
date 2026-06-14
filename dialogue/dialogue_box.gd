@@ -95,10 +95,17 @@ func _finish_typing() -> void:
 	_start_blink()
 
 
-func _unhandled_input(event: InputEvent) -> void:
+# Uses _input (not _unhandled_input) so a click on the box itself still counts —
+# the panel's mouse_filter would otherwise consume the click first.
+func _input(event: InputEvent) -> void:
 	if not visible:
 		return
+	var advance := false
 	if event.is_action_pressed("ui_accept"):
+		advance = true
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		advance = true
+	if advance:
 		_advance()
 		get_viewport().set_input_as_handled()
 

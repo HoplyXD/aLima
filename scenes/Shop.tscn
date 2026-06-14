@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://dgc2dadcifuf2"]
 
 [ext_resource type="Texture2D" uid="uid://c5urpwhdwyj6r" path="res://icon.svg" id="1_rgcs7"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/Character Placeholder.png" id="3_cimqq"]
+[ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
+[ext_resource type="Script" uid="uid://b6g12k1wskqm6" path="res://scenes/hud.gd" id="4_yltc6"]
 
 [sub_resource type="Environment" id="Environment_ec5oe"]
 background_energy_multiplier = 5.0
@@ -33,3 +36,186 @@ transform = Transform3D(1.7751245, 0, 0, 0, 1.34561, 0, 0, 0, 1, 0, 2.5706012, -
 transform = Transform3D(1.0577253, 0, 0, 0, 1.8982875, 0, 0, 0, 1, -2.5413516, 0.7349527, -0.8361771)
 material_override = SubResource("StandardMaterial3D_t4md6")
 mesh = SubResource("QuadMesh_ohui2")
+
+[node name="Visitor" type="Sprite3D" parent="." unique_id=1414777339]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.0851084, 0, 3.618494, -3.2)
+pixel_size = 0.005
+billboard = 1
+texture = ExtResource("3_cimqq")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=70770043]
+visible = false
+script = ExtResource("4_yltc6")
+
+[node name="TopPanel" type="Panel" parent="HUD" unique_id=456457821]
+anchors_preset = 10
+anchor_right = 1.0
+offset_right = -1.0
+offset_bottom = 104.0
+grow_horizontal = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/TopPanel" unique_id=1064822271]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 10
+
+[node name="Bar" type="HBoxContainer" parent="HUD/TopPanel/Margin" unique_id=967362501]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Unrestored" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=2061628147]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=706879992]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Unrestored"
+
+[node name="UnrestoredCounts" type="RichTextLabel" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=1604844694]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 26)
+layout_mode = 2
+bbcode_enabled = true
+text = "W 0   G 0   B 0   P 0   Gd 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Sep1" type="VSeparator" parent="HUD/TopPanel/Margin/Bar" unique_id=874822323]
+layout_mode = 2
+
+[node name="Restored" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=509181040]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=1467891453]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Restored (sell via phone)"
+
+[node name="RestoredCounts" type="RichTextLabel" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=349620944]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 26)
+layout_mode = 2
+bbcode_enabled = true
+text = "W 0   G 0   B 0   P 0   Gd 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Sep2" type="VSeparator" parent="HUD/TopPanel/Margin/Bar" unique_id=1628169842]
+layout_mode = 2
+
+[node name="Quest" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=1907714145]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=1207304325]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Quest"
+
+[node name="QuestCount" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=124039789]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "0"
+
+[node name="Spacer" type="Control" parent="HUD/TopPanel/Margin/Bar" unique_id=822961757]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Clock" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=1731936120]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="DayLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1986770492]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Day 1 of 5"
+horizontal_alignment = 2
+
+[node name="ClockLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=962757482]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "7:00 AM"
+horizontal_alignment = 2
+
+[node name="DoorButton" type="Button" parent="HUD" unique_id=528432250]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -170.0
+offset_right = 120.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 22
+text = "Door
+
+(Answer Visitor)"
+
+[node name="WorkbenchButton" type="Button" parent="HUD" unique_id=258395927]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -96.0
+offset_right = 120.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 18
+text = "Workbench"
+
+[node name="JournalButton" type="Button" parent="HUD" unique_id=1761002404]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 28.0
+offset_top = -50.0
+offset_right = 188.0
+offset_bottom = 50.0
+grow_vertical = 2
+theme_override_font_sizes/font_size = 18
+text = "Journal"
+
+[node name="PhoneButton" type="Button" parent="HUD" unique_id=1964981723]
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -188.0
+offset_top = -50.0
+offset_right = -28.0
+offset_bottom = 50.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_font_sizes/font_size = 18
+text = "Phone"
+
+[node name="DialogueBox" parent="HUD" unique_id=900789323 instance=ExtResource("3_dlgbox")]
+visible = false
+
+[node name="Button" type="Button" parent="HUD" unique_id=710770686]
+offset_left = 353.0
+offset_top = 254.0
+offset_right = 570.0
+offset_bottom = 403.0
+text = "AAAAAAAAA
+"
+
+[connection signal="pressed" from="HUD/DoorButton" to="HUD" method="_on_door_button_pressed"]
