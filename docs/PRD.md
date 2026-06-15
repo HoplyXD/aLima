@@ -6,7 +6,7 @@
 |---|---|
 | **Project** | aLima — cozy AI-powered historical-restoration roguelite |
 | **Event** | AI Game On! · AI Fest 2026 · Iloilo City |
-| **Stack** | Godot 4.6.3 (typed GDScript) · hybrid 3D shop + 2D interfaces · Node/Express backend · JSON/`.tres` data |
+| **Stack** | Godot 4.6.3 (typed GDScript) · hybrid 3D shop + focused 3D restoration + hybrid 2D/3D journal + 2D interfaces (triage, scanner, dialogue, Portal) · Node/Express backend · JSON/`.tres` data |
 | **Companion docs** | `CLAUDE.md` (operating spine + invariants) · `README.md` (GDD/design/narrative) · `docs/phase-task.md` (implementation order/status) |
 
 > **How to use this doc.** This is the testable build contract. Every requirement has an **ID** (e.g. `SCAN-R3`) and must map back to a promise in the full-game GDD. Authority order is **`CLAUDE.md` §4 implementation invariants → `README.md` full-game product promises → this PRD's implementation detail → `docs/phase-task.md` execution and proof**. This PRD may clarify the GDD but may not silently omit or downgrade it. `P0` is the June 30 slice; `P1` is mandatory for 100% full-GDD completion; `P2` is optional post-release expansion. **Section 12 is the complete discovery specification** for the Spawn Director, Cultural Echoes, and carriers.
@@ -75,7 +75,7 @@ aLima is a single-player game where the player runs a junk shop across a repeati
 | **P2** | Optional post-release expansion not promised by the current GDD |
 
 ### 2.3 Slice (P0) summary
-One hybrid 3D shop space with 2D gameplay interfaces; delivery + triage; **one** fully-built carrier (the pendant) with clean→open; Spawn Director v1 (genuine carrier+container+day rolls, per-player never-twice); Echo mixer v1 (4 bands + resonance meter + captions); cached scanner v1; Artifact Found → mock Portal → Portal Unlock → persisted museum record → journal seat (5-slot case, one slot fills); journal v1; the Elderly-Auntie photo beat as a scripted emotional showcase. Everything promised elsewhere in the GDD remains mandatory P1 work after the slice unless explicitly identified as post-release P2.
+One hybrid 3D shop space (restoration is a focused 3D object-manipulation view; the journal is hybrid 2D/3D; triage/scanner/dialogue/Portal are 2D); delivery + triage; **one** fully-built carrier (the pendant) with a 3D clean→open; Spawn Director v1 (genuine carrier+container+day rolls, per-player never-twice); Echo mixer v1 (4 bands + resonance meter + captions); cached scanner v1; Artifact Found → mock Portal → Portal Unlock → persisted museum record → journal seat (5-slot case, one slot fills); journal v1; the Elderly-Auntie photo beat as a scripted emotional showcase. Everything promised elsewhere in the GDD remains mandatory P1 work after the slice unless explicitly identified as post-release P2.
 
 ---
 
@@ -434,17 +434,19 @@ class SaveState:
 
 ## 8. Restoration  · P0 (one mini-game) / P1 (full set)
 
-- **REST-R1 (P0).** Restoration is a tactile mini-game raising an instance's `condition` (0→100). Object `state`: `DIRTY → CLEAN`.
-- **REST-R2 (P1).** Distinct mini-games per category: brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, mechanism inspection.
+- **REST-R1 (P0).** Restoration is a tactile **3D object-manipulation** mini-game raising an instance's `condition` (0→100). Object `state`: `DIRTY → CLEAN`. (See REST-R8 for the presentation contract.)
+- **REST-R2 (P1).** Distinct mini-games per category: brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, mechanism inspection. Each is a 3D interaction on the object's surface (REST-R8).
 - **REST-R3 (P0).** Using the **wrong tool** can erase detail / lower condition / permanently reduce value. Correct tool+technique improves outcome.
-- **REST-R4 (P0).** A carrier must reach `CLEAN` before it can be opened. *(Invariant §4-D.)*
+- **REST-R4 (P0).** A carrier must reach `CLEAN` before it can be opened. *(Invariant §4-D.)* Both cleaning and the type-specific open are 3D manipulations of the same object; the modality does not relax the gate.
 - **REST-R5 (P1).** A mini-game may require a learned **Technique** (persistent) and an owned **Tool** (loop-scoped unless legacy) — §4.9.
 - **REST-R6 (P1).** Some techniques are learnable only from characters (e.g., the Artisan), not the shop.
 - **REST-R7 (P0, slice).** For the slice, build the **one** mini-game the pendant uses; ensure its tool is in the kit at slice start so the demo is always winnable.
+- **REST-R8 (P0).** Restoration presents the object as a **manipulable 3D model in a focused restoration view**: the player orbits/rotates it and applies the selected tool **across its 3D surface** (grime/dirt is represented on the surface and cleared by working the tool over it; see D8), framed by a 2D background + HUD overlay carrying tool selection, condition/value meters, feedback, and captions. The clean→open gate (REST-R4), tool consequences (REST-R3), and tools-vs-techniques rules (REST-R5) are unchanged; only the presentation is 3D. The underlying restoration logic is presentation-agnostic and shared across input methods (INPUT-R5). The slice's pendant clean→clasp-open is built in this 3D view (REST-R7).
 
 **Acceptance**
 - [ ] Cleaning raises condition and gates opening.
 - [ ] Wrong-tool use is punished (value/condition loss) and recorded.
+- [ ] Restoration runs in the focused 3D view: the object can be rotated and is cleaned across its surface; the clean→open gate and tool consequences behave identically to the underlying logic.
 
 ---
 
@@ -487,10 +489,12 @@ class SaveState:
 - **JRN-R3 (P0).** **Purple-and-below** finds are archived in the journal; **Gold + Master Artifact** go to the museum (§14). *(Invariant §4-F.)*
 - **JRN-R4 (P1).** Mystery pages (Master-Artifact sketches, faded symbols, references to the five) become legible as routes complete and Temporal Echoes are unlocked (§16).
 - **JRN-R5 (P0).** AI annotations on entries come from the scanner/backend (verified records), clearly distinguished from the uncle's handwritten notes.
+- **JRN-R6 (P0/P1).** The journal is presented as a **hybrid 2D/3D** interface: the book, pages, notes, and annotations are a 2D paper UI, while the Fragment Case renders seated fragments (and the assembling Master Artifact) as rotatable **3D viewers**, and object entries may embed a 3D preview of the restored object. The archive routing (JRN-R3), persistence (§5), and entry/seating data contracts are unchanged by the presentation. (P0: the 5-slot case with at least the seated-fragment 3D viewer; richer per-entry 3D previews are P1.)
 
 **Acceptance**
 - [ ] Restoring an object creates/updates its entry with condition/sale records.
 - [ ] Seating a fragment fills a case slot that persists across resets.
+- [ ] The Fragment Case shows seated fragments as 3D viewers within the 2D journal; archive routing and persistence are unaffected.
 
 ---
 
@@ -726,7 +730,7 @@ stateDiagram-v2
 ### 22.1 Order (P0 — to June 30)
 1. **Core:** day clock + loop controller + split save (§5,§6). *DoD: reset keeps/wipes correctly.*
 2. **Delivery/triage** (§7) + object data pipeline (§4.1–4.2). *DoD: keep/recycle works; glow shows.*
-3. **Restoration (pendant mini-game)** (§8 REST-R7) + clean→open gate. *DoD: cleaning gates opening.*
+3. **Restoration (pendant mini-game — focused 3D view)** (§8 REST-R7/REST-R8) + clean→open gate. *DoD: cleaning gates opening, performed by rotating/cleaning the 3D object.*
 4. **Carriers/openables** (§12.3) — pendant clasp + `EMPTY|TEMPORAL_ECHO|FRAGMENT`. *DoD: opening yields contents.*
 5. **Spawn Director v1** (§12.1) — genuine rolls + never-twice. *DoD: 3 runs differ, no repeat pair.*
 6. **Echo mixer v1** (§12.2) — 4 bands + resonance meter + captions. *DoD: echoes lead to carrier; heartbeat carrier-only.*
@@ -755,6 +759,8 @@ Full-game completion additionally requires every P1 requirement, every content-m
 | D5 | **Does cleaning/scanning consume in-game time?** (CLOCK-R5) | Full-screen UI pauses through pause ownership; authored exceptions must be explicit |
 | D6 | **Locked-crate gating** for fragments vs reserved for Safe/drawer | fragments not behind solvable locks in slice |
 | D7 | **Buyer 5th-fragment release** | deterministic special delivery once Perfect-Loop conditions are met (ROUTE-R5 / END-R4) |
+| D8 | **3D dirt/cleaning representation** (REST-R8) | shader dirt-mask cleared by tool strokes (alternatives: decals / vertex paint); keep the restoration logic presentation-agnostic |
+| D9 | **Restoration view framing** (REST-R8) | resolved: focused 3D restoration view (3D object + 2D background/HUD overlay) |
 
 All decisions above may remain open during the slice only. `CONTENT-R1` blocks full content production until the artifact, source packet, carrier compatibility, decoy tuning, pile cap, time policy, and Buyer release behavior are recorded as accepted decisions.
 
@@ -812,9 +818,9 @@ All decisions above may remain open during the slice only. `CONTENT-R1` blocks f
 
 - **INPUT-R1 (P1).** Every gameplay and menu action is completable with mouse, controller, and touch on both target platforms.
 - **INPUT-R2 (P1).** Keyboard/controller actions use Godot Input Map actions, expose visible focus, pressed, disabled, and hover states, and support remapping where the platform permits.
-- **INPUT-R3 (P1).** All Cultural Echo bands, voice lines, critical audio information, and dialogue have synchronized captions; discovery is completable with master audio muted.
-- **INPUT-R4 (P1).** 2D interfaces scale from the 1920x1080 reference layout to the 1280x720 web reference without clipped required controls or unreadable text.
-- **INPUT-R5 (P1).** Touch interactions provide alternatives to hover, right-click, precision dragging, and other unavailable gestures; restoration tolerances are tuned per input method without changing outcomes.
+- **INPUT-R3 (P1).** All Cultural Echo bands, voice lines, critical audio information, dialogue, and restoration feedback have synchronized captions; discovery is completable with master audio muted.
+- **INPUT-R4 (P1).** 2D interfaces (and the 2D HUD overlays of the 3D restoration view and the journal) scale from the 1920x1080 reference layout to the 1280x720 web reference without clipped required controls or unreadable text.
+- **INPUT-R5 (P1).** Touch interactions provide alternatives to hover, right-click, precision dragging, and other unavailable gestures. The 3D restoration interaction (REST-R8) — rotating/orbiting the object and working the tool across its surface, plus the journal's 3D Fragment Case viewers (JRN-R6) — is completable with mouse, controller, and touch; restoration tolerances are tuned per input method without changing outcomes.
 
 **Acceptance**
 - [ ] Complete input-matrix runs finish one full loop and the finale with each input family.
@@ -827,7 +833,7 @@ All decisions above may remain open during the slice only. `CONTENT-R1` blocks f
 - **PLAT-R1 (P1).** The Windows export completes the full story, save/reload, live services, and offline fallback flows.
 - **PLAT-R2 (P1).** The HTML5 export completes the same full story and persistence flow; unsupported platform behavior receives an equivalent documented implementation rather than a removed feature.
 - **PLAT-R3 (P1).** Scanner, marketplace, Portal facts, and required narrative remain usable when live services time out or the exhibit is offline.
-- **PLAT-R4 (P1).** Target sustained performance is **60 FPS at 1920x1080** on the documented Windows reference system and **30 FPS at 1280x720** on the documented web reference system during delivery, Echo, restoration, and UI stress scenarios.
+- **PLAT-R4 (P1).** Target sustained performance is **60 FPS at 1920x1080** on the documented Windows reference system and **30 FPS at 1280x720** on the documented web reference system during delivery, Echo, restoration, and UI stress scenarios. The restoration scenario explicitly covers the focused 3D restoration view and its surface dirt/cleaning representation (D8), including on the HTML5 reference target.
 - **PLAT-R5 (P1).** A maintained parity matrix records renderer, audio, networking, storage, input, and known platform differences; every difference has an accepted equivalent behavior.
 - **PLAT-R6 (P1).** Release exports contain no credentials, debug reset/seed controls, development endpoints, test fixtures presented as production content, or unlicensed placeholders.
 

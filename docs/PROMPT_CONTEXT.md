@@ -8,7 +8,7 @@ Canonical repository context for agents that write implementation prompts for aL
 - Then inspect the current code, scene, data, test, and documentation files relevant to the requested work. This snapshot does not replace source inspection.
 - Treat running code and assets as truth for what exists. Authority is `CLAUDE.md` Section 4 implementation invariants -> `README.md` full-game promises -> `docs/PRD.md` testable build contract -> `docs/phase-task.md` implementation order and evidence. The PRD may clarify but may not omit a GDD promise.
 - If source and docs disagree, report the disagreement. Do not silently rewrite behavior or requirements.
-- Snapshot last audited 2026-06-15; refreshed after Phase 5 Spawn Director implementation. Repository branch is `main`. Refresh this file when implementation materially changes.
+- Snapshot last audited 2026-06-15; refreshed after Phase 5 Spawn Director implementation and the restoration-3D / hybrid-journal presentation-contract docs update (REST-R8, JRN-R6; restoration UI is still a 2D placeholder pending P4.7). Repository branch is `main`. Refresh this file when implementation materially changes.
 
 ## Game Identity
 
@@ -75,7 +75,7 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 - **Target engine:** Godot 4.6.3 with typed GDScript.
 - **Current project settings:** Godot feature `4.6`, GL Compatibility renderer, Jolt 3D physics, 1920x1080 viewport, fullscreen mode, Windows D3D12 driver setting.
 - **Targets:** Windows is primary. HTML5/web is planned for the AI Fest exhibit and must be verified separately rather than assumed equivalent.
-- **Presentation:** One stylized 3D shop with 2D `Control`/`CanvasLayer` screens for triage, restoration, scanner, journal, dialogue, and Portal flows.
+- **Presentation:** One stylized 3D shop. **Restoration is a focused 3D object-manipulation interaction** (rotate the 3D object and clean its surface, framed by a 2D background + HUD overlay; REST-R8) and the **journal is hybrid 2D/3D** (a 2D book embedding 3D Fragment Case / object viewers; JRN-R6). Triage, scanner, dialogue, and Portal flows are 2D `Control`/`CanvasLayer` screens. The implemented `scenes/ui/restoration_screen.*` is a **2D interim placeholder** pending the 3D restoration view (phase-task P4.7).
 - **Input:** Mouse-first presentation, but mouse, controller, and touch are mandatory full-game targets. Current dialogue advances with `ui_accept` or left mouse click; broader input support is not implemented yet.
 - **Accessibility:** Echo discovery must remain playable muted through captions and a visual resonance meter. UI needs readable contrast, visible focus/hover states, 1920x1080 reference layout, and smaller-window scaling.
 - **Performance:** Full-game targets are 60 FPS at 1920x1080 on the documented Windows reference system and 30 FPS at 1280x720 on the documented web reference system. Memory/download budgets still require measurement during Phase 21.
@@ -134,7 +134,8 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 5 Spawn Director i
 
 - (Phase 2 implemented) Real day clock, loop controller, pause ownership, and the split/atomic persistence reset now exist as the `DayClock`/`LoopController` autoloads with strict-validated `SaveService` writes (GUT-verified; on-screen/real-time observation pending).
 - (Phase 3 implemented) Weighted delivery generation, `Marker3D` placement anchors, full-screen keep/recycle triage, storage-cost inventory enforcement, and the fixed six-state glow legend. Manual on-screen verification is pending.
-- (Phase 4 implemented) `RestorationService`, `RestorationScreen`, authored pendant/tin cleaning tuning, deterministic tool consequences, the `DIRTY -> CLEAN -> OPEN` state machine, and `EMPTY | TEMPORAL_ECHO | FRAGMENT` resolution. Carrier identity remains an injected role on an ordinary pendant instance. Automated verification passes; on-screen manual verification is pending.
+- (Phase 4 implemented — logic) `RestorationService` (presentation-agnostic), authored pendant/tin cleaning tuning, deterministic tool consequences, the `DIRTY -> CLEAN -> OPEN` state machine, and `EMPTY | TEMPORAL_ECHO | FRAGMENT` resolution. Carrier identity remains an injected role on an ordinary pendant instance. `RestorationScreen` is a **2D interim placeholder**. Automated verification passes; on-screen manual verification is pending.
+- (Not yet built) The **focused 3D restoration view** (REST-R8 / phase-task P4.7) — rotate the 3D object and clean its surface with a 2D HUD overlay, reusing `RestorationService` unchanged — and the **hybrid 2D/3D journal** (JRN-R6 / Phase 9) with 3D Fragment Case / object viewers.
 - (Phase 5 implemented) Full Spawn Director with explicit candidate enumeration, hard filters (tool obtainability, compatibility, capacity, locked locations, Safe code), weighted scoring (neglect + day-spread), never-twice history with documented soft reset, deterministic audit log, and a three-seed demo helper. Automated verification passes; manual three-seed demo observation is pending.
 - Cultural Echo audio/meter/captions and proximity-authorized carrier flicker.
 - Cached scanner, verdict UI, Node/Express backend, mock Portal, Godot HTTP clients, Found/Unlock flow, museum record, journal, and fragment case.
@@ -180,7 +181,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 5 Spawn Director i
 - `scripts/delivery/`: `delivery_generator.gd`, `spawn_director.gd`, `glow_mapper.gd`, `triage_state.gd`, `triage_service.gd`.
 - `scripts/discovery/`: `spawn_director_demo.gd`.
 - `scripts/restoration/`: `restoration_service.gd`.
-- `scenes/ui/restoration_screen.gd` + `.tscn`: Phase 4 pendant cleaning mini-game UI.
+- `scenes/ui/restoration_screen.gd` + `.tscn`: Phase 4 pendant cleaning mini-game UI — **2D interim placeholder** pending the focused 3D restoration view (REST-R8 / P4.7). `RestorationService` is presentation-agnostic and is reused by the 3D view unchanged.
 - `tests/restoration/`: Phase 4 restoration/opening tests.
 - `tests/discovery/spawn_director/`: Phase 5 Spawn Director tests.
 - `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, `data/scanner-cache/`, `data/delivery/`: authored JSON fixtures (schema_version = 1), including `data/delivery/spawn_config.json`.
@@ -261,6 +262,7 @@ Current limitations: Godot 4.6.3 is installed and verified via the explicit exec
 - Repository-history wording is reconciled: proposal planning is dated June 1, while public Git history begins June 13, 2026. Preserve that distinction in submission materials.
 - The Twine intro starts the player with one fragment, while current design requires only the journal and all five fragments hidden. Current PRD/invariants win.
 - The old tracker requested two restoration mini-games; the current slice requires one complete pendant cleaning/opening interaction. Current PRD/phase tracker win.
+- **Intentional docs-ahead-of-code divergence (2026-06-15):** the docs now specify restoration as a focused **3D** object-manipulation interaction (REST-R8) and the journal as **hybrid 2D/3D** (JRN-R6), but the implemented restoration UI (`scenes/ui/restoration_screen.*`) is still a **2D placeholder** and the journal UI is not built. The `RestorationService` logic, clean→open gate, and tests remain valid and carry over unchanged. The 3D rework is tracked as phase-task **P4.7**; the hybrid journal as **Phase 9**. Treat the 3D/hybrid presentation as the target, not as shipped.
 - Twine uses random success and automatic sales; Godot requires skill-based restoration, player judgment, and explicit sell/return/museum decisions.
 - Twine route names/logic are useful draft content but current PRD route lifecycle and schedules are authoritative.
 - (Resolved in Phase 0) The Shop HUD is now visible, the stray test button is gone, orchestration is a single controller on the Shop root, the duplicate controllers and the whole `prototype/` directory were removed, and `prototype/Main.tscn`'s broken script path no longer exists.

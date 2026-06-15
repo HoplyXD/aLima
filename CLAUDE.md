@@ -4,7 +4,7 @@
 
 **aLima** — a cozy AI-powered historical-restoration roguelite set in a Western Visayas junk shop. Built for the *AI Game On!* jam (AI Fest 2026, Iloilo City). Theme: *"Giving Our History a New Heartbeat through the Intelligence of Tomorrow."*
 
-> **STACK CONTRACT:** The project targets **Godot 4.6.3 (GDScript) + a Node/Express backend**. The presentation is hybrid: a 3D shop scene with 2D `Control`/`CanvasLayer` screens for triage, restoration, scanner, journal, dialogue, and Portal flows. If the project moves to another engine or stack, stop and update §2, §3, §6, the PRD, and the phase tracker together.
+> **STACK CONTRACT:** The project targets **Godot 4.6.3 (GDScript) + a Node/Express backend**. The presentation is hybrid: a 3D shop scene; **restoration is a focused 3D object-manipulation interaction** (a manipulable 3D model the player orbits/rotates and cleans by working the tool across its surface, framed by a 2D background + HUD overlay for tools, meters, feedback, and captions); the **journal is hybrid 2D/3D** (a 2D book/paper UI that embeds 3D viewers for the Fragment Case and restored objects); **triage, scanner, dialogue, and Portal** flows are 2D `Control`/`CanvasLayer` screens. If the project moves to another engine or stack, stop and update §2, §3, §6, the PRD, and the phase tracker together.
 
 ---
 
@@ -25,7 +25,7 @@
 
 | Layer | Tech | Purpose |
 |---|---|---|
-| Game client | **Godot 4.6.3**, typed GDScript | hybrid 3D shop + 2D gameplay interfaces |
+| Game client | **Godot 4.6.3**, typed GDScript | hybrid 3D shop + focused 3D restoration + hybrid 2D/3D journal + 2D interfaces (triage, scanner, dialogue, Portal) |
 | Backend | **Node.js + Express** | server-side LLM proxy (scanner, buyer chat), Portal API client. **All secrets live here, never in the client.** |
 | Mock Portal | Node (Express) | local stand-in for the City-Wide Portal API; mirrors the real contract 1:1 |
 | Object DB | **JSON** (+ Godot `.tres` resources) | artifact-agnostic object/echo/route definitions |
@@ -47,7 +47,7 @@ alima/
 │   ├── phase-task.md          ← canonical implementation checklist/status
 │   ├── PROMPT_CONTEXT.md      ← verified context and prompt contract for agents
 │   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
-├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/
+├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration scene; scenes/ui/restoration_screen.* is the 2D interim placeholder pending the 3D rework)
 ├── scripts/                   ← shop, core, models, delivery, discovery, restoration, scanner, journal, portal
 │   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController
 │   ├── models/                ← typed data contracts + enums + validation
@@ -88,7 +88,7 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 
 **C. Carrier is a *role*, not an object type.** Never model a fragment as a special object. The Spawn Director **promotes an ordinary openable instance** to "carrier" for the run (injects the fragment, binds the heartbeat, enables close-range flicker). Any pendant *could* be a carrier; almost none are. See PRD §12.
 
-**D. Two-stage gate:** a carrier must be **cleaned before it can be opened**. No exceptions — this is why discovery flows through the restoration loop.
+**D. Two-stage gate:** a carrier must be **cleaned before it can be opened**. No exceptions — this is why discovery flows through the restoration loop. Both stages are 3D object-manipulation steps (clean the surface, then perform the type-specific open); the modality does not relax the gate.
 
 **E. Glow legend is fixed.** `white` common · `green` uncommon · `blue` antique · `purple` rare · `gold` historically significant · `flickering` = story/route-connected. **Do not add new glow states.** The carrier reuses `flickering`; the **heartbeat audio band** (carrier-only) is the disambiguator, not a glow. Flicker only becomes visible at proximity ≥ `GLOW_REVEAL_AT` so the audio leads.
 
@@ -123,7 +123,7 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 
 ## 5. The Core Loop (what the code serves)
 
-**Daily:** morning delivery → triage (limited storage/time/money) → restore (clean mini-game) → scan & judge (AI suggests, player decides) → decide (sell / return / museum) → evening (journal, upkeep).
+**Daily:** morning delivery → triage (limited storage/time/money) → restore (**3D clean mini-game** — rotate and clean the actual 3D object) → scan & judge (AI suggests, player decides) → decide (sell / return / museum) → evening (journal, upkeep).
 
 **Discovery (the headline mechanic):**
 > Hum (far) → Melody (area) → Voice (pile) → carrier flickers + Heartbeat spikes → pick up → **clean** → **open** → fragment inside → **Artifact Found** screen → **Portal API** → **Portal Unlock** fact → fragment **seats in journal case** (permanent).
@@ -199,7 +199,7 @@ Pop-Location
 Build the discovery loop **once, end-to-end, deep not wide.** Priorities:
 
 1. Shop scene + delivery/triage.
-2. **One** carrier fully built — the **pendant** (clean → clasp-open → fragment). Stub other open-interactions.
+2. **One** carrier fully built — the **pendant** (clean → clasp-open → fragment) as a focused **3D** object-manipulation interaction. Stub other open-interactions.
 3. **Spawn Director v1** with *genuine* carrier + container + day rolls and per-player never-twice (this is the beat the video proves — must be real, not faked).
 4. **Echo mixer v1** — 4 bands + resonance meter + captions.
 5. **Cached scanner v1** — evidence and suggestions only; the player sets the verdict.

@@ -126,7 +126,7 @@ Daily Loop (one in-game day)
 
 2\.  Triage. Limited storage, time, and money force the player to choose which objects to rescue before the rest is bulk-recycled. A faint glow hints at rarity — but the glow can lie.
 
-3\.  Restore. Tactile cleaning mini-games: brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveals. The wrong tool damages value permanently.
+3\.  Restore. Tactile, hands-on cleaning mini-games played on the **actual 3D object** — you rotate and turn it in a focused restoration view and work the tool across its surface: brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveals. The wrong tool damages value permanently.
 
 4\.  Scan & judge. The AI scanner proposes an identification; the player cross-references the uncle’s journal to confirm, doubt, or overrule it.
 
@@ -196,13 +196,15 @@ Daily deliveries are the game’s card draw. Storage, time, and money are limite
 
 ## **9.2 Restoration Mini-Games**
 
-Each object type demands its own touch: brushing away dust, wiping grime, lifting rust, polishing metal, cleaning fragile paper, repairing frames, restoring faded photographs, revealing hidden engravings, and inspecting damaged mechanisms. Using the wrong tool can erase details, lower condition, or permanently destroy value. Better tools are purchased with profits from ordinary finds — and some delicate techniques can only be learned from people, not shops.
+Restoration is a focused **3D interaction**: the object is rendered as a manipulable 3D model that the player orbits and rotates to inspect, then cleans by working the chosen tool across its surface, with a 2D background and HUD overlay carrying tool selection, condition/value meters, feedback, and captions. Each object type demands its own touch: brushing away dust, wiping grime, lifting rust, polishing metal, cleaning fragile paper, repairing frames, restoring faded photographs, revealing hidden engravings, and inspecting damaged mechanisms. Using the wrong tool can erase details, lower condition, or permanently destroy value. Better tools are purchased with profits from ordinary finds — and some delicate techniques can only be learned from people, not shops.
 
 ## **9.3 The Uncle’s Journal**
 
 The journal is the player’s archive, guide, and progression system in one. Every restored object earns an entry: estimated origin, materials, weight range, recommended cleaning method, counterfeit indicators, historical context, price ranges, best condition and sale records, discovered variants, the uncle’s handwritten notes, and AI-generated annotations from verified records. All Purple-rarity-and-below finds are archived here (Gold finds and the Master Artifact go to the online museum — see 9.10). The journal is also the central mystery — sketches of the Master Artifact, faded symbols, and references to the five people the uncle trusted become legible only as the player completes story routes.
 
 Set into the journal’s first page is an empty case shaped for the five fragments of the Master Artifact; the player seats each fragment here as it is recovered. Because the journal is bound in Chronos Emulsion and sits outside time, it is the loop’s anchor — and anything in its case persists across resets. This is the in-fiction reason recovered fragments and all journal knowledge survive each loop while money and stock do not.
+
+Presentation-wise the journal is **hybrid 2D/3D**: the book, pages, notes, and annotations are a 2D paper interface, while the Fragment Case displays the seated fragments (and the assembling Master Artifact) as rotatable 3D models, and entries can show a 3D viewer of the restored object. The archive routing and persistence rules above are unchanged by the presentation.
 
 ## **9.4 The AI Object Scanner**
 
@@ -334,7 +336,7 @@ Development AI (production tools, fully disclosed)
 
 # **11\. Technical Overview**
 
-• Engine: Godot 4.6.3 — the shop is a 3D environment, while triage, restoration, scanner, journal, dialogue, and Portal flows use 2D `Control`/`CanvasLayer` interfaces. Godot’s audio buses drive the four-band echo mixer; Windows is primary and HTML5 is a separately verified exhibit target.
+• Engine: Godot 4.6.3 — the shop is a 3D environment. **Restoration is a focused 3D object-manipulation interaction** (rotate the 3D object and clean its surface, framed by a 2D background + HUD overlay), and the **journal is hybrid 2D/3D** (a 2D book that embeds 3D viewers for the Fragment Case and restored objects). Triage, scanner, dialogue, and Portal flows use 2D `Control`/`CanvasLayer` interfaces. Godot’s audio buses drive the four-band echo mixer; Windows is primary and HTML5 is a separately verified exhibit target.
 
 • Architecture: game client ↔ a lightweight Node.js/Express service ↔ the City-Wide Portal API. LLM calls run server-side with rate limiting and cached fallbacks. The team’s lead developer ships production MERN systems, so this layer reuses proven tooling.
 

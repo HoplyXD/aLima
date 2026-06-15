@@ -50,7 +50,7 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
 - `[x]` Object data pipeline, real delivery/triage, restoration, carriers, and the Phase 5 Spawn Director are implemented and covered by GUT under Godot 4.6.3. Cultural Echoes, cached scanner, backend/mock Portal, journal, museum record, and exports are not implemented.
-- `[x]` The Workbench action now opens the real Phase 4 restoration screen. Journal and Phone actions remain placeholder-only.
+- `[-]` The Workbench action opens the Phase 4 restoration screen — currently the **2D interim placeholder** (`scenes/ui/restoration_screen.*`); the focused **3D** restoration view is the target (REST-R8 / task P4.7). Journal and Phone actions remain placeholder-only.
 
 ## Reconciliation With the Old Tracker
 
@@ -491,21 +491,23 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
 
 ## Phase 4 - Restoration and Pendant Carrier
 
-**Goal:** deliver one complete, skill-based clean-to-open interaction.
+**Goal:** deliver one complete, skill-based clean-to-open interaction in a focused **3D** restoration view.
 
-**Requirements:** REST-R1, REST-R3, REST-R4, REST-R7, DISC-R12, DISC-R13
+**Requirements:** REST-R1, REST-R3, REST-R4, REST-R7, REST-R8, DISC-R12, DISC-R13
 **Dependencies:** Phases 1 and 3
-**Subsystems:** restoration UI, tool rules, openable/carrier logic
+**Subsystems:** focused 3D restoration view, tool rules, openable/carrier logic
+
+> **Presentation status (2026-06-15 docs update):** Restoration is now specified as a focused **3D object-manipulation** interaction (REST-R8). The implemented `scenes/ui/restoration_screen.*` is a **2D interim placeholder**: the restoration *logic* and the clean→open *gate* (in `RestorationService`, which is presentation-agnostic) are complete and tested and carry over unchanged, but the **3D presentation diverges from the target** and is tracked in **P4.7**. P4.1 and P4.4 are therefore reopened to `[-]` for their presentation; P4.2/P4.3/P4.5/P4.6 (pure logic) remain `[x]`.
 
 ### Tasks
 
-- `[x]` **P4.1 Build the pendant cleaning mini-game.**
-  - `scenes/ui/restoration_screen.tscn` + `scenes/ui/restoration_screen.gd` provide a paused 2D full-screen interface.
+- `[-]` **P4.1 Build the pendant cleaning mini-game.** (logic done; 3D presentation reopened — see P4.7)
+  - `scenes/ui/restoration_screen.tscn` + `scenes/ui/restoration_screen.gd` provide a paused **2D interim placeholder** (ItemList + tool buttons + a "CleanArea" button). The target presentation is the focused **3D** view (REST-R8), built in P4.7.
   - Acquires/releases `DayClock.PAUSE_RESTORATION` on open, close, and `_exit_tree`.
-  - Player selects an owned tool and clicks the cleaning area to apply one deliberate action.
-  - Progress is calculated from authored `clean_progress_per_action`, `clean_value_bonus`, and technique bonuses loaded from `DataRepository`.
+  - Player selects an owned tool and applies one deliberate cleaning action (a button press in the placeholder; a tool stroke across the 3D surface in the target view).
+  - Progress is calculated from authored `clean_progress_per_action`, `clean_value_bonus`, and technique bonuses loaded from `DataRepository` (logic shared with the 3D view).
   - Displays selected tool, condition, value, recorded damage, and completion threshold.
-  - Evidence: `tests/restoration/test_restoration_ui.gd` passes; `tests/restoration/test_restoration_service.gd` covers deterministic CLEAN reach.
+  - Evidence: `tests/restoration/test_restoration_ui.gd` passes; `tests/restoration/test_restoration_service.gd` covers deterministic CLEAN reach. **Pending:** the 3D view (P4.7).
 
 - `[x]` **P4.2 Implement tool consequences.**
   - Compatible tool (matches `clean_minigame`/`required_clean_tool`) increases condition and value, clamped to authored bounds.
@@ -519,10 +521,10 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
   - Cleaning transitions only the selected instance to `CLEAN`; other instances are untouched.
   - Evidence: `test_dirty_openables_reject_open_including_carrier`, `test_restoration_changes_only_the_selected_instance`.
 
-- `[x]` **P4.4 Build the pendant clasp interaction.**
-  - Clasp opening is a separate `OpenButton` action distinct from the cleaning area.
-  - Only `CLEAN` instances show an enabled open button; clicking transitions the selected instance to `OPEN` exactly once.
-  - Evidence: `test_clean_pendant_can_open`, `test_clasp_interaction_is_distinct_from_cleaning_completion`, `test_opening_is_single_use_and_idempotent`.
+- `[-]` **P4.4 Build the pendant clasp interaction.** (logic done; 3D presentation reopened — see P4.7)
+  - Clasp opening is a separate action distinct from cleaning (an `OpenButton` in the 2D placeholder; a type-specific 3D clasp manipulation in the target view).
+  - Only `CLEAN` instances allow opening; it transitions the selected instance to `OPEN` exactly once.
+  - Evidence: `test_clean_pendant_can_open`, `test_clasp_interaction_is_distinct_from_cleaning_completion`, `test_opening_is_single_use_and_idempotent`. **Pending:** the 3D clasp interaction (P4.7).
 
 - `[x]` **P4.5 Implement general open results.**
   - Opening resolves from the instance's authored/injected `contents`: `EMPTY`, `TEMPORAL_ECHO`, or `FRAGMENT`.
@@ -534,11 +536,21 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
   - Added `tests/restoration/test_restoration_service.gd` (17 tests) and `tests/restoration/test_restoration_ui.gd` (2 tests).
   - Covers dirty ordinary/carrier rejection, deterministic CLEAN, condition/value bounds, persistent damage, instance isolation, single-use opening, non-carrier EMPTY, carrier FRAGMENT, temporal echo resolution, pause ownership, and invalid tool/technique repository validation.
 
+- `[ ]` **P4.7 Build the focused 3D restoration view.** (REST-R8; the target presentation for P4.1/P4.4)
+  - Present the object as a manipulable 3D model in a focused restoration sub-scene (camera/workbench), framed by a 2D background + HUD overlay (tool palette, condition/value meters, feedback, captions).
+  - Orbit/rotate the object; apply the selected tool by working it **across the 3D surface**; represent grime/dirt on the surface and clear it as the tool works (D8 default: shader dirt-mask).
+  - **Reuse `RestorationService` unchanged** — the 3D view is a presentation layer over the existing logic, gate, and tool consequences; keep `DayClock.PAUSE_RESTORATION` ownership.
+  - Perform the type-specific 3D clasp/open on the cleaned object.
+  - Input parity (INPUT-R5): mouse, controller, and touch can rotate + clean; captions for feedback (INPUT-R3); muted-playable.
+  - Replace `scenes/ui/restoration_screen.*` (2D placeholder) once the 3D view reaches parity; keep its GUT logic coverage green.
+  - Evidence: pending implementation.
+
 ### Acceptance
 
-- `[x]` Pendant clean -> clasp open -> result works end to end (automated coverage).
+- `[x]` Pendant clean -> clasp open -> result works end to end at the logic level (automated coverage via `RestorationService`).
 - `[x]` Wrong-tool use has visible (feedback label) and recorded (`recorded_damage`) consequences.
 - `[x]` Carrier is an injected role (`is_carrier`/`contents` on an ordinary pendant instance), not a special pendant type.
+- `[-]` Cleaning and opening are performed in the focused **3D** view (rotate + clean the 3D object). Pending P4.7; currently a 2D placeholder.
 
 ### Verification
 
@@ -840,10 +852,11 @@ Manual: run success, forced-timeout fallback, and duplicate-click scenarios.
 
 ### Tasks
 
-- `[ ]` **P9.1 Build the full-screen 2D journal.**
+- `[ ]` **P9.1 Build the hybrid 2D/3D journal.** (JRN-R6)
   - Pause through the clock ownership API.
+  - 2D book/paper UI for pages, entries, and notes; the first-page Fragment Case renders seated fragments (and the assembling Master Artifact) as rotatable **3D viewers**, and entries may embed a 3D preview of the restored object.
   - Provide first-page Fragment Case and object-entry navigation.
-  - Support mouse-first controls and readable scaling.
+  - Support mouse-first controls and readable scaling; the 3D viewers honor input parity (INPUT-R5).
 
 - `[ ]` **P9.2 Implement journal entry updates.**
   - Create an entry after first restoration.
@@ -1056,7 +1069,7 @@ Manual: review the locked artifact packet and manifest with the named cultural r
 ### Tasks
 
 - `[ ]` **P13.1 Author at least 30 restorable object templates.** Cover all rarity tiers and nine restoration categories with distinct materials, tools, values, history, and disposition hooks.
-- `[ ]` **P13.2 Implement all nine restoration interactions.** Build brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, and mechanism inspection with input-specific tuning.
+- `[ ]` **P13.2 Implement all nine restoration interactions.** Build brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, and mechanism inspection as focused **3D** object-manipulation interactions (REST-R8) on the object's surface, with input-specific tuning. Reuse `RestorationService` / the P4.7 3D restoration view.
 - `[ ]` **P13.3 Complete tools and techniques.** Support shop-bought loop-scoped tools, persistent learned techniques, character-only techniques, legacy tools, upkeep, and wrong-tool consequences.
 - `[ ]` **P13.4 Author six solvable counterfeit variants.** Each exposes journal/scanner-comparable evidence without an automatic verdict.
 - `[ ]` **P13.5 Integrate catalog records.** Every object updates condition, best result, variants, scanner evidence, value, and applicable journal history without duplicate entries.
