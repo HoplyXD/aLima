@@ -47,7 +47,7 @@ alima/
 │   ├── phase-task.md          ← canonical implementation checklist/status
 │   ├── PROMPT_CONTEXT.md      ← verified context and prompt contract for agents
 │   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
-├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration scene; scenes/ui/restoration_screen.* is the 2D interim placeholder pending the 3D rework)
+├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration view: restoration_view.tscn + restoration_dirt.gdshader; the old 2D placeholder scenes/ui/restoration_screen.* was retired in P4.7)
 ├── scripts/                   ← shop, core, models, delivery, discovery, restoration, scanner, journal, portal
 │   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController
 │   ├── models/                ← typed data contracts + enums + validation
@@ -215,7 +215,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`69/69` passing, 234 asserts), focused model/core suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Runtime tasks (including on-screen/real-time clock observation) still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`159/159` passing, 613 asserts as of 2026-06-16, including the Phase 4 P4.7 focused 3D restoration view), focused model/core/delivery/restoration/spawn suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Runtime tasks (including on-screen/real-time clock observation and the restoration mouse/controller/touch flow) still require their own acceptance checks before `[x]`.
 
 ---
 

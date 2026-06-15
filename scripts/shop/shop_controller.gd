@@ -8,7 +8,7 @@ extends Node3D
 ## LoopController autoloads, not here. Real delivery/restoration systems replace
 ## the count placeholders in later phases (see docs/phase-task.md).
 
-const RESTORATION_SCREEN_SCENE := preload("res://scenes/ui/restoration_screen.tscn")
+const RESTORATION_VIEW_SCENE := preload("res://scenes/restoration/restoration_view.tscn")
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector (e.g. 0.1) to watch the clock move faster while
@@ -35,7 +35,7 @@ var _quest_artifacts := 1
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
 @onready var _triage_screen: TriageController = $TriageScreen
-@onready var _restoration_screen: RestorationScreen = _create_restoration_screen()
+@onready var _restoration_view: RestorationView = _create_restoration_view()
 
 
 func _ready() -> void:
@@ -54,7 +54,7 @@ func _ready() -> void:
 	LoopController.begin_session()
 
 	_triage_screen.closed.connect(_on_triage_closed)
-	_restoration_screen.closed.connect(_on_restoration_closed)
+	_restoration_view.closed.connect(_on_restoration_closed)
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -116,7 +116,7 @@ func _on_door_pressed() -> void:
 
 
 func _on_workbench_pressed() -> void:
-	_restoration_screen.open()
+	_restoration_view.open()
 
 
 func _on_journal_pressed() -> void:
@@ -169,10 +169,10 @@ func _on_restoration_closed() -> void:
 	_refresh_ui()
 
 
-func _create_restoration_screen() -> RestorationScreen:
-	var screen: RestorationScreen = RESTORATION_SCREEN_SCENE.instantiate()
-	add_child(screen)
-	return screen
+func _create_restoration_view() -> RestorationView:
+	var view: RestorationView = RESTORATION_VIEW_SCENE.instantiate()
+	add_child(view)
+	return view
 
 
 func _count_inventory_by_glow(restored_only: bool) -> Dictionary:

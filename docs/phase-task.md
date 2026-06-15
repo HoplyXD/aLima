@@ -50,7 +50,7 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
 - `[x]` Object data pipeline, real delivery/triage, restoration, carriers, and the Phase 5 Spawn Director are implemented and covered by GUT under Godot 4.6.3. Cultural Echoes, cached scanner, backend/mock Portal, journal, museum record, and exports are not implemented.
-- `[-]` The Workbench action opens the Phase 4 restoration screen — currently the **2D interim placeholder** (`scenes/ui/restoration_screen.*`); the focused **3D** restoration view is the target (REST-R8 / task P4.7). Journal and Phone actions remain placeholder-only.
+- `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate. Journal and Phone actions remain placeholder-only.
 
 ## Reconciliation With the Old Tracker
 
@@ -497,17 +497,17 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
 **Dependencies:** Phases 1 and 3
 **Subsystems:** focused 3D restoration view, tool rules, openable/carrier logic
 
-> **Presentation status (2026-06-15 docs update):** Restoration is now specified as a focused **3D object-manipulation** interaction (REST-R8). The implemented `scenes/ui/restoration_screen.*` is a **2D interim placeholder**: the restoration *logic* and the clean→open *gate* (in `RestorationService`, which is presentation-agnostic) are complete and tested and carry over unchanged, but the **3D presentation diverges from the target** and is tracked in **P4.7**. P4.1 and P4.4 are therefore reopened to `[-]` for their presentation; P4.2/P4.3/P4.5/P4.6 (pure logic) remain `[x]`.
+> **Presentation status (2026-06-16):** The focused **3D object-manipulation** restoration view (REST-R8) is now implemented (`scenes/restoration/restoration_view.tscn` + `scripts/restoration/restoration_view.gd` / `restoration_object_3d.gd` + `restoration_dirt.gdshader`, P4.7) and the 2D interim placeholder `scenes/ui/restoration_screen.*` was retired. The restoration *logic* and clean→open *gate* (in `RestorationService`, presentation-agnostic) carry over unchanged and are reused by the 3D view. P4.1, P4.4, and P4.7 remain `[-]` only because their on-screen mouse/controller/touch flow is still a pending human verification gate; all automated coverage is green. P4.2/P4.3/P4.5/P4.6 (pure logic) remain `[x]`.
 
 ### Tasks
 
-- `[-]` **P4.1 Build the pendant cleaning mini-game.** (logic done; 3D presentation reopened — see P4.7)
-  - `scenes/ui/restoration_screen.tscn` + `scenes/ui/restoration_screen.gd` provide a paused **2D interim placeholder** (ItemList + tool buttons + a "CleanArea" button). The target presentation is the focused **3D** view (REST-R8), built in P4.7.
-  - Acquires/releases `DayClock.PAUSE_RESTORATION` on open, close, and `_exit_tree`.
-  - Player selects an owned tool and applies one deliberate cleaning action (a button press in the placeholder; a tool stroke across the 3D surface in the target view).
-  - Progress is calculated from authored `clean_progress_per_action`, `clean_value_bonus`, and technique bonuses loaded from `DataRepository` (logic shared with the 3D view).
-  - Displays selected tool, condition, value, recorded damage, and completion threshold.
-  - Evidence: `tests/restoration/test_restoration_ui.gd` passes; `tests/restoration/test_restoration_service.gd` covers deterministic CLEAN reach. **Pending:** the 3D view (P4.7).
+- `[-]` **P4.1 Build the pendant cleaning mini-game.** (logic + 3D presentation done in code; on-screen manual gate pending)
+  - `scenes/restoration/restoration_view.tscn` + `scripts/restoration/restoration_view.gd` provide the paused focused **3D** view (REST-R8): a `SubViewport` 3D object plus a 2D HUD overlay (object selector, tool palette, condition/value/damage meters, surface-progress bar, feedback + caption). The 2D interim placeholder was retired.
+  - Acquires/releases `DayClock.PAUSE_RESTORATION` on open, close, and `_exit_tree`, tracked by an `_owns_pause` flag so release happens exactly once.
+  - Player selects an owned tool and works it across the object's 3D surface; a deliberate stroke (a press-drag worth of surface work, or one controller `restoration_clean` press) invokes `RestorationService.apply_tool()` once — never per-frame.
+  - Progress is calculated by the service from authored `clean_progress_per_action`, `clean_value_bonus`, and technique bonuses; the view only renders the dirt mask and meters.
+  - Displays selected tool, condition, value, recorded damage, completion threshold, and surface-cleaned coverage.
+  - Evidence: `tests/restoration/test_restoration_view.gd` (open/load, rotation-without-mutation, reset-view, empty-space no-op, surface-hit cleaning, correct-tool reaches CLEAN, wrong-tool damage) + `tests/restoration/test_restoration_service.gd` (deterministic CLEAN reach). **Pending:** human on-screen mouse/controller/touch verification.
 
 - `[x]` **P4.2 Implement tool consequences.**
   - Compatible tool (matches `clean_minigame`/`required_clean_tool`) increases condition and value, clamped to authored bounds.
@@ -521,10 +521,10 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
   - Cleaning transitions only the selected instance to `CLEAN`; other instances are untouched.
   - Evidence: `test_dirty_openables_reject_open_including_carrier`, `test_restoration_changes_only_the_selected_instance`.
 
-- `[-]` **P4.4 Build the pendant clasp interaction.** (logic done; 3D presentation reopened — see P4.7)
-  - Clasp opening is a separate action distinct from cleaning (an `OpenButton` in the 2D placeholder; a type-specific 3D clasp manipulation in the target view).
-  - Only `CLEAN` instances allow opening; it transitions the selected instance to `OPEN` exactly once.
-  - Evidence: `test_clean_pendant_can_open`, `test_clasp_interaction_is_distinct_from_cleaning_completion`, `test_opening_is_single_use_and_idempotent`. **Pending:** the 3D clasp interaction (P4.7).
+- `[-]` **P4.4 Build the pendant clasp interaction.** (logic + 3D presentation done in code; on-screen manual gate pending)
+  - Clasp opening is a separate 3D interaction: at CLEAN a distinct clasp hotspot is revealed on the pendant and activated by clicking it (raycast) or the `restoration_open` action. It is hidden/rejected while DIRTY and never auto-fires on reaching CLEAN.
+  - Only `CLEAN` instances allow opening (gate enforced by `RestorationService.open_clasp()`); it transitions the selected instance to `OPEN` exactly once and shows the resolved result without re-resolving content.
+  - Evidence: `test_dirty_clasp_interaction_is_rejected`, `test_cleaning_does_not_auto_open_clasp`, `test_clean_pendant_clasp_opens_once` (view) + `test_clean_pendant_can_open`, `test_opening_is_single_use_and_idempotent` (service). **Pending:** human on-screen verification.
 
 - `[x]` **P4.5 Implement general open results.**
   - Opening resolves from the instance's authored/injected `contents`: `EMPTY`, `TEMPORAL_ECHO`, or `FRAGMENT`.
@@ -536,38 +536,40 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
   - Added `tests/restoration/test_restoration_service.gd` (17 tests) and `tests/restoration/test_restoration_ui.gd` (2 tests).
   - Covers dirty ordinary/carrier rejection, deterministic CLEAN, condition/value bounds, persistent damage, instance isolation, single-use opening, non-carrier EMPTY, carrier FRAGMENT, temporal echo resolution, pause ownership, and invalid tool/technique repository validation.
 
-- `[ ]` **P4.7 Build the focused 3D restoration view.** (REST-R8; the target presentation for P4.1/P4.4)
-  - Present the object as a manipulable 3D model in a focused restoration sub-scene (camera/workbench), framed by a 2D background + HUD overlay (tool palette, condition/value meters, feedback, captions).
-  - Orbit/rotate the object; apply the selected tool by working it **across the 3D surface**; represent grime/dirt on the surface and clear it as the tool works (D8 default: shader dirt-mask).
-  - **Reuse `RestorationService` unchanged** — the 3D view is a presentation layer over the existing logic, gate, and tool consequences; keep `DayClock.PAUSE_RESTORATION` ownership.
-  - Perform the type-specific 3D clasp/open on the cleaned object.
-  - Input parity (INPUT-R5): mouse, controller, and touch can rotate + clean; captions for feedback (INPUT-R3); muted-playable.
-  - Replace `scenes/ui/restoration_screen.*` (2D placeholder) once the 3D view reaches parity; keep its GUT logic coverage green.
-  - Evidence: pending implementation.
+- `[-]` **P4.7 Build the focused 3D restoration view.** (REST-R8; implemented + automated-verified; on-screen manual gate pending)
+  - The object is a manipulable 3D model in a focused restoration sub-scene (`scenes/restoration/restoration_view.tscn`): a `SubViewport` world (camera, key/fill lights, workbench, `ObjectPivot`) framed by a 2D background + HUD overlay (object selector, tool palette, condition/value/damage meters, surface-progress bar, feedback + caption, Reset View / Close).
+  - Orbit/rotate the object (mouse drag, right-drag, WASD/left-stick/d-pad; pitch clamped, yaw wrapped); apply the selected tool by working it **across the 3D surface**. Grime is a shader **dirt mask** (`scenes/restoration/restoration_dirt.gdshader`, R8/RGBA8 `ImageTexture`) cleared locally where worked; both the shader and the painter derive UV analytically from the object-space normal so they stay aligned regardless of mesh UVs (D8). GL Compatibility / HTML5-friendly.
+  - Hit detection is analytic ray-sphere (deterministic, headless-testable) distinguishing object hits from empty space; strokes are threshold-gated so `apply_tool()` is never called per-frame/pixel.
+  - **Reuses `RestorationService` unchanged** — the view delegates every rule (condition/value, compatibility, wrong-tool damage, clean->open gate, open-result resolution) and never writes through `SaveService`. Keeps `DayClock.PAUSE_RESTORATION` ownership (single-release guarded).
+  - The type-specific 3D clasp/open is a separate revealed-at-CLEAN hotspot, not a relabeled 2D button. Carrier identity is never exposed via model, dirt, meters, or clasp before opening (ordinary and promoted pendants share one presentation path).
+  - Pendant-specific model/clasp/colour live in a narrowly-scoped presentation adapter (`RestorationObject3D.PRESENTATION` keyed by `openable_type`), so the view stays reusable/artifact-agnostic. Geometry is placeholder development geometry pending authored models (Phase 13/20).
+  - Input (INPUT-R5): mouse + emulated-touch rotate/clean via the same pointer pipeline (no hover dependence); keyboard/controller rotate, clean (auto-targets grime, no precision aiming), open, reset, toggle-mode, close via runtime-registered Input Map actions. Captions mirror every important response (INPUT-R3); muted-playable.
+  - Replaced and retired `scenes/ui/restoration_screen.*` (2D placeholder) and migrated its GUT coverage into `tests/restoration/test_restoration_view.gd`.
+  - Evidence: `tests/restoration/test_restoration_view.gd` (15 tests) + the unchanged `tests/restoration/test_restoration_service.gd` (17) pass. **Pending:** human on-screen mouse verification and controller/touch device verification.
 
 ### Acceptance
 
 - `[x]` Pendant clean -> clasp open -> result works end to end at the logic level (automated coverage via `RestorationService`).
 - `[x]` Wrong-tool use has visible (feedback label) and recorded (`recorded_damage`) consequences.
 - `[x]` Carrier is an injected role (`is_carrier`/`contents` on an ordinary pendant instance), not a special pendant type.
-- `[-]` Cleaning and opening are performed in the focused **3D** view (rotate + clean the 3D object). Pending P4.7; currently a 2D placeholder.
+- `[-]` Cleaning and opening are performed in the focused **3D** view (rotate + clean the 3D object). Implemented (`scenes/restoration/restoration_view.tscn`) and automated-verified via `test_restoration_view.gd`; human on-screen mouse/controller/touch verification is the remaining gate.
 
 ### Verification
 
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
-& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/restoration
-# Result: 19/19 passed, 73 asserts.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/restoration -ginclude_subdirs -gexit
+# Result (2026-06-16): 32/32 passed, 121 asserts (17 service + 15 view).
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result: 121/121 passed, 509 asserts.
+# Result (2026-06-16): 159/159 passed, 613 asserts.
 
-gdformat --check scripts scenes dialogue tests
-gdlint scripts scenes dialogue tests
-git diff --check
+gdformat --check scripts scenes dialogue tests   # 57 files unchanged
+gdlint scripts scenes dialogue tests             # no problems
+git diff --check                                 # clean
 ```
 
-Manual: restore one ordinary pendant and one promoted pendant, including one wrong-tool attempt. Pending human on-screen observation.
+Manual (pending human on-screen observation): open the Workbench, confirm the clock pauses, rotate the pendant and inspect multiple surfaces, clean empty space (no change), use the wrong tool (visible + captioned damage), close/reopen (damage persists), clean correctly until CLEAN (clasp does not auto-open), perform the 3D clasp interaction (result resolves once), and repeat with a promoted pendant (carrier role hidden until opened). Mouse, then controller/touch where hardware is available; check 1920x1080 and 1280x720.
 
 ---
 
