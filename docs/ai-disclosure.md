@@ -16,6 +16,7 @@ This is the running disclosure log for AI used during development or inside the 
 | Date | Tool / model | Area | Use | Human review and safeguards | Shipped output |
 |---|---|---|---|---|---|
 | 2026-06-15 | OpenAI Codex | Documentation and repository audit | Reconciled `CLAUDE.md`, `README.md`, and `docs/PRD.md`; created the canonical implementation checklist; inspected the Godot project and Git state. | Team must review all requirements and cultural wording. No historical claim, art, audio, or runtime response was generated. Existing invariants and requirement IDs were preserved. | Documentation only |
+| 2026-06-15 | OpenAI Codex | Prompt engineering and repository audit | Inspected all tracked source, scenes, assets, narrative prototypes, project settings, documentation, Git history, and local verification tools; created `docs/PROMPT_CONTEXT.md` as canonical context for future implementation prompts. | Findings distinguish verified runtime behavior from plans and assumptions. No game feature, historical claim, art, audio, or runtime AI output was generated. Team review remains required before using prompts or submission claims. | Documentation only |
 
 ## Planned Runtime AI
 
