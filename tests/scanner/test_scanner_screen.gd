@@ -39,6 +39,13 @@ func _make_instance(template_id: String, state: int) -> ObjectInstance:
 	return inst
 
 
+func _find_verdict_button(verdict: int) -> Button:
+	for child in _screen.get_verdict_buttons().get_children():
+		if child is Button and child.get_meta("verdict") == verdict:
+			return child
+	return null
+
+
 func test_screen_acquires_scanner_pause_on_open() -> void:
 	var inst := _make_instance("tarnished_pendant", ModelEnums.ObjState.CLEAN)
 	_screen.open(inst)
@@ -78,7 +85,10 @@ func test_all_four_verdict_buttons_can_be_selected() -> void:
 		ModelEnums.Verdict.MODIFIED,
 		ModelEnums.Verdict.UNCERTAIN
 	]:
-		_screen.select_verdict(verdict)
+		var button := _find_verdict_button(verdict)
+		assert_not_null(button, "verdict button missing for %d" % verdict)
+		button.pressed.emit()
+		await wait_physics_frames(1)
 		assert_eq(_screen.get_selected_verdict(), verdict)
 		assert_false(_screen.get_confirm_button().disabled)
 

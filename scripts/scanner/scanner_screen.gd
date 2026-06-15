@@ -99,9 +99,13 @@ func _build_verdict_buttons() -> void:
 		button.text = VERDICT_BUTTONS[verdict]
 		button.toggle_mode = true
 		button.focus_mode = Control.FOCUS_ALL
-		button.pressed.connect(func() -> void: _select_verdict(verdict))
+		button.pressed.connect(_on_verdict_pressed.bind(verdict))
 		button.set_meta("verdict", verdict)
 		_verdict_buttons.add_child(button)
+
+
+func _on_verdict_pressed(verdict: int) -> void:
+	_select_verdict(verdict)
 
 
 func _select_verdict(verdict: int) -> void:
@@ -272,6 +276,10 @@ func get_content() -> VBoxContainer:
 
 func get_verdict_section() -> VBoxContainer:
 	return _verdict_section
+
+
+func get_verdict_buttons() -> HBoxContainer:
+	return _verdict_buttons
 
 
 ## Test seam to select a verdict without simulating input.

@@ -1,9 +1,10 @@
-[gd_scene format=3 uid="uid://scanner2duiscrn"]
+[gd_scene format=3 uid="uid://b4bxq6wb6m7yh"]
 
 [ext_resource type="Script" path="res://scripts/scanner/scanner_screen.gd" id="1_scanner"]
 
 [node name="ScannerScreen" type="CanvasLayer"]
 process_mode = 3
+layer = 10
 script = ExtResource("1_scanner")
 
 [node name="Background" type="ColorRect" parent="."]
