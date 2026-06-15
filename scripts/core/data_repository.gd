@@ -23,6 +23,7 @@ var character_routes: Dictionary = {}  ## id -> CharacterRoute
 var placement_containers: Dictionary = {}  ## id -> PlacementContainer
 var scanner_cache_entries: Dictionary = {}  ## id -> ScannerCacheEntry
 var delivery_config: DeliveryConfig = DeliveryConfig.new()
+var spawn_config: SpawnConfig = SpawnConfig.new()
 var starting_kit: Dictionary = {"tool_ids": [], "technique_ids": []}
 
 var _loaded := false
@@ -54,7 +55,7 @@ func load_from_filesystem() -> ValidationResult:
 	_load_directory("echoes", _parse_echo_file)
 	_load_directory("routes", _parse_route_file)
 	_load_directory("scanner-cache", _parse_scanner_cache_file)
-	_load_directory("delivery", _parse_delivery_config_file)
+	_load_directory("delivery", _parse_delivery_file)
 
 	if not _validation.is_valid():
 		_clear_state()
@@ -118,6 +119,10 @@ func get_delivery_config() -> DeliveryConfig:
 	return delivery_config
 
 
+func get_spawn_config() -> SpawnConfig:
+	return spawn_config
+
+
 func _clear_state() -> void:
 	_loaded = false
 	scrap_object_templates.clear()
@@ -131,6 +136,7 @@ func _clear_state() -> void:
 	placement_containers.clear()
 	scanner_cache_entries.clear()
 	delivery_config = DeliveryConfig.new()
+	spawn_config = SpawnConfig.new()
 	starting_kit = {"tool_ids": [], "technique_ids": []}
 
 
@@ -287,13 +293,19 @@ func _parse_scanner_cache_file(file_path: String) -> void:
 			entry.validate(_validation, file_path)
 
 
-func _parse_delivery_config_file(file_path: String) -> void:
+func _parse_delivery_file(file_path: String) -> void:
 	var doc: Variant = _read_json_file(file_path)
 	if doc == null:
 		return
-	var cfg := DeliveryConfig.from_dictionary(doc)
-	cfg.validate(_validation, file_path)
-	delivery_config = cfg
+	var file_name := file_path.get_file()
+	if file_name == "spawn_config.json":
+		var spawn_cfg := SpawnConfig.from_dictionary(doc)
+		spawn_cfg.validate(_validation, file_path)
+		spawn_config = spawn_cfg
+	else:
+		var delivery_cfg := DeliveryConfig.from_dictionary(doc)
+		delivery_cfg.validate(_validation, file_path)
+		delivery_config = delivery_cfg
 
 
 func _get_items(doc: Dictionary, file_path: String) -> Array:

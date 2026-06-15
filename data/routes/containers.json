@@ -27,6 +27,15 @@
       "capacity": 4,
       "is_locked_by_default": false,
       "unlock_requirement": ""
+    },
+    {
+      "record_type": "container",
+      "id": "safe",
+      "display_name": "Uncle's Safe",
+      "compatibility_tags": ["jewelry", "small", "metal", "mechanical"],
+      "capacity": 2,
+      "is_locked_by_default": true,
+      "unlock_requirement": "safe_code"
     }
   ]
 }

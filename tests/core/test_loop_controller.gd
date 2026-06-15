@@ -123,13 +123,18 @@ func test_every_loop_scoped_field_resets() -> void:
 	assert_eq(fresh.day_event_outcomes.size(), 0)
 	assert_eq(fresh.current_delivery_ids.size(), 0)
 	# current_carrier_placements is loop-scoped and is cleared, then the Spawn
-	# Director re-plans any RELEASED fragments for the new loop.
-	assert_false(
-		(
-			fresh.current_carrier_placements.has("fragment_01")
-			and fresh.current_carrier_placements["fragment_01"].get("container_id") == "pile_left"
-		),
-		"Old carrier placement must be cleared"
+	# Director re-plans any RELEASED fragments for the new loop. The manually
+	# injected placeholder must be replaced by a real plan (it has no
+	# carrier_template_id), even if the Director happens to pick the same
+	# container again.
+	assert_true(
+		fresh.current_carrier_placements.has("fragment_01"),
+		"Released fragment gets a fresh carrier placement"
+	)
+	var new_plan: Dictionary = fresh.current_carrier_placements["fragment_01"]
+	assert_true(
+		new_plan.has("carrier_template_id"),
+		"Old manual placeholder must be replaced by a real SpawnDirector plan"
 	)
 	assert_eq(fresh.current_day, 1)
 	assert_eq(fresh.current_hour, 7)

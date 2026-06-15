@@ -162,6 +162,7 @@ func _fallback_anchor(template: ScrapObjectTemplate, counts_by_anchor: Dictionar
 
 ## Injects carrier instances planned by the Spawn Director for the given day.
 ## Falls back to a compatible anchor if the planned anchor is invalid or full.
+## Emits EventBus.carrier_activated after successful promotion.
 func _inject_carriers(instances: Array[ObjectInstance], day: int, used_uids: Dictionary) -> void:
 	var placements := _game_state.save_state.loop.current_carrier_placements
 	var counts_by_anchor := {}
@@ -171,6 +172,7 @@ func _inject_carriers(instances: Array[ObjectInstance], day: int, used_uids: Dic
 				counts_by_anchor.get(inst.assigned_anchor_id, 0) + 1
 			)
 
+	var director := SpawnDirector.new(_repo, _game_state)
 	for fragment_id in placements.keys():
 		var plan: Dictionary = placements[fragment_id]
 		if plan.get("day", 0) != day:
@@ -194,6 +196,9 @@ func _inject_carriers(instances: Array[ObjectInstance], day: int, used_uids: Dic
 		used_uids[inst.uid] = true
 		instances.append(inst)
 		counts_by_anchor[container_id] = counts_by_anchor.get(container_id, 0) + 1
+
+		director.record_carrier_instance_id(fragment_id, inst.uid)
+		EventBus.carrier_activated.emit(inst.uid, fragment_id)
 
 
 ## Returns a valid, non-full anchor for the template. If the requested anchor is

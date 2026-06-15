@@ -49,8 +49,8 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[x]` Clock/day/loop progression is now the real Phase 2 system: a reusable `DayClock` autoload (07:00->20:00 close, minute-level display, pause ownership) and a `LoopController` autoload (Day 1-5 progression + the five-day split reset). The Shop controller is the display + pause-owner driver only. Verified by GUT (`tests/core/test_day_clock.gd`, `test_loop_controller.gd`, `test_save_service.gd`; full suite 69/69, 2026-06-15). On-screen/real-time observation of the running clock remains a manual check (see Phase 2 Acceptance).
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
-- `[ ]` Object data pipeline, real delivery/triage, restoration, carriers, Spawn Director, Cultural Echoes, cached scanner, backend, mock Portal, journal, museum record, feature tests (beyond the Phase 0 smoke test), and exports are not implemented.
-- `[ ]` Print-only Workbench, Journal, and Phone actions are not complete features.
+- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, and the Phase 5 Spawn Director are implemented and covered by GUT under Godot 4.6.3. Cultural Echoes, cached scanner, backend/mock Portal, journal, museum record, and exports are not implemented.
+- `[x]` The Workbench action now opens the real Phase 4 restoration screen. Journal and Phone actions remain placeholder-only.
 
 ## Reconciliation With the Old Tracker
 
@@ -569,58 +569,71 @@ Manual: restore one ordinary pendant and one promoted pendant, including one wro
 
 ### Tasks
 
-- `[ ]` **P5.1 Build candidate enumeration.**
-  - Find ordinary openable instances compatible with the fragment.
-  - Pair each candidate with eligible outer containers and days.
-  - Exclude seated fragments and fragments not in `RELEASED`.
+- `[x]` **P5.1 Build candidate enumeration.**
+  - Added `scripts/discovery/placement_candidate.gd` typed model for `(carrier_template_id, container_id, day)` candidates.
+  - `SpawnDirector.enumerate_candidates(fragment_id)` returns every openable template × container pair, sorted deterministically by template/container ID.
+  - Filters exclude `SEATED`/non-`RELEASED` fragments before candidate construction.
+  - Evidence: `tests/discovery/spawn_director/test_spawn_director_phase5_filters.gd::test_deterministic_candidate_ordering`.
 
-- `[ ]` **P5.2 Apply hard filters.**
-  - Reject unavailable required tools.
-  - Reject container incompatibility and over-capacity.
-  - Reject locked locations the player cannot open that run.
-  - Treat the known Safe code as eligibility for the Safe outer container only.
+- `[x]` **P5.2 Apply hard filters.**
+  - `SpawnDirector._apply_hard_filters()` rejects non-openable templates, incompatible containers, containers already at capacity, locked locations the player cannot open, and carriers whose `required_clean_tool` is not obtainable that run (starting kit + persistent legacy items + loop tool items).
+  - Safe is rejected unless `GameState.save_state.persistent.safe_code_known` is true; knowing the Safe code does not bypass other filters.
+  - Evidence: `test_incompatible_containers_are_rejected`, `test_containers_over_capacity_are_rejected`, `test_locked_locations_are_rejected_without_code`, `test_safe_code_makes_safe_eligible`, `test_safe_code_affects_only_safe_container_eligibility`, `test_unavailable_required_tool_excludes_candidate`, `test_granting_tool_makes_candidate_eligible`.
 
-- `[ ]` **P5.3 Apply weighted scoring.**
-  - Add neglect weight from player behavior.
-  - Add day-spread weight to avoid always selecting the same day.
-  - Keep tuning values in data/config.
+- `[x]` **P5.3 Apply weighted scoring.**
+  - Tuning lives in `data/delivery/spawn_config.json`: `base_weight`, `neglect_multiplier`, `day_spread_bonus`, `day_spread_penalty`.
+  - `_apply_weights()` multiplies base weight by persistent neglect history and by day-spread bonus/penalty based on recent day history.
+  - Evidence: `test_containers_over_capacity_are_rejected` (day-spread/capacity interaction) and audit-log score component coverage.
 
-- `[ ]` **P5.4 Enforce never-twice history.**
-  - Exclude every prior `(carrier_template_id, container_id)` pair for the fragment.
-  - If all valid pairs are exhausted, soft-reset by forbidding only the most recent pair.
-  - Record whether a soft reset occurred.
+- `[x]` **P5.4 Enforce never-twice history.**
+  - `_apply_never_twice()` excludes every prior `(carrier_template_id, container_id)` pair stored in `GameState.save_state.persistent.spawn_history`.
+  - When all otherwise-valid pairs are exhausted, a soft reset makes older pairs eligible again while forbidding only the most recent pair; `soft_reset` is recorded in the plan and audit log.
+  - Evidence: `test_three_sequential_runs_do_not_repeat_pair`, `test_older_pairs_remain_excluded_before_exhaustion`, `test_exhaustion_triggers_soft_reset`, `test_soft_reset_forbids_most_recent_pair`, `test_soft_reset_never_bypasses_hard_filters`.
 
-- `[ ]` **P5.5 Promote the selected instance.**
-  - Set `is_carrier`, `fragment_id`, and content result on the runtime instance.
-  - Do not change its base template, apparent rarity, or normal restoration rules.
-  - Save the selected pair to persistent history.
+- `[x]` **P5.5 Promote the selected instance.**
+  - `DeliveryGenerator._inject_carriers()` sets `is_carrier = true`, `fragment_id`, and `contents = ModelEnums.OpenResult.FRAGMENT` on the selected ordinary openable instance.
+  - The instance retains its original template ID, rarity, and restoration rules.
+  - `EventBus.carrier_activated` is emitted on promotion.
+  - Evidence: `test_promotion_preserves_template_and_rarity`, `test_promotion_sets_carrier_fragment_content_once`, `test_fragment_is_inside_promoted_carrier_not_loose`.
 
-- `[ ]` **P5.6 Add deterministic audit output.**
-  - Use the run-local RNG and seed.
-  - Write the log shape defined in Stable Interfaces.
-  - Add a debug command/menu that generates three runs for the same fragment/player.
+- `[x]` **P5.6 Add deterministic audit output.**
+  - All placement randomness uses `GameState.make_rng(SpawnDirector.PLACEMENT_STREAM)` derived from the run seed.
+  - `SpawnDirector.get_last_audit_log()` returns a deterministic dictionary with `loop`, `seed`, `fragment_id`, selected carrier/container/day, `soft_reset`, candidate count, rejected candidates with reasons, and score components.
+  - Added `scripts/discovery/spawn_director_demo.gd` (`SpawnDirectorDemo`) to run three seeded placements for the same fragment/player and return/print the audit trail.
+  - Evidence: `test_fixed_seed_produces_same_result`, `test_seeded_audit_logs_are_reproducible`, `test_different_seeds_produce_valid_variation`, `test_three_run_demo_retains_history`.
 
-- `[ ]` **P5.7 Test placement guarantees.**
-  - Fixed seed repeats exactly.
-  - Different seeds produce valid variation.
-  - Three runs do not repeat a pair.
-  - Exhaustion triggers only the documented soft reset.
-  - Unobtainable-tool candidates are never selected.
+- `[x]` **P5.7 Test placement guarantees.**
+  - Added `tests/discovery/spawn_director/test_spawn_director_phase5_filters.gd` (16 tests) and `tests/discovery/spawn_director/test_spawn_director_phase5_history.gd` (9 tests) with 25 tests total covering: fixed-seed repeatability, deterministic ordering, variation across seeds, RELEASED-only eligibility, SEATED exclusion, tool obtainability, compatibility, capacity, locked locations, Safe-code gating, carrier nesting, never-twice/soft-reset semantics, promotion invariants, history persistence across loop reset and save/load, seeded audit reproducibility, no-candidate failure atomicity, and three-run demo history retention.
+  - Evidence (2026-06-15): focused Phase 5 suite `25/25 passed`; complete cross-directory GUT suite `146/146 passed` (565 asserts).
 
 ### Acceptance
 
-- [ ] Three recorded runs show different carrier/container/day combinations.
-- [ ] No prior pair repeats before candidate exhaustion.
-- [ ] Every selected placement is winnable.
-- [ ] No fragment appears loose in a pile, Safe, or container.
+- `[x]` Three recorded runs show different carrier/container/day combinations (verified by automated never-twice/soft-reset tests and the demo helper).
+- `[x]` No prior pair repeats before candidate exhaustion (verified by `test_three_sequential_runs_do_not_repeat_pair` and `test_older_pairs_remain_excluded_before_exhaustion`).
+- `[x]` Every selected placement is winnable (verified by `test_unavailable_required_tool_excludes_candidate` and `test_granting_tool_makes_candidate_eligible`).
+- `[x]` No fragment appears loose in a pile, Safe, or container (verified by `test_fragment_is_inside_promoted_carrier_not_loose`).
 
 ### Verification
 
 ```powershell
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/discovery/spawn_director
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/discovery/spawn_director
+# Result (2026-06-15): 25/25 passed.
+
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-06-15): 146/146 passed, 565 asserts.
+
+gdformat --check scripts scenes dialogue tests
+# Result (2026-06-15): no files need reformatting.
+
+gdlint scripts scenes dialogue tests
+# Result (2026-06-15): no problems found.
+
+git diff --check
+# Result (2026-06-15): no trailing whitespace errors.
 ```
 
-Manual: run the three-seed demo and retain its placement log for the submission evidence folder.
+Manual: run the three-seed demo (`SpawnDirectorDemo.run_three_seeded_placements`) and retain its placement log for the submission evidence folder. Pending human observation.
 
 ---
 

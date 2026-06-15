@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "base_candidate_weight": 1.0,
+  "neglect_weight_multiplier": 0.5,
+  "day_spread_weight_multiplier": 1.0,
+  "min_candidate_weight": 0.0,
+  "safe_container_id": "safe",
+  "safe_unlock_flag": "safe_code_known"
+}

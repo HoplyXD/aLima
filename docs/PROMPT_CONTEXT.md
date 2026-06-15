@@ -8,7 +8,7 @@ Canonical repository context for agents that write implementation prompts for aL
 - Then inspect the current code, scene, data, test, and documentation files relevant to the requested work. This snapshot does not replace source inspection.
 - Treat running code and assets as truth for what exists. Authority is `CLAUDE.md` Section 4 implementation invariants -> `README.md` full-game promises -> `docs/PRD.md` testable build contract -> `docs/phase-task.md` implementation order and evidence. The PRD may clarify but may not omit a GDD promise.
 - If source and docs disagree, report the disagreement. Do not silently rewrite behavior or requirements.
-- Snapshot last audited 2026-06-15; refreshed after Phase 3 delivery/triage implementation. Repository branch is `main`. Refresh this file when implementation materially changes.
+- Snapshot last audited 2026-06-15; refreshed after Phase 5 Spawn Director implementation. Repository branch is `main`. Refresh this file when implementation materially changes.
 
 ## Game Identity
 
@@ -90,13 +90,13 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 
 ## Verified Repository State
 
-Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architecture and data):
+Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 5 Spawn Director implementation):
 
 - Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and reports `4.6.3.stable.official.7d41c59c4`.
 - The bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`). A 4.6.3 shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the `.cmd` file is shadowed by the earlier `godot.exe` on the effective PATH.
 - `--headless --editor --path . --quit` completes with exit 0; the main scene `scenes/Shop.tscn` starts and the controller prints `[Shop] ready`.
-- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `121/121 passed` (509 asserts), including Phase 0/1/2 tests, Phase 3 delivery/triage coverage, and Phase 4 restoration/opening coverage (2026-06-15).
-- Focused suites pass: `-gdir=res://tests/models` → `11/11 passed`; `-gdir=res://tests/core` → `45/45 passed`; `-gdir=res://tests/delivery` → `33/33 passed` (197 asserts); `-gdir=res://tests/restoration` → `19/19 passed` (73 asserts).
+- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `146/146 passed` (565 asserts), including Phase 0/1/2 tests, Phase 3 delivery/triage coverage, Phase 4 restoration/opening coverage, and Phase 5 Spawn Director coverage (2026-06-15).
+- Focused suites pass: `-gdir=res://tests/models` → `11/11 passed`; `-gdir=res://tests/core` → `45/45 passed`; `-gdir=res://tests/delivery` → `33/33 passed` (197 asserts); `-gdir=res://tests/restoration` → `19/19 passed` (73 asserts); `-gdir=res://tests/discovery/spawn_director` → `25/25 passed`.
 - `gdformat --check scripts scenes dialogue tests` and `gdlint scripts scenes dialogue tests` pass (scoped to exclude vendored `addons/gut`).
 - `dialogue/dialogue_box.tscn` loads. The `prototype/` directory was removed during Phase 0.
 - No tracked `.env`, secret, credential, or API-key file was found.
@@ -124,7 +124,8 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 - Phase 1 core autoloads: `EventBus`, `GameState`, `SaveService` (registered in `project.godot`).
 - Phase 2 core autoloads: `DayClock` (reusable clock + ref-counted pause ownership) and `LoopController` (Day 1–5 progression, five-day split reset, DayClock->EventBus/GameState bridge, Phase 3 carrier placement planning on reset).
 - Phase 1 deterministic run context owned by `GameState` using local `RandomNumberGenerator` instances.
-- Phase 1 slice fixtures: pendant template (now with authored cleaning tuning), two ordinary instance fixtures, tools/techniques (with quality/value bonuses), containers, Master Artifact + five fragments, Echo set, cached scanner response, starting kit, and delivery config.
+- Phase 1 slice fixtures: pendant template (now with authored cleaning tuning), two ordinary instance fixtures, tools/techniques (with quality/value bonuses), containers, Master Artifact + five fragments, Echo set, cached scanner response, starting kit, delivery config, and spawn config.
+- Phase 5 Spawn Director (`scripts/delivery/spawn_director.gd`), typed `PlacementCandidate` model (`scripts/discovery/placement_candidate.gd`), deterministic audit log, and a three-seed demo helper (`scripts/discovery/spawn_director_demo.gd`).
 - Toolchain: vendored GUT 9.6.0 + smoke test + Phase 1 model/core tests, pinned gdtoolkit (gdformat/gdlint), and a GitHub Actions CI workflow.
 - Twine/Chapbook narrative and economy prototype in `aLima.twee`, with generated `aLima.html`.
 - Detailed PRD, invariants, data contracts, phase plan, and disclosure process.
@@ -134,7 +135,8 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 - (Phase 2 implemented) Real day clock, loop controller, pause ownership, and the split/atomic persistence reset now exist as the `DayClock`/`LoopController` autoloads with strict-validated `SaveService` writes (GUT-verified; on-screen/real-time observation pending).
 - (Phase 3 implemented) Weighted delivery generation, `Marker3D` placement anchors, full-screen keep/recycle triage, storage-cost inventory enforcement, and the fixed six-state glow legend. Manual on-screen verification is pending.
 - (Phase 4 implemented) `RestorationService`, `RestorationScreen`, authored pendant/tin cleaning tuning, deterministic tool consequences, the `DIRTY -> CLEAN -> OPEN` state machine, and `EMPTY | TEMPORAL_ECHO | FRAGMENT` resolution. Carrier identity remains an injected role on an ordinary pendant instance. Automated verification passes; on-screen manual verification is pending.
-- Spawn Director v1 (Phase 3 minimal: RELEASED fragment carrier/container/day planning, compatibility/capacity checks, never-twice history, neglect weighting), demo seeds/logging, Cultural Echo audio/meter/captions, and proximity-authorized carrier flicker.
+- (Phase 5 implemented) Full Spawn Director with explicit candidate enumeration, hard filters (tool obtainability, compatibility, capacity, locked locations, Safe code), weighted scoring (neglect + day-spread), never-twice history with documented soft reset, deterministic audit log, and a three-seed demo helper. Automated verification passes; manual three-seed demo observation is pending.
+- Cultural Echo audio/meter/captions and proximity-authorized carrier flicker.
 - Cached scanner, verdict UI, Node/Express backend, mock Portal, Godot HTTP clients, Found/Unlock flow, museum record, journal, and fragment case.
 - Auntie scheduling and scripted photo showcase.
 - Backend tests, export presets, Windows/web exports, and submission evidence. (GUT 9.6.0, pinned gdtoolkit, and a GitHub Actions CI workflow now exist as of Phase 0.)
@@ -176,10 +178,13 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 - `scripts/models/`: `model_enums.gd`, `model_utils.gd`, `validation_result.gd`, `scrap_object_template.gd`, `object_instance.gd`, `fragment.gd`, `master_artifact.gd`, `echo_set.gd`, `journal_entry.gd`, `museum_entry.gd`, `tool_definition.gd`, `technique_definition.gd`, `placement_container.gd`, `character_route.gd`, `scanner_cache_entry.gd`, `save_state.gd`, `delivery_config.gd`.
 - `scripts/core/`: `event_bus.gd`, `game_state.gd`, `save_service.gd`, `data_repository.gd`, `day_clock.gd`, `loop_controller.gd`.
 - `scripts/delivery/`: `delivery_generator.gd`, `spawn_director.gd`, `glow_mapper.gd`, `triage_state.gd`, `triage_service.gd`.
+- `scripts/discovery/`: `spawn_director_demo.gd`.
 - `scripts/restoration/`: `restoration_service.gd`.
 - `scenes/ui/restoration_screen.gd` + `.tscn`: Phase 4 pendant cleaning mini-game UI.
 - `tests/restoration/`: Phase 4 restoration/opening tests.
-- `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, `data/scanner-cache/`, `data/delivery/`: authored JSON fixtures (schema_version = 1).
+- `tests/discovery/spawn_director/`: Phase 5 Spawn Director tests.
+- `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, `data/scanner-cache/`, `data/delivery/`: authored JSON fixtures (schema_version = 1), including `data/delivery/spawn_config.json`.
+- `scripts/models/`: includes `placement_candidate.gd`.
 - `addons/gut/`: vendored GUT 9.6.0. `requirements-dev.txt`: pinned gdtoolkit. `.github/workflows/ci.yml`: CI (4.6.3 import + GUT + lint).
 - `aLima.twee`: old interactive design prototype. Useful for route prose/tuning history, but subordinate to current invariants and PRD.
 
