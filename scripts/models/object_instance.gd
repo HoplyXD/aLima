@@ -1,0 +1,71 @@
+class_name ObjectInstance
+## Runtime object instance. One per delivered item; lives in LoopState.
+##
+## A carrier is a runtime role, never a separate template. The Spawn Director
+## promotes an ordinary instance by setting is_carrier, fragment_id, and contents.
+
+var template_id: String = ""
+var uid: String = ""  ## Unique within the current loop.
+var condition: float = 0.0  ## 0..100, raised by restoration.
+var state: int = ModelEnums.ObjState.DIRTY
+var is_carrier: bool = false
+var fragment_id: String = ""  ## Payload when is_carrier is true.
+var contents: int = ModelEnums.OpenResult.EMPTY
+var authenticity: int = ModelEnums.Verdict.UNKNOWN
+var is_counterfeit_truth: bool = false
+
+
+func _init() -> void:
+	pass
+
+
+static func from_dictionary(data: Dictionary) -> ObjectInstance:
+	var inst := ObjectInstance.new()
+	inst.template_id = ModelUtils.as_string(data.get("template_id"))
+	inst.uid = ModelUtils.as_string(data.get("uid"))
+	inst.condition = ModelUtils.as_float(data.get("condition"))
+	inst.state = ModelEnums.obj_state_from_name(ModelUtils.as_string(data.get("state")))
+	inst.is_carrier = ModelUtils.as_bool(data.get("is_carrier"))
+	inst.fragment_id = ModelUtils.as_string(data.get("fragment_id"))
+	inst.contents = ModelEnums.open_result_from_name(ModelUtils.as_string(data.get("contents")))
+	inst.authenticity = ModelEnums.verdict_from_name(ModelUtils.as_string(data.get("authenticity")))
+	inst.is_counterfeit_truth = ModelUtils.as_bool(data.get("is_counterfeit_truth"))
+	return inst
+
+
+func to_dictionary() -> Dictionary:
+	return {
+		"template_id": template_id,
+		"uid": uid,
+		"condition": condition,
+		"state": ModelEnums.obj_state_name(state),
+		"is_carrier": is_carrier,
+		"fragment_id": fragment_id,
+		"contents": ModelEnums.open_result_name(contents),
+		"authenticity": ModelEnums.verdict_name(authenticity),
+		"is_counterfeit_truth": is_counterfeit_truth,
+	}
+
+
+func validate(
+	result: ValidationResult = ValidationResult.new(), file_path: String = ""
+) -> ValidationResult:
+	if uid.is_empty():
+		result.add_field_error(file_path, uid, "uid", "required instance uid is missing")
+	if template_id.is_empty():
+		result.add_field_error(file_path, uid, "template_id", "required template_id is missing")
+	if condition < 0.0 or condition > 100.0:
+		result.add_field_error(file_path, uid, "condition", "condition must be between 0 and 100")
+	if ModelEnums.OBJ_STATE_NAMES.find(ModelEnums.obj_state_name(state)) < 0:
+		result.add_field_error(file_path, uid, "state", "unknown object state")
+	if ModelEnums.OPEN_RESULT_NAMES.find(ModelEnums.open_result_name(contents)) < 0:
+		result.add_field_error(file_path, uid, "contents", "unknown open result")
+	if ModelEnums.VERDICT_NAMES.find(ModelEnums.verdict_name(authenticity)) < 0:
+		result.add_field_error(file_path, uid, "authenticity", "unknown verdict")
+	if is_carrier and fragment_id.is_empty():
+		result.add_field_error(file_path, uid, "fragment_id", "carriers must specify a fragment_id")
+	if not is_carrier and not fragment_id.is_empty():
+		result.add_field_error(
+			file_path, uid, "fragment_id", "only carriers may carry a fragment_id"
+		)
+	return result

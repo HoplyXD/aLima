@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "route",
+      "id": "auntie",
+      "display_name": "Elderly Auntie",
+      "schedule": [
+        {
+          "days": [1, 3, 5],
+          "start_hour": 12,
+          "end_hour": 14
+        }
+      ],
+      "prerequisites": [],
+      "mutual_exclusions": [],
+      "holds_fragment_id": "fragment_01",
+      "rewards": ["safe_code", "drawer_clue"],
+      "has_ending": true
+    },
+    {
+      "record_type": "route",
+      "id": "artisan",
+      "display_name": "Local Artisan",
+      "schedule": [
+        {
+          "days": [2, 4, 5],
+          "start_hour": 13,
+          "end_hour": 14
+        }
+      ],
+      "prerequisites": ["auntie"],
+      "mutual_exclusions": ["scavenger"],
+      "holds_fragment_id": "fragment_02",
+      "rewards": ["delicate_tool"],
+      "has_ending": true
+    },
+    {
+      "record_type": "route",
+      "id": "scavenger",
+      "display_name": "Trash Scavenger",
+      "schedule": [
+        {
+          "days": [2, 4, 5],
+          "start_hour": 13,
+          "end_hour": 14
+        }
+      ],
+      "prerequisites": [],
+      "mutual_exclusions": ["artisan"],
+      "holds_fragment_id": "fragment_03",
+      "rewards": ["archeologist_lead"],
+      "has_ending": true
+    },
+    {
+      "record_type": "route",
+      "id": "archeologist",
+      "display_name": "Archeologist",
+      "schedule": [
+        {
+          "days": [1, 3, 5],
+          "start_hour": 8,
+          "end_hour": 11
+        }
+      ],
+      "prerequisites": ["archeologist_lead"],
+      "mutual_exclusions": [],
+      "holds_fragment_id": "fragment_04",
+      "rewards": ["excavation_tools"],
+      "has_ending": true
+    },
+    {
+      "record_type": "route",
+      "id": "buyer",
+      "display_name": "Mysterious Buyer",
+      "schedule": [
+        {
+          "days": [1, 2, 3, 4, 5],
+          "start_hour": 17,
+          "end_hour": 18
+        }
+      ],
+      "prerequisites": [],
+      "mutual_exclusions": [],
+      "holds_fragment_id": "fragment_05",
+      "rewards": ["encoded_ledger"],
+      "has_ending": false
+    },
+    {
+      "record_type": "route",
+      "id": "yuyu",
+      "display_name": "Uncle's Legacy",
+      "schedule": [],
+      "prerequisites": ["all_fragments_seated"],
+      "mutual_exclusions": [],
+      "holds_fragment_id": "",
+      "rewards": ["perfect_loop"],
+      "has_ending": true
+    }
+  ]
+}

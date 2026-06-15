@@ -21,6 +21,12 @@ window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
 
+[autoload]
+
+EventBus="*res://scripts/core/event_bus.gd"
+GameState="*res://scripts/core/game_state.gd"
+SaveService="*res://scripts/core/save_service.gd"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

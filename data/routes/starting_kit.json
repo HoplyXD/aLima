@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "tool_ids": ["soft_cloth"],
+  "technique_ids": ["pendant_cleaning"]
+}

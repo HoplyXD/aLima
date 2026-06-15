@@ -8,7 +8,7 @@ Canonical repository context for agents that write implementation prompts for aL
 - Then inspect the current code, scene, data, test, and documentation files relevant to the requested work. This snapshot does not replace source inspection.
 - Treat running code and assets as truth for what exists. Treat `CLAUDE.md` Section 4 as the design invariants, `docs/PRD.md` as the build contract, `README.md` as the GDD/narrative source, and `docs/phase-task.md` as the implementation order/status tracker.
 - If source and docs disagree, report the disagreement. Do not silently rewrite behavior or requirements.
-- Snapshot last audited 2026-06-15; refreshed after Phase 0 stabilization (controller/HUD consolidation, toolchain, hygiene). Those changes are in the working tree on `main`, not yet committed (base commit `779a515`). Refresh this file when implementation materially changes.
+- Snapshot last audited 2026-06-15; refreshed after Phase 1 core architecture and data (typed models, repository, autoloads, slice fixtures, tests). Those changes are in the working tree on `main`, not yet committed (base commit `779a515`). Refresh this file when implementation materially changes.
 
 ## Game Identity
 
@@ -72,14 +72,15 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 
 ## Verified Repository State
 
-Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 0 stabilization and minute-level clock update; changes are in the working tree, not yet committed):
+Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architecture and data):
 
 - Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and reports `4.6.3.stable.official.7d41c59c4`.
 - The bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`). A 4.6.3 shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the `.cmd` file is shadowed by the earlier `godot.exe` on the effective PATH.
-- `--headless --editor --path . --quit` and `--headless --path . --quit` complete with exit 0 and no error lines; the main scene `scenes/Shop.tscn` starts and the controller prints `[Shop] ready`.
-- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `16/16 passed` (54 asserts), including the smoke test and the new `tests/test_shop_clock.gd`.
+- `--headless --editor --path . --quit` completes with exit 0; the main scene `scenes/Shop.tscn` starts and the controller prints `[Shop] ready`.
+- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `49/49 passed` (160 asserts), including existing Phase 0 tests and new `tests/models/` and `tests/core/` coverage.
+- Focused Phase 1 suites pass: `-gdir=res://tests/models` → `11/11 passed`; `-gdir=res://tests/core` → `22/22 passed`.
 - `gdformat --check scripts scenes dialogue tests` and `gdlint scripts scenes dialogue tests` pass (scoped to exclude vendored `addons/gut`).
-- `dialogue/dialogue_box.tscn` loads. The `prototype/` directory (including the previously-broken `Main.tscn`) was removed during Phase 0.
+- `dialogue/dialogue_box.tscn` loads. The `prototype/` directory was removed during Phase 0.
 - No tracked `.env`, secret, credential, or API-key file was found.
 
 ### Current Playable State
@@ -99,21 +100,25 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 0 stabilization an
 - Production controller/HUD separation (`scripts/shop/shop_controller.gd` + `scenes/ui/shop_hud.gd`) and the Phase 0 source layout.
 - Reusable `DialogueBox` component in `dialogue/`.
 - Placeholder clock/count formatting and button flow; minute-level clock display with configurable `seconds_per_hour`.
-- Toolchain: vendored GUT 9.6.0 + smoke test, pinned gdtoolkit (gdformat/gdlint), and a GitHub Actions CI workflow.
+- Phase 1 typed models, enums, validation, and serialization round-trips in `scripts/models/`.
+- Phase 1 `DataRepository` (`scripts/core/data_repository.gd`) loading and validating `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, and `data/scanner-cache/`.
+- Phase 1 core autoloads: `EventBus`, `GameState`, `SaveService` (registered in `project.godot`).
+- Phase 1 deterministic run context owned by `GameState` using local `RandomNumberGenerator` instances.
+- Phase 1 slice fixtures: pendant template, two ordinary instance fixtures, tools/techniques, containers, Master Artifact + five fragments, Echo set, cached scanner response, and starting kit.
+- Toolchain: vendored GUT 9.6.0 + smoke test + Phase 1 model/core tests, pinned gdtoolkit (gdformat/gdlint), and a GitHub Actions CI workflow.
 - Twine/Chapbook narrative and economy prototype in `aLima.twee`, with generated `aLima.html`.
 - Detailed PRD, invariants, data contracts, phase plan, and disclosure process.
 
 ### Missing Runtime Systems
 
-- Typed models, JSON/resource data, validation, EventBus, GameState, SaveService, and deterministic run context.
-- Real day clock, loop controller, split/atomic persistence, and migrations.
+- Real day clock, loop controller, and full split/atomic persistence gameplay semantics (Phase 2).
 - Delivery generation, 3D placement anchors, triage, inventory, and rarity glow behavior.
 - Pendant cleaning mini-game, tool consequences, clean/open state machine, and general open results.
 - Spawn Director, placement history, demo seeds/logging, Cultural Echo audio/meter/captions, and carrier flicker.
 - Cached scanner, verdict UI, Node/Express backend, mock Portal, Godot HTTP clients, Found/Unlock flow, museum record, journal, and fragment case.
 - Auntie scheduling and scripted photo showcase.
 - Backend tests, export presets, Windows/web exports, and submission evidence. (GUT 9.6.0, pinned gdtoolkit, and a GitHub Actions CI workflow now exist as of Phase 0.)
-- `scripts/`, `data/`, `resources/`, `tests/`, and `addons/gut/` now exist (Phase 0); `server/` and `mock-portal/` still do not (Phase 8).
+- `scripts/core/`, `scripts/models/`, `data/`, `resources/`, `tests/`, and `addons/gut/` now hold Phase 1 code and fixtures; `server/` and `mock-portal/` still do not (Phase 8).
 - No npm package manifests or lockfiles exist yet; `requirements-dev.txt` pins the Python gdtoolkit version.
 
 ## Important Files
@@ -129,6 +134,11 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 0 stabilization an
 - `scenes/ui/shop_hud.gd`: presentation-only HUD (`class_name ShopHud`); typed intent signals + `set_*` API, no game state.
 - `dialogue/dialogue_box.gd` and `.tscn`: reusable dialogue implementation.
 - `tests/test_shop_smoke.gd` + `.gutconfig.json`: GUT smoke test for the Shop/HUD boundary.
+- `tests/models/test_models.gd`: model round-trip and validation tests.
+- `tests/core/test_data_repository.gd`, `test_event_bus.gd`, `test_game_state.gd`, `test_save_service.gd`, `test_run_context.gd`: Phase 1 core tests.
+- `scripts/models/`: `model_enums.gd`, `model_utils.gd`, `validation_result.gd`, `scrap_object_template.gd`, `object_instance.gd`, `fragment.gd`, `master_artifact.gd`, `echo_set.gd`, `journal_entry.gd`, `museum_entry.gd`, `tool_definition.gd`, `technique_definition.gd`, `placement_container.gd`, `character_route.gd`, `scanner_cache_entry.gd`, `save_state.gd`.
+- `scripts/core/`: `event_bus.gd`, `game_state.gd`, `save_service.gd`, `data_repository.gd`.
+- `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, `data/scanner-cache/`: authored JSON fixtures (schema_version = 1).
 - `addons/gut/`: vendored GUT 9.6.0. `requirements-dev.txt`: pinned gdtoolkit. `.github/workflows/ci.yml`: CI (4.6.3 import + GUT + lint).
 - `aLima.twee`: old interactive design prototype. Useful for route prose/tuning history, but subordinate to current invariants and PRD.
 

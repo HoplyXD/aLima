@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "template",
+      "id": "tarnished_pendant",
+      "display_name": "Tarnished Pendant",
+      "category": "jewelry",
+      "base_rarity": "blue",
+      "weight_range": [8.0, 15.0],
+      "materials": ["silver", "patina"],
+      "tags": ["jewelry", "small", "openable"],
+      "is_openable": true,
+      "openable_type": "pendant",
+      "required_clean_tool": "soft_cloth",
+      "clean_minigame": "pendant_wipe",
+      "base_value_range": [120, 280],
+      "counterfeit_profile": "",
+      "historical_fact_ref": "",
+      "can_hold_temporal_echo": false
+    },
+    {
+      "record_type": "instance_fixture",
+      "id": "pendant_fixture_01",
+      "template_id": "tarnished_pendant",
+      "uid": "inst_pendant_01",
+      "condition": 0.0,
+      "state": "dirty",
+      "is_carrier": false,
+      "fragment_id": "",
+      "contents": "empty",
+      "authenticity": "unknown",
+      "is_counterfeit_truth": false
+    },
+    {
+      "record_type": "instance_fixture",
+      "id": "pendant_fixture_02",
+      "template_id": "tarnished_pendant",
+      "uid": "inst_pendant_02",
+      "condition": 0.0,
+      "state": "dirty",
+      "is_carrier": false,
+      "fragment_id": "",
+      "contents": "empty",
+      "authenticity": "unknown",
+      "is_counterfeit_truth": false
+    },
+    {
+      "record_type": "template",
+      "id": "rusted_tin",
+      "display_name": "Rusted Tin",
+      "category": "metal",
+      "base_rarity": "white",
+      "weight_range": [40.0, 120.0],
+      "materials": ["tin", "paper"],
+      "tags": ["metal", "small", "openable"],
+      "is_openable": true,
+      "openable_type": "tin",
+      "required_clean_tool": "rust_brush",
+      "clean_minigame": "tin_pry",
+      "base_value_range": [10, 40],
+      "counterfeit_profile": "",
+      "historical_fact_ref": "",
+      "can_hold_temporal_echo": true
+    }
+  ]
+}

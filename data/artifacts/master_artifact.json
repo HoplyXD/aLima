@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "master_artifact_demo",
+  "display_name": "Heirloom Timepiece (placeholder)",
+  "fragment_ids": [
+    "fragment_01",
+    "fragment_02",
+    "fragment_03",
+    "fragment_04",
+    "fragment_05"
+  ],
+  "assembled_history_ref": "master_artifact_demo_history"
+}

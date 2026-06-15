@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "technique",
+      "id": "pendant_cleaning",
+      "display_name": "Pendant Cleaning",
+      "enables_minigame": "pendant_wipe",
+      "learned_from": "shop"
+    }
+  ]
+}

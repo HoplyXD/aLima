@@ -262,47 +262,52 @@ git ls-files | Select-String -Pattern '(^|/).env$|api[_-]?key|credential|secret'
 
 ### Tasks
 
-- `[ ]` **P1.1 Implement typed model classes.**
-  - Create models for `ScrapObjectTemplate`, `ObjectInstance`, `Fragment`, `MasterArtifact`, `EchoSet`, `JournalEntry`, `MuseumEntry`, `ToolDefinition`, and `TechniqueDefinition`.
-  - Use enums/constants for rarity, object state, fragment state, open result, and verdict.
-  - Provide `from_dictionary()`, `to_dictionary()`, and validation methods.
+- `[x]` **P1.1 Implement typed model classes.**
+  - Added `scripts/models/model_enums.gd`, `model_utils.gd`, `validation_result.gd`, and models for `ScrapObjectTemplate`, `ObjectInstance`, `Fragment`, `MasterArtifact`, `EchoSet`, `JournalEntry`, `MuseumEntry`, `ToolDefinition`, `TechniqueDefinition`, `PlacementContainer`, `CharacterRoute`, `ScannerCacheEntry`, and `SaveState`.
+  - Enums/constants for rarity, object state, fragment state, open result, and verdict live in `ModelEnums`.
+  - Every model provides `from_dictionary()`, `to_dictionary()`, and `validate()` with accumulated structured errors.
+  - Evidence (2026-06-15): `tests/models/test_models.gd` 11/11 passed.
 
-- `[ ]` **P1.2 Implement JSON loading and validation.**
-  - Load each data directory through one typed repository/service.
-  - Reject duplicate IDs, unknown enum values, invalid ranges, missing tools, and broken references.
-  - Report all validation errors together so content authors can fix a batch.
+- `[x]` **P1.2 Implement JSON loading and validation.**
+  - Added `scripts/core/data_repository.gd` (`class_name DataRepository`) loading `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, and `data/scanner-cache/`.
+  - Validates schema versions, duplicate IDs, enums, numeric ranges, fragment slots, five unique Master Artifact fragments, required tools, and cross-references (tool/route/echo/artifact/scanner/container).
+  - Collects all discoverable validation errors in one pass and leaves collections empty on failure.
+  - Evidence (2026-06-15): `tests/core/test_data_repository.gd` 5/5 passed.
 
-- `[ ]` **P1.3 Add core autoloads.**
-  - `EventBus`: signals listed in Stable Interfaces.
-  - `GameState`: owns current loop and persistent state in memory.
-  - `SaveService`: serialization, validation, atomic writes, and migration entrypoint.
-  - Autoloads do not directly manipulate scene nodes.
+- `[x]` **P1.3 Add core autoloads.**
+  - Registered `EventBus`, `GameState`, and `SaveService` in `project.godot` in that order.
+  - `EventBus` exposes every Stable Interface signal with typed payloads.
+  - `GameState` owns `SaveState` and exposes persistent/loop state separately.
+  - `SaveService` serializes, validates schema, writes atomically (`user://save.tmp` → validation → `user://save.json`), and exposes a migration entrypoint.
+  - No autoload manipulates scene nodes.
+  - Evidence (2026-06-15): `tests/core/test_event_bus.gd` 3/3 passed, `test_game_state.gd` 5/5 passed, `test_save_service.gd` 5/5 passed.
 
-- `[ ]` **P1.4 Add deterministic run context.**
-  - Store `player_id`, `loop_index`, and `run_seed`.
-  - Accept a debug seed override for recorded demo runs.
-  - Use local `RandomNumberGenerator` instances; never depend on global random state for placement.
+- `[x]` **P1.4 Add deterministic run context.**
+  - `GameState.run_context` owns `player_id`, `loop_index`, and `run_seed`; supports `debug_seed_override`.
+  - `make_rng(stream_name)` and `derive_seed(stream_name)` create local `RandomNumberGenerator` instances from the run seed.
+  - Evidence (2026-06-15): `tests/core/test_run_context.gd` 4/4 passed.
 
-- `[ ]` **P1.5 Add minimum slice data.**
-  - One tarnished pendant template used by ordinary instances and carriers.
-  - At least two non-carrier pendant decoys.
-  - At least three compatible outer containers/piles.
-  - One `RELEASED` demo fragment definition.
-  - One four-band echo set and cached scanner response.
-  - Required pendant cleaning tool in the slice starting kit.
+- `[x]` **P1.5 Add minimum slice data.**
+  - `data/objects/objects.json`: `tarnished_pendant` template plus two ordinary non-carrier instance fixtures.
+  - `data/objects/tools.json` / `techniques.json`: `soft_cloth` tool and `pendant_cleaning` technique.
+  - `data/routes/containers.json`: `pile_left`, `pile_center`, `shelf_right`.
+  - `data/artifacts/master_artifact.json` + `fragments.json`: artifact-agnostic five-slot Master Artifact; `fragment_01` is `RELEASED`.
+  - `data/echoes/echoes.json`: four-band `demo_echo_set` with placeholder audio paths (documented).
+  - `data/scanner-cache/scanner_cache.json`: advisory cached response for `tarnished_pendant` matching PRD §20.
+  - `data/routes/starting_kit.json`: `soft_cloth` in starting kit.
+  - Evidence (2026-06-15): `tests/core/test_data_repository.gd::test_slice_fixtures_load_and_validate` passed.
 
-- `[ ]` **P1.6 Test model and loader contracts.**
-  - Valid fixtures load.
-  - Missing/duplicate IDs fail.
-  - Broken references fail.
-  - Round-trip serialization preserves fields and types.
+- `[x]` **P1.6 Test model and loader contracts.**
+  - Added `tests/models/test_models.gd` (11 tests) and `tests/core/` tests for repository, EventBus, GameState, SaveService, and run context (22 tests).
+  - Covers valid parsing, round-trip serialization, missing/duplicate IDs, unknown enums, invalid ranges, broken tool/fragment/echo/route/scanner/container references, accumulated errors, atomic writes, migration rejection, and deterministic seeds.
+  - Evidence (2026-06-15): full GUT suite `49/49 passed`, 160 asserts.
 
 ### Acceptance
 
-- [ ] No artifact-specific value is hardcoded in gameplay logic.
-- [ ] All slice fixtures load from data and pass validation.
-- [ ] Cross-system events compile with typed payloads.
-- [ ] A fixed seed produces the same test random sequence.
+- [x] No artifact-specific value is hardcoded in gameplay logic.
+- [x] All slice fixtures load from data and pass validation.
+- [x] Cross-system events compile with typed payloads.
+- [x] A fixed seed produces the same test random sequence.
 
 ### Verification
 
@@ -975,7 +980,7 @@ Manual only after all automated phase tests pass: record one uninterrupted end-t
 
 | Requirement group | Phase | Current status |
 |---|---:|---|
-| ARCH-R1..R5 | 0, 1, 8 | Phase 0 done (toolchain, signals/ARCH-R4, layout); Phase 1/8 not started |
+| ARCH-R1..R5 | 0, 1, 8 | Phase 0 done; Phase 1 models/repository/autoloads/data done (ARCH-R4/R5); Phase 8 backend pending |
 | SAVE-R1..R3, SAVE-R6 | 2, 5, 9 | Not started |
 | CLOCK-R1..R3 | 2 | Placeholder only |
 | DLV-R1..R3, DLV-R5 | 3 | Not started |

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "scanner_cache",
+      "id": "tarnished_pendant",
+      "template_id": "tarnished_pendant",
+      "response": {
+        "type": "pendant",
+        "period": "early 20th century",
+        "materials": ["silver", "patina"],
+        "markings": ["clasp wear", "tarnish pattern"],
+        "condition_note": "Heavily tarnished; clasp mechanism intact but stiff.",
+        "cultural_relevance": "Personal jewelry from the Panay region; similar forms appear in heirloom portraits.",
+        "price_range": [120, 280],
+        "modification_signs": []
+      },
+      "fallback": true
+    }
+  ]
+}

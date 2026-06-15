@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "tool",
+      "id": "soft_cloth",
+      "display_name": "Soft Cleaning Cloth",
+      "enables": ["pendant_wipe"],
+      "quality": 1,
+      "cost": 0,
+      "is_legacy": true
+    },
+    {
+      "record_type": "tool",
+      "id": "rust_brush",
+      "display_name": "Wire Brush",
+      "enables": ["tin_pry"],
+      "quality": 1,
+      "cost": 80,
+      "is_legacy": false
+    }
+  ]
+}

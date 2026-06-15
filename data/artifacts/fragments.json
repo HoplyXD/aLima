@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "id": "fragment_01",
+      "master_artifact_id": "master_artifact_demo",
+      "owning_character_id": "auntie",
+      "case_slot_index": 0,
+      "state": "released",
+      "echo_set_ref": "demo_echo_set",
+      "historical_fact_ref": "fragment_01_fact"
+    },
+    {
+      "id": "fragment_02",
+      "master_artifact_id": "master_artifact_demo",
+      "owning_character_id": "artisan",
+      "case_slot_index": 1,
+      "state": "locked",
+      "echo_set_ref": "demo_echo_set",
+      "historical_fact_ref": "fragment_02_fact"
+    },
+    {
+      "id": "fragment_03",
+      "master_artifact_id": "master_artifact_demo",
+      "owning_character_id": "scavenger",
+      "case_slot_index": 2,
+      "state": "locked",
+      "echo_set_ref": "demo_echo_set",
+      "historical_fact_ref": "fragment_03_fact"
+    },
+    {
+      "id": "fragment_04",
+      "master_artifact_id": "master_artifact_demo",
+      "owning_character_id": "archeologist",
+      "case_slot_index": 3,
+      "state": "locked",
+      "echo_set_ref": "demo_echo_set",
+      "historical_fact_ref": "fragment_04_fact"
+    },
+    {
+      "id": "fragment_05",
+      "master_artifact_id": "master_artifact_demo",
+      "owning_character_id": "buyer",
+      "case_slot_index": 4,
+      "state": "locked",
+      "echo_set_ref": "demo_echo_set",
+      "historical_fact_ref": "fragment_05_fact"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "container",
+      "id": "pile_left",
+      "display_name": "Left Delivery Pile",
+      "compatibility_tags": ["jewelry", "metal", "small"],
+      "capacity": 6,
+      "is_locked_by_default": false,
+      "unlock_requirement": ""
+    },
+    {
+      "record_type": "container",
+      "id": "pile_center",
+      "display_name": "Center Delivery Pile",
+      "compatibility_tags": ["jewelry", "ceramic", "paper", "small"],
+      "capacity": 6,
+      "is_locked_by_default": false,
+      "unlock_requirement": ""
+    },
+    {
+      "record_type": "container",
+      "id": "shelf_right",
+      "display_name": "Right Shelf",
+      "compatibility_tags": ["jewelry", "metal", "mechanical"],
+      "capacity": 4,
+      "is_locked_by_default": false,
+      "unlock_requirement": ""
+    }
+  ]
+}

@@ -40,18 +40,22 @@
 alima/
 ├── CLAUDE.md                  ← you are here
 ├── README.md                  ← GDD / narrative and design source
-├── project.godot              ← Godot 4.6.3 project root
+├── project.godot              ← Godot 4.6.3 project root; autoloads EventBus, GameState, SaveService
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
 │   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
 ├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/
 ├── scripts/                   ← shop, core, models, discovery, restoration, scanner, journal, portal
+│   ├── core/                  ← EventBus, GameState, SaveService, DataRepository
+│   └── models/                ← typed data contracts + enums + validation
 ├── dialogue/                  ← reusable dialogue scene and script
 ├── addons/gut/                ← vendored GUT 9.6.0 (Godot Unit Test) runner
 ├── resources/                 ← Godot .tres definitions
 ├── assets/                    ← original art/audio only
 ├── tests/                     ← GUT tests (test_*.gd)
+│   ├── models/                ← model round-trip/validation tests
+│   └── core/                  ← repository, autoload, save, run-context tests
 ├── .github/workflows/ci.yml   ← CI: 4.6.3 import + GUT + gdformat + gdlint
 ├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
 ├── server/                    ← Express: LLM proxy + portal client (Phase 8; not yet created)
@@ -126,6 +130,10 @@ $C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe --version  # exp
 godot --editor --path .
 godot --headless --editor --path . --quit            # import/build check
 godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+
+# Focused Phase 1 suites
+godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/models
+godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core
 
 # --- Lint/format (gdtoolkit; pinned in requirements-dev.txt: pip install -r requirements-dev.txt) ---
 # Scope to our source — vendored addons/gut is third-party and not formatted by us.
