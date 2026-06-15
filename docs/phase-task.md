@@ -38,9 +38,9 @@ Every completed task must:
 
 ## Current Repository Audit
 
-- `[-]` Godot project scaffold exists and targets feature `4.6`, but the local CLI resolves to `4.5.1.stable`.
-- `[-]` Upstream commit `0255430` is integrated. It adds the hybrid Shop scene, HUD controller, visitor placeholder, and dialogue mouse input, but runtime behavior is not verified under 4.6.3.
-- `[-]` The first 4.5.1 headless run reported a missing imported placeholder texture after the upstream merge. A 4.5.1 editor import regenerated the cache and the subsequent headless run started cleanly; the required 4.6.3 verification remains blocked.
+- `[-]` Godot project scaffold exists and targets feature `4.6`. Official Godot 4.6.3 is installed in `C:\Users\roman\Downloads` and passes explicit import/startup checks, but the bare `godot` command still resolves to `4.5.1.stable`.
+- `[-]` Upstream commit `0255430` is integrated. It adds the hybrid Shop scene, HUD controller, visitor placeholder, and dialogue mouse input. The editor import and headless startup pass under 4.6.3; manual UI behavior remains unverified and the HUD is hidden.
+- `[x]` The 4.6.3 editor import and configured main-scene startup complete without parser, resource, UID, or missing-texture errors. Evidence: `Godot_v4.6.3-stable_win64_console.exe --headless --editor --path . --quit` and `--headless --path . --quit`, run 2026-06-15.
 - `[-]` `scenes/Shop.tscn` is the configured main scene and loads, but its `HUD` CanvasLayer is currently `visible = false`, so the integrated interface is not yet a usable production screen.
 - `[-]` Shop orchestration is duplicated across `scenes/hud.gd`, unused `scenes/shop_3d.gd`, and `prototype/shop.gd`. The production scene currently attaches `scenes/hud.gd` to the HUD rather than a controller to the Shop root.
 - `[-]` The production Shop contains an unlabeled test button (`AAAAAAAAA`) that must be removed during stabilization.
@@ -71,7 +71,7 @@ The deleted root `phasetask.md` is still available in Git history at commit `bab
 
 Do not rebuild the Shop from scratch. Start with **Phase 0 stabilization**:
 
-1. Install/select Godot 4.6.3 and import the project.
+1. Select the installed Godot 4.6.3 executable for the editor and CLI; do not use the 4.5.1 executable currently first on `PATH`.
 2. Make the existing `scenes/Shop.tscn` HUD visible and remove the stray test button.
 3. Consolidate the duplicated controllers into one Shop controller plus one presentation-only HUD.
 4. Verify all four buttons, dialogue input, visitor visibility, and clock pause/resume.
@@ -183,23 +183,21 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 
 - `[-]` **P0.1 Integrate the upstream hybrid shop work.**
   - Commit `0255430` is present locally.
-  - The texture cache regenerates and the production scene starts without console errors under the currently installed 4.5.1 CLI.
+  - The texture cache regenerates and the production scene starts without console errors under the installed Godot 4.6.3 console executable.
   - The current Shop is not yet production-ready: reveal the hidden HUD and remove the `AAAAAAAAA` test button.
-  - Import and run `scenes/Shop.tscn` under Godot 4.6.3.
-  - Confirm the placeholder texture imports and the scene parses without errors.
+  - The 4.6.3 editor import, configured main scene, and direct `scenes/Shop.tscn` startup pass without parser/resource errors (verified 2026-06-15).
   - Confirm Door, Workbench, Journal, and Phone receive mouse input.
-  - Keep this partial until the 4.6.3 checks pass.
+  - Keep this partial until the HUD is usable and manual interaction checks pass.
 
-- `[!]` **P0.2 Install and select Godot 4.6.3.**
-  - Install the official 4.6.3 standard build.
+- `[-]` **P0.2 Select Godot 4.6.3 for CLI/editor use.**
+  - Official 4.6.3 standard and console builds are installed in `C:\Users\roman\Downloads`.
   - Ensure `godot --version` resolves to `4.6.3.stable`.
   - Do not silently use 4.5.1 because `project.godot` and the checklist target 4.6.
-  - Record the executable location if the team uses a non-PATH installation.
+  - Until `PATH` is corrected, use `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` explicitly.
 
-- `[!]` **P0.3 Complete the 4.6.3 import gate.**
-  - Run `godot --headless --editor --path . --quit`.
-  - Run `godot --headless --path . --quit`.
-  - Resolve parse, missing resource, UID, and import errors.
+- `[-]` **P0.3 Complete the production architecture gate after the 4.6.3 import check.**
+  - The explicit 4.6.3 editor import and main-scene startup checks pass as of 2026-06-15.
+  - Keep using 4.6.3 for subsequent parser, resource, UID, and import checks.
   - Attach the final production controller to the Shop root and keep the HUD presentation-only.
 
 - `[ ]` **P0.4 Consolidate duplicate shop controllers.**
@@ -228,7 +226,7 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 ### Acceptance
 
 - [ ] `godot --version` reports 4.6.3.
-- [ ] The production Shop imports and opens with zero parser/resource errors.
+- [x] The production Shop imports and opens with zero parser/resource errors under the explicit Godot 4.6.3 console executable (2026-06-15).
 - [ ] Exactly one production shop controller owns orchestration.
 - [ ] GUT smoke test, gdformat check, and gdlint execute successfully.
 - [ ] No secret or real `.env` is tracked.

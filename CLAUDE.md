@@ -178,7 +178,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. The local `godot` CLI was still 4.5.1 on June 15, 2026; no task may be marked `[x]` until its acceptance checks pass under Godot 4.6.3.
+- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64.exe`; its console executable passed the editor import and main-scene startup checks on June 15, 2026. The bare `godot` command still resolves to 4.5.1, so use the 4.6.3 executable explicitly until `PATH` is corrected. Runtime tasks still require their own acceptance checks before `[x]`.
 
 ---
 

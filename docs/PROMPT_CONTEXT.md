@@ -72,13 +72,13 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 
 ## Verified Repository State
 
-Verified with local Godot `4.5.1.stable` on 2026-06-15:
+Verified with the installed official Godot `4.6.3.stable` executable on 2026-06-15:
 
-- `godot --headless --editor --path . --quit` completed successfully.
+- `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe --headless --editor --path . --quit` completed successfully.
 - The configured main scene, `scenes/Shop.tscn`, starts without parser/resource errors and prints the HUD ready message.
 - `prototype/shop.tscn` and `dialogue/dialogue_box.tscn` load.
 - `prototype/Main.tscn` is broken because it references missing `res://Main.gd` instead of `res://prototype/Main.gd`.
-- Required Godot 4.6.3 verification has not occurred; local `godot` resolves to `C:\Users\roman\Desktop\Godot\godot.exe` version 4.5.1.
+- Godot 4.6.3 is installed in `C:\Users\roman\Downloads`. The bare `godot` command still resolves to `C:\Users\roman\Desktop\Godot\godot.exe` version 4.5.1, so verification commands must use the 4.6.3 executable explicitly until `PATH` is corrected.
 - Git working tree was clean before this documentation change, and no tracked `.env`, obvious secret, credential, or API-key file was found.
 
 ### Current Playable State
@@ -183,7 +183,7 @@ git status --short
 git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 ```
 
-Current limitations: Godot 4.6.3, GUT, gdformat, gdlint, `server/`, and `mock-portal/` are absent or unavailable, so prompts must add and verify only the tooling required by their phase and report every command that could not run.
+Current limitations: Godot 4.6.3 is installed but is not the executable selected by the bare `godot` command. GUT, gdformat, gdlint, `server/`, and `mock-portal/` are absent or unavailable, so prompts must add and verify only the tooling required by their phase and report every command that could not run.
 
 ## Hackathon And Submission Priorities
 
@@ -195,7 +195,7 @@ Current limitations: Godot 4.6.3, GUT, gdformat, gdlint, `server/`, and `mock-po
 
 ## Risks, Contradictions, And Unknowns
 
-- The required engine is 4.6.3, but only 4.5.1 is installed and verified locally.
+- Godot 4.6.3 is installed and passes the project import/startup checks, but the bare `godot` command still selects 4.5.1. This can cause agents or CI instructions to verify against the wrong engine unless the executable is selected explicitly.
 - Nearly every P0 gameplay and submission system is unimplemented with 15 days remaining until June 30, 2026.
 - The README says the public repository was initialized June 1; Git history begins June 13, 2026. Correct the claim or document external evidence before submission.
 - The Twine intro starts the player with one fragment, while current design requires only the journal and all five fragments hidden. Current PRD/invariants win.
