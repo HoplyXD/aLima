@@ -7,6 +7,10 @@ class_name GlowMapper
 ## explicitly authorizes flicker. Both 3D placement and 2D triage must use this
 ## mapper so they cannot disagree.
 
+## Normalized proximity at which the active promoted carrier may reveal its
+## flickering glow. Audio leads; flicker confirms (DISC-R10).
+const GLOW_REVEAL_AT := 0.60
+
 const COLOR_WHITE := Color("#cfd2d6")
 const COLOR_GREEN := Color("#5bc46a")
 const COLOR_BLUE := Color("#4c8cff")

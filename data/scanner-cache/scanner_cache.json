@@ -11,9 +11,113 @@
         "materials": ["silver", "patina"],
         "markings": ["clasp wear", "tarnish pattern"],
         "condition_note": "Heavily tarnished; clasp mechanism intact but stiff.",
-        "cultural_relevance": "Personal jewelry from the Panay region; similar forms appear in heirloom portraits.",
+        "cultural_relevance": "A personal pendant in a style common to heirloom jewelry in the Panay region. Local families often kept similar pieces as keepsakes; no specific provenance is claimed.",
         "price_range": [120, 280],
-        "modification_signs": []
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "Exact maker and original owner are unknown.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review and verified local sources."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "rusted_tin",
+      "template_id": "rusted_tin",
+      "response": {
+        "type": "tin canister",
+        "period": "mid-20th century",
+        "materials": ["tin", "paper"],
+        "markings": ["oxidation streaks", "replaced lid seam"],
+        "condition_note": "Surface rust over most of the body; lid appears to have been resealed.",
+        "cultural_relevance": "A household storage tin of a type once common in regional sari-sari stores and homes. The form is ordinary; any historical value depends on contents and provenance.",
+        "price_range": [10, 40],
+        "modification_signs": ["Lid seam looks newer than the body.", "Interior paper lining shows uneven aging."],
+        "confidence": "low",
+        "uncertainty_notes": "The resealed lid suggests later handling. Authenticity cannot be confirmed from the exterior alone.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Development fixture for testing suspicious/modified verdict paths."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "cracked_photo_frame",
+      "template_id": "cracked_photo_frame",
+      "response": {
+        "type": "wooden photo frame",
+        "period": "early to mid-20th century",
+        "materials": ["wood", "glass", "paper"],
+        "markings": ["wood grain", "glass cracks", "faded backing paper"],
+        "condition_note": "Glass is cracked; wood has minor scratches; backing paper is faded but intact.",
+        "cultural_relevance": "A domestic frame style found in many Filipino homes. Any historical significance depends on the photograph and provenance, not the frame itself.",
+        "price_range": [40, 120],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "Date is estimated from wear and construction style, not a maker's mark.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "small_santo",
+      "template_id": "small_santo",
+      "response": {
+        "type": "small wooden santo figure",
+        "period": "20th century",
+        "materials": ["wood", "paint"],
+        "markings": ["layered paint", "minor chips"],
+        "condition_note": "Paint is layered and chipped in places; wood shows age-appropriate cracking.",
+        "cultural_relevance": "Santo figures are part of Filipino Catholic devotional practice. This example appears to be a small household piece rather than a documented workshop piece.",
+        "price_range": [60, 150],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "No workshop mark or documented provenance is visible.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "dusty_locket",
+      "template_id": "dusty_locket",
+      "response": {
+        "type": "locket",
+        "period": "early 20th century",
+        "materials": ["brass", "silver"],
+        "markings": ["hinge wear", "tarnish"],
+        "condition_note": "Dusty and tarnished; hinge moves with slight resistance.",
+        "cultural_relevance": "A personal locket similar to keepsake jewelry kept in families across the Visayas. Specific origin and owner are not recorded.",
+        "price_range": [100, 240],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "Metal composition is inferred from surface color and tarnish, not assay.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
       },
       "fallback": true
     }

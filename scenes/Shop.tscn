@@ -6,6 +6,9 @@
 [ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="4_yltc6"]
 [ext_resource type="Script" uid="uid://dv20ba7olxrka" path="res://scripts/shop/shop_controller.gd" id="5_ctrl"]
 [ext_resource type="PackedScene" path="res://scenes/ui/triage_screen.tscn" id="6_triage"]
+[ext_resource type="PackedScene" path="res://scenes/ui/echo_hud.tscn" id="7_echo"]
+[ext_resource type="Script" path="res://scripts/shop/echo_scene_bridge.gd" id="8_bridge"]
+[ext_resource type="Script" path="res://scripts/shop/echo_focus_controller.gd" id="9_focus"]
 
 [sub_resource type="Environment" id="Environment_ec5oe"]
 background_energy_multiplier = 5.0
@@ -238,3 +241,12 @@ visible = false
 
 [node name="TriageScreen" parent="." unique_id=900789324 instance=ExtResource("6_triage")]
 visible = false
+
+[node name="EchoHud" parent="." instance=ExtResource("7_echo")]
+
+[node name="EchoSceneBridge" type="Node3D" parent="."]
+script = ExtResource("8_bridge")
+camera_path = NodePath("../Camera3D")
+
+[node name="EchoFocusController" type="Node" parent="."]
+script = ExtResource("9_focus")

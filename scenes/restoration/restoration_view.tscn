@@ -264,6 +264,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Reset View (R)"
 
+[node name="ScanButton" type="Button" parent="HUD/BottomPanel/Margin/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Scan & Judge"
+
 [node name="CloseButton" type="Button" parent="HUD/BottomPanel/Margin/VBox/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2

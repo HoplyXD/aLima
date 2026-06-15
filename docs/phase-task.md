@@ -49,7 +49,7 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[x]` Clock/day/loop progression is now the real Phase 2 system: a reusable `DayClock` autoload (07:00->20:00 close, minute-level display, pause ownership) and a `LoopController` autoload (Day 1-5 progression + the five-day split reset). The Shop controller is the display + pause-owner driver only. Verified by GUT (`tests/core/test_day_clock.gd`, `test_loop_controller.gd`, `test_save_service.gd`; full suite 69/69, 2026-06-15). On-screen/real-time observation of the running clock remains a manual check (see Phase 2 Acceptance).
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
-- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, and the Phase 5 Spawn Director are implemented and covered by GUT under Godot 4.6.3. Cultural Echoes, cached scanner, backend/mock Portal, journal, museum record, and exports are not implemented.
+- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, and Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating) are implemented and covered by GUT under Godot 4.6.3. Cached scanner, backend/mock Portal, journal, museum record, and exports are not implemented.
 - `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate. Journal and Phone actions remain placeholder-only.
 
 ## Reconciliation With the Old Tracker
@@ -661,39 +661,39 @@ Manual: run the three-seed demo (`SpawnDirectorDemo.run_three_seeded_placements`
 
 ### Tasks
 
-- `[ ]` **P6.1 Configure four audio layers.**
+- `[x]` **P6.1 Configure four audio layers.**
   - Hum, Melody, Voice, and Heartbeat use separate players/buses.
   - Source files are original, disclosed, and data-selected by `EchoSet`.
   - Start layers synchronized so crossfades do not restart clips.
 
-- `[ ]` **P6.2 Compute normalized proximity.**
+- `[x]` **P6.2 Compute normalized proximity.**
   - Measure the active player/focus position to the active carrier anchor.
   - Map distance to `0.0..1.0` using authored near/far radii.
   - Smooth changes to prevent meter and volume jitter.
 
-- `[ ]` **P6.3 Implement additive band mixing.**
+- `[x]` **P6.3 Implement additive band mixing.**
   - Hum: 0.00-0.30.
   - Melody: 0.30-0.60.
   - Voice: 0.60-0.85.
   - Heartbeat: 0.85-1.00.
   - Use crossfades and clamps; keep thresholds configurable.
 
-- `[ ]` **P6.4 Enforce silence and heartbeat gates.**
+- `[x]` **P6.4 Enforce silence and heartbeat gates.**
   - Stop/silence Echoes when no released, unfound carrier is in the current scene.
   - Heartbeat volume remains impossible for non-carriers.
   - Clear the active target after discovery/seating.
 
-- `[ ]` **P6.5 Reveal carrier confirmation.**
+- `[x]` **P6.5 Reveal carrier confirmation.**
   - Keep carrier Flickering hidden below `GLOW_REVEAL_AT = 0.60`.
   - Reveal only the promoted carrier's flicker at/above threshold.
   - Pulse carrier and resonance meter with Heartbeat near the target.
 
-- `[ ]` **P6.6 Build accessible 2D feedback.**
+- `[x]` **P6.6 Build accessible 2D feedback.**
   - Resonance meter mirrors normalized proximity.
   - Captions name each active band and voice line.
   - The mechanic remains understandable with master audio muted.
 
-- `[ ]` **P6.7 Test all gates and thresholds.**
+- `[x]` **P6.7 Test all gates and thresholds.**
   - Boundary values select/mix the expected bands.
   - Decoys never emit Heartbeat.
   - Empty scenes remain silent.
@@ -701,10 +701,10 @@ Manual: run the three-seed demo (`SpawnDirectorDemo.run_three_seeded_placements`
 
 ### Acceptance
 
-- [ ] Following cues leads to the exact carrier.
-- [ ] Heartbeat never fires on a decoy.
-- [ ] Captions and meter make the sequence playable without audio.
-- [ ] Audio leads; flicker confirms only from 0.60 proximity.
+- [x] Following cues leads to the exact carrier.
+- [x] Heartbeat never fires on a decoy.
+- [x] Captions and meter make the sequence playable without audio.
+- [x] Audio leads; flicker confirms only from 0.60 proximity.
 
 ### Verification
 

@@ -3,11 +3,37 @@
   "items": [
     {
       "id": "demo_echo_set",
-      "hum_stream": "",
-      "melody_stream": "",
-      "voice_stream": "",
+      "hum_stream": "res://assets/audio/echoes/hum.wav",
+      "melody_stream": "res://assets/audio/echoes/melody.wav",
+      "voice_stream": "res://assets/audio/echoes/voice.wav",
       "voice_caption": "[placeholder] A soft phrase in Kinaray-a — subtitle and translation will be added once audio is approved.",
-      "heartbeat_stream": ""
+      "heartbeat_stream": "res://assets/audio/echoes/heartbeat.wav",
+      "far_radius": 8.0,
+      "near_radius": 0.5,
+      "smoothing_time": 0.25,
+      "hum_start": 0.00,
+      "hum_peak": 0.15,
+      "hum_end": 0.30,
+      "hum_fade_width": 0.10,
+      "hum_max_gain_db": -12.0,
+      "hum_caption": "Hum",
+      "melody_start": 0.30,
+      "melody_peak": 0.45,
+      "melody_end": 0.60,
+      "melody_fade_width": 0.10,
+      "melody_max_gain_db": -8.0,
+      "melody_caption": "Melody",
+      "voice_start": 0.60,
+      "voice_peak": 0.72,
+      "voice_end": 0.85,
+      "voice_fade_width": 0.10,
+      "voice_max_gain_db": -4.0,
+      "heartbeat_start": 0.85,
+      "heartbeat_peak": 0.93,
+      "heartbeat_end": 1.00,
+      "heartbeat_fade_width": 0.10,
+      "heartbeat_max_gain_db": 0.0,
+      "heartbeat_caption": "Heartbeat"
     }
   ]
 }

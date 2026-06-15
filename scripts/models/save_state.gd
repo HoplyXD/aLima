@@ -64,7 +64,7 @@ func reset_loop_state() -> void:
 class PersistentState:
 	var journal_entries: Dictionary = {}  ## template_id -> JournalEntry.
 	var techniques_learned: Array[String] = []
-	var scanned_records: Dictionary = {}  ## template_id -> scan response dict.
+	var scanned_records: Dictionary = {}  ## template_id -> ScannedRecord.
 	var museum_entries: Dictionary = {}  ## artifact_id -> MuseumEntry.
 	var story_clues: Array[String] = []
 	var dialogue_flags: Array[String] = []
@@ -81,7 +81,7 @@ class PersistentState:
 		var p := PersistentState.new()
 		p.journal_entries = SaveState._entry_dict(data.get("journal_entries", {}), JournalEntry)
 		p.techniques_learned = ModelUtils.as_string_array(data.get("techniques_learned"))
-		p.scanned_records = data.get("scanned_records", {}) as Dictionary
+		p.scanned_records = SaveState._entry_dict(data.get("scanned_records", {}), ScannedRecord)
 		p.museum_entries = SaveState._entry_dict(data.get("museum_entries", {}), MuseumEntry)
 		p.story_clues = ModelUtils.as_string_array(data.get("story_clues"))
 		p.dialogue_flags = ModelUtils.as_string_array(data.get("dialogue_flags"))
@@ -99,7 +99,7 @@ class PersistentState:
 		return {
 			"journal_entries": SaveState._dict_to_raw(journal_entries),
 			"techniques_learned": techniques_learned.duplicate(),
-			"scanned_records": scanned_records.duplicate(),
+			"scanned_records": SaveState._dict_to_raw(scanned_records),
 			"museum_entries": SaveState._dict_to_raw(museum_entries),
 			"story_clues": story_clues.duplicate(),
 			"dialogue_flags": dialogue_flags.duplicate(),
@@ -123,6 +123,9 @@ class PersistentState:
 		for fragment_id in fragments.keys():
 			var fragment: Fragment = fragments[fragment_id]
 			fragment.validate(result, file_path)
+		for template_id in scanned_records.keys():
+			var record: ScannedRecord = scanned_records[template_id]
+			record.validate(result, file_path)
 
 
 ## ---------------------------------------------------------------------------

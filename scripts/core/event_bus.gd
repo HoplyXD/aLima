@@ -19,6 +19,10 @@ signal triage_completed(kept_ids: Array[String], recycled_ids: Array[String])
 signal restoration_completed(instance_id: String, condition: float, tool_id: String)
 signal object_opened(instance_id: String, result: String, content_id: String)
 
+# --- Scanner events ---
+signal scanner_response_received(instance_id: String, status: String)
+signal scanner_verdict_committed(instance_id: String, verdict: String)
+
 # --- Discovery events ---
 signal carrier_activated(instance_id: String, fragment_id: String)
 signal echo_proximity_changed(instance_id: String, proximity: float, band: String)

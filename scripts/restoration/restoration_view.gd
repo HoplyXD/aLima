@@ -26,6 +26,7 @@ const STROKE_PIXEL_THRESHOLD: float = 64.0  ## Drag distance that commits one st
 ## Temporary diagnostic logging for the restoration interaction. Flip to false
 ## (or remove) once the on-screen flow is confirmed working.
 const DEBUG_LOG: bool = true
+const SCANNER_SCREEN_SCENE := preload("res://scenes/ui/scanner_screen.tscn")
 
 var _service: RestorationService
 var _selected_uid: String = ""
@@ -42,6 +43,7 @@ var _stroke_pixels: float = 0.0
 var _last_pointer: Vector2 = Vector2.ZERO
 var _stroke_uvs: PackedVector2Array = PackedVector2Array()
 var _instance_uids: Array[String] = []
+var _scanner_screen: ScannerScreen
 
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
@@ -63,11 +65,15 @@ var _instance_uids: Array[String] = []
 @onready var _caption_label: Label = %CaptionLabel
 @onready var _clasp_prompt: Label = %ClaspPrompt
 @onready var _reset_button: Button = %ResetButton
+@onready var _scan_button: Button = %ScanButton
 @onready var _close_button: Button = %CloseButton
 
 
 func _ready() -> void:
 	_service = RestorationService.new()
+	_scanner_screen = SCANNER_SCREEN_SCENE.instantiate()
+	add_child(_scanner_screen)
+	_scanner_screen.closed.connect(_on_scanner_closed)
 	visible = false
 	_ensure_input_actions()
 	_viewport_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -77,6 +83,7 @@ func _ready() -> void:
 	_instance_selector.item_selected.connect(_on_instance_selected)
 	_mode_button.pressed.connect(_toggle_mode)
 	_reset_button.pressed.connect(reset_view)
+	_scan_button.pressed.connect(_on_scan_pressed)
 	_close_button.pressed.connect(close)
 	set_process(false)
 
@@ -118,6 +125,27 @@ func _release_pause_if_owned() -> void:
 	if _owns_pause:
 		DayClock.release_pause(DayClock.PAUSE_RESTORATION)
 		_owns_pause = false
+
+
+func _on_scan_pressed() -> void:
+	if _selected_uid.is_empty():
+		return
+	var inst := _service.find_instance_by_id(_selected_uid)
+	if inst == null or inst.state != ModelEnums.ObjState.CLEAN:
+		return
+	_scanner_screen.open(inst)
+
+
+func _on_scanner_closed() -> void:
+	# The player may have committed a verdict; refresh the instance display.
+	if _selected_uid.is_empty():
+		return
+	var inst := _service.find_instance_by_id(_selected_uid)
+	var template := (
+		_service.get_repository().get_template(inst.template_id) if inst != null else null
+	)
+	if inst != null:
+		_refresh(inst, template)
 
 
 # --- Instance / tool selection ----------------------------------------------
@@ -341,8 +369,9 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	if is_open:
 		_object.set_clasp_open(true)
 	_clasp_prompt.visible = is_clean
+	_scan_button.visible = is_clean
 	if is_clean:
-		_clasp_prompt.text = "Pendant is clean — click the clasp (or press Open) to open it."
+		_clasp_prompt.text = "Pendant is clean — scan and judge, or click the clasp to open."
 	elif is_open:
 		_clasp_prompt.visible = false
 
