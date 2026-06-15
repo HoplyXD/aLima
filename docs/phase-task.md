@@ -38,13 +38,13 @@ Every completed task must:
 
 ## Current Repository Audit
 
-- `[x]` Godot project scaffold exists and targets feature `4.6`. Godot 4.6.3 passes explicit import/startup checks, and the bare `godot` command now resolves to `4.6.3.stable` via a PATH shim (Phase 0 P0.2; the older 4.5.1 stays at its own path).
+- `[-]` Godot project scaffold exists and targets feature `4.6`. Godot 4.6.3 is installed and passes explicit import/startup checks via `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`. The bare `godot` command currently resolves to the older `4.5.1.stable` executable at `C:\Users\roman\Desktop\Godot` (Phase 0 P0.2 remains open; see Acceptance below).
 - `[-]` Upstream commit `0255430` is integrated and stabilized: HUD revealed, stray button removed, controllers consolidated. Editor import and headless startup pass under 4.6.3; on-screen manual UI click-through remains for human confirmation.
 - `[x]` The 4.6.3 editor import and configured main-scene startup complete without parser, resource, UID, or missing-file errors. Evidence: `--headless --editor --path . --quit` and `--headless --path . --quit`, run 2026-06-15 (exit 0, no error lines).
 - `[x]` `scenes/Shop.tscn` is the configured main scene; its `HUD` CanvasLayer is now `visible = true` and is a usable production screen.
 - `[x]` Shop orchestration is consolidated into one controller on the Shop root (`scripts/shop/shop_controller.gd`) plus a presentation-only HUD (`scenes/ui/shop_hud.gd`). The old `scenes/hud.gd`, `scenes/shop_3d.gd`, and `prototype/` controllers were removed after migration.
 - `[x]` The stray `AAAAAAAAA` test button has been removed from `scenes/Shop.tscn`.
-- `[-]` Clock/day progression exists only as placeholder state in the Shop controller. There is no reusable loop controller or split persistence (Phase 2).
+- `[-]` Clock/day progression is placeholder state in the Shop controller with minute-level display (7:00 AM → 7:01 AM → …). A reusable `DayClock`, pause ownership, and split persistence are Phase 2.
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
 - `[ ]` Object data pipeline, real delivery/triage, restoration, carriers, Spawn Director, Cultural Echoes, cached scanner, backend, mock Portal, journal, museum record, feature tests (beyond the Phase 0 smoke test), and exports are not implemented.
@@ -181,19 +181,21 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 
 ### Tasks
 
-- `[-]` **P0.1 Integrate the upstream hybrid shop work.**
+- `[x]` **P0.1 Integrate the upstream hybrid shop work.**
   - Commit `0255430` is present locally.
   - HUD revealed (`HUD.visible = true`) and the stray `AAAAAAAAA` test button removed from `scenes/Shop.tscn`.
   - The 4.6.3 editor import and `scenes/Shop.tscn` startup pass without parser/resource/UID/missing-file errors; the controller logs `[Shop] ready` (verified 2026-06-15).
   - Door/Workbench/Journal/Phone input is covered at the logic level by the GUT smoke test: button intent signals fire and dialogue advances via simulated mouse + keyboard events through the real `DialogueBox._input`.
-  - **Remaining gate (manual):** on-screen click-through under a real display (mouse hit-testing/visuals) — to be confirmed by a human. Kept `[-]` until then.
-  - Evidence (2026-06-15): `Godot_v4.6.3-stable_win64_console.exe --headless --editor --path . --quit` (exit 0, no errors); `--headless --path . --quit` (exit 0); GUT `7/7 passed`.
+  - Manual on-screen check passed (2026-06-15, human-confirmed under windowed 4.6.3): HUD visible; Door shows the visitor + dialogue; left-click and `ui_accept` both advance; closing hides the visitor and restores the action buttons; Workbench/Journal/Phone show their placeholders; the clock advances and pauses/resumes with dialogue.
+  - Minute-level clock check passed (2026-06-15, human-confirmed under windowed 4.6.3): clock starts at `7:00 AM`, visibly advances through `7:01 AM`/`7:02 AM`/etc, reaches `8:00 AM` after roughly 60 real seconds, freezes while dialogue is open, and resumes after dialogue closes.
+  - Evidence (2026-06-15): `--headless --editor --path . --quit` (exit 0, no errors); `--headless --path . --quit` (exit 0); GUT `16/16 passed` (54 asserts) including `tests/test_shop_clock.gd`; windowed manual run confirmed by the team.
 
-- `[x]` **P0.2 Select Godot 4.6.3 for CLI/editor use.**
-  - A PATH shim (`C:\Users\roman\tools\bin\godot.cmd` → the 4.6.3 console exe) is prepended to the User PATH ahead of the older 4.5.1 install (which stays at its own path). A bash shim (`godot`) is included for Git Bash.
-  - `godot --version` now reports `4.6.3.stable.official.7d41c59c4` in a fresh shell.
-  - The explicit `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` still works for the current/unrefreshed session.
-  - Evidence (2026-06-15): fresh-shell `godot --version` → `4.6.3.stable.official.7d41c59c4`; resolved to `C:\Users\roman\tools\bin\godot.cmd`.
+- `[-]` **P0.2 Select Godot 4.6.3 for CLI/editor use.**
+  - Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`).
+  - A PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd` → the 4.6.3 console exe, and `C:\Users\roman\tools\bin` is on the User PATH. A bash shim (`godot`) is also present in that directory.
+  - The bare `godot` command currently resolves to the older `4.5.1.stable` executable at `C:\Users\roman\Desktop\Godot` because `godot.exe` appears earlier in the effective PATH than the `.cmd` shim. The older 4.5.1 install stays at its own path.
+  - The explicit `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` works and is the verified executable used for all Phase 0 checks.
+  - Evidence (2026-06-15): `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe --version` → `4.6.3.stable.official.7d41c59c4`; bare `godot --version` → `4.5.1.stable.official.f62fdbde1`.
 
 - `[x]` **P0.3 Complete the production architecture gate after the 4.6.3 import check.**
   - `scripts/shop/shop_controller.gd` (extends `Node3D`) is attached to the Shop root and owns orchestration + clock state.
@@ -230,10 +232,10 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 
 ### Acceptance
 
-- [x] `godot --version` reports 4.6.3 (`4.6.3.stable.official.7d41c59c4`, fresh shell, 2026-06-15).
+- `[-]` The bare `godot --version` still reports `4.5.1.stable.official.f62fdbde1` (2026-06-15). Godot 4.6.3 is installed and verified only via the explicit executable `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` (`--version` → `4.6.3.stable.official.7d41c59c4`). This is the remaining Phase 0 blocker.
 - [x] The production Shop imports and opens with zero parser/resource errors under Godot 4.6.3 (2026-06-15).
 - [x] Exactly one production shop controller owns orchestration (`scripts/shop/shop_controller.gd`); HUD is presentation-only.
-- [x] GUT smoke test (7/7), gdformat check, and gdlint execute successfully (2026-06-15).
+- [x] GUT tests (`16/16` passing, 54 asserts), gdformat check, and gdlint execute successfully (2026-06-15).
 - [x] No secret or real `.env` is tracked.
 
 ### Verification

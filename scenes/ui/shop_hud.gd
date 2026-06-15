@@ -64,9 +64,10 @@ func set_day(day: int, total_days: int) -> void:
 	_day_label.text = "Day %d of %d" % [day, total_days]
 
 
-## hour: 24-hour value (the shop runs 7..20). Shown as 12-hour AM/PM.
-func set_time(hour: int) -> void:
-	_clock_label.text = _format_time(hour)
+## hour: 24-hour value (the shop runs 7..20). minute: 0..59.
+## Shown as H:MM AM/PM.
+func set_time(hour: int, minute: int = 0) -> void:
+	_clock_label.text = _format_time(hour, minute)
 
 
 ## Show or hide the four action buttons (e.g. hidden while a dialogue plays).
@@ -92,9 +93,9 @@ func _format_counts(counts: Dictionary) -> String:
 	return "   ".join(parts)
 
 
-func _format_time(hour: int) -> String:
+func _format_time(hour: int, minute: int = 0) -> String:
 	var suffix := "AM" if hour < 12 else "PM"
 	var h := hour % 12
 	if h == 0:
 		h = 12
-	return "%d:00 %s" % [h, suffix]
+	return "%d:%02d %s" % [h, clampi(minute, 0, 59), suffix]

@@ -10,6 +10,7 @@ extends Node3D
 const DAY_START_HOUR := 7  ## Shop opens 07:00.
 const DAY_END_HOUR := 20  ## Shop closes 20:00.
 const TOTAL_DAYS := 5  ## Five-day loop.
+const MINUTES_PER_HOUR := 60  ## In-game minutes shown in one clock hour.
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector to watch the clock move faster while testing.
@@ -18,6 +19,9 @@ const TOTAL_DAYS := 5  ## Five-day loop.
 # --- Placeholder state until the delivery/restoration systems exist ---
 var _day := 1
 var _hour := DAY_START_HOUR
+var _hour_elapsed := 0.0  ## Real seconds elapsed inside the current in-game hour.
+var _clock_paused := false  ## True while dialogue (or another fullscreen UI) freezes time.
+
 var _unrestored := {
 	ShopHud.Rarity.WHITE: 3,
 	ShopHud.Rarity.GREEN: 2,
@@ -34,8 +38,6 @@ var _restored := {
 }
 var _quest_artifacts := 1
 
-var _clock_timer: Timer
-
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
 
@@ -51,38 +53,53 @@ func _ready() -> void:
 
 	_visitor.visible = false
 
-	_clock_timer = Timer.new()
-	_clock_timer.wait_time = seconds_per_hour
-	_clock_timer.timeout.connect(_on_hour_tick)
-	add_child(_clock_timer)
-	_clock_timer.start()
-
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
+
+
+func _process(delta: float) -> void:
+	_advance_clock(delta)
 
 
 ## True while the day clock is actively ticking (paused during dialogue). Exposed
 ## as a read-only seam for tests; not a gameplay system.
 func is_day_running() -> bool:
-	return _clock_timer != null and not _clock_timer.is_stopped()
+	return not _clock_paused
 
 
 func _refresh_ui() -> void:
-	_hud.set_day(_day, TOTAL_DAYS)
-	_hud.set_time(_hour)
 	_hud.set_unrestored(_unrestored)
 	_hud.set_restored(_restored)
 	_hud.set_quest_count(_quest_artifacts)
+	_update_clock_display()
+
+
+func _update_clock_display() -> void:
+	_hud.set_day(_day, TOTAL_DAYS)
+	var minute := int((_hour_elapsed / maxf(seconds_per_hour, 0.0001)) * MINUTES_PER_HOUR)
+	minute = clampi(minute, 0, MINUTES_PER_HOUR - 1)
+	_hud.set_time(_hour, minute)
 
 
 # --- Time ---------------------------------------------------------------
+
+
+## Advances the clock by `delta` real seconds. Kept as a separate method so tests
+## can drive it deterministically without waiting for real time.
+func _advance_clock(delta: float) -> void:
+	if _clock_paused or seconds_per_hour <= 0.0:
+		return
+	_hour_elapsed += delta
+	while _hour_elapsed >= seconds_per_hour:
+		_hour_elapsed -= seconds_per_hour
+		_on_hour_tick()
+	_update_clock_display()
 
 
 func _on_hour_tick() -> void:
 	_hour += 1
 	if _hour > DAY_END_HOUR:
 		_advance_day()
-	_refresh_ui()
 
 
 func _advance_day() -> void:
@@ -132,7 +149,7 @@ func _on_phone_pressed() -> void:
 ## Opens the dialogue box, optionally showing the visitor sprite, and freezes the
 ## shop (clock + action buttons) until the conversation ends.
 func _open_dialogue(lines: Array, show_visitor: bool) -> void:
-	_clock_timer.stop()
+	_clock_paused = true
 	_hud.set_actions_visible(false)
 	_visitor.visible = show_visitor
 	_hud.start_dialogue(lines)
@@ -141,4 +158,4 @@ func _open_dialogue(lines: Array, show_visitor: bool) -> void:
 func _on_dialogue_finished() -> void:
 	_visitor.visible = false
 	_hud.set_actions_visible(true)
-	_clock_timer.start()
+	_clock_paused = false

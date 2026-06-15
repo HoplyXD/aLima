@@ -72,11 +72,12 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 
 ## Verified Repository State
 
-Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 0 stabilization; changes are in the working tree, not yet committed):
+Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 0 stabilization and minute-level clock update; changes are in the working tree, not yet committed):
 
-- `godot --version` reports `4.6.3.stable.official.7d41c59c4`. The bare `godot` command now resolves to a PATH shim (`C:\Users\roman\tools\bin\godot.cmd` → `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`), prepended to the User PATH ahead of the older 4.5.1 at `C:\Users\roman\Desktop\Godot`. Open a fresh shell to pick it up.
+- Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and reports `4.6.3.stable.official.7d41c59c4`.
+- The bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`). A 4.6.3 shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the `.cmd` file is shadowed by the earlier `godot.exe` on the effective PATH.
 - `--headless --editor --path . --quit` and `--headless --path . --quit` complete with exit 0 and no error lines; the main scene `scenes/Shop.tscn` starts and the controller prints `[Shop] ready`.
-- GUT 9.6.0 smoke suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `7/7 passed`.
+- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `16/16 passed` (54 asserts), including the smoke test and the new `tests/test_shop_clock.gd`.
 - `gdformat --check scripts scenes dialogue tests` and `gdlint scripts scenes dialogue tests` pass (scoped to exclude vendored `addons/gut`).
 - `dialogue/dialogue_box.tscn` loads. The `prototype/` directory (including the previously-broken `Main.tscn`) was removed during Phase 0.
 - No tracked `.env`, secret, credential, or API-key file was found.
@@ -89,7 +90,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 0 stabilization; c
 - Orchestration lives in `scripts/shop/shop_controller.gd` (attached to the Shop root): placeholder rarity counts, a 07:00-20:00 timer, Day 1-5 wrapping, visitor visibility, and the hardcoded placeholder Auntie/"coming soon" dialogue. Presentation lives in `scenes/ui/shop_hud.gd` (`class_name ShopHud`), which emits typed intent signals and exposes `set_*`/`start_dialogue`/`set_actions_visible` and owns no game state.
 - Door opens the dialogue queue (with the visitor). Workbench, Journal, and Phone only show "coming soon" dialogue. No real navigation or game systems are connected.
 - Dialogue supports queued String/Dictionary lines, BBCode, typewriter reveal, skip/advance, keyboard, mouse, and a completion signal.
-- The clock merely wraps to Day 1; there is no loop reset transaction, save file, route schedule, or persistent state.
+- The clock shows minute-level placeholder progression (`7:00 AM` → `7:01 AM` → …), pauses during dialogue, and resumes without skipping partial-hour time. There is no loop reset transaction, save file, route schedule, or persistent state.
 - The dialogue lifecycle (open → clock pause + visitor show; advance via mouse/keyboard → close → clock resume + visitor hide) is verified headlessly by the GUT smoke test. On-screen mouse hit-testing/visuals under a real display remain a manual human check.
 
 ### Implemented Or Reusable Pieces
@@ -97,7 +98,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 0 stabilization; c
 - Root Godot project and configured hybrid Shop scene (HUD visible; single controller on the root).
 - Production controller/HUD separation (`scripts/shop/shop_controller.gd` + `scenes/ui/shop_hud.gd`) and the Phase 0 source layout.
 - Reusable `DialogueBox` component in `dialogue/`.
-- Placeholder clock/count formatting and button flow.
+- Placeholder clock/count formatting and button flow; minute-level clock display with configurable `seconds_per_hour`.
 - Toolchain: vendored GUT 9.6.0 + smoke test, pinned gdtoolkit (gdformat/gdlint), and a GitHub Actions CI workflow.
 - Twine/Chapbook narrative and economy prototype in `aLima.twee`, with generated `aLima.html`.
 - Detailed PRD, invariants, data contracts, phase plan, and disclosure process.
@@ -185,7 +186,7 @@ git status --short
 git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 ```
 
-Current limitations: Godot 4.6.3 is installed but is not the executable selected by the bare `godot` command. GUT, gdformat, gdlint, `server/`, and `mock-portal/` are absent or unavailable, so prompts must add and verify only the tooling required by their phase and report every command that could not run.
+Current limitations: Godot 4.6.3 is installed and verified via the explicit executable, but the bare `godot` command still selects the older 4.5.1 executable. GUT, gdformat, and gdlint are present; `server/` and `mock-portal/` are absent, so prompts must add and verify only the tooling required by their phase and report every command that could not run.
 
 ## Hackathon And Submission Priorities
 

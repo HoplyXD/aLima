@@ -116,11 +116,13 @@ Full detail: `docs/PRD.md` §12.
 
 ## 6. Commands
 
-`godot` resolves to **4.6.3** via a PATH shim (`C:\Users\roman\tools\bin\godot.cmd`, first on the User PATH). Open a fresh shell after a PATH change. The explicit console exe also works: `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`.
+Use the **explicit Godot 4.6.3 console executable** for reliable CI/automation: `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`. A PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` because its `godot.exe` appears earlier in the effective PATH than the `.cmd` shim. Open a fresh shell after any PATH change.
 
 ```powershell
 # --- Game (Godot 4.6.3; project.godot is in this directory) ---
-godot --version                                      # expect 4.6.3.stable
+godot --version                                      # currently 4.5.1.stable; use the explicit 4.6.3 exe below
+$C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe --version  # expect 4.6.3.stable
+# For each command, replace `godot` with `$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"` until the bare command is fixed.
 godot --editor --path .
 godot --headless --editor --path . --quit            # import/build check
 godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
@@ -186,7 +188,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`. As of June 15, 2026 the bare `godot` command resolves to **4.6.3** via a PATH shim (`C:\Users\roman\tools\bin\godot.cmd`, prepended to the User PATH ahead of the older 4.5.1 install, which stays available at its own path). Open a fresh shell to pick up the change. The editor import, main-scene startup, and GUT smoke suite all pass under 4.6.3. Runtime tasks still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, GUT suite (`16/16` passing), and minute-level clock behavior all pass under 4.6.3. Runtime tasks still require their own acceptance checks before `[x]`.
 
 ---
 
