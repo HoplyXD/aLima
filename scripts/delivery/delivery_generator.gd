@@ -114,11 +114,30 @@ func _make_uid(day: int) -> String:
 		_uid_counter = 0
 		_last_loop_index = _game_state.loop_index
 		_last_run_seed = _game_state.run_seed
-	_uid_counter += 1
-	return (
-		"%s%d_%d_%d_%d"
-		% [UID_PREFIX, _game_state.loop_index, _game_state.run_seed, day, _uid_counter]
-	)
+
+	var candidate := ""
+	while true:
+		_uid_counter += 1
+		candidate = (
+			"%s%d_%d_%d_%d"
+			% [UID_PREFIX, _game_state.loop_index, _game_state.run_seed, day, _uid_counter]
+		)
+		if _uid_is_available(candidate):
+			return candidate
+	return candidate  # Unreachable; keeps the type checker happy.
+
+
+## True when the uid is not already used by an instance in the loop inventory or
+## by a previously generated delivery in the current loop. This prevents collisions
+## when multiple morning deliveries are generated on the same day/loop.
+func _uid_is_available(uid: String) -> bool:
+	for raw in _game_state.save_state.loop.inventory:
+		if raw is Dictionary and raw.get("uid") == uid:
+			return false
+	for id in _game_state.save_state.loop.current_delivery_ids:
+		if id == uid:
+			return false
+	return true
 
 
 func _fallback_anchor(template: ScrapObjectTemplate, counts_by_anchor: Dictionary = {}) -> String:

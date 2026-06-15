@@ -139,6 +139,7 @@ class LoopState:
 	var pending_requests: Array = []  ## Request dictionaries.
 	var day_event_outcomes: Dictionary = {}
 	var current_delivery_ids: Array[String] = []
+	var last_delivery_day: int = 0  ## Day on which the most recent Morning Delivery arrived.
 	var current_carrier_placements: Dictionary = {}  ## fragment_id -> placement dict.
 
 	static func from_dictionary(data: Dictionary) -> LoopState:
@@ -153,6 +154,7 @@ class LoopState:
 		l.pending_requests = SaveState._as_array(data.get("pending_requests", []))
 		l.day_event_outcomes = data.get("day_event_outcomes", {}) as Dictionary
 		l.current_delivery_ids = ModelUtils.as_string_array(data.get("current_delivery_ids"))
+		l.last_delivery_day = ModelUtils.as_int(data.get("last_delivery_day"), 0)
 		l.current_carrier_placements = data.get("current_carrier_placements", {}) as Dictionary
 		return l
 
@@ -168,6 +170,7 @@ class LoopState:
 			"pending_requests": pending_requests.duplicate(),
 			"day_event_outcomes": day_event_outcomes.duplicate(),
 			"current_delivery_ids": current_delivery_ids.duplicate(),
+			"last_delivery_day": last_delivery_day,
 			"current_carrier_placements": current_carrier_placements.duplicate(),
 		}
 

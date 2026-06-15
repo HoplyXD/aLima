@@ -149,11 +149,15 @@ func _generate_and_show_triage() -> void:
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(GameState.save_state.loop.current_day)
+	GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
 	var cfg := repo.get_delivery_config()
 	_triage_screen.open(delivery, cfg.storage_cap)
 
 
 func _on_morning_delivery_pressed() -> void:
+	if GameState.save_state.loop.current_day == GameState.save_state.loop.last_delivery_day:
+		_open_dialogue(["The morning delivery has already arrived."], false)
+		return
 	_generate_and_show_triage()
 
 

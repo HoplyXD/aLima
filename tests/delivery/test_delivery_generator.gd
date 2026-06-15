@@ -100,6 +100,26 @@ func test_unique_instance_ids_across_batches() -> void:
 				seen[inst.uid] = true
 
 
+func test_unique_instance_ids_across_repeated_morning_deliveries() -> void:
+	# Reproduces the bug where a second Morning Delivery on the same day reused
+	# UIDs from the first batch because each ShopController call creates a fresh
+	# DeliveryGenerator with a reset counter.
+	GameState.set_debug_seed_override(7777)
+	GameState.new_run()
+
+	var first := _make_generator().generate_day_delivery(1)
+	var first_ids := _uids_of(first)
+	for inst in first:
+		GameState.save_state.loop.inventory.append(inst.to_dictionary())
+
+	var second := _make_generator().generate_day_delivery(1)
+	var second_ids := _uids_of(second)
+	for uid in second_ids:
+		assert_false(
+			first_ids.has(uid), "Second delivery reused UID %s already present in inventory" % uid
+		)
+
+
 func test_due_carrier_injected_on_assigned_day() -> void:
 	GameState.set_debug_seed_override(7777)
 	GameState.new_run()

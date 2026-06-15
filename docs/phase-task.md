@@ -453,8 +453,8 @@ Manual (PENDING on-screen observation under windowed 4.6.3): run with `seconds_p
   - Evidence (2026-06-15): `tests/delivery/test_triage.gd` outcome/eligibility/neglect tests passed.
 
 - `[x]` **P3.6 Test delivery invariants.**
-  - Added `tests/delivery/` with 32 tests covering batch bounds, deterministic weighted generation, unique IDs, carrier injection, carrier identity preservation, hidden flicker, six-state glow mapping, anchor compatibility/capacity/fallback, triage capacity enforcement, undecided blocking, keep/recycle outcomes, recycled carrier eligibility, neglect history persistence, seated-fragment protection, and atomic application.
-  - Evidence (2026-06-15): focused delivery suite `32/32 passed` (191 asserts); complete GUT suite `120/120 passed` (503 asserts).
+  - Added `tests/delivery/` with 33 tests covering batch bounds, deterministic weighted generation, unique IDs, carrier injection, carrier identity preservation, hidden flicker, six-state glow mapping, anchor compatibility/capacity/fallback, triage capacity enforcement, undecided blocking, keep/recycle outcomes, recycled carrier eligibility, neglect history persistence, seated-fragment protection, atomic application, and UID uniqueness across repeated morning deliveries on the same loop/day.
+  - Evidence (2026-06-15): focused delivery suite `33/33 passed` (197 asserts); complete GUT suite `121/121 passed` (509 asserts).
 
 ### Acceptance
 
@@ -462,6 +462,7 @@ Manual (PENDING on-screen observation under windowed 4.6.3): run with `seconds_p
 - `[x]` The player can keep only the configured storage-cost budget.
 - `[x]` All six fixed visual states work without adding a new rarity.
 - `[x]` Director-selected instances appear at the correct shop anchor/day (with deterministic fallback).
+- `[x]` Morning Delivery can only be triggered once per in-game day.
 - `[-]` Manual on-screen verification of mouse/keyboard input, 1920x1080 readability, and three accelerated debug mornings is pending human observation.
 
 ### Verification
@@ -469,10 +470,10 @@ Manual (PENDING on-screen observation under windowed 4.6.3): run with `seconds_p
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/delivery
-# Result (2026-06-15): 32/32 passed, 191 asserts.
+# Result (2026-06-15): 33/33 passed, 197 asserts.
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result (2026-06-15): 120/120 passed, 503 asserts.
+# Result (2026-06-15): 121/121 passed, 509 asserts.
 
 gdformat --check scripts scenes dialogue tests
 # Result (2026-06-15): no files need reformatting.
@@ -547,7 +548,7 @@ $godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
 # Result: 19/19 passed, 73 asserts.
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result: 120/120 passed, 503 asserts.
+# Result: 121/121 passed, 509 asserts.
 
 gdformat --check scripts scenes dialogue tests
 gdlint scripts scenes dialogue tests
