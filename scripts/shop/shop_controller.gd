@@ -8,12 +8,14 @@ extends Node3D
 ## LoopController autoloads, not here. Real delivery/restoration systems replace
 ## the count placeholders in later phases (see docs/phase-task.md).
 
+const RESTORATION_SCREEN_SCENE := preload("res://scenes/ui/restoration_screen.tscn")
+
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector (e.g. 0.1) to watch the clock move faster while
 ## testing; the value is forwarded to the DayClock on ready.
 @export var seconds_per_hour: float = 60.0
 
-# --- Placeholder count state until the delivery/restoration systems exist ---
+# --- Placeholder count state until the delivery/restoration systems exist --
 var _unrestored := {
 	ShopHud.Rarity.WHITE: 3,
 	ShopHud.Rarity.GREEN: 2,
@@ -33,6 +35,7 @@ var _quest_artifacts := 1
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
 @onready var _triage_screen: TriageController = $TriageScreen
+@onready var _restoration_screen: RestorationScreen = _create_restoration_screen()
 
 
 func _ready() -> void:
@@ -51,6 +54,7 @@ func _ready() -> void:
 	LoopController.begin_session()
 
 	_triage_screen.closed.connect(_on_triage_closed)
+	_restoration_screen.closed.connect(_on_restoration_closed)
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -112,8 +116,7 @@ func _on_door_pressed() -> void:
 
 
 func _on_workbench_pressed() -> void:
-	var line := "You step over to the work desk. [i]Restoration mini-games land here soon.[/i]"
-	_open_dialogue([line], false)
+	_restoration_screen.open()
 
 
 func _on_journal_pressed() -> void:
@@ -156,6 +159,16 @@ func _on_morning_delivery_pressed() -> void:
 
 func _on_triage_closed() -> void:
 	_refresh_ui()
+
+
+func _on_restoration_closed() -> void:
+	_refresh_ui()
+
+
+func _create_restoration_screen() -> RestorationScreen:
+	var screen: RestorationScreen = RESTORATION_SCREEN_SCENE.instantiate()
+	add_child(screen)
+	return screen
 
 
 func _count_inventory_by_glow(restored_only: bool) -> Dictionary:

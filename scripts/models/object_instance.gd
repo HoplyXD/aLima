@@ -15,6 +15,8 @@ var authenticity: int = ModelEnums.Verdict.UNKNOWN
 var is_counterfeit_truth: bool = false
 var storage_cost: int = 1  ## Copied from the template at creation time.
 var assigned_anchor_id: String = ""  ## Container/placement anchor for this instance.
+var value: int = 0  ## Current assessed market value, initialized from the template.
+var recorded_damage: int = 0  ## Accumulated damage from wrong tools; persists with the instance.
 
 
 func _init() -> void:
@@ -34,6 +36,8 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	inst.is_counterfeit_truth = ModelUtils.as_bool(data.get("is_counterfeit_truth"))
 	inst.storage_cost = ModelUtils.as_int(data.get("storage_cost"), 1)
 	inst.assigned_anchor_id = ModelUtils.as_string(data.get("assigned_anchor_id"))
+	inst.value = ModelUtils.as_int(data.get("value"))
+	inst.recorded_damage = ModelUtils.as_int(data.get("recorded_damage"))
 	return inst
 
 
@@ -50,6 +54,8 @@ func to_dictionary() -> Dictionary:
 		"is_counterfeit_truth": is_counterfeit_truth,
 		"storage_cost": storage_cost,
 		"assigned_anchor_id": assigned_anchor_id,
+		"value": value,
+		"recorded_damage": recorded_damage,
 	}
 
 
@@ -76,4 +82,10 @@ func validate(
 		)
 	if storage_cost < 1:
 		result.add_field_error(file_path, uid, "storage_cost", "storage_cost must be at least 1")
+	if value < 0:
+		result.add_field_error(file_path, uid, "value", "value must be non-negative")
+	if recorded_damage < 0:
+		result.add_field_error(
+			file_path, uid, "recorded_damage", "recorded_damage must be non-negative"
+		)
 	return result

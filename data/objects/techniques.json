@@ -6,7 +6,9 @@
       "id": "pendant_cleaning",
       "display_name": "Pendant Cleaning",
       "enables_minigame": "pendant_wipe",
-      "learned_from": "shop"
+      "learned_from": "shop",
+      "quality_bonus": 5,
+      "value_bonus": 10
     }
   ]
 }

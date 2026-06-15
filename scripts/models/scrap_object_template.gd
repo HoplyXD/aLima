@@ -16,6 +16,12 @@ var is_openable: bool = false
 var openable_type: String = ""  ## e.g. "pendant", "tin", "santo", "frame".
 var required_clean_tool: String = ""  ## ToolDefinition id.
 var clean_minigame: String = ""  ## Mini-game key used by restoration.
+var clean_completion_threshold: int = 100  ## Condition required to reach CLEAN.
+var clean_progress_per_action: int = 0  ## Base condition gained per correct action.
+var clean_value_bonus: int = 0  ## Base value gained per correct action.
+var wrong_tool_condition_damage: int = 0  ## Condition lost when an incompatible tool is used.
+var wrong_tool_value_damage: int = 0  ## Value lost when an incompatible tool is used.
+var wrong_tool_feedback: String = ""  ## Player-facing text for wrong-tool use.
 var base_value_range: Vector2 = Vector2.ZERO
 var storage_cost: int = 1  ## Loop inventory slots this template occupies.
 var counterfeit_profile: String = ""  ## Optional ref; empty if none.
@@ -41,6 +47,12 @@ static func from_dictionary(data: Dictionary) -> ScrapObjectTemplate:
 	t.openable_type = ModelUtils.as_string(data.get("openable_type"))
 	t.required_clean_tool = ModelUtils.as_string(data.get("required_clean_tool"))
 	t.clean_minigame = ModelUtils.as_string(data.get("clean_minigame"))
+	t.clean_completion_threshold = ModelUtils.as_int(data.get("clean_completion_threshold"), 100)
+	t.clean_progress_per_action = ModelUtils.as_int(data.get("clean_progress_per_action"))
+	t.clean_value_bonus = ModelUtils.as_int(data.get("clean_value_bonus"))
+	t.wrong_tool_condition_damage = ModelUtils.as_int(data.get("wrong_tool_condition_damage"))
+	t.wrong_tool_value_damage = ModelUtils.as_int(data.get("wrong_tool_value_damage"))
+	t.wrong_tool_feedback = ModelUtils.as_string(data.get("wrong_tool_feedback"))
 	t.base_value_range = ModelUtils.as_vector2(data.get("base_value_range"))
 	t.storage_cost = ModelUtils.as_int(data.get("storage_cost"), 1)
 	t.counterfeit_profile = ModelUtils.as_string(data.get("counterfeit_profile"))
@@ -62,6 +74,12 @@ func to_dictionary() -> Dictionary:
 		"openable_type": openable_type,
 		"required_clean_tool": required_clean_tool,
 		"clean_minigame": clean_minigame,
+		"clean_completion_threshold": clean_completion_threshold,
+		"clean_progress_per_action": clean_progress_per_action,
+		"clean_value_bonus": clean_value_bonus,
+		"wrong_tool_condition_damage": wrong_tool_condition_damage,
+		"wrong_tool_value_damage": wrong_tool_value_damage,
+		"wrong_tool_feedback": wrong_tool_feedback,
 		"base_value_range": ModelUtils.vector2_to_array(base_value_range),
 		"storage_cost": storage_cost,
 		"counterfeit_profile": counterfeit_profile,
@@ -99,6 +117,23 @@ func validate(
 			"required_clean_tool",
 			"openable objects must declare a required cleaning tool"
 		)
+	if is_openable:
+		if clean_completion_threshold <= 0 or clean_completion_threshold > 100:
+			result.add_field_error(
+				file_path, id, "clean_completion_threshold", "must be between 1 and 100"
+			)
+		if clean_progress_per_action < 0:
+			result.add_field_error(
+				file_path, id, "clean_progress_per_action", "must be non-negative"
+			)
+		if clean_value_bonus < 0:
+			result.add_field_error(file_path, id, "clean_value_bonus", "must be non-negative")
+		if wrong_tool_condition_damage < 0:
+			result.add_field_error(
+				file_path, id, "wrong_tool_condition_damage", "must be non-negative"
+			)
+		if wrong_tool_value_damage < 0:
+			result.add_field_error(file_path, id, "wrong_tool_value_damage", "must be non-negative")
 	if base_value_range.x < 0.0 or base_value_range.y < base_value_range.x:
 		result.add_field_error(file_path, id, "base_value_range", "invalid value range")
 	if storage_cost < 1:

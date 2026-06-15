@@ -454,7 +454,7 @@ Manual (PENDING on-screen observation under windowed 4.6.3): run with `seconds_p
 
 - `[x]` **P3.6 Test delivery invariants.**
   - Added `tests/delivery/` with 32 tests covering batch bounds, deterministic weighted generation, unique IDs, carrier injection, carrier identity preservation, hidden flicker, six-state glow mapping, anchor compatibility/capacity/fallback, triage capacity enforcement, undecided blocking, keep/recycle outcomes, recycled carrier eligibility, neglect history persistence, seated-fragment protection, and atomic application.
-  - Evidence (2026-06-15): focused delivery suite `32/32 passed` (191 asserts); complete GUT suite `101/101 passed` (429 asserts).
+  - Evidence (2026-06-15): focused delivery suite `32/32 passed` (191 asserts); complete GUT suite `120/120 passed` (503 asserts).
 
 ### Acceptance
 
@@ -472,7 +472,7 @@ $godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
 # Result (2026-06-15): 32/32 passed, 191 asserts.
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result (2026-06-15): 101/101 passed, 429 asserts.
+# Result (2026-06-15): 120/120 passed, 503 asserts.
 
 gdformat --check scripts scenes dialogue tests
 # Result (2026-06-15): no files need reformatting.
@@ -498,52 +498,63 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
 
 ### Tasks
 
-- `[ ]` **P4.1 Build the pendant cleaning mini-game.**
-  - Open as a paused 2D full-screen interface over the 3D shop.
-  - Let the player select the cleaning tool and apply controlled strokes/actions.
-  - Increase condition from authored tuning rather than a luck roll.
-  - Provide visual progress and a clear completion threshold.
+- `[x]` **P4.1 Build the pendant cleaning mini-game.**
+  - `scenes/ui/restoration_screen.tscn` + `scenes/ui/restoration_screen.gd` provide a paused 2D full-screen interface.
+  - Acquires/releases `DayClock.PAUSE_RESTORATION` on open, close, and `_exit_tree`.
+  - Player selects an owned tool and clicks the cleaning area to apply one deliberate action.
+  - Progress is calculated from authored `clean_progress_per_action`, `clean_value_bonus`, and technique bonuses loaded from `DataRepository`.
+  - Displays selected tool, condition, value, recorded damage, and completion threshold.
+  - Evidence: `tests/restoration/test_restoration_ui.gd` passes; `tests/restoration/test_restoration_service.gd` covers deterministic CLEAN reach.
 
-- `[ ]` **P4.2 Implement tool consequences.**
-  - Correct tool increases condition/value within tuned bounds.
-  - Wrong tool reduces condition or permanent value and records the damage.
-  - Prevent condition from exceeding 100 or dropping below 0.
+- `[x]` **P4.2 Implement tool consequences.**
+  - Compatible tool (matches `clean_minigame`/`required_clean_tool`) increases condition and value, clamped to authored bounds.
+  - Wrong/incompatible tool applies `wrong_tool_condition_damage` and `wrong_tool_value_damage` from the template and increments `recorded_damage`.
+  - Condition is clamped to `0..100`; value is clamped to `base_value_range` and never negative.
+  - Evidence: `test_wrong_tool_records_persistent_instance_damage`, `test_condition_remains_within_zero_to_one_hundred`, `test_correct_tool_modifies_value_within_authored_bounds`.
 
-- `[ ]` **P4.3 Implement the clean gate.**
-  - Dirty openables reject Open with a clear player-facing reason.
-  - Completing restoration transitions only that instance to `CLEAN`.
-  - Carrier status does not bypass the gate.
+- `[x]` **P4.3 Implement the clean gate.**
+  - `RestorationService.open_clasp()` rejects any instance whose state is not `CLEAN` with a player-facing reason.
+  - Carrier status is checked only after the clean gate; a dirty carrier cannot open.
+  - Cleaning transitions only the selected instance to `CLEAN`; other instances are untouched.
+  - Evidence: `test_dirty_openables_reject_open_including_carrier`, `test_restoration_changes_only_the_selected_instance`.
 
-- `[ ]` **P4.4 Build the pendant clasp interaction.**
-  - Make clasp opening distinct from cleaning.
-  - Allow it only for clean pendant instances.
-  - Transition the instance to `OPEN` once.
+- `[x]` **P4.4 Build the pendant clasp interaction.**
+  - Clasp opening is a separate `OpenButton` action distinct from the cleaning area.
+  - Only `CLEAN` instances show an enabled open button; clicking transitions the selected instance to `OPEN` exactly once.
+  - Evidence: `test_clean_pendant_can_open`, `test_clasp_interaction_is_distinct_from_cleaning_completion`, `test_opening_is_single_use_and_idempotent`.
 
-- `[ ]` **P4.5 Implement general open results.**
-  - Resolve `EMPTY`, `TEMPORAL_ECHO`, or `FRAGMENT` from instance content state.
-  - Only a Director-promoted carrier can produce `FRAGMENT`.
-  - Ordinary pendants use the same template and scene as the carrier.
+- `[x]` **P4.5 Implement general open results.**
+  - Opening resolves from the instance's authored/injected `contents`: `EMPTY`, `TEMPORAL_ECHO`, or `FRAGMENT`.
+  - Only an instance with `is_carrier == true` and `contents == FRAGMENT` can produce a fragment.
+  - Carriers retain the ordinary `tarnished_pendant` template ID, rarity, and scene; no special pendant subtype exists.
+  - Evidence: `test_only_carrier_produces_fragment_and_retains_template_identity`, `test_empty_temporal_echo_and_fragment_resolve_correctly`, `test_reopening_cannot_duplicate_content`.
 
-- `[ ]` **P4.6 Test restoration and opening.**
-  - Dirty carrier cannot open.
-  - Correct tool reaches clean state.
-  - Wrong tool causes persistent instance damage.
-  - Non-carrier pendant cannot produce a fragment.
-  - Reopening cannot duplicate content.
+- `[x]` **P4.6 Test restoration and opening.**
+  - Added `tests/restoration/test_restoration_service.gd` (17 tests) and `tests/restoration/test_restoration_ui.gd` (2 tests).
+  - Covers dirty ordinary/carrier rejection, deterministic CLEAN, condition/value bounds, persistent damage, instance isolation, single-use opening, non-carrier EMPTY, carrier FRAGMENT, temporal echo resolution, pause ownership, and invalid tool/technique repository validation.
 
 ### Acceptance
 
-- [ ] Pendant clean -> clasp open -> result works end to end.
-- [ ] Wrong-tool use has visible and recorded consequences.
-- [ ] Carrier is an injected role, not a special pendant type.
+- `[x]` Pendant clean -> clasp open -> result works end to end (automated coverage).
+- `[x]` Wrong-tool use has visible (feedback label) and recorded (`recorded_damage`) consequences.
+- `[x]` Carrier is an injected role (`is_carrier`/`contents` on an ordinary pendant instance), not a special pendant type.
 
 ### Verification
 
 ```powershell
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/restoration
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/restoration
+# Result: 19/19 passed, 73 asserts.
+
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result: 120/120 passed, 503 asserts.
+
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
+git diff --check
 ```
 
-Manual: restore one ordinary pendant and one promoted pendant, including one wrong-tool attempt.
+Manual: restore one ordinary pendant and one promoted pendant, including one wrong-tool attempt. Pending human on-screen observation.
 
 ---
 

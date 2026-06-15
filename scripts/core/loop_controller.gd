@@ -27,6 +27,7 @@ func begin_session() -> void:
 	DayClock.reset()
 	DayClock.loop_index = GameState.loop_index
 	DayClock.running = true
+	_grant_starting_kit()
 	DayClock.start_day(1)
 
 
@@ -75,6 +76,7 @@ func _perform_loop_reset() -> void:
 	_resetting = true
 	GameState.reset_loop_state()
 	GameState.new_run()
+	_grant_starting_kit()
 	_plan_carrier_placements()
 	DayClock.loop_index = GameState.loop_index
 	DayClock.start_day(1)
@@ -92,3 +94,25 @@ func _plan_carrier_placements() -> void:
 		return
 	var director := SpawnDirector.new(repo, GameState)
 	director.plan_loop_placements()
+
+
+## Grants the authored starting kit: techniques persist, legacy tools persist, and
+## every loop starts with the loop-scoped tools listed in data/routes/starting_kit.json.
+## This is the narrow integration fix that puts the pendant-cleaning tool in the
+## player's hands for the slice (REST-R7).
+func _grant_starting_kit() -> void:
+	var repo := DataRepository.singleton()
+	if not repo.is_loaded():
+		return
+	for technique_id in repo.starting_kit.get("technique_ids", []):
+		if not GameState.save_state.persistent.techniques_learned.has(technique_id):
+			GameState.save_state.persistent.techniques_learned.append(technique_id)
+	for tool_id in repo.starting_kit.get("tool_ids", []):
+		var tool := repo.get_tool(tool_id)
+		if tool == null:
+			continue
+		if tool.is_legacy:
+			if not GameState.save_state.persistent.legacy_items.has(tool_id):
+				GameState.save_state.persistent.legacy_items.append(tool_id)
+		if not GameState.save_state.loop.tool_items.has(tool_id):
+			GameState.save_state.loop.tool_items.append(tool_id)

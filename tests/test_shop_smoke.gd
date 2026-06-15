@@ -80,12 +80,12 @@ func test_door_dialogue_pauses_and_resumes_clock_via_keyboard() -> void:
 
 
 func test_dialogue_advances_via_left_click() -> void:
-	_hud.workbench_pressed.emit()
+	_hud.phone_pressed.emit()
 	await wait_physics_frames(1)
 
 	var dialogue: DialogueBox = _hud.get_node("DialogueBox")
-	assert_true(dialogue.visible, "Workbench placeholder opens a dialogue")
-	assert_false(_visitor.visible, "No visitor for the workbench placeholder")
+	assert_true(dialogue.visible, "Phone placeholder opens a dialogue")
+	assert_false(_visitor.visible, "No visitor for the phone placeholder")
 
 	await _advance_until_closed(dialogue, _make_click_event)
 
