@@ -9,7 +9,7 @@
 | **Stack** | Godot 4.6.3 (typed GDScript) · hybrid 3D shop + 2D interfaces · Node/Express backend · JSON/`.tres` data |
 | **Companion docs** | `CLAUDE.md` (operating spine + invariants) · `README.md` (GDD/design/narrative) · `docs/phase-task.md` (implementation order/status) |
 
-> **How to use this doc.** This is the buildable spec. Every requirement has an **ID** (e.g. `SCAN-R3`) — reference them when directing implementation ("build `PORT-R1..R4`"). Each system carries a **priority**: `P0` = June 30 slice, `P1` = finalist core, `P2` = polish. Authority order is **`CLAUDE.md` §4 invariants → this PRD → `README.md` GDD → `docs/phase-task.md` implementation tracker**. Where this conflicts with the GDD, this wins for build detail. **Section 12 is the complete discovery specification** for the Spawn Director, Cultural Echoes, and carriers.
+> **How to use this doc.** This is the testable build contract. Every requirement has an **ID** (e.g. `SCAN-R3`) and must map back to a promise in the full-game GDD. Authority order is **`CLAUDE.md` §4 implementation invariants → `README.md` full-game product promises → this PRD's implementation detail → `docs/phase-task.md` execution and proof**. This PRD may clarify the GDD but may not silently omit or downgrade it. `P0` is the June 30 slice; `P1` is mandatory for 100% full-GDD completion; `P2` is optional post-release expansion. **Section 12 is the complete discovery specification** for the Spawn Director, Cultural Echoes, and carriers.
 
 ---
 
@@ -38,6 +38,14 @@
 21. State Machines
 22. Build Sequencing & Definition of Done
 23. Open Decisions
+24. Disposition & Object Outcomes
+25. Evening Upkeep & Preparation
+26. Full-Game Content Contract
+27. Input & Accessibility
+28. Platforms, Offline Operation & Performance
+29. Production Assets & Cultural Review
+30. Full-Game QA, Release & Submission
+31. GDD-to-Requirement Coverage
 
 ---
 
@@ -45,8 +53,8 @@
 
 aLima is a single-player game where the player runs a junk shop across a repeating **five-day loop**, rescuing and restoring discarded objects, authenticating them with an AI scanner, selling or preserving them, and — across loops — recovering the **five fragments** of a regional heritage artifact (the "Master Artifact") to break the loop.
 
-**In scope for this PRD:** all runtime game systems, their data contracts, the backend services they depend on, and the build sequence to the June 30 slice and the finalist phase.
-**Out of scope:** narrative prose/dialogue text (lives in `data/` + GDD), final art/audio asset production, and the final Master Artifact selection (pending; see §23).
+**In scope for this PRD:** all runtime systems, data contracts, backend services, authored-content minimums, production-asset gates, cultural/provenance review, platform/input requirements, release evidence, and the build sequence from the June 30 slice through the finished GDD game.
+**Stored outside this PRD:** narrative prose/dialogue, historical source packets, and binary art/audio assets live in `data/`, `assets/`, and production files. Their required quantity, review, integration, and acceptance remain in scope here. The final Master Artifact selection is a required pre-content decision (§23 / `CONTENT-R1`).
 
 ---
 
@@ -63,11 +71,11 @@ aLima is a single-player game where the player runs a junk shop across a repeati
 | Tag | Meaning |
 |---|---|
 | **P0** | Required for the **June 30 vertical slice** (50% video) |
-| **P1** | Required for a complete finalist build |
-| **P2** | Polish / stretch |
+| **P1** | Required for **100% full-GDD completion** and the finished release |
+| **P2** | Optional post-release expansion not promised by the current GDD |
 
 ### 2.3 Slice (P0) summary
-One hybrid 3D shop space with 2D gameplay interfaces; delivery + triage; **one** fully-built carrier (the pendant) with clean→open; Spawn Director v1 (genuine carrier+container+day rolls, per-player never-twice); Echo mixer v1 (4 bands + resonance meter + captions); cached scanner v1; Artifact Found → mock Portal → Portal Unlock → persisted museum record → journal seat (5-slot case, one slot fills); journal v1; the Elderly-Auntie photo beat as a scripted emotional showcase. Everything else is P1/P2.
+One hybrid 3D shop space with 2D gameplay interfaces; delivery + triage; **one** fully-built carrier (the pendant) with clean→open; Spawn Director v1 (genuine carrier+container+day rolls, per-player never-twice); Echo mixer v1 (4 bands + resonance meter + captions); cached scanner v1; Artifact Found → mock Portal → Portal Unlock → persisted museum record → journal seat (5-slot case, one slot fills); journal v1; the Elderly-Auntie photo beat as a scripted emotional showcase. Everything promised elsewhere in the GDD remains mandatory P1 work after the slice unless explicitly identified as post-release P2.
 
 ---
 
@@ -114,6 +122,21 @@ flowchart LR
 - **ARCH-R3 (P0).** Portal calls target a config-selected base URL: `mock-portal` in dev, real Portal in prod. Swapping is a single env/config change. *(Invariant §4-K / §13.)*
 - **ARCH-R4 (P0).** Client↔system communication is via **signals/events**, not hard cross-references, so systems are independently testable. *(Convention — CLAUDE.md §7.)*
 - **ARCH-R5 (P0).** All object/fragment/route/echo definitions load from `data/` or `resources/`. No hardcoded artifact specifics anywhere in logic. *(Invariant §4 / G5.)*
+- **ARCH-R6 (P1).** Full-game integrations extend the typed event surface rather than coupling UI to services. At minimum it carries disposition selected/completed, sale completed, object returned, evening started/committed, mini-event started/resolved, route beat completed, and ending triggered events.
+
+**Full-game event contract**
+
+```gdscript
+signal disposition_completed(instance_id: String, disposition: String, outcome_id: String)
+signal sale_completed(instance_id: String, buyer_id: String, price: int)
+signal object_returned(instance_id: String, owner_route_id: String, reward_id: String)
+signal evening_started(day: int)
+signal evening_plan_committed(day: int, plan_id: String)
+signal mini_event_started(event_id: String)
+signal mini_event_resolved(event_id: String, outcome_id: String)
+signal route_beat_completed(route_id: String, beat_id: String)
+signal ending_triggered(ending_id: String)
+```
 
 ---
 
@@ -250,6 +273,94 @@ class ToolItem:
 ```
 > **Rule (REST-R5):** a mini-game may require a learned **Technique** (persistent) AND an owned **Tool** (loop-scoped unless legacy). Next loop you still *know* the method but may need to re-buy the kit. *(See GDD 9.2 / persistence table.)*
 
+### 4.10 BuyerPersona
+```gdscript
+class BuyerPersona:
+    var id: String
+    var display_name: String
+    var motive: String
+    var budget_range: Vector2i
+    var preferred_categories: Array[String]
+    var negotiation_style: String
+    var route_id: String                 # "" unless tied to a route
+    var fallback_response_set: String
+```
+
+### 4.11 CounterfeitProfile
+```gdscript
+class CounterfeitProfile:
+    var id: String
+    var template_id: String
+    var wrong_weight_range: Vector2
+    var modern_fasteners: Array[String]
+    var artificial_wear_signs: Array[String]
+    var engraving_errors: Array[String]
+    var seller_history_clues: Array[String]
+    var journal_evidence_refs: Array[String]
+```
+
+### 4.12 TemporalEchoDefinition
+```gdscript
+class TemporalEchoDefinition:
+    var id: String
+    var eligible_template_ids: Array[String]
+    var memory_text_ref: String
+    var audio_ref: String
+    var caption: String
+    var journal_page_id: String
+    var related_route_ids: Array[String]
+```
+
+### 4.13 MiniEventDefinition
+```gdscript
+class MiniEventDefinition:
+    var id: String
+    var trigger_conditions: Dictionary
+    var weight: float
+    var per_loop_cap: int
+    var prompt_ref: String
+    var outcome_ids: Array[String]
+    var affected_systems: Array[String]
+```
+
+### 4.14 RouteBeat
+```gdscript
+class RouteBeat:
+    var id: String
+    var route_id: String
+    var sequence_index: int
+    var prerequisites: Array[String]
+    var required_object_tags: Array[String]
+    var dialogue_ref: String
+    var completion_flags: Array[String]
+    var reward_ids: Array[String]
+```
+
+### 4.15 EveningPlan
+```gdscript
+class EveningPlan:
+    var id: String
+    var day: int
+    var repair_tool_ids: Array[String]
+    var purchase_tool_ids: Array[String]
+    var storage_discard_ids: Array[String]
+    var prepared_request_ids: Array[String]
+    var reviewed_journal_entry_ids: Array[String]
+```
+
+### 4.16 ContentManifest
+```gdscript
+class ContentManifest:
+    var schema_version: int
+    var required_counts: Dictionary
+    var required_ids: Dictionary
+    var source_packet_refs: Array[String]
+    var native_speaker_review_refs: Array[String]
+    var provenance_refs: Array[String]
+```
+
+The manifest is validated in CI and at development startup. It records minimum counts and required named IDs without embedding prose or artifact-specific logic in gameplay code.
+
 ---
 
 ## 5. Persistence & The Loop  · P0
@@ -273,6 +384,9 @@ class SaveState:
 | `fragments` (incl. `SEATED` + case) | `current_day`, `current_hour` |
 | `legacy_items`, `leads` | per-loop instance state |
 | `spawn_history` (per-player, per-fragment) | |
+| `route_beat_progress`, `returns_completed` | `disposition_queue`, `daily_sales` |
+| `endings_unlocked`, `temporal_echoes` | `evening_plan`, `upkeep_state` |
+| `content_version`, `source_review_version` | `active_event`, `events_seen_this_loop` |
 
 **Requirements**
 - **SAVE-R1 (P0).** On loop reset, clear `LoopState` only; `PersistentState` is untouched. *(Invariant §4-A.)*
@@ -281,6 +395,7 @@ class SaveState:
 - **SAVE-R4 (P1).** `route_completion` persists; a completed route stays completed and keeps its fragment `RELEASED` until found.
 - **SAVE-R5 (P1).** Legacy tools (`is_legacy=true`) and `leads` persist; shop-bought tools do not.
 - **SAVE-R6 (P0).** Saving is atomic (write-temp-then-rename) to survive a crash mid-write.
+- **SAVE-R7 (P1).** Full-game saves persist route beats, returns, Echoes, endings, content/review versions, and long-term records while keeping daily sales, current dispositions, evening preparation, upkeep, and event state loop-scoped. Schema migrations preserve existing Phase 0/P1 saves.
 
 **Acceptance**
 - [ ] Reset wipes money/inventory/listings; journal, museum, techniques, seated fragments, spawn history all remain.
@@ -295,7 +410,7 @@ class SaveState:
 - **CLOCK-R2 (P0).** The controller exposes `current_day (1..5)` and `current_hour`, and emits signals on hour change, day change, and loop reset.
 - **CLOCK-R3 (P0).** At end of Day 5 → `loop_reset` → `SaveState` reset per §5 → Day 1, 07:00.
 - **CLOCK-R4 (P1).** NPC visit windows are checked against the clock; a knock fires only inside a character's window (§15). The player may ignore a knock; an unanswered visitor leaves and that visit is consumed.
-- **CLOCK-R5 (P2).** Time can be paused by full-screen UI (mini-game, scanner, negotiation) — design decision flagged in §23 (does cleaning consume in-game time?).
+- **CLOCK-R5 (P1).** Full-screen interfaces use pause ownership by default so restoration, scanner, negotiation, journal, and evening planning do not consume shop time; any authored exception is explicit and tested.
 
 **Acceptance**
 - [ ] A full day elapses in ~13 real minutes; loop in ~1 hour.
@@ -341,6 +456,7 @@ class SaveState:
 - **SCAN-R4 (P0).** Scanner calls go through `POST /api/scan` (backend, §20); the client never calls the LLM directly. *(Invariant §4-K.)*
 - **SCAN-R5 (P0).** The slice ships **cached** scanner annotations for slice objects; live LLM is P1.
 - **SCAN-R6 (P1).** Scanner facts derive only from verified records; legend is framed as legend. *(Invariant §4-L.)*
+- **SCAN-R7 (P1).** The finished build passes both live backend scanner scenarios and forced timeout/rate-limit/offline fallback scenarios. Cache-only operation does not satisfy full-game completion.
 
 **Acceptance**
 - [ ] Scanner output is advisory; the player must choose the verdict.
@@ -355,7 +471,8 @@ class SaveState:
 - **MKT-R3 (P1).** Negotiation runs through `POST /api/negotiate` (backend) with **persona + guardrail prompts server-side**. *(Invariant §4-K.)*
 - **MKT-R4 (P1).** Selling is the primary economy, but some objects (Gold / Master-Artifact-linked) should be preserved, not sold — the UI nudges this.
 - **MKT-R5 (P1).** Best sale price per template updates the journal (`best_sale`).
-- **MKT-R6 (P2).** The suspicious buyer ties into the Mysterious-Buyer route (§15) — repeated dealings build toward the fifth fragment.
+- **MKT-R6 (P1).** The suspicious buyer ties into the Mysterious-Buyer route (§15) — repeated dealings build toward the fifth fragment.
+- **MKT-R7 (P1).** All six personas work through live `POST /api/negotiate` and deterministic offline fallback response sets; both paths preserve persona, budget, restoration-quality, and honesty constraints.
 
 **Acceptance**
 - [ ] At least the listed personas produce distinct, in-character offers.
@@ -399,6 +516,8 @@ class SaveState:
 ### 12.3 Carriers / openables
 - **DISC-R12 (P0).** Opening is a general feature: opening any openable yields `EMPTY | TEMPORAL_ECHO | FRAGMENT`. Only Director-placed carriers yield `FRAGMENT`.
 - **DISC-R13 (P0).** Open interaction is type-specific (clasp/pry/unscrew/slide). Build **one** (pendant clasp) for the slice; pool the rest (P1).
+- **DISC-R14 (P1).** The full game provides at least 15 openable carrier candidates and at least 3 compatible candidates for every fragment after tool, container, and route filters. Every authored openable type has a tested opening interaction.
+- **DISC-R15 (P1).** Every fragment has its own reviewed `EchoSet`, captions, proximity tuning, carrier anchors, and deterministic QA placement scenarios.
 
 **Acceptance (slice-critical)**
 - [ ] Three runs of the same fragment yield visibly different carrier + container + day; never a repeat pair for that player.
@@ -414,6 +533,7 @@ class SaveState:
 - **PORT-R3 (P0).** On response, show the **Portal Unlock** notification with the real-world historical fact, persist the P0 museum record (§14), and seat the fragment (§11). The polished online/in-game gallery remains P1.
 - **PORT-R4 (P0).** In dev, the request hits `mock-portal/`, which mirrors the real contract 1:1. Prod swap is config-only. *(ARCH-R3.)*
 - **PORT-R5 (P0).** If the call fails/times out, the backend returns a cached fallback fact so the flow always completes. *(ARCH-R2.)*
+- **PORT-R6 (P1).** Before full-game completion, a configured live Portal endpoint must pass discovery, idempotency, museum retrieval, and failure-recovery tests. Mock Portal remains the deterministic CI/dev target, not the sole finished integration.
 
 **Acceptance**
 - [ ] Found → API call → Unlock fact → persisted museum record → fragment seated, on camera, against the mock.
@@ -425,7 +545,7 @@ class SaveState:
 
 - **MUS-R1 (P1).** The polished online API museum displays **Gold** finds and the **Master Artifact** with fact cards, photos, timelines, regional stories, and character memories (`MuseumEntry`, §4.8). *(Invariant §4-F.)*
 - **MUS-R2 (P0 record / P1 gallery).** Each verified discovery posts to the Portal and persists a `MuseumEntry` record in P0; displaying it in the player's polished gallery/profile is P1.
-- **MUS-R3 (P2).** The museum view in-game mirrors the portal gallery.
+- **MUS-R3 (P1).** The museum view in-game mirrors the portal gallery and remains available in offline/fallback mode from persisted records.
 - **MUS-R4 (P1).** Museum facts derive only from verified records; folklore framed as folklore. *(Invariant §4-L.)*
 
 **Acceptance**
@@ -476,14 +596,14 @@ Five fragment-holders (Auntie, Artisan, Scavenger, Archeologist, Buyer); the unc
 
 ---
 
-## 17. Mini-Events  · P1 / P2
+## 17. Mini-Events  · P1
 
-- **EVT-R1 (P1).** Scripted/random events vary runs without distracting from the core loop: **Rush Delivery, Sudden Brownout, Community Request, Suspicious Antique, Rare Buyer Alert, Mystery Box, Rainy-Day Leak, Tool Breakdown.**
+- **EVT-R1 (P1).** All eight scripted/random events vary runs without distracting from the core loop: **Rush Delivery, Sudden Brownout, Community Request, Suspicious Antique, Rare Buyer Alert, Mystery Box, Rainy-Day Leak, Tool Breakdown.**
 - **EVT-R2 (P1).** Each event has clear trigger conditions, a player-facing prompt, and a bounded outcome that feeds existing systems (delivery, restoration, marketplace).
-- **EVT-R3 (P2).** Event frequency is tunable and capped per loop to avoid noise.
+- **EVT-R3 (P1).** Event frequency is data-tunable and capped per loop to avoid noise; each named event must be reachable in deterministic QA scenarios.
 
 **Acceptance**
-- [ ] At least two events (e.g., Rush Delivery, Sudden Brownout) function and affect the loop.
+- [ ] All eight named events function, are individually testable, and affect at least one existing system.
 
 ---
 
@@ -614,11 +734,13 @@ stateDiagram-v2
 8. **Found → mock Portal → Unlock → persisted museum record → seat** (§13) + journal v1 + 5-slot case (§11). *DoD: full beat on camera.*
 9. **Record video** (3 beats, §12–13 acceptance) + finalize `docs/ai-disclosure.md`.
 
-### 22.2 Finalist (P1)
-Full economy + tools/techniques; live scanner; marketplace AI; all routes + scheduling; Temporal Echoes; museum; Safe/drawer; endings + Perfect Loop; remaining carrier interactions; live Portal swap.
+### 22.2 Full Game (P1 — mandatory for 100%)
+`docs/phase-task.md` Phases 12–22 implement the complete GDD: artifact/content lock; full restoration catalog; economy, disposition, and evening upkeep; all routes; Temporal Echoes, journal, and museum; full discovery pools; all events; endings; final production assets and cultural review; live services and platform/input parity; then whole-game QA, 6–10 hour playtesting, exports, replica, lore video, and submission. This work is deferred from the slice, not optional.
 
 ### 22.3 Global Definition of Done
-A task is done when: it satisfies its requirement IDs; respects all CLAUDE.md §4 invariants; has GUT/backend tests where logic exists; passes lint/format; any new AI dependency is appended to `docs/ai-disclosure.md`; and it's committed with a Conventional Commit message.
+A task is done when: it satisfies its requirement IDs and mapped GDD promise; respects all `CLAUDE.md` §4 invariants; has focused automated tests where logic exists; passes lint/format/import; completes its manual gameplay, content, or production acceptance; records evidence in the phase tracker; updates AI disclosure when needed; and is committed with a Conventional Commit message.
+
+Full-game completion additionally requires every P1 requirement, every content-manifest minimum, all production/cultural review gates, live-plus-fallback service tests, Windows/HTML5 and mouse/controller/touch completion, and `REL-R1..R8`. P2 work may remain incomplete because it is outside the current GDD promise.
 
 ---
 
@@ -627,13 +749,149 @@ A task is done when: it satisfies its requirement IDs; respects all CLAUDE.md §
 | # | Decision | Default until decided |
 |---|---|---|
 | D1 | **Master Artifact** selection | Heirloom Timepiece (frontrunner); keep artifact-agnostic |
-| D2 | **Carrier pool size** per fragment | 1 (pendant) for slice; 3–4 for full game |
+| D2 | **Carrier pool size** per fragment | 1 (pendant) for slice; at least 3 compatible candidates per fragment and 15 total for full game |
 | D3 | **Decoy density** (ordinary flickering openables per loop) | enough that flicker ≠ fragment by sight |
 | D4 | **Pile size cap** (openables per pile) | ≤ 6 |
-| D5 | **Does cleaning/scanning consume in-game time?** (CLOCK-R5) | UI pauses the clock |
+| D5 | **Does cleaning/scanning consume in-game time?** (CLOCK-R5) | Full-screen UI pauses through pause ownership; authored exceptions must be explicit |
 | D6 | **Locked-crate gating** for fragments vs reserved for Safe/drawer | fragments not behind solvable locks in slice |
 | D7 | **Buyer 5th-fragment release** | deterministic special delivery once Perfect-Loop conditions are met (ROUTE-R5 / END-R4) |
 
+All decisions above may remain open during the slice only. `CONTENT-R1` blocks full content production until the artifact, source packet, carrier compatibility, decoy tuning, pile cap, time policy, and Buyer release behavior are recorded as accepted decisions.
+
 ---
 
-*This PRD is the build reference and §12 is the complete discovery specification. Pair it with `CLAUDE.md` (invariants/commands), `README.md` (GDD/design), and `docs/phase-task.md` (implementation order/status). Update requirement IDs in place as systems land; never silently diverge from §4 invariants.*
+## 24. Disposition & Object Outcomes  · P1
+
+- **DISP-R1 (P1).** After restoration and scanner judgment, each eligible object presents only valid authored dispositions: `SELL | RETURN | PRESERVE | JOURNAL`. Ownership, rarity, route state, and artifact protection determine eligibility.
+- **DISP-R2 (P1).** `SELL` creates a marketplace listing/negotiation, updates loop money and the persistent best-sale record, and records description honesty and condition.
+- **DISP-R3 (P1).** `RETURN` requires an identified owner/route, resolves an authored route or community outcome, and may award knowledge, a lead, dialogue, or a legacy item; it never directly grants a fragment.
+- **DISP-R4 (P1).** `PRESERVE` routes Gold/Master-Artifact discoveries to Portal/museum records; `JOURNAL` archives Purple-and-below objects. Invalid rarity routing is rejected.
+- **DISP-R5 (P1).** Disposition is confirmed before commitment, is idempotent, and cannot sell, return, or archive the same instance twice.
+- **DISP-R6 (P1).** Persistent story/record consequences survive resets; loop money, listings, and ordinary inventory still reset according to §5.
+
+**Acceptance**
+- [ ] One object can be sold, one returned, one journaled, and one preserved through complete UI flows.
+- [ ] Every outcome updates the correct save partition and journal/museum/route record exactly once.
+
+---
+
+## 25. Evening Upkeep & Preparation  · P1
+
+- **EVE-R1 (P1).** Each shop day enters an explicit evening state before day advancement; the player cannot silently skip unresolved mandatory consequences.
+- **EVE-R2 (P1).** The evening summary reports money, sales/returns/preservation, condition damage, route/event outcomes, new journal entries, and fragment progress.
+- **EVE-R3 (P1).** Upkeep supports repairing/replacing tools, resolving storage overage, reviewing pending requests, and purchasing or preparing obtainable next-day equipment.
+- **EVE-R4 (P1).** The player can review journal clues and commit an `EveningPlan`; preparation changes only documented loop-scoped state and never fabricates persistent knowledge.
+- **EVE-R5 (P1).** Evening commitment saves atomically, then advances the day or performs the Day 5 reset. Repeated input cannot double-charge purchases or duplicate outcomes.
+
+**Acceptance**
+- [ ] A full day reaches evening, resolves upkeep, saves, and advances correctly.
+- [ ] Day 5 evening performs the split reset while preserving all Chronos-bound records.
+
+---
+
+## 26. Full-Game Content Contract  · P1
+
+- **CONTENT-R1 (P1).** Before full content production, lock the Master Artifact, five natural components, verified source packet, cultural reviewers, carrier compatibility rules, decoy/pile tuning, clock policy, and Buyer release behavior. Record decisions without hardcoding artifact specifics in logic.
+- **CONTENT-R2 (P1).** A versioned `ContentManifest` is validated in CI and at development startup; missing required IDs, duplicate IDs, broken references, insufficient counts, absent provenance, or absent review records fail validation.
+- **CONTENT-R3 (P1).** Ship at least **30 authored restorable object templates** distributed across the nine restoration categories and rarity tiers, with meaningful material/tool/value/history variation.
+- **CONTENT-R4 (P1).** Ship all **9 restoration interactions** named in `REST-R2`, each used by at least two authored templates and covered by correct-tool/wrong-tool behavior.
+- **CONTENT-R5 (P1).** Ship at least **15 openable carrier candidates**, with at least **3 compatible candidates per fragment**, plus complete opening interactions and container compatibility data.
+- **CONTENT-R6 (P1).** Ship at least **15 Temporal Echo memories** and **10 mystery-journal pages**, including references that connect ordinary objects to all five fragment-holder routes and the uncle.
+- **CONTENT-R7 (P1).** Ship at least **3 authored progression beats** each for Auntie, Artisan, Scavenger, Archeologist, and Buyer; four character endings; Neutral continuation; and the Yuyu finale.
+- **CONTENT-R8 (P1).** Ship **6 buyer personas**, **6 journal-solvable counterfeit variants**, and **all 8 named mini-events** with distinct behavior and authored fallback content.
+- **CONTENT-R9 (P1).** Ship **5 fragment fact cards**, **1 assembled-artifact record**, and at least **5 additional Gold museum discoveries**, all backed by verified source references.
+- **CONTENT-R10 (P1).** Progression, economy, delivery variety, and route gating are tuned so three blind first-completion playtests have a median of **6–10 hours**, without debug tools or forced seed knowledge.
+
+**Acceptance**
+- [ ] The manifest validator proves every minimum and cross-reference.
+- [ ] No required content slot is satisfied by a placeholder, duplicate-with-renamed-ID, or unreviewed generated output.
+
+---
+
+## 27. Input & Accessibility  · P1
+
+- **INPUT-R1 (P1).** Every gameplay and menu action is completable with mouse, controller, and touch on both target platforms.
+- **INPUT-R2 (P1).** Keyboard/controller actions use Godot Input Map actions, expose visible focus, pressed, disabled, and hover states, and support remapping where the platform permits.
+- **INPUT-R3 (P1).** All Cultural Echo bands, voice lines, critical audio information, and dialogue have synchronized captions; discovery is completable with master audio muted.
+- **INPUT-R4 (P1).** 2D interfaces scale from the 1920x1080 reference layout to the 1280x720 web reference without clipped required controls or unreadable text.
+- **INPUT-R5 (P1).** Touch interactions provide alternatives to hover, right-click, precision dragging, and other unavailable gestures; restoration tolerances are tuned per input method without changing outcomes.
+
+**Acceptance**
+- [ ] Complete input-matrix runs finish one full loop and the finale with each input family.
+- [ ] Muted-audio and reduced-window runs remain fully playable.
+
+---
+
+## 28. Platforms, Offline Operation & Performance  · P1
+
+- **PLAT-R1 (P1).** The Windows export completes the full story, save/reload, live services, and offline fallback flows.
+- **PLAT-R2 (P1).** The HTML5 export completes the same full story and persistence flow; unsupported platform behavior receives an equivalent documented implementation rather than a removed feature.
+- **PLAT-R3 (P1).** Scanner, marketplace, Portal facts, and required narrative remain usable when live services time out or the exhibit is offline.
+- **PLAT-R4 (P1).** Target sustained performance is **60 FPS at 1920x1080** on the documented Windows reference system and **30 FPS at 1280x720** on the documented web reference system during delivery, Echo, restoration, and UI stress scenarios.
+- **PLAT-R5 (P1).** A maintained parity matrix records renderer, audio, networking, storage, input, and known platform differences; every difference has an accepted equivalent behavior.
+- **PLAT-R6 (P1).** Release exports contain no credentials, debug reset/seed controls, development endpoints, test fixtures presented as production content, or unlicensed placeholders.
+
+**Acceptance**
+- [ ] Windows and HTML5 fresh-save completion runs pass.
+- [ ] Performance captures meet targets in the named stress scenarios.
+
+---
+
+## 29. Production Assets & Cultural Review  · P1
+
+- **ASSET-R1 (P1).** Replace placeholders with original production environment, prop, object, character, Master Artifact, fragment, lighting, animation, and effect assets matching the GDD direction.
+- **ASSET-R2 (P1).** Deliver the complete diegetic UI skin and readable states for triage, restoration, scanner, marketplace, journal, museum, dialogue, evening, Found/Unlock, settings, endings, and credits.
+- **ASSET-R3 (P1).** Deliver original music, shop ambience, interaction sounds, restoration feedback, and five reviewed Cultural Echo sets without sampling or imitating protected recordings.
+- **ASSET-R4 (P1).** Record or produce all required Kinaray-a/Hiligaynon voice content with subtitles and documented native-speaker review of wording, pronunciation, and translation.
+- **ASSET-R5 (P1).** Maintain provenance/licensing and AI-disclosure records for every shipped asset, text source, model/tool, and generated intermediate; unresolved provenance blocks release.
+- **ASSET-R6 (P1).** Produce the required physical/visual artifact replica and lore video, using the locked artifact history and five-part narrative.
+- **ASSET-R7 (P1).** Historical facts, folklore labels, artifact interpretation, regional language, and sensitive character material pass documented cultural review before final integration.
+
+**Acceptance**
+- [ ] No release-facing placeholder or unknown-provenance asset remains.
+- [ ] Review records cover every fact card, regional-language line, Cultural Echo set, replica, and lore-video claim.
+
+---
+
+## 30. Full-Game QA, Release & Submission  · P1
+
+- **REL-R1 (P1).** Run the complete Godot, backend, mock Portal, lint, import, save-migration, security, and content-manifest suites; every fixed release bug gains regression coverage where feasible.
+- **REL-R2 (P1).** A fresh save reaches all five fragment seats and the Yuyu finale without debug tools, console intervention, edited saves, or inaccessible seeds.
+- **REL-R3 (P1).** Run at least three blind first-completion playtests; median completion is 6–10 hours, blockers are resolved, and route/economy/placement telemetry is retained without collecting unnecessary personal data.
+- **REL-R4 (P1).** Verify live and forced-fallback scanner, marketplace, and Portal matrices, including timeout, rate limit, malformed response, duplicate request, and service recovery.
+- **REL-R5 (P1).** Verify Windows/HTML5 × mouse/controller/touch, muted-audio discovery, scaling, save/reload, and performance matrices.
+- **REL-R6 (P1).** Complete provenance, cultural/native-speaker, historical-source, privacy, AI-disclosure, and secret scans with named human sign-off.
+- **REL-R7 (P1).** Produce final Windows and HTML5 exports, gameplay/pitch evidence, artifact replica, lore video, public repository materials, forms, credits, and rollback/archive copies.
+- **REL-R8 (P1).** Documentation validation proves every README promise maps to PRD IDs and detailed phase tasks, every mandatory ID appears in the final coverage index, `git diff --check` passes, and tracked documentation contains no stale completion claim.
+
+**Acceptance**
+- [ ] All `REL-R1..R8` evidence is linked from the phase tracker.
+- [ ] Phase 22 is the only gate that may mark the full project 100% complete.
+
+---
+
+## 31. GDD-to-Requirement Coverage
+
+| README promise | Canonical requirement groups |
+|---|---|
+| Daily delivery, triage, restoration, scan, decide, evening | `DLV`, `REST`, `SCAN`, `DISP`, `EVE` |
+| Knowledge-based five-day persistence | `SAVE`, `CLOCK`, `JRN` |
+| Sell, return, preserve, or journal | `MKT`, `DISP`, `MUS`, `JRN`, `ROUTE` |
+| Five routes and five fragment releases | `ROUTE`, `DISC`, `SAVE`, `CONTENT` |
+| Spawn Director and never-twice placement | `DISC`, `SAVE`, `CONTENT` |
+| Cultural Echoes and accessible discovery | `DISC`, `INPUT`, `ASSET` |
+| Live scanner, marketplace, Portal, and fallbacks | `ARCH`, `SCAN`, `MKT`, `PORT`, `API`, `PLAT`, `REL` |
+| Journal mystery, Temporal Echoes, Safe/drawer | `JRN`, `TEMP`, `CACHE`, `CONTENT` |
+| Digital museum and verified regional history | `MUS`, `PORT`, `CONTENT`, `ASSET` |
+| All eight mini-events | `EVT`, `DLV`, `CONTENT` |
+| Character endings, Neutral, Perfect Loop/Yuyu | `END`, `ROUTE`, `CONTENT`, `REL` |
+| 6–10 hour complete story | `CONTENT-R10`, `REL-R2`, `REL-R3` |
+| Original art/audio, language review, replica, lore video | `ASSET`, `CONTENT`, `REL` |
+| Windows, HTML5, mouse, controller, touch | `INPUT`, `PLAT`, `REL` |
+| Ethical AI, privacy, provenance, submission | `ARCH`, `API`, `ASSET`, `REL` |
+
+Any future GDD promise must be added to this table, assigned requirement IDs, and scheduled in `docs/phase-task.md` in the same change.
+
+---
+
+*This PRD is the testable implementation contract and §12 is the complete discovery specification. `README.md` defines promised scope, `CLAUDE.md` §4 governs implementation, and `docs/phase-task.md` records execution and proof. Update requirement IDs and the coverage matrix together; never silently diverge from an invariant or GDD promise.*

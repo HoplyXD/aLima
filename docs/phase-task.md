@@ -1,6 +1,6 @@
 # aLima Phase Task Checklist
 
-Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, mock Portal, tests, and milestone evidence.
+Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, live/mock services, authored content, production assets, tests, milestone evidence, and full release. Completing every mandatory task through Phase 22 is defined to deliver the complete README GDD.
 
 | Field | Value |
 |---|---|
@@ -9,7 +9,7 @@ Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, mock Por
 | Engine target | Godot 4.6.3 |
 | Presentation | Hybrid 3D shop with 2D gameplay interfaces |
 | Project root | Repository root (`project.godot` stays here) |
-| Build authority | `CLAUDE.md` §4 -> `docs/PRD.md` -> `README.md` -> this checklist |
+| Build authority | `CLAUDE.md` §4 -> `README.md` full-game promises -> `docs/PRD.md` requirements -> this checklist |
 | Discovery specification | `docs/PRD.md` §12 |
 
 Toolchain references: [Godot 4.6.3 maintenance release](https://godotengine.org/article/maintenance-release-godot-4-6-3/) and [Godot 4.6 documentation](https://docs.godotengine.org/en/4.6/).
@@ -27,7 +27,7 @@ Do not mark runtime work `[x]` from screenshots, print statements, scene presenc
 
 Every completed task must:
 
-- Satisfy its listed PRD requirement IDs and `CLAUDE.md` §4 invariants.
+- Satisfy its listed PRD requirement IDs, mapped README promise, and `CLAUDE.md` §4 invariants.
 - Use typed GDScript and signals for cross-system communication.
 - Keep artifact, fragment, route, echo, and object specifics in JSON or resources.
 - Include focused GUT or backend tests when logic exists.
@@ -35,6 +35,8 @@ Every completed task must:
 - Include one manual gameplay acceptance check for user-facing behavior.
 - Append new AI usage to `docs/ai-disclosure.md`.
 - Avoid committing secrets, generated caches, or unrelated file churn.
+
+Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare the complete GDD game 100% finished, and only after every mandatory P0/P1 task, content minimum, production review, service/platform matrix, and release gate passes.
 
 ## Current Repository Audit
 
@@ -101,6 +103,16 @@ signal echo_proximity_changed(instance_id: String, proximity: float, band: Strin
 signal fragment_discovered(fragment_id: String, instance_id: String)
 signal portal_completed(fragment_id: String, museum_entry_id: String, used_fallback: bool)
 signal fragment_seated(fragment_id: String, slot_index: int)
+
+signal disposition_completed(instance_id: String, disposition: String, outcome_id: String)
+signal sale_completed(instance_id: String, buyer_id: String, price: int)
+signal object_returned(instance_id: String, owner_route_id: String, reward_id: String)
+signal evening_started(day: int)
+signal evening_plan_committed(day: int, plan_id: String)
+signal mini_event_started(event_id: String)
+signal mini_event_resolved(event_id: String, outcome_id: String)
+signal route_beat_completed(route_id: String, beat_id: String)
+signal ending_triggered(ending_id: String)
 ```
 
 ### Data Contracts
@@ -110,6 +122,12 @@ signal fragment_seated(fragment_id: String, slot_index: int)
 - Echo sets: `data/echoes/*.json`.
 - Route/dialogue definitions: `data/routes/*.json`.
 - Cached scanner responses: `data/scanner-cache/*.json`.
+- Buyer personas and fallbacks: `data/marketplace/*.json`.
+- Counterfeit evidence: `data/counterfeits/*.json`.
+- Temporal Echoes and mystery pages: `data/temporal-echoes/*.json`, `data/journal/*.json`.
+- Mini-events and evening planning: `data/events/*.json`, `data/evening/*.json`.
+- Historical facts, sources, cultural reviews, and provenance: `data/museum/*.json`, `docs/sources/`, `docs/reviews/`, `docs/provenance/`.
+- Full-game count/ID contract: `data/content-manifest.json`.
 - Runtime instances are generated from templates and never overwrite authored files.
 - Every JSON file has a top-level `schema_version` and stable string IDs.
 
@@ -124,8 +142,8 @@ signal fragment_seated(fragment_id: String, slot_index: int)
 }
 ```
 
-- `persistent`: journal entries, scanner records, museum entries, seated fragments, spawn history, learned techniques, completed routes, leads, legacy items, Safe/drawer knowledge.
-- `loop`: day/hour, money, ordinary inventory, temporary tools/upgrades, listings, current deliveries, unfinished requests, event outcomes.
+- `persistent`: journal entries, scanner records, museum entries, seated fragments, spawn history, learned techniques, completed route beats, returns, leads, legacy items, Safe/drawer knowledge, Temporal Echoes, endings, and content/review versions.
+- `loop`: day/hour, money, ordinary inventory, temporary tools/upgrades, listings, current deliveries, unfinished requests, dispositions, daily sales, evening plan/upkeep, active event, and event outcomes.
 - Save writes use `user://save.tmp`, validate the complete payload, then replace `user://save.json`.
 - Future schema changes increment `schema_version` and add an explicit migration.
 
@@ -149,15 +167,19 @@ Each placement audit writes one JSON line:
 
 - `POST /api/scan`: use the request/response in PRD §20; output is advisory only.
 - `POST /api/portal/discovery`: use the request/response in PRD §20.
+- `POST /api/negotiate`: use the request/response in PRD §20; six personas require live and fallback paths.
 - Repeated Portal requests use a deterministic idempotency key: `player_id:fragment_id`.
 - Backend timeout, validation, rate limiting, fallback, and config selection are mandatory.
 
 ## Standard Verification Commands
 
+All phase verification snippets that use `$godot` assume this variable is initialized as shown below in the current PowerShell session.
+
 ```powershell
-godot --version
-godot --headless --editor --path . --quit
-godot --headless --path . -s addons/gut/gut_cmdln.gd
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --version
+& $godot --headless --editor --path . --quit
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 gdformat --check .
 gdlint .
 
@@ -938,41 +960,402 @@ Manual only after all automated phase tests pass: record one uninterrupted end-t
 
 ---
 
-## Phase 12 - Finalist P1 and Polish P2
+## Phase 12 - Full-Game Decisions and Content Manifest
 
-**Goal:** expand the proven P0 architecture without weakening its invariants.
+**Goal:** lock the decisions and validation contract required before full content production.
 
-**Dependencies:** Phase 11 slice baseline
-**Subsystems:** economy, routes, content, museum, endings, polish
+**Requirements:** ARCH-R5, CONTENT-R1, CONTENT-R2, ASSET-R5, ASSET-R7
+**Dependencies:** Phase 11 slice baseline and workshop/cultural consultation results
+**Subsystems:** artifact data, source packets, content manifest, validation, review records
 
-### P1 Backlog
+### Tasks
 
-- `[ ]` **P12.1 Full tools/techniques and restoration set:** SAVE-R5, REST-R2, REST-R5, REST-R6.
-- `[ ]` **P12.2 Live verified scanner:** SCAN-R3, SCAN-R6.
-- `[ ]` **P12.3 Marketplace AI and economy:** MKT-R1..R5.
-- `[ ]` **P12.4 Full journal mystery progression:** JRN-R4.
-- `[ ]` **P12.5 Polished online museum/gallery:** MUS-R1, MUS-R2 gallery portion, MUS-R4.
-- `[ ]` **P12.6 All character schedules and route logic:** CLOCK-R4, ROUTE-R1..R6.
-- `[ ]` **P12.7 Temporal Echo memories:** TEMP-R1..R4.
-- `[ ]` **P12.8 At least two mini-events:** EVT-R1, EVT-R2.
-- `[ ]` **P12.9 Safe and locked drawer:** CACHE-R1..R3.
-- `[ ]` **P12.10 Character endings and Yuyu finale:** END-R1..R5.
-- `[ ]` **P12.11 Remaining carrier opening interactions and live Portal config swap.**
+- `[ ]` **P12.1 Lock the Master Artifact and source packet.** Record the selected regional artifact, five natural components, verified historical sources, folklore labels, reviewers, and approval date without hardcoding them in logic.
+- `[ ]` **P12.2 Resolve all PRD §23 decisions.** Record carrier compatibility, decoy density, pile cap, full-screen clock policy, lock policy, and Buyer release behavior as versioned design data.
+- `[ ]` **P12.3 Implement the `ContentManifest`.** Validate all required counts, named IDs, references, provenance records, source packets, and native-speaker review references.
+- `[ ]` **P12.4 Add manifest validation to tests and CI.** Fail on missing/duplicate IDs, insufficient counts, broken references, placeholder production IDs, or absent review/provenance records.
+- `[ ]` **P12.5 Create the full-game data directory contracts.** Add versioned locations for buyer personas, counterfeits, Temporal Echoes, mini-events, route beats, evening plans, museum facts, sources, reviews, and provenance.
 
-### P2 Backlog
+### Acceptance
 
-- `[ ]` **P12.12 Event frequency/cap tuning:** EVT-R3.
-- `[ ]` **P12.13 Suspicious Buyer route depth:** MKT-R6.
-- `[ ]` **P12.14 In-game museum mirror:** MUS-R3.
-- `[ ]` **P12.15 Clock-consumption and pause polish:** CLOCK-R5 using the P0 default that full-screen interfaces pause time.
-- `[ ]` **P12.16 Additional accessibility, animation, audio, lighting, controller, touch, and exhibit polish.**
+- [ ] The artifact and all blocking decisions are signed off and data-driven.
+- [ ] A deliberately incomplete manifest fails with actionable errors; the accepted manifest passes.
+- [ ] No production content task depends on an unresolved artifact or cultural-source decision.
 
-### Final Acceptance
+### Verification
 
-- [ ] Every P1/P2 requirement has tests or a documented manual acceptance case.
-- [ ] All five fragments follow `LOCKED -> RELEASED -> SEATED`.
-- [ ] The Buyer and Safe never bypass carrier placement, cleaning, opening, or seating.
-- [ ] Seating the fifth persistent fragment triggers the Yuyu finale.
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/content/manifest
+```
+
+Manual: review the locked artifact packet and manifest with the named cultural reviewer and record approval evidence.
+
+---
+
+## Phase 13 - Full Object Catalog, Restoration, and Counterfeits
+
+**Goal:** build the complete tactile restoration and authentication content set.
+
+**Requirements:** SAVE-R5, REST-R2, REST-R5, REST-R6, SCAN-R3, SCAN-R6, CONTENT-R3, CONTENT-R4, CONTENT-R8
+**Dependencies:** Phase 12
+**Subsystems:** object catalog, restoration interactions, tools, techniques, counterfeit evidence
+
+### Tasks
+
+- `[ ]` **P13.1 Author at least 30 restorable object templates.** Cover all rarity tiers and nine restoration categories with distinct materials, tools, values, history, and disposition hooks.
+- `[ ]` **P13.2 Implement all nine restoration interactions.** Build brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, and mechanism inspection with input-specific tuning.
+- `[ ]` **P13.3 Complete tools and techniques.** Support shop-bought loop-scoped tools, persistent learned techniques, character-only techniques, legacy tools, upkeep, and wrong-tool consequences.
+- `[ ]` **P13.4 Author six solvable counterfeit variants.** Each exposes journal/scanner-comparable evidence without an automatic verdict.
+- `[ ]` **P13.5 Integrate catalog records.** Every object updates condition, best result, variants, scanner evidence, value, and applicable journal history without duplicate entries.
+- `[ ]` **P13.6 Test the restoration matrix.** Cover every interaction, correct/wrong tool, technique gate, input family, condition bound, value consequence, and counterfeit solution path.
+
+### Acceptance
+
+- [ ] Manifest reports at least 30 objects, all 9 interactions, and 6 counterfeits.
+- [ ] Every interaction is used by at least two authored templates.
+- [ ] A player can solve each counterfeit from evidence and may still choose any final verdict.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/restoration
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/scanner/counterfeits
+```
+
+Manual: complete every restoration interaction with correct and wrong tools, then solve all six counterfeit fixtures from the journal.
+
+---
+
+## Phase 14 - Economy, Marketplace, Disposition, and Evenings
+
+**Goal:** complete the daily economic decision loop from restored object to next-day preparation.
+
+**Requirements:** ARCH-R6, SAVE-R7, DLV-R4, MKT-R1, MKT-R2, MKT-R3, MKT-R4, MKT-R5, MKT-R6, DISP-R1..R6, EVE-R1..R5
+**Dependencies:** Phases 2, 3, 9, 12, and 13
+**Subsystems:** marketplace, disposition router, economy, returns, evening summary, upkeep
+
+### Tasks
+
+- `[ ]` **P14.1 Build listing and negotiation state.** Connect condition, authenticity verdict, description honesty, persona preference, budget, offers, acceptance, rejection, and walk-away outcomes.
+- `[ ]` **P14.2 Implement six buyer personas and fallback sets.** Keep persona prompts/guardrails server-side and authored fallback behavior data-driven.
+- `[ ]` **P14.3 Implement the disposition router.** Offer only valid `SELL`, `RETURN`, `PRESERVE`, and `JOURNAL` choices; confirm and commit each outcome idempotently.
+- `[ ]` **P14.4 Implement return-to-owner outcomes.** Resolve owner/route rewards and story flags without directly granting fragments.
+- `[ ]` **P14.5 Build the evening state.** Summarize outcomes, repair/replace tools, resolve storage, prepare requests/equipment, review journal changes, and commit the next-day plan.
+- `[ ]` **P14.6 Extend save and event contracts.** Persist records and story consequences while keeping money, listings, daily sales, upkeep, evening plans, and event state in the correct reset partition.
+- `[ ]` **P14.7 Test economy and transaction safety.** Cover duplicate clicks, insufficient funds, invalid dispositions, reset behavior, and Day 5 evening advancement.
+
+### Acceptance
+
+- [ ] Sell, return, preserve, and journal flows each complete exactly once.
+- [ ] Six personas produce distinct, constrained negotiations and prices respond to quality/honesty.
+- [ ] Every day ends through a useful evening screen and Day 5 preserves only the documented state.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/economy
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/evening
+Push-Location server
+npm test
+Pop-Location
+```
+
+Manual: play two days using every disposition, negotiate with all personas, perform upkeep, and confirm the next delivery reflects preparation.
+
+---
+
+## Phase 15 - Character Routes, Returns, Safe, and Drawer
+
+**Goal:** implement all authored route beats, temporal scheduling, persistent leads, and route-gated caches.
+
+**Requirements:** SAVE-R4, SAVE-R5, SAVE-R7, CLOCK-R4, CLOCK-R5, ROUTE-R1..R6, CACHE-R1..R3, DISP-R3, CONTENT-R7
+**Dependencies:** Phases 2, 10, 12, 13, and 14
+**Subsystems:** route scheduler, route beats, dialogue, returns, Safe, drawer, rewards
+
+### Tasks
+
+- `[ ]` **P15.1 Author three progression beats for each route.** Complete Auntie, Artisan, Scavenger, Archeologist, and Buyer data with prerequisites, object/return hooks, dialogue, rewards, and release beat.
+- `[ ]` **P15.2 Implement authoritative scheduling.** Evaluate windows at open time, consume unanswered visits, preserve pause ownership, and enforce the temporal Artisan/Scavenger exclusion.
+- `[ ]` **P15.3 Implement persistent route progression.** Persist beats, leads, completion, unlocked dialogue, legacy rewards, and released fragments across loops.
+- `[ ]` **P15.4 Integrate route returns and restoration requests.** Required objects flow through restoration, judgment, and return rather than scripted bypasses.
+- `[ ]` **P15.5 Implement the Safe and locked drawer.** Persist code/access knowledge, pay the loop-scoped Safe reward, expose drawer pages, and preserve carrier nesting rules.
+- `[ ]` **P15.6 Test route reachability.** Cover every window, missed visit, prerequisite, exclusion, later-loop lead, reward, and fragment release.
+
+### Acceptance
+
+- [ ] Each non-finale route contains three playable beats and releases exactly one assigned fragment.
+- [ ] Perfect-Loop ordering can thread Scavenger, Auntie, and Artisan as specified.
+- [ ] Safe/drawer knowledge persists and neither cache can hand over a loose fragment.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/routes
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/caches
+```
+
+Manual: complete all five route paths across controlled loops, including one ignored visit and the intended Perfect-Loop route order.
+
+---
+
+## Phase 16 - Temporal Echoes, Journal Mystery, and Museum
+
+**Goal:** connect ordinary restoration to the uncle's mystery and complete both archives.
+
+**Requirements:** JRN-R4, MUS-R1..R4, TEMP-R1..R4, DISP-R4, CONTENT-R6, CONTENT-R9
+**Dependencies:** Phases 9, 12, 13, and 15
+**Subsystems:** Temporal Echoes, mystery pages, journal planning, museum gallery, fact records
+
+### Tasks
+
+- `[ ]` **P16.1 Author and integrate 15 Temporal Echoes.** Tie eligible objects to memories, captions/audio, journal pages, and all five fragment-holder routes.
+- `[ ]` **P16.2 Build ten mystery-journal pages.** Clear static through Echoes/routes, reveal uncle notes, and expose useful future-loop planning information.
+- `[ ]` **P16.3 Complete the journal interface.** Support searchable object records, route clues, Echo playback/captions, planning notes, condition/sale history, and fragment case.
+- `[ ]` **P16.4 Complete online and in-game museum views.** Display persisted Gold and Master Artifact records online and mirror them in-game/offline.
+- `[ ]` **P16.5 Author verified museum history.** Add five fragment facts, the assembled-artifact record, and at least five additional Gold discoveries with source references.
+- `[ ]` **P16.6 Test unlock and archive routing.** Cover Echo persistence, page reveal order, duplicate prevention, offline museum records, and rarity boundaries.
+
+### Acceptance
+
+- [ ] Manifest reports 15 Echoes, 10 mystery pages, 5 fragment facts, 1 assembled record, and 5 additional Gold records.
+- [ ] Every route is connected to at least one ordinary-object memory.
+- [ ] Journal and museum remain distinct, complete, and usable offline from persisted data.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/journal
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/temporal_echoes
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/museum
+```
+
+Manual: unlock all Echoes/pages in a content save, inspect both archives, restart, and confirm every record persists.
+
+---
+
+## Phase 17 - Full Carrier Pools and Five-Fragment Discovery
+
+**Goal:** scale the proven slice discovery system to every fragment and opening type.
+
+**Requirements:** DISC-R1..R15, SAVE-R2, SAVE-R3, CONTENT-R5
+**Dependencies:** Phases 5, 6, 12, 13, and 15
+**Subsystems:** carrier catalog, opening interactions, Spawn Director, Echo sets, five-fragment progression
+
+### Tasks
+
+- `[ ]` **P17.1 Author 15 carrier candidates.** Provide at least three compatible candidates per fragment after tool/container/route filters.
+- `[ ]` **P17.2 Implement remaining opening interactions.** Complete clasp, pry, unscrew, slide, and every additional authored openable action with clean-first gating.
+- `[ ]` **P17.3 Configure five reviewed Echo sets.** Add audio, captions, anchors, radii, thresholds, pulse behavior, and muted-mode feedback per fragment.
+- `[ ]` **P17.4 Scale placement to concurrent released fragments.** Keep deterministic seeds, winnability, nesting, never-twice history, neglect weighting, day spread, and Safe eligibility correct.
+- `[ ]` **P17.5 Complete five-fragment persistence.** Re-place released fragments each loop, permanently exclude seated fragments, and prevent duplicate discovery/seating.
+- `[ ]` **P17.6 Add deterministic discovery matrices.** Test every fragment across carrier/container/day candidates, exhaustion, unavailable tools, decoys, and reloads.
+
+### Acceptance
+
+- [ ] Every fragment has at least three valid carriers and its own accessible Echo path.
+- [ ] All five can progress `LOCKED -> RELEASED -> SEATED` without a direct handoff.
+- [ ] Three-run never-twice evidence exists for each fragment.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/discovery
+```
+
+Manual: discover and seat all five fragments across ordinary seeded play, including one Safe outer-container placement.
+
+---
+
+## Phase 18 - All Mini-Events and Loop Variation
+
+**Goal:** implement and tune every GDD-named event without obscuring the core loop.
+
+**Requirements:** DLV-R4, EVT-R1, EVT-R2, EVT-R3, CONTENT-R8
+**Dependencies:** Phases 3, 13, 14, and 15
+**Subsystems:** event director, delivery/economy/restoration modifiers, event prompts, tuning
+
+### Tasks
+
+- `[ ]` **P18.1 Author all eight event definitions.** Implement Rush Delivery, Sudden Brownout, Community Request, Suspicious Antique, Rare Buyer Alert, Mystery Box, Rainy-Day Leak, and Tool Breakdown.
+- `[ ]` **P18.2 Integrate bounded outcomes.** Each event affects delivery, restoration, marketplace, requests, upkeep, or shop conditions through existing contracts.
+- `[ ]` **P18.3 Implement trigger and cap rules.** Keep deterministic QA overrides separate from production weighting and cap disruptive events per loop.
+- `[ ]` **P18.4 Add player-facing communication.** Show trigger, duration, changed rules, consequences, accessibility text, and evening-summary outcome.
+- `[ ]` **P18.5 Tune variation and fairness.** Prevent unwinnable fragments, impossible requests, route-window obstruction, or repeated event spam.
+- `[ ]` **P18.6 Test every event deterministically.** Cover trigger, outcome, save/reset, interaction with carriers, and cap behavior.
+
+### Acceptance
+
+- [ ] All eight events are reachable, distinct, and recorded by the content manifest.
+- [ ] Event combinations never violate discovery winnability or route invariants.
+- [ ] Normal play varies without exceeding the documented per-loop cap.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/events
+```
+
+Manual: run the deterministic event showcase, then play three unforced loops and review frequency/cap logs.
+
+---
+
+## Phase 19 - Character Endings and Yuyu Finale
+
+**Goal:** deliver all authored outcomes and the complete Master Artifact restoration ending.
+
+**Requirements:** END-R1..R5, ROUTE-R5, CONTENT-R7, CONTENT-R9
+**Dependencies:** Phases 15, 16, and 17
+**Subsystems:** ending state, character resolutions, Neutral continuation, final restoration, credits transition
+
+### Tasks
+
+- `[ ]` **P19.1 Implement four character endings.** Resolve Auntie, Artisan, Scavenger, and Archeologist through their completed route state and authored final scenes.
+- `[ ]` **P19.2 Implement Neutral continuation.** Completing no route repeats the loop without corrupting persistent progress or falsely ending the game.
+- `[ ]` **P19.3 Complete the Buyer release path.** Qualifying dealings release the fifth fragment into a guaranteed Director-placed special delivery.
+- `[ ]` **P19.4 Build the Master Artifact restoration.** Assemble the five seated components through a final tactile sequence using locked artifact data.
+- `[ ]` **P19.5 Implement the Yuyu finale.** Resolve the uncle, release the loop, create the assembled museum record, and transition to credits/postgame state.
+- `[ ]` **P19.6 Test ending reachability and exclusivity.** Cover all character endings, Neutral, fifth-seat trigger, reloads, duplicate prevention, and post-finale state.
+
+### Acceptance
+
+- [ ] Four character endings, Neutral continuation, and Yuyu are all reachable from valid saves.
+- [ ] Seating the fifth fragment triggers the finale exactly once.
+- [ ] The Buyer and final restoration never bypass carrier placement, cleaning, opening, Portal completion, or seating.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/endings
+```
+
+Manual: record each ending and one uninterrupted final-fragment-to-credits playthrough.
+
+---
+
+## Phase 20 - Final Narrative, Art, Audio, UI, and Cultural Review
+
+**Goal:** replace all placeholders with reviewed production content and required external deliverables.
+
+**Requirements:** ASSET-R1..R7, CONTENT-R6, CONTENT-R7, CONTENT-R9
+**Dependencies:** Phases 12–19
+**Subsystems:** narrative, environment, objects, characters, UI, animation, audio, voices, replica, lore video
+
+### Tasks
+
+- `[ ]` **P20.1 Finalize all narrative text.** Complete dialogue, route beats, Echo memories, journal prose, museum facts, endings, captions, credits, and fallback text.
+- `[ ]` **P20.2 Replace visual placeholders.** Deliver the shop, props, objects, characters, artifact/fragments, lighting, animation, effects, and all UI screens in the approved direction.
+- `[ ]` **P20.3 Complete audio production.** Deliver music, ambience, restoration/UI sounds, voice lines, and five Cultural Echo sets without protected samples.
+- `[ ]` **P20.4 Complete language and cultural review.** Record native-speaker and historical/cultural approvals for every relevant line, fact, sound set, and interpretation.
+- `[ ]` **P20.5 Complete provenance and disclosure.** Resolve every asset source/license, generated intermediate, model/tool, external reference, default icon, and adapted-code concern.
+- `[ ]` **P20.6 Produce the artifact replica and lore video.** Match the locked artifact, five-part logic, verified history, and shipped game presentation.
+- `[ ]` **P20.7 Run placeholder/provenance audits.** Block release on unknown provenance, missing captions, missing review, temporary UI, or unapproved historical claims.
+
+### Acceptance
+
+- [ ] No release-facing placeholder, temporary prose, unknown-provenance asset, or unreviewed cultural line remains.
+- [ ] Replica and lore video are complete and historically consistent with the game.
+- [ ] Every shipped AI-assisted asset/text workflow appears in `docs/ai-disclosure.md`.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/content
+git ls-files | Select-String -Pattern 'placeholder|TEMP_ASSET|TODO_ASSET|unverified'
+```
+
+Manual: perform a screen-by-screen and scene-by-scene production review with provenance and cultural-review checklists open.
+
+---
+
+## Phase 21 - Live Services, Platforms, Inputs, and Performance
+
+**Goal:** satisfy the finished runtime AI, Portal, accessibility, platform, and input promises.
+
+**Requirements:** ARCH-R1, ARCH-R2, ARCH-R3, ARCH-R6, SCAN-R7, MKT-R3, MKT-R7, PORT-R6, API-R1..R3, INPUT-R1..R5, PLAT-R1..R6
+**Dependencies:** Phases 8, 14, 16, 17, and 20; live credentials/contracts
+**Subsystems:** backend, scanner, negotiation, Portal, Windows, HTML5, input, accessibility, performance
+
+### Tasks
+
+- `[ ]` **P21.1 Verify live scanner and negotiation.** Exercise real configured services through the backend with validation, guardrails, rate limits, timeout, cache, and recovery.
+- `[ ]` **P21.2 Verify the live Portal.** Pass discovery, idempotency, museum retrieval, config swap, timeout, malformed response, and recovery against the official endpoint.
+- `[ ]` **P21.3 Complete mouse, controller, and touch.** Cover every gameplay/UI action, remapping where supported, visible states, touch alternatives, and input-specific restoration tolerances.
+- `[ ]` **P21.4 Complete accessibility behavior.** Verify captions, muted discovery, focus order, readable contrast, scalable text/layout, and non-audio critical feedback.
+- `[ ]` **P21.5 Complete Windows and HTML5 parity.** Maintain the renderer/audio/network/storage/input parity matrix and equivalent behavior for platform limitations.
+- `[ ]` **P21.6 Meet performance targets.** Sustain 60 FPS at 1920x1080 on the Windows reference system and 30 FPS at 1280x720 on the web reference system in named stress scenes.
+- `[ ]` **P21.7 Audit release security.** Remove debug controls, development endpoints, credentials, test-only production content, and unsafe logging from exports.
+
+### Acceptance
+
+- [ ] Live and forced-fallback scanner, marketplace, and Portal matrices pass.
+- [ ] Windows and HTML5 can complete the game with mouse, controller, and touch.
+- [ ] Accessibility and performance targets pass on documented reference systems.
+
+### Verification
+
+```powershell
+Push-Location server
+npm test
+Pop-Location
+Push-Location mock-portal
+npm test
+Pop-Location
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/input
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/platform
+```
+
+Manual: complete the platform × input × online/fallback matrix and retain performance captures.
+
+---
+
+## Phase 22 - Full-Game QA, Playtesting, Export, and Submission
+
+**Goal:** prove that the complete GDD game is stable, 6–10 hours, reviewed, exportable, and submission-ready.
+
+**Requirements:** CONTENT-R10, REL-R1..R8, all mandatory P0/P1 requirements
+**Dependencies:** Phases 0–21
+**Subsystems:** regression, migrations, full playthroughs, balancing, exports, release evidence, documentation parity
+
+### Tasks
+
+- `[ ]` **P22.1 Run the complete automated and security baseline.** Include Godot import/GUT/lint, backend/mock tests, content manifest, save migration, secret scan, and release regressions.
+- `[ ]` **P22.2 Complete fresh-save full-game runs.** Reach all five seats and Yuyu without debug tools on Windows and HTML5; include save/reload and offline recovery.
+- `[ ]` **P22.3 Run three blind first-completion playtests.** Retain consented route/economy/placement timing notes, resolve blockers, and achieve a 6–10 hour median.
+- `[ ]` **P22.4 Complete final matrices.** Sign off live/fallback services, platform/input, accessibility, performance, route/ending reachability, and content coverage.
+- `[ ]` **P22.5 Produce final exports and package.** Build Windows and HTML5 releases, credits, repository materials, gameplay/pitch evidence, forms, replica, lore video, disclosures, and archive/rollback copies.
+- `[ ]` **P22.6 Validate documentation parity.** Compare README promises, PRD IDs, phase tasks, manifest counts, and evidence; reject stale or unmatched claims.
+- `[ ]` **P22.7 Complete named human sign-off.** Obtain engineering, design/narrative, cultural/native-speaker, provenance, privacy, and submission approvals.
+
+### Acceptance - 100% Completion Gate
+
+- [ ] Every README promise maps to PRD IDs, detailed tasks, and passing evidence.
+- [ ] Every mandatory P0/P1 requirement is complete; no required content minimum is a placeholder.
+- [ ] A fresh save completes the five-fragment story and Yuyu ending without debug assistance.
+- [ ] Three blind playtests have a 6–10 hour median first completion.
+- [ ] Live services and all forced fallback cases pass.
+- [ ] Windows/HTML5 × mouse/controller/touch, accessibility, and performance matrices pass.
+- [ ] All assets, facts, language, AI use, privacy handling, replica, lore video, exports, and submission materials are approved.
+- [ ] Only after every item above passes may the project be described as **100% complete**.
+
+### Verification
+
+```powershell
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --headless --editor --path . --quit
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
+Push-Location server
+npm test
+Pop-Location
+Push-Location mock-portal
+npm test
+Pop-Location
+git diff --check
+git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
+```
+
+Manual: perform the signed release-candidate checklist and retain all playthrough, matrix, review, export, and submission evidence.
 
 ---
 
@@ -996,25 +1379,48 @@ Manual only after all automated phase tests pass: record one uninterrupted end-t
 
 ## Complete Requirement Index
 
-This index names every current PRD requirement explicitly so no feature disappears behind a phase summary.
+This index names every current PRD requirement literally so automated parity checks can prove that no feature disappears behind a range or phase summary.
 
-- **Phase 0-1 architecture:** ARCH-R1, ARCH-R2, ARCH-R3, ARCH-R4, ARCH-R5.
-- **Phase 2 core loop/save:** SAVE-R1, SAVE-R2, SAVE-R6, CLOCK-R1, CLOCK-R2, CLOCK-R3.
-- **Phase 3 delivery:** DLV-R1, DLV-R2, DLV-R3, DLV-R5.
-- **Phase 4 restoration/opening:** REST-R1, REST-R3, REST-R4, REST-R7, DISC-R12, DISC-R13.
-- **Phase 5 placement:** SAVE-R3, DISC-R1, DISC-R2, DISC-R3, DISC-R4, DISC-R5, DISC-R6.
-- **Phase 6 Echoes:** DISC-R7, DISC-R8, DISC-R9, DISC-R10, DISC-R11.
-- **Phase 7-8 scanner:** SCAN-R1, SCAN-R2, SCAN-R4, SCAN-R5.
-- **Phase 8 Portal/backend:** PORT-R1, PORT-R2, PORT-R3, PORT-R4, PORT-R5, API-R1, API-R2, API-R3.
-- **Phase 9 archives:** JRN-R1, JRN-R2, JRN-R3, JRN-R5, MUS-R2.
-- **Phase 10 slice route integration:** ROUTE-R3.
-- **Phase 12 persistence/scheduling:** SAVE-R4, SAVE-R5, CLOCK-R4, CLOCK-R5, DLV-R4.
-- **Phase 12 restoration/scanner:** REST-R2, REST-R5, REST-R6, SCAN-R3, SCAN-R6.
-- **Phase 12 marketplace:** MKT-R1, MKT-R2, MKT-R3, MKT-R4, MKT-R5, MKT-R6.
-- **Phase 12 journal/museum:** JRN-R4, MUS-R1, MUS-R3, MUS-R4.
-- **Phase 12 routes:** ROUTE-R1, ROUTE-R2, ROUTE-R4, ROUTE-R5, ROUTE-R6.
-- **Phase 12 Temporal Echoes/events:** TEMP-R1, TEMP-R2, TEMP-R3, TEMP-R4, EVT-R1, EVT-R2, EVT-R3.
-- **Phase 12 caches/endings:** CACHE-R1, CACHE-R2, CACHE-R3, END-R1, END-R2, END-R3, END-R4, END-R5.
+- **Architecture:** ARCH-R1, ARCH-R2, ARCH-R3, ARCH-R4, ARCH-R5, ARCH-R6.
+- **Persistence:** SAVE-R1, SAVE-R2, SAVE-R3, SAVE-R4, SAVE-R5, SAVE-R6, SAVE-R7.
+- **Clock:** CLOCK-R1, CLOCK-R2, CLOCK-R3, CLOCK-R4, CLOCK-R5.
+- **Delivery:** DLV-R1, DLV-R2, DLV-R3, DLV-R4, DLV-R5.
+- **Restoration:** REST-R1, REST-R2, REST-R3, REST-R4, REST-R5, REST-R6, REST-R7.
+- **Scanner:** SCAN-R1, SCAN-R2, SCAN-R3, SCAN-R4, SCAN-R5, SCAN-R6, SCAN-R7.
+- **Marketplace:** MKT-R1, MKT-R2, MKT-R3, MKT-R4, MKT-R5, MKT-R6, MKT-R7.
+- **Journal:** JRN-R1, JRN-R2, JRN-R3, JRN-R4, JRN-R5.
+- **Discovery:** DISC-R1, DISC-R2, DISC-R3, DISC-R4, DISC-R5, DISC-R6, DISC-R7, DISC-R8, DISC-R9, DISC-R10, DISC-R11, DISC-R12, DISC-R13, DISC-R14, DISC-R15.
+- **Portal:** PORT-R1, PORT-R2, PORT-R3, PORT-R4, PORT-R5, PORT-R6.
+- **Museum:** MUS-R1, MUS-R2, MUS-R3, MUS-R4.
+- **Routes:** ROUTE-R1, ROUTE-R2, ROUTE-R3, ROUTE-R4, ROUTE-R5, ROUTE-R6.
+- **Temporal Echoes:** TEMP-R1, TEMP-R2, TEMP-R3, TEMP-R4.
+- **Events:** EVT-R1, EVT-R2, EVT-R3.
+- **Caches:** CACHE-R1, CACHE-R2, CACHE-R3.
+- **Endings:** END-R1, END-R2, END-R3, END-R4, END-R5.
+- **Backend API:** API-R1, API-R2, API-R3.
+- **Disposition:** DISP-R1, DISP-R2, DISP-R3, DISP-R4, DISP-R5, DISP-R6.
+- **Evening:** EVE-R1, EVE-R2, EVE-R3, EVE-R4, EVE-R5.
+- **Content:** CONTENT-R1, CONTENT-R2, CONTENT-R3, CONTENT-R4, CONTENT-R5, CONTENT-R6, CONTENT-R7, CONTENT-R8, CONTENT-R9, CONTENT-R10.
+- **Input:** INPUT-R1, INPUT-R2, INPUT-R3, INPUT-R4, INPUT-R5.
+- **Platforms:** PLAT-R1, PLAT-R2, PLAT-R3, PLAT-R4, PLAT-R5, PLAT-R6.
+- **Assets/review:** ASSET-R1, ASSET-R2, ASSET-R3, ASSET-R4, ASSET-R5, ASSET-R6, ASSET-R7.
+- **Release:** REL-R1, REL-R2, REL-R3, REL-R4, REL-R5, REL-R6, REL-R7, REL-R8.
+
+## Full-Game Requirement Coverage
+
+| Requirement group | Detailed phase(s) | Current status |
+|---|---:|---|
+| Artifact decisions, manifest, sources | 12 | Not started |
+| Full objects, restoration, tools, counterfeits | 13 | Not started |
+| Marketplace, disposition, evening upkeep | 14 | Not started |
+| Routes, schedules, returns, Safe/drawer | 15 | Auntie slice only; full work not started |
+| Temporal Echoes, journal mystery, museum | 16 | P0 journal record pending; full work not started |
+| Fifteen carriers and five-fragment discovery | 17 | Slice carrier pending; full work not started |
+| All eight events | 18 | Not started |
+| Character endings, Neutral, Yuyu finale | 19 | Not started |
+| Final narrative, assets, audio, review, replica/video | 20 | Not started |
+| Live services, platforms, inputs, accessibility, performance | 21 | P0 mock/cached work pending; full work not started |
+| Full-game QA, 6–10 hour playtests, release/submission | 22 | Not started |
 
 ## Update Procedure
 
@@ -1025,5 +1431,6 @@ When implementation lands:
 3. Change only that task's marker.
 4. Add a short evidence line with test command, date, and commit hash.
 5. Update the P0 coverage table if the group status changed.
-6. Update `CLAUDE.md` commands/layout only when architecture actually changes.
-7. Update `docs/PRD.md` requirement wording only through an explicit design decision; never silently change an invariant.
+6. Update the full-game coverage table and content manifest when P1 status or counts change.
+7. Update `CLAUDE.md` commands/layout only when architecture actually changes.
+8. Update `docs/PRD.md`, its GDD coverage matrix, and this index together for any explicit design decision; never silently change an invariant or GDD promise.

@@ -4,7 +4,7 @@
 
 A Cozy AI-Powered Historical Restoration Roguelite
 
-> **Document role:** This file is the GDD and narrative/design source. For implementation, follow `CLAUDE.md` §4 first, then `docs/PRD.md`, then this GDD, then `docs/phase-task.md`.
+> **Document role:** This file is the full-game GDD and defines the product promises that must exist at 100% completion. `CLAUDE.md` §4 governs implementation invariants, `docs/PRD.md` translates every promise here into testable requirements, and `docs/phase-task.md` tracks implementation and proof. The PRD may clarify build detail, but it may not silently omit or downgrade a promise in this GDD.
 
 GAME DESIGN DOCUMENT — PROJECT PROPOSAL
 
@@ -86,12 +86,12 @@ aLima’s answer to the theme is structural rather than decorative. Preservation
 | :---- | :---- |
 | Working Title | aLima |
 | Genre | Cozy restoration sim × narrative roguelite |
-| Platform | PC (Windows) primary; HTML5/web build planned for the AI Fest exhibit booth |
+| Platform | PC (Windows) primary; HTML5/web build required for the AI Fest exhibit booth |
 | Engine | Godot 4.6.3 — hybrid 3D shop environment with 2D `Control`/`CanvasLayer` gameplay interfaces, audio-bus control for Cultural Echoes, and desktop/web export targets |
 | Mode | Single-player |
 | Session Length | ≈10–13 minutes real per in-game day (1 real minute \= 1 in-game hour); ≈1 hour per five-day loop; full story arc 6–10 hours |
 | Target Audience | Teens and adults; players of Unpacking, PowerWash Simulator, Strange Horticulture, and Coffee Talk |
-| Input | Mouse-first; controller- and touch-friendly |
+| Input | Mouse-first; complete mouse, controller, and touch support on Windows and HTML5 |
 | Language | English UI; Kinaray-a and Hiligaynon cultural lines, always subtitled |
 | Team Size | 3 members — see Section 16 |
 
@@ -280,7 +280,7 @@ Every restored item is a story rescued from being forgotten; together the museum
 
 ## **9.11 Mini-Events**
 
-Random and scripted events keep each run distinct: Rush Delivery, Sudden Brownout, Community Request, Suspicious Antique, Rare Buyer Alert, Mystery Box, Rainy-Day Leak, and Tool Breakdown.
+Random and scripted events keep each run distinct: Rush Delivery, Sudden Brownout, Community Request, Suspicious Antique, Rare Buyer Alert, Mystery Box, Rainy-Day Leak, and Tool Breakdown. All eight named events are required in the finished game; frequency and per-loop caps are tuned so they add variety without overwhelming the daily loop.
 
 ## **9.12 Temporal Echoes (Object Memories)**
 
@@ -344,7 +344,7 @@ Development AI (production tools, fully disclosed)
 
 • Data: a JSON-defined object database keeps the design artifact-agnostic; per-player spawn history backs the never-twice placement guarantee.
 
-• Repository: public GitHub repository initialized June 1, with a commit history demonstrating the project is built from scratch within the jam window.
+• Repository: public GitHub history begins June 13, 2026, and demonstrates the project being built from scratch during the jam window. Any earlier proposal work is documented separately rather than represented as repository history.
 
 # **12\. Art & Audio Direction**
 
@@ -358,7 +358,7 @@ The roadmap is built backwards from the official jam milestones.
 
 | Dates | Milestone | Focus |
 | :---- | :---- | :---- |
-| June 1 | Repo \+ proposal | GitHub initialized; concept locked; this document |
+| June 1 | Proposal planning target | Concept and proposal work began; public Git history starts June 13, 2026 |
 | June 12–19 | Sprint 1 — core slice | Hybrid shop scene, delivery/triage, one complete pendant cleaning/opening interaction, object data pipeline |
 | June 20 | Official Workshop 1 | Apply feedback; artifact candidate review with mentors |
 | June 21–26 | Sprint 2 — jam mechanics | Spawn Director, Cultural Echo mixer, Artifact Found screen, mock portal API |
@@ -368,6 +368,39 @@ The roadmap is built backwards from the official jam milestones.
 | July 11 | Mentoring session | Refinement plan with mentors |
 | July 12–Aug 2 | Content build | Full five-day loop, marketplace AI, all five character routes, museum gallery, final-cycle ending |
 | Aug 3–5 | AI Fest, Iloilo City | Exhibit booth (web/offline build); pitching and judging on August 4 |
+
+## **13.1 Full-Game Completion Contract**
+
+The June 30 build is a vertical slice, not the definition of a finished game. The project reaches **100% completion** only when the complete GDD experience is implemented, authored, reviewed, tested, and exportable without debug tools. Completing `docs/phase-task.md` therefore guarantees all of the following:
+
+• The complete daily loop: delivery, triage, restoration, scanner judgment, and a meaningful disposition choice to sell, return to an owner, preserve in the museum, or archive in the journal, followed by an evening summary with upkeep and next-day preparation.
+
+• The complete meta-loop: all five routes and fragment releases, all five persistent fragment discoveries, the Safe and locked drawer, Temporal Echoes, mystery-journal progression, four character endings, Neutral continuation, Master Artifact restoration, and the Yuyu finale.
+
+• The complete economy and AI layer: six buyer personas, live backend scanner and negotiation services, live Portal configuration, and tested cached/offline fallbacks. AI remains advisory and all cultural claims remain tied to verified sources.
+
+• The complete variation layer: all nine named restoration interactions, at least three eligible carrier choices per fragment, solvable counterfeits, all eight named mini-events, tuned delivery variation, and Cultural Echo guidance for each fragment.
+
+• The complete presentation: original production art, UI, animation, lighting, music, ambience, voices, captions, native-speaker review, provenance records, the physical/visual artifact replica, and the artifact lore video.
+
+• The complete platform promise: Windows and HTML5 builds complete the game with mouse, controller, and touch; discovery remains playable without audio; layouts scale below 1920x1080; and offline/fallback mode remains usable at the exhibit.
+
+The minimum authored content budget used to support the promised 6–10 hour first-completion arc is:
+
+| Content area | Finished-game minimum |
+| :---- | :---- |
+| Restorable objects | 30 authored object templates across the restoration categories |
+| Restoration | All 9 interactions: brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, mechanism inspection |
+| Carriers | 15 openable carrier candidates, with at least 3 compatible candidates per fragment |
+| Counterfeits | 6 variants whose evidence can be solved through scanner/journal comparison |
+| Temporal Echoes | 15 memories plus 10 mystery-journal pages |
+| Character content | 3 authored progression beats each for Auntie, Artisan, Scavenger, Archeologist, and Buyer |
+| Endings | 4 character endings, Neutral continuation, and the Yuyu finale |
+| Marketplace | 6 distinct buyer personas with live negotiation and offline fallback |
+| Events | All 8 named mini-events |
+| Museum history | 5 fragment fact cards, 1 assembled-artifact record, and at least 5 additional Gold discoveries |
+
+Three blind first-completion playtests must produce a median of 6–10 hours before the full-game checklist can be marked complete. Detailed requirement IDs and acceptance tests live in `docs/PRD.md`; implementation sequencing and evidence live in `docs/phase-task.md`.
 
 # **14\. The June 30 Vertical Slice (50% Milestone)**
 

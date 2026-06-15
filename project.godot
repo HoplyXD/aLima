@@ -15,17 +15,17 @@ run/main_scene="uid://dgc2dadcifuf2"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
-[display]
-
-window/size/viewport_width=1920
-window/size/viewport_height=1080
-window/size/mode=3
-
 [autoload]
 
 EventBus="*res://scripts/core/event_bus.gd"
 GameState="*res://scripts/core/game_state.gd"
 SaveService="*res://scripts/core/save_service.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/mode=3
 
 [physics]
 

@@ -6,9 +6,9 @@ Canonical repository context for agents that write implementation prompts for aL
 
 - Read this file before producing any implementation prompt.
 - Then inspect the current code, scene, data, test, and documentation files relevant to the requested work. This snapshot does not replace source inspection.
-- Treat running code and assets as truth for what exists. Treat `CLAUDE.md` Section 4 as the design invariants, `docs/PRD.md` as the build contract, `README.md` as the GDD/narrative source, and `docs/phase-task.md` as the implementation order/status tracker.
+- Treat running code and assets as truth for what exists. Authority is `CLAUDE.md` Section 4 implementation invariants -> `README.md` full-game promises -> `docs/PRD.md` testable build contract -> `docs/phase-task.md` implementation order and evidence. The PRD may clarify but may not omit a GDD promise.
 - If source and docs disagree, report the disagreement. Do not silently rewrite behavior or requirements.
-- Snapshot last audited 2026-06-15; refreshed after Phase 1 core architecture and data (typed models, repository, autoloads, slice fixtures, tests). Those changes are in the working tree on `main`, not yet committed (base commit `779a515`). Refresh this file when implementation materially changes.
+- Snapshot last audited 2026-06-15; refreshed after Phase 1 core architecture/data and the full-GDD documentation reconciliation. Repository branch is `main`; current HEAD at audit time is `2a6f259` and the working tree contains an unrelated pre-existing `project.godot` modification plus this documentation work. Refresh this file when implementation materially changes.
 
 ## Game Identity
 
@@ -18,6 +18,7 @@ Canonical repository context for agents that write implementation prompts for aL
 - **Progression:** A repeating five-day loop. Money, ordinary stock, temporary tools/upgrades, listings, requests, and daily outcomes reset. Knowledge, journal/scanner/museum records, learned techniques, story clues, route completion, leads, legacy items, spawn history, and seated fragments persist.
 - **Goal:** Recover five fragments of a real Western Visayas heritage artifact, seat them permanently in the journal case, complete the Master Artifact, end the loop, and recover the uncle.
 - **Artifact status:** Not selected. The Heirloom Timepiece is the frontrunner. Keep all logic artifact-agnostic and authored through JSON or Godot resources.
+- **Completion rule:** Phase 11 completes only the June 30 vertical slice. The full game is 100% complete only after mandatory Phases 12–22 and every P0/P1 requirement, content minimum, production review, service/platform matrix, and release gate pass.
 
 ## Core Play
 
@@ -33,6 +34,20 @@ Planned daily loop:
 Slice-critical discovery flow:
 
 `Hum -> Melody -> Voice -> carrier flicker + Heartbeat -> select object -> clean -> scan and judge -> open -> fragment -> Artifact Found -> backend/mock Portal -> Portal Unlock -> museum record -> journal case seat`
+
+## Full-Game Content Minimums
+
+- 30 authored restorable object templates across all nine restoration interactions.
+- 15 openable carrier candidates, with at least three compatible candidates per fragment.
+- 6 journal-solvable counterfeit variants.
+- 15 Temporal Echo memories and 10 mystery-journal pages.
+- 3 progression beats each for Auntie, Artisan, Scavenger, Archeologist, and Buyer.
+- 4 character endings, Neutral continuation, and the Yuyu finale.
+- 6 buyer personas with live negotiation and deterministic offline fallback.
+- All 8 named mini-events.
+- 5 fragment fact cards, 1 assembled-artifact record, and at least 5 additional Gold discoveries.
+- Original production art/audio/UI/voices, five reviewed Cultural Echo sets, subtitles, provenance, cultural/native-speaker review, artifact replica, and lore video.
+- Three blind first-completion playtests with a 6–10 hour median.
 
 ## Non-Negotiable Rules
 
@@ -51,6 +66,9 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 - All LLM and Portal calls go through the Node/Express backend. Never put keys, provider calls, or secrets in Godot. External calls require validation, timeout, rate limiting where applicable, and cached fallback behavior.
 - Historical claims require verified sources. Folklore must be labeled as folklore. The Code of Kalantiaw is excluded as a source of fact.
 - Use original assets only. Folk-inspired audio must not sample or imitate protected/traditional recordings. Kinaray-a/Hiligaynon content requires subtitles and cultural/native-speaker review.
+- The finished game requires live scanner, marketplace, and Portal verification plus cached/offline fallbacks. Mock-only or cache-only service behavior is not full completion.
+- Sell, return, preserve, and journal dispositions plus evening upkeep/preparation are mandatory parts of the daily loop.
+- Windows and HTML5 must complete the game with mouse, controller, and touch; target 60 FPS at 1920x1080 on Windows and 30 FPS at 1280x720 on web reference systems.
 
 ## Platforms, Input, And Presentation
 
@@ -58,9 +76,9 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 - **Current project settings:** Godot feature `4.6`, GL Compatibility renderer, Jolt 3D physics, 1920x1080 viewport, fullscreen mode, Windows D3D12 driver setting.
 - **Targets:** Windows is primary. HTML5/web is planned for the AI Fest exhibit and must be verified separately rather than assumed equivalent.
 - **Presentation:** One stylized 3D shop with 2D `Control`/`CanvasLayer` screens for triage, restoration, scanner, journal, dialogue, and Portal flows.
-- **Input:** Mouse-first. Controller and touch are goals, not verified features. Current dialogue advances with `ui_accept` or left mouse click.
+- **Input:** Mouse-first presentation, but mouse, controller, and touch are mandatory full-game targets. Current dialogue advances with `ui_accept` or left mouse click; broader input support is not implemented yet.
 - **Accessibility:** Echo discovery must remain playable muted through captions and a visual resonance meter. UI needs readable contrast, visible focus/hover states, 1920x1080 reference layout, and smaller-window scaling.
-- **Performance:** No FPS, memory, draw-call, or download-size budget is documented. Prompts should avoid unnecessary scene churn, per-frame allocations, and heavyweight architecture, and must test Windows and web behavior when affected.
+- **Performance:** Full-game targets are 60 FPS at 1920x1080 on the documented Windows reference system and 30 FPS at 1280x720 on the documented web reference system. Memory/download budgets still require measurement during Phase 21.
 
 ## Art, Audio, And UI Direction
 
@@ -121,12 +139,27 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 - `scripts/core/`, `scripts/models/`, `data/`, `resources/`, `tests/`, and `addons/gut/` now hold Phase 1 code and fixtures; `server/` and `mock-portal/` still do not (Phase 8).
 - No npm package manifests or lockfiles exist yet; `requirements-dev.txt` pins the Python gdtoolkit version.
 
+### Mandatory Phase Map
+
+- **Phases 0–11:** June 30 vertical slice, mock/cached integration, evidence, and slice exports only.
+- **Phase 12:** artifact/source decisions and validated content manifest.
+- **Phase 13:** 30-object catalog, all nine restoration interactions, tools/techniques, and counterfeits.
+- **Phase 14:** economy, six-persona marketplace, dispositions, returns, and evening upkeep.
+- **Phase 15:** all route beats/schedules, persistent leads, Safe, and drawer.
+- **Phase 16:** Temporal Echoes, mystery journal, verified museum, and in-game mirror.
+- **Phase 17:** 15 carriers, five Echo sets, and complete five-fragment discovery.
+- **Phase 18:** all eight mini-events and tuning.
+- **Phase 19:** character endings, Neutral continuation, Master Artifact restoration, and Yuyu finale.
+- **Phase 20:** final narrative, art, audio, UI, language/cultural review, provenance, replica, and lore video.
+- **Phase 21:** live services plus fallbacks, Windows/HTML5, all inputs, accessibility, security, and performance.
+- **Phase 22:** full regression, fresh-save completion, 6–10 hour blind playtests, exports, submission, and documentation parity. Only this phase can declare 100% completion.
+
 ## Important Files
 
 - `CLAUDE.md`: operating contract, invariants, target architecture, commands, conventions.
-- `docs/PRD.md`: requirement IDs and canonical system contracts; Section 12 is the complete discovery specification.
-- `README.md`: GDD, narrative, routes, art/audio direction, roadmap, and milestone description.
-- `docs/phase-task.md`: canonical task order and status. Start at Phase 0 stabilization.
+- `README.md`: full-game GDD and promised product scope.
+- `docs/PRD.md`: testable requirement IDs, canonical contracts, full-game completion requirements, and GDD coverage matrix; Section 12 is the complete discovery specification.
+- `docs/phase-task.md`: canonical task order, evidence, full-game phase map, and 100% completion gate. Start at the first incomplete dependency-safe task.
 - `docs/ai-disclosure.md`: append-only AI usage log and milestone review gate.
 - `project.godot`: engine, renderer, viewport, and main scene configuration.
 - `scenes/Shop.tscn`: production entry scene; HUD now visible, stray test button removed, controller on the root.
@@ -160,7 +193,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 Every future implementation prompt for this repository must:
 
 1. Begin by requiring the agent to read `docs/PROMPT_CONTEXT.md`, then inspect the exact relevant source/docs before editing.
-2. Name the phase, PRD requirement IDs, and `CLAUDE.md` invariants being implemented.
+2. Name the phase, mapped README/GDD promise, PRD requirement IDs, and `CLAUDE.md` invariants being implemented.
 3. Describe verified current behavior separately from planned behavior and assumptions.
 4. Scope work to the actual Godot/Node architecture and current milestone. Preserve typed GDScript, signals, data-driven content, and the hybrid 3D/2D presentation.
 5. Avoid unnecessary architecture changes and unrelated refactors. Reuse the existing Shop and DialogueBox where sensible; migrate behavior before deleting prototypes.
@@ -169,20 +202,21 @@ Every future implementation prompt for this repository must:
 8. Include automated commands plus a manual gameplay check. Never permit "works" or `[x]` status without running the relevant checks and reporting results.
 9. Require `docs/phase-task.md` evidence/status updates only after its stated automated and manual gates pass under Godot 4.6.3.
 10. Require `docs/ai-disclosure.md` updates for new tools/models, generated assets/audio/text, runtime AI, or materially AI-assisted workflows.
-11. Require `CLAUDE.md` updates when layout, commands, stack, or architecture changes. Change PRD requirements only for an explicit design decision.
-12. Optimize for a polished, stable, offline-safe, recordable June 30 slice before P1 breadth.
+11. Require `CLAUDE.md` updates when layout, commands, stack, architecture, or invariants change. Change a GDD promise or PRD requirement only through an explicit design decision that updates the coverage matrix and phase index together.
+12. Respect the active milestone: optimize for the polished June 30 slice through Phase 11, then implement mandatory full-GDD Phases 12–22 without treating deferred slice work as optional.
 
 ## Verification Baseline
 
 Target commands from the repository:
 
 ```powershell
-godot --version
-godot --headless --editor --path . --quit
-godot --headless --path . --quit
-godot --headless --path . -s addons/gut/gut_cmdln.gd
-gdformat --check .
-gdlint .
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --version
+& $godot --headless --editor --path . --quit
+& $godot --headless --path . --quit
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
 
 Push-Location server
 npm test
@@ -196,7 +230,7 @@ git status --short
 git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 ```
 
-Current limitations: Godot 4.6.3 is installed and verified via the explicit executable, but the bare `godot` command still selects the older 4.5.1 executable. GUT, gdformat, and gdlint are present; `server/` and `mock-portal/` are absent, so prompts must add and verify only the tooling required by their phase and report every command that could not run.
+Current limitations: Godot 4.6.3 is installed and verified via the explicit executable, but the bare `godot` command selects the older 4.5.1 executable. GUT, gdformat, and gdlint are present; `server/` and `mock-portal/` are absent, so prompts must add and verify only the tooling required by their phase and report every command that could not run.
 
 ## Hackathon And Submission Priorities
 
@@ -205,12 +239,13 @@ Current limitations: Godot 4.6.3 is installed and verified via the explicit exec
 - Planned dates documented in the repo: Workshop 1 on June 20; Workshop 2 and final artifact lock on June 27; recording/submission June 28-30; Top 10 announcement July 7; mentoring July 11; AI Fest August 3-5 with judging August 4.
 - Submission materials documented in the repo include the public repository, gameplay video, finalized AI disclosure, a physical/visual artifact replica, and an artifact lore video.
 - Judging emphasis inferred from the documented mechanics: theme integration, genuine procedural variation, usable Cultural Echo discovery, API/Portal proof, cultural responsibility, and a polished playable slice. No separate scoring rubric is stored in the repository.
+- The post-slice completion target is the full README GDD, not a reduced finalist core. Phase 22 requires fresh-save Windows/HTML5 completion, live-plus-fallback services, all inputs, reviewed production assets, a 6–10 hour median, the artifact replica, and lore video.
 
 ## Risks, Contradictions, And Unknowns
 
-- The bare `godot` command now resolves to 4.6.3 via a PATH shim (Phase 0). The change lives in the User PATH, so it applies to fresh shells and this machine only — CI and other machines must still select 4.6.3 explicitly (the CI workflow downloads it).
+- The bare `godot` command currently resolves to 4.5.1 because `C:\Users\roman\Desktop\Godot\godot.exe` precedes the 4.6.3 `.cmd` shim. Use the explicit 4.6.3 executable; CI and other machines must also select 4.6.3 explicitly.
 - Nearly every P0 gameplay and submission system is unimplemented with 15 days remaining until June 30, 2026.
-- The README says the public repository was initialized June 1; Git history begins June 13, 2026. Correct the claim or document external evidence before submission.
+- Repository-history wording is reconciled: proposal planning is dated June 1, while public Git history begins June 13, 2026. Preserve that distinction in submission materials.
 - The Twine intro starts the player with one fragment, while current design requires only the journal and all five fragments hidden. Current PRD/invariants win.
 - The old tracker requested two restoration mini-games; the current slice requires one complete pendant cleaning/opening interaction. Current PRD/phase tracker win.
 - Twine uses random success and automatic sales; Godot requires skill-based restoration, player judgment, and explicit sell/return/museum decisions.
@@ -218,4 +253,4 @@ Current limitations: Godot 4.6.3 is installed and verified via the explicit exec
 - (Resolved in Phase 0) The Shop HUD is now visible, the stray test button is gone, orchestration is a single controller on the Shop root, the duplicate controllers and the whole `prototype/` directory were removed, and `prototype/Main.tscn`'s broken script path no longer exists.
 - Asset provenance, licensing, cultural review, final artifact choice, Portal/ADK access, and exact live Portal contract are not verified.
 - The default Godot icon, placeholder visitor art, and dialogue code adapted from named external references need provenance/license review against the jam's original-asset and disclosure rules.
-- No explicit performance budget, final controller/touch scheme, web compatibility result, judging score rubric, or completed export process is documented.
+- Performance targets, controller/touch completion, and Windows/HTML5 parity are now mandatory PRD gates, but reference hardware details, measured results, judging score rubric, and completed export evidence do not yet exist.

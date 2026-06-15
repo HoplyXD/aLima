@@ -10,12 +10,13 @@
 
 ## 1. Operating Contract (how you, Claude Code, work here)
 
-- **Read before you build.** Use this authority order: `CLAUDE.md` §4 invariants → `docs/PRD.md` build requirements → `README.md` GDD/narrative design → `docs/phase-task.md` implementation order and status. PRD §12 is the complete Spawn Director / Echoes / carrier specification.
+- **Read before you build.** Use this authority order: `CLAUDE.md` §4 implementation invariants → `README.md` full-game GDD/product promises → `docs/PRD.md` testable build contract → `docs/phase-task.md` implementation order and proof. The PRD may clarify the GDD but may not omit or downgrade a promised feature. PRD §12 remains the complete Spawn Director / Echoes / carrier specification.
 - **Invariants are law.** §4 lists rules that, if broken, break the game's design or its jam eligibility. Never violate them, even if a task seems to ask for it — flag the conflict instead.
 - **Data-driven, always.** The final heritage artifact is **not yet chosen**. Never hardcode artifact/object specifics; everything lives in `data/` or Godot resources so the choice drops in without a refactor. See §4.
 - **Log AI usage.** Whenever you introduce an AI tool or dependency (in-game LLM call, generated asset pipeline, AI-assisted code of note), append it to `docs/ai-disclosure.md`. Undisclosed AI use is a **disqualification risk** — treat this as non-optional.
 - **Keep commits clean and incremental.** The repo must show a from-scratch build within the jam window. Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`). Small, working commits.
 - **Test before "done."** Run the relevant tests/checks (§6) and report results. Don't declare a task complete on untested code.
+- **Do not confuse the slice with the game.** Phase 11 completes the June 30 vertical slice only. The project is 100% complete only after every mandatory full-game phase, content minimum, platform gate, production deliverable, and final release check passes.
 - **Update this file** when architecture or commands change. It is the source of truth; stale = dangerous.
 
 ---
@@ -44,6 +45,7 @@ alima/
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
+│   ├── PROMPT_CONTEXT.md      ← verified context and prompt contract for agents
 │   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
 ├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/
 ├── scripts/                   ← shop, core, models, discovery, restoration, scanner, journal, portal
@@ -105,6 +107,16 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 - **Folklore is framed as folklore, never as archaeological fact.** Scanner "facts" derive from verified records.
 - Excluded as source-of-fact: the **Code of Kalantiaw** (documented 20th-c. hoax). Maragtas may flavor lore but is treated as oral tradition.
 
+**M. Full-GDD parity and content manifest.** Every product promise in `README.md` must map to a PRD requirement ID and a phase task. The validated full-game content manifest must enforce at least 30 object templates, all 9 restoration interactions, 15 openable carrier candidates with at least 3 compatible candidates per fragment, 6 counterfeits, 15 Temporal Echoes, 10 mystery pages, 3 authored beats for each of the five non-finale routes, 6 buyer personas, all 8 named events, 5 fragment fact cards, 1 assembled-artifact record, and 5 additional Gold discoveries. Do not mark the full game complete by substituting placeholders, duplicated content, or unreviewed generated material.
+
+**N. Disposition and evening loop are mandatory.** After restoration and judgment, eligible objects must support the authored choice to sell, return to an owner, preserve in the museum, or archive in the journal. Outcomes update economy, route/story state, and records consistently. Each day ends through an evening summary that exposes upkeep, tool/storage management, journal changes, and next-day preparation; these are not flavor-only screens.
+
+**O. Live services plus fallbacks.** The finished game must verify live backend scanner, marketplace negotiation, and Portal integrations through environment-selected services. Cached/offline fallbacks are also mandatory, but a mock-only or cache-only implementation does not satisfy full-game completion. Missing credentials or an unavailable official contract is an explicit blocker, not permission to mark the task complete.
+
+**P. Platform, input, and accessibility parity.** Windows and HTML5 must complete the full game with mouse, controller, and touch. All actionable UI exposes focus, hover/pressed, and touch states; input actions are remappable where the platform permits. Cultural Echo discovery remains playable muted through captions and the resonance meter. Target performance is 60 FPS at 1920x1080 on the Windows reference system and 30 FPS at 1280x720 on the web reference system.
+
+**Q. Production and cultural review are part of done.** Final art, UI, animation, lighting, audio, voices, subtitles, artifact replica, lore video, provenance records, verified historical citations, native-speaker review, AI disclosure, exports, and submission materials belong to the phase checklist. A system-complete build with placeholder assets or unreviewed cultural content is not 100% complete.
+
 ---
 
 ## 5. The Core Loop (what the code serves)
@@ -124,16 +136,16 @@ Use the **explicit Godot 4.6.3 console executable** for reliable CI/automation: 
 
 ```powershell
 # --- Game (Godot 4.6.3; project.godot is in this directory) ---
-godot --version                                      # currently 4.5.1.stable; use the explicit 4.6.3 exe below
-$C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe --version  # expect 4.6.3.stable
-# For each command, replace `godot` with `$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"` until the bare command is fixed.
-godot --editor --path .
-godot --headless --editor --path . --quit            # import/build check
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+godot --version                                      # currently 4.5.1.stable; diagnostic only
+& $godot --version                                   # expect 4.6.3.stable
+& $godot --editor --path .
+& $godot --headless --editor --path . --quit         # import/build check
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 
 # Focused Phase 1 suites
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/models
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/models
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core
 
 # --- Lint/format (gdtoolkit; pinned in requirements-dev.txt: pip install -r requirements-dev.txt) ---
 # Scope to our source — vendored addons/gut is third-party and not formatted by us.
@@ -141,13 +153,18 @@ gdformat --check scripts scenes dialogue tests
 gdlint scripts scenes dialogue tests
 
 # --- Backend (LLM proxy + portal client; Phase 8, not yet scaffolded) ---
-cd server && npm install
-cp .env.example .env            # fill in keys locally; NEVER commit .env
-npm run dev                     # dev server
-npm test                        # backend tests
+Push-Location server
+npm install
+Copy-Item .env.example .env     # fill in keys locally; NEVER commit .env
+npm run dev                     # run in a dedicated terminal
+npm test
+Pop-Location
 
 # --- Mock Portal (Phase 8, not yet scaffolded) ---
-cd mock-portal && npm install && npm start
+Push-Location mock-portal
+npm install
+npm start                       # run in a dedicated terminal
+Pop-Location
 ```
 
 > If a command above doesn't exist yet (early in the build), create the missing scaffolding (test runner, lint config, scripts) as part of the task and update this section.
@@ -188,7 +205,7 @@ Build the discovery loop **once, end-to-end, deep not wide.** Priorities:
 
 The 50% gameplay video must show three beats: (a) the artifact spawning in different locations, (b) finding it via Echo cues, and (c) the Portal Unlock notification. See PRD §12 acceptance, §13 acceptance, and `docs/phase-task.md` Phase 11 for the cut-line and shot checklist.
 
-**Deferred (finalist phase):** full economy, live marketplace AI, the other character routes, museum polish, remaining carrier open-interactions, live Portal endpoint (single-URL swap).
+**Mandatory after the slice:** Phases 12–22 expand the slice into the complete GDD game: artifact/content lock; full restoration catalog; economy, disposition, and evenings; all routes; Temporal Echoes and museum; all fragments/carriers; all events; endings; production assets and cultural review; live services plus fallbacks; Windows/HTML5 and all inputs; then full-game QA, playtesting, exports, replica, lore video, and submission. These phases are deferred from the June 30 slice, not optional for 100% completion.
 
 ---
 
@@ -196,8 +213,8 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, GUT suite (`16/16` passing), and minute-level clock behavior all pass under 4.6.3. Runtime tasks still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`49/49` passing, 160 asserts), focused model/core suites, and minute-level clock behavior pass under 4.6.3. Runtime tasks still require their own acceptance checks before `[x]`.
 
 ---
 
-*Read `README.md` for the GDD, `docs/PRD.md` for build requirements and the full discovery spec, and `docs/phase-task.md` for implementation order. When in doubt, the invariants in §4 win.*
+*Read `README.md` for promised full-game scope, `docs/PRD.md` for testable requirements and the full discovery spec, and `docs/phase-task.md` for implementation order and evidence. When in doubt, §4 governs implementation and the GDD promise must remain covered.*
