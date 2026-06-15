@@ -24,15 +24,15 @@ signal finished
 ## Characters revealed per second during the typewriter effect.
 @export var characters_per_second: float = 35.0
 
-@onready var _name_label: Label = %NameLabel
-@onready var _text_label: RichTextLabel = %TextLabel
-@onready var _continue_indicator: Label = %ContinueIndicator
-@onready var _type_timer: Timer = %TypeTimer
-
 var _lines: Array = []
 var _index: int = 0
 var _is_typing: bool = false
 var _blink_tween: Tween
+
+@onready var _name_label: Label = %NameLabel
+@onready var _text_label: RichTextLabel = %TextLabel
+@onready var _continue_indicator: Label = %ContinueIndicator
+@onready var _type_timer: Timer = %TypeTimer
 
 
 func _ready() -> void:
@@ -103,7 +103,9 @@ func _input(event: InputEvent) -> void:
 	var advance := false
 	if event.is_action_pressed("ui_accept"):
 		advance = true
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+	elif (
+		event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed
+	):
 		advance = true
 	if advance:
 		_advance()

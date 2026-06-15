@@ -1,0 +1,4 @@
+# Python dev tooling for aLima (GDScript formatting + linting).
+# Install with:  pip install -r requirements-dev.txt
+# gdtoolkit 4.x targets GDScript 2.0 (Godot 4). Pinned for reproducible CI/local runs.
+gdtoolkit==4.5.0

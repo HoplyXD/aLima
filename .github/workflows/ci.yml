@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# No backend jobs yet: server/ and mock-portal/ do not exist (Phase 8).
+env:
+  GODOT_VERSION: "4.6.3"
+  GDTOOLKIT_VERSION: "4.5.0"
+
+jobs:
+  lint:
+    name: GDScript format + lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install gdtoolkit (pinned)
+        run: pip install "gdtoolkit==${GDTOOLKIT_VERSION}"
+
+      # Scope excludes vendored addons/gut (third-party, not formatted by us).
+      - name: gdformat --check
+        run: gdformat --check scripts scenes dialogue tests
+
+      - name: gdlint
+        run: gdlint scripts scenes dialogue tests
+
+  godot:
+    name: Godot ${{ env.GODOT_VERSION }} import + GUT
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Godot ${{ env.GODOT_VERSION }} (headless)
+        run: |
+          set -euo pipefail
+          ZIP="Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          URL="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/${ZIP}"
+          curl -fL -o godot.zip "$URL"
+          unzip -o godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          ./godot --version
+
+      # Editor import regenerates .godot/ and registers global classes (GutTest).
+      - name: Editor import
+        run: ./godot --headless --editor --path . --quit
+
+      - name: GUT smoke tests
+        run: ./godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit

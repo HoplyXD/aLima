@@ -2,3 +2,8 @@ root = true
 
 [*]
 charset = utf-8
+
+# GDScript uses tabs (matches gdformat's output).
+[*.gd]
+indent_style = tab
+indent_size = 4

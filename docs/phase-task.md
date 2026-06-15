@@ -38,16 +38,16 @@ Every completed task must:
 
 ## Current Repository Audit
 
-- `[-]` Godot project scaffold exists and targets feature `4.6`. Official Godot 4.6.3 is installed in `C:\Users\roman\Downloads` and passes explicit import/startup checks, but the bare `godot` command still resolves to `4.5.1.stable`.
-- `[-]` Upstream commit `0255430` is integrated. It adds the hybrid Shop scene, HUD controller, visitor placeholder, and dialogue mouse input. The editor import and headless startup pass under 4.6.3; manual UI behavior remains unverified and the HUD is hidden.
-- `[x]` The 4.6.3 editor import and configured main-scene startup complete without parser, resource, UID, or missing-texture errors. Evidence: `Godot_v4.6.3-stable_win64_console.exe --headless --editor --path . --quit` and `--headless --path . --quit`, run 2026-06-15.
-- `[-]` `scenes/Shop.tscn` is the configured main scene and loads, but its `HUD` CanvasLayer is currently `visible = false`, so the integrated interface is not yet a usable production screen.
-- `[-]` Shop orchestration is duplicated across `scenes/hud.gd`, unused `scenes/shop_3d.gd`, and `prototype/shop.gd`. The production scene currently attaches `scenes/hud.gd` to the HUD rather than a controller to the Shop root.
-- `[-]` The production Shop contains an unlabeled test button (`AAAAAAAAA`) that must be removed during stabilization.
-- `[-]` Clock/day progression exists only as placeholder state in shop/HUD controllers. There is no reusable loop controller or split persistence.
-- `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but dialogue is hardcoded in controllers.
+- `[x]` Godot project scaffold exists and targets feature `4.6`. Godot 4.6.3 passes explicit import/startup checks, and the bare `godot` command now resolves to `4.6.3.stable` via a PATH shim (Phase 0 P0.2; the older 4.5.1 stays at its own path).
+- `[-]` Upstream commit `0255430` is integrated and stabilized: HUD revealed, stray button removed, controllers consolidated. Editor import and headless startup pass under 4.6.3; on-screen manual UI click-through remains for human confirmation.
+- `[x]` The 4.6.3 editor import and configured main-scene startup complete without parser, resource, UID, or missing-file errors. Evidence: `--headless --editor --path . --quit` and `--headless --path . --quit`, run 2026-06-15 (exit 0, no error lines).
+- `[x]` `scenes/Shop.tscn` is the configured main scene; its `HUD` CanvasLayer is now `visible = true` and is a usable production screen.
+- `[x]` Shop orchestration is consolidated into one controller on the Shop root (`scripts/shop/shop_controller.gd`) plus a presentation-only HUD (`scenes/ui/shop_hud.gd`). The old `scenes/hud.gd`, `scenes/shop_3d.gd`, and `prototype/` controllers were removed after migration.
+- `[x]` The stray `AAAAAAAAA` test button has been removed from `scenes/Shop.tscn`.
+- `[-]` Clock/day progression exists only as placeholder state in the Shop controller. There is no reusable loop controller or split persistence (Phase 2).
+- `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
-- `[ ]` Object data pipeline, real delivery/triage, restoration, carriers, Spawn Director, Cultural Echoes, cached scanner, backend, mock Portal, journal, museum record, tests, and exports are not implemented.
+- `[ ]` Object data pipeline, real delivery/triage, restoration, carriers, Spawn Director, Cultural Echoes, cached scanner, backend, mock Portal, journal, museum record, feature tests (beyond the Phase 0 smoke test), and exports are not implemented.
 - `[ ]` Print-only Workbench, Journal, and Phone actions are not complete features.
 
 ## Reconciliation With the Old Tracker
@@ -183,53 +183,58 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 
 - `[-]` **P0.1 Integrate the upstream hybrid shop work.**
   - Commit `0255430` is present locally.
-  - The texture cache regenerates and the production scene starts without console errors under the installed Godot 4.6.3 console executable.
-  - The current Shop is not yet production-ready: reveal the hidden HUD and remove the `AAAAAAAAA` test button.
-  - The 4.6.3 editor import, configured main scene, and direct `scenes/Shop.tscn` startup pass without parser/resource errors (verified 2026-06-15).
-  - Confirm Door, Workbench, Journal, and Phone receive mouse input.
-  - Keep this partial until the HUD is usable and manual interaction checks pass.
+  - HUD revealed (`HUD.visible = true`) and the stray `AAAAAAAAA` test button removed from `scenes/Shop.tscn`.
+  - The 4.6.3 editor import and `scenes/Shop.tscn` startup pass without parser/resource/UID/missing-file errors; the controller logs `[Shop] ready` (verified 2026-06-15).
+  - Door/Workbench/Journal/Phone input is covered at the logic level by the GUT smoke test: button intent signals fire and dialogue advances via simulated mouse + keyboard events through the real `DialogueBox._input`.
+  - **Remaining gate (manual):** on-screen click-through under a real display (mouse hit-testing/visuals) — to be confirmed by a human. Kept `[-]` until then.
+  - Evidence (2026-06-15): `Godot_v4.6.3-stable_win64_console.exe --headless --editor --path . --quit` (exit 0, no errors); `--headless --path . --quit` (exit 0); GUT `7/7 passed`.
 
-- `[-]` **P0.2 Select Godot 4.6.3 for CLI/editor use.**
-  - Official 4.6.3 standard and console builds are installed in `C:\Users\roman\Downloads`.
-  - Ensure `godot --version` resolves to `4.6.3.stable`.
-  - Do not silently use 4.5.1 because `project.godot` and the checklist target 4.6.
-  - Until `PATH` is corrected, use `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` explicitly.
+- `[x]` **P0.2 Select Godot 4.6.3 for CLI/editor use.**
+  - A PATH shim (`C:\Users\roman\tools\bin\godot.cmd` → the 4.6.3 console exe) is prepended to the User PATH ahead of the older 4.5.1 install (which stays at its own path). A bash shim (`godot`) is included for Git Bash.
+  - `godot --version` now reports `4.6.3.stable.official.7d41c59c4` in a fresh shell.
+  - The explicit `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` still works for the current/unrefreshed session.
+  - Evidence (2026-06-15): fresh-shell `godot --version` → `4.6.3.stable.official.7d41c59c4`; resolved to `C:\Users\roman\tools\bin\godot.cmd`.
 
-- `[-]` **P0.3 Complete the production architecture gate after the 4.6.3 import check.**
-  - The explicit 4.6.3 editor import and main-scene startup checks pass as of 2026-06-15.
-  - Keep using 4.6.3 for subsequent parser, resource, UID, and import checks.
-  - Attach the final production controller to the Shop root and keep the HUD presentation-only.
+- `[x]` **P0.3 Complete the production architecture gate after the 4.6.3 import check.**
+  - `scripts/shop/shop_controller.gd` (extends `Node3D`) is attached to the Shop root and owns orchestration + clock state.
+  - `scenes/ui/shop_hud.gd` (`class_name ShopHud`, extends `CanvasLayer`) is the presentation-only HUD: it emits typed intent signals and exposes `set_*`/`start_dialogue`/`set_actions_visible`, holding no game state, timers, or visitor/flow logic.
+  - Cross-boundary communication is via typed signals (ARCH-R4).
+  - Evidence (2026-06-15): editor import exit 0, registers `ShopHud`/`DialogueBox` global classes; main-scene startup exit 0.
 
-- `[ ]` **P0.4 Consolidate duplicate shop controllers.**
-  - Make `scenes/Shop.tscn` the only production main scene.
-  - Create `scripts/shop/shop_controller.gd` for shop orchestration.
-  - Extract the HUD into a presentation scene/script that emits intent signals and owns no game state.
-  - Migrate useful behavior from `scenes/hud.gd`, `scenes/shop_3d.gd`, and `prototype/shop.gd`.
-  - Delete obsolete duplicate controllers only after behavior is migrated and verified.
+- `[x]` **P0.4 Consolidate duplicate shop controllers.**
+  - `scenes/Shop.tscn` is the only production main scene.
+  - `scripts/shop/shop_controller.gd` owns shop orchestration; `scenes/ui/shop_hud.gd` is the presentation-only HUD (intent signals, no game state) — the prototype's controller/UI split promoted to production.
+  - Useful behavior (clock, day wrap, counts, visitor/dialogue flow, placeholder prose) migrated from `scenes/hud.gd`, `scenes/shop_3d.gd`, and `prototype/shop.gd` + `prototype/shop_ui.gd`.
+  - Obsolete files deleted after verification: `scenes/hud.gd`, `scenes/shop_3d.gd` (+ `.uid`), and the entire `prototype/` directory (including the broken `Main.tscn`). `dialogue/` preserved.
+  - Evidence (2026-06-15): clean import + startup + GUT `7/7` after deletion; `git status` shows the 13 removals.
 
-- `[ ]` **P0.5 Establish the root layout.**
-  - Add `scripts/core`, `scripts/models`, `scripts/shop`, `scripts/delivery`, `scripts/restoration`, `scripts/discovery`, `scripts/scanner`, `scripts/journal`, and `scripts/portal`.
-  - Add `scenes/ui`, `scenes/restoration`, `resources`, `data/objects`, `data/artifacts`, `data/echoes`, `data/routes`, `data/scanner-cache`, and `tests`.
-  - Add `server` and `mock-portal` only when their package scaffolds are created.
+- `[x]` **P0.5 Establish the root layout.**
+  - Added `scripts/{core,models,shop,delivery,restoration,discovery,scanner,journal,portal}`.
+  - Added `scenes/{ui,restoration}`, `resources`, `data/{objects,artifacts,echoes,routes,scanner-cache}`, and `tests`.
+  - Empty dirs keep a `.gitkeep`; `scripts/shop`, `scenes/ui`, and `tests` hold real files instead.
+  - `server` and `mock-portal` intentionally not created (Phase 8).
+  - Evidence (2026-06-15): directories present in working tree; `git status` lists the new untracked paths.
 
-- `[ ]` **P0.6 Install test and lint tooling.**
-  - Add GUT under `addons/gut` and one smoke test.
-  - Install gdtoolkit and document the version.
-  - Add backend test scripts when `server/package.json` is created.
-  - Add a CI workflow that runs Godot import, GUT, lint, and backend tests.
+- `[x]` **P0.6 Install test and lint tooling.**
+  - Vendored GUT 9.6.0 under `addons/gut`; smoke test `tests/test_shop_smoke.gd` + `.gutconfig.json`.
+  - gdtoolkit pinned to `4.5.0` in `requirements-dev.txt` (`pip install -r requirements-dev.txt`).
+  - CI `.github/workflows/ci.yml`: a lint job (gdformat `--check` + gdlint, scoped to `scripts scenes dialogue tests`) and a Godot job (downloads pinned 4.6.3 Linux headless → editor import → GUT). No backend job by design (server/mock-portal not created yet — Phase 8).
+  - Evidence (2026-06-15, local): GUT `7/7 passed` (29 asserts, exit 0); `gdformat --check scripts scenes dialogue tests` exit 0; `gdlint ...` "no problems found". CI workflow added; first remote run is pending the next push.
+  - Note: the literal `gdformat --check .` / `gdlint .` forms fail only on the 81 vendored `addons/gut` files (0 of ours), so the documented commands are scoped to our source.
 
-- `[ ]` **P0.7 Verify repository hygiene.**
-  - Confirm `.godot/`, real `.env` files, logs, exports, and local caches are ignored.
-  - Confirm no API key or credential is tracked.
-  - Keep `.env.example` with placeholder values only.
+- `[x]` **P0.7 Verify repository hygiene.**
+  - `.gitignore` now covers `.godot/`, `.env`/`*.env` (keeping `!.env.example`), logs, exports (`/build*`, `/export*`, `*.pck`, `*.zip`), and Python caches (`__pycache__/`, `.venv/`). Tracked `.import` files (Godot 4 metadata) intentionally kept.
+  - `.editorconfig` declares `[*.gd] indent_style = tab` to match gdformat.
+  - No tracked secret/`.env`/credential/api-key path; no secret-like content in new source.
+  - Evidence (2026-06-15): `git ls-files | Select-String '(^|/)\.env$|secret|credential|api[_-]?key'` → no matches.
 
 ### Acceptance
 
-- [ ] `godot --version` reports 4.6.3.
-- [x] The production Shop imports and opens with zero parser/resource errors under the explicit Godot 4.6.3 console executable (2026-06-15).
-- [ ] Exactly one production shop controller owns orchestration.
-- [ ] GUT smoke test, gdformat check, and gdlint execute successfully.
-- [ ] No secret or real `.env` is tracked.
+- [x] `godot --version` reports 4.6.3 (`4.6.3.stable.official.7d41c59c4`, fresh shell, 2026-06-15).
+- [x] The production Shop imports and opens with zero parser/resource errors under Godot 4.6.3 (2026-06-15).
+- [x] Exactly one production shop controller owns orchestration (`scripts/shop/shop_controller.gd`); HUD is presentation-only.
+- [x] GUT smoke test (7/7), gdformat check, and gdlint execute successfully (2026-06-15).
+- [x] No secret or real `.env` is tracked.
 
 ### Verification
 
@@ -968,7 +973,7 @@ Manual only after all automated phase tests pass: record one uninterrupted end-t
 
 | Requirement group | Phase | Current status |
 |---|---:|---|
-| ARCH-R1..R5 | 0, 1, 8 | Not started / tooling partial |
+| ARCH-R1..R5 | 0, 1, 8 | Phase 0 done (toolchain, signals/ARCH-R4, layout); Phase 1/8 not started |
 | SAVE-R1..R3, SAVE-R6 | 2, 5, 9 | Not started |
 | CLOCK-R1..R3 | 2 | Placeholder only |
 | DLV-R1..R3, DLV-R5 | 3 | Not started |

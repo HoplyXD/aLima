@@ -34,7 +34,7 @@
 
 ## 3. Repository Layout
 
-`project.godot` stays at the repository root. New systems follow this target layout as they are implemented; legacy experiments remain in `prototype/` until the Phase 0 cleanup gate in `docs/phase-task.md`.
+`project.godot` stays at the repository root. New systems follow this layout as they are implemented. The `prototype/` experiments were removed at the Phase 0 cleanup gate (their useful controller/UI-split behavior was migrated into `scripts/shop/` + `scenes/ui/`); the reusable dialogue component remains in `dialogue/`.
 
 ```
 alima/
@@ -45,16 +45,18 @@ alima/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
 │   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
-├── scenes/                    ← production .tscn scenes; hybrid 3D + 2D UI
-├── scripts/                   ← core, discovery, restoration, scanner, journal, portal
+├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/
+├── scripts/                   ← shop, core, models, discovery, restoration, scanner, journal, portal
 ├── dialogue/                  ← reusable dialogue scene and script
-├── prototype/                 ← temporary experiments; remove after migration verification
+├── addons/gut/                ← vendored GUT 9.6.0 (Godot Unit Test) runner
 ├── resources/                 ← Godot .tres definitions
 ├── assets/                    ← original art/audio only
-├── tests/                     ← GUT tests
-├── server/                    ← Express: LLM proxy + portal client
-├── mock-portal/               ← mock City-Wide Portal API
-└── data/objects/              ← JSON object database (artifact-agnostic)
+├── tests/                     ← GUT tests (test_*.gd)
+├── .github/workflows/ci.yml   ← CI: 4.6.3 import + GUT + gdformat + gdlint
+├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
+├── server/                    ← Express: LLM proxy + portal client (Phase 8; not yet created)
+├── mock-portal/               ← mock City-Wide Portal API (Phase 8; not yet created)
+└── data/                      ← objects, artifacts, echoes, routes, scanner-cache (JSON; artifact-agnostic)
 ```
 
 ---
@@ -114,21 +116,27 @@ Full detail: `docs/PRD.md` §12.
 
 ## 6. Commands
 
-```bash
-# --- Game (Godot 4.6.3; project.godot is in this directory) ---
-godot --version
-godot --editor --path .
-godot --headless --editor --path . --quit           # import/build check
-godot --headless --path . -s addons/gut/gut_cmdln.gd
-gdformat --check . && gdlint .                      # gdtoolkit
+`godot` resolves to **4.6.3** via a PATH shim (`C:\Users\roman\tools\bin\godot.cmd`, first on the User PATH). Open a fresh shell after a PATH change. The explicit console exe also works: `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`.
 
-# --- Backend (LLM proxy + portal client) ---
+```powershell
+# --- Game (Godot 4.6.3; project.godot is in this directory) ---
+godot --version                                      # expect 4.6.3.stable
+godot --editor --path .
+godot --headless --editor --path . --quit            # import/build check
+godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+
+# --- Lint/format (gdtoolkit; pinned in requirements-dev.txt: pip install -r requirements-dev.txt) ---
+# Scope to our source — vendored addons/gut is third-party and not formatted by us.
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
+
+# --- Backend (LLM proxy + portal client; Phase 8, not yet scaffolded) ---
 cd server && npm install
 cp .env.example .env            # fill in keys locally; NEVER commit .env
 npm run dev                     # dev server
 npm test                        # backend tests
 
-# --- Mock Portal ---
+# --- Mock Portal (Phase 8, not yet scaffolded) ---
 cd mock-portal && npm install && npm start
 ```
 
@@ -178,7 +186,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64.exe`; its console executable passed the editor import and main-scene startup checks on June 15, 2026. The bare `godot` command still resolves to 4.5.1, so use the 4.6.3 executable explicitly until `PATH` is corrected. Runtime tasks still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`. As of June 15, 2026 the bare `godot` command resolves to **4.6.3** via a PATH shim (`C:\Users\roman\tools\bin\godot.cmd`, prepended to the User PATH ahead of the older 4.5.1 install, which stays available at its own path). Open a fresh shell to pick up the change. The editor import, main-scene startup, and GUT smoke suite all pass under 4.6.3. Runtime tasks still require their own acceptance checks before `[x]`.
 
 ---
 

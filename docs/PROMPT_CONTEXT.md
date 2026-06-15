@@ -8,7 +8,7 @@ Canonical repository context for agents that write implementation prompts for aL
 - Then inspect the current code, scene, data, test, and documentation files relevant to the requested work. This snapshot does not replace source inspection.
 - Treat running code and assets as truth for what exists. Treat `CLAUDE.md` Section 4 as the design invariants, `docs/PRD.md` as the build contract, `README.md` as the GDD/narrative source, and `docs/phase-task.md` as the implementation order/status tracker.
 - If source and docs disagree, report the disagreement. Do not silently rewrite behavior or requirements.
-- Snapshot audited on 2026-06-15 at commit `779a515` on clean `main`, aligned with `origin/main`. Refresh this file when implementation materially changes.
+- Snapshot last audited 2026-06-15; refreshed after Phase 0 stabilization (controller/HUD consolidation, toolchain, hygiene). Those changes are in the working tree on `main`, not yet committed (base commit `779a515`). Refresh this file when implementation materially changes.
 
 ## Game Identity
 
@@ -72,37 +72,38 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 
 ## Verified Repository State
 
-Verified with the installed official Godot `4.6.3.stable` executable on 2026-06-15:
+Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 0 stabilization; changes are in the working tree, not yet committed):
 
-- `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe --headless --editor --path . --quit` completed successfully.
-- The configured main scene, `scenes/Shop.tscn`, starts without parser/resource errors and prints the HUD ready message.
-- `prototype/shop.tscn` and `dialogue/dialogue_box.tscn` load.
-- `prototype/Main.tscn` is broken because it references missing `res://Main.gd` instead of `res://prototype/Main.gd`.
-- Godot 4.6.3 is installed in `C:\Users\roman\Downloads`. The bare `godot` command still resolves to `C:\Users\roman\Desktop\Godot\godot.exe` version 4.5.1, so verification commands must use the 4.6.3 executable explicitly until `PATH` is corrected.
-- Git working tree was clean before this documentation change, and no tracked `.env`, obvious secret, credential, or API-key file was found.
+- `godot --version` reports `4.6.3.stable.official.7d41c59c4`. The bare `godot` command now resolves to a PATH shim (`C:\Users\roman\tools\bin\godot.cmd` → `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`), prepended to the User PATH ahead of the older 4.5.1 at `C:\Users\roman\Desktop\Godot`. Open a fresh shell to pick it up.
+- `--headless --editor --path . --quit` and `--headless --path . --quit` complete with exit 0 and no error lines; the main scene `scenes/Shop.tscn` starts and the controller prints `[Shop] ready`.
+- GUT 9.6.0 smoke suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `7/7 passed`.
+- `gdformat --check scripts scenes dialogue tests` and `gdlint scripts scenes dialogue tests` pass (scoped to exclude vendored `addons/gut`).
+- `dialogue/dialogue_box.tscn` loads. The `prototype/` directory (including the previously-broken `Main.tscn`) was removed during Phase 0.
+- No tracked `.env`, secret, credential, or API-key file was found.
 
 ### Current Playable State
 
 - `project.godot` launches `scenes/Shop.tscn`.
 - The scene contains a camera, extremely simple quad-based background/book placeholders, a billboard visitor sprite, and a CanvasLayer HUD.
-- The production HUD is `visible = false`, so the current main scene is not a usable production gameplay screen.
-- `scenes/hud.gd` owns placeholder rarity counts, a 07:00-20:00 timer, Day 1-5 wrapping, four buttons, visitor visibility, and hardcoded Auntie dialogue.
-- Door opens the dialogue queue. Workbench, Journal, and Phone only show "coming soon" dialogue. No real navigation or game systems are connected.
+- The production HUD is now `visible = true` and the stray `AAAAAAAAA` test button is gone, so the main scene is a usable production screen.
+- Orchestration lives in `scripts/shop/shop_controller.gd` (attached to the Shop root): placeholder rarity counts, a 07:00-20:00 timer, Day 1-5 wrapping, visitor visibility, and the hardcoded placeholder Auntie/"coming soon" dialogue. Presentation lives in `scenes/ui/shop_hud.gd` (`class_name ShopHud`), which emits typed intent signals and exposes `set_*`/`start_dialogue`/`set_actions_visible` and owns no game state.
+- Door opens the dialogue queue (with the visitor). Workbench, Journal, and Phone only show "coming soon" dialogue. No real navigation or game systems are connected.
 - Dialogue supports queued String/Dictionary lines, BBCode, typewriter reveal, skip/advance, keyboard, mouse, and a completion signal.
 - The clock merely wraps to Day 1; there is no loop reset transaction, save file, route schedule, or persistent state.
-- Manual mouse interaction, visible HUD behavior, visitor flow, and pause/resume have not been verified under Godot 4.6.3.
+- The dialogue lifecycle (open → clock pause + visitor show; advance via mouse/keyboard → close → clock resume + visitor hide) is verified headlessly by the GUT smoke test. On-screen mouse hit-testing/visuals under a real display remain a manual human check.
 
 ### Implemented Or Reusable Pieces
 
-- Root Godot project and configured hybrid Shop scene.
+- Root Godot project and configured hybrid Shop scene (HUD visible; single controller on the root).
+- Production controller/HUD separation (`scripts/shop/shop_controller.gd` + `scenes/ui/shop_hud.gd`) and the Phase 0 source layout.
 - Reusable `DialogueBox` component in `dialogue/`.
 - Placeholder clock/count formatting and button flow.
+- Toolchain: vendored GUT 9.6.0 + smoke test, pinned gdtoolkit (gdformat/gdlint), and a GitHub Actions CI workflow.
 - Twine/Chapbook narrative and economy prototype in `aLima.twee`, with generated `aLima.html`.
 - Detailed PRD, invariants, data contracts, phase plan, and disclosure process.
 
 ### Missing Runtime Systems
 
-- Production controller/HUD separation and stable source layout.
 - Typed models, JSON/resource data, validation, EventBus, GameState, SaveService, and deterministic run context.
 - Real day clock, loop controller, split/atomic persistence, and migrations.
 - Delivery generation, 3D placement anchors, triage, inventory, and rarity glow behavior.
@@ -110,9 +111,9 @@ Verified with the installed official Godot `4.6.3.stable` executable on 2026-06-
 - Spawn Director, placement history, demo seeds/logging, Cultural Echo audio/meter/captions, and carrier flicker.
 - Cached scanner, verdict UI, Node/Express backend, mock Portal, Godot HTTP clients, Found/Unlock flow, museum record, journal, and fragment case.
 - Auntie scheduling and scripted photo showcase.
-- GUT, gdtoolkit, CI, backend tests, export presets, Windows/web exports, and submission evidence.
-- `scripts/`, `data/`, `resources/`, `tests/`, `server/`, `mock-portal/`, and `addons/gut/` do not exist yet.
-- No package manifests or lockfiles exist.
+- Backend tests, export presets, Windows/web exports, and submission evidence. (GUT 9.6.0, pinned gdtoolkit, and a GitHub Actions CI workflow now exist as of Phase 0.)
+- `scripts/`, `data/`, `resources/`, `tests/`, and `addons/gut/` now exist (Phase 0); `server/` and `mock-portal/` still do not (Phase 8).
+- No npm package manifests or lockfiles exist yet; `requirements-dev.txt` pins the Python gdtoolkit version.
 
 ## Important Files
 
@@ -122,11 +123,12 @@ Verified with the installed official Godot `4.6.3.stable` executable on 2026-06-
 - `docs/phase-task.md`: canonical task order and status. Start at Phase 0 stabilization.
 - `docs/ai-disclosure.md`: append-only AI usage log and milestone review gate.
 - `project.godot`: engine, renderer, viewport, and main scene configuration.
-- `scenes/Shop.tscn`: current production entry scene; hidden HUD and stray `AAAAAAAAA` test button.
-- `scenes/hud.gd`: active but over-responsible production HUD/controller.
-- `scenes/shop_3d.gd`: unused duplicate Shop controller.
-- `prototype/shop.gd`, `prototype/shop_ui.gd`, `prototype/shop.tscn`, `prototype/shop_ui.tscn`: cleaner controller/presentation experiment; inspect before consolidation.
+- `scenes/Shop.tscn`: production entry scene; HUD now visible, stray test button removed, controller on the root.
+- `scripts/shop/shop_controller.gd`: the single production Shop controller (orchestration + placeholder clock/state) on the Shop root.
+- `scenes/ui/shop_hud.gd`: presentation-only HUD (`class_name ShopHud`); typed intent signals + `set_*` API, no game state.
 - `dialogue/dialogue_box.gd` and `.tscn`: reusable dialogue implementation.
+- `tests/test_shop_smoke.gd` + `.gutconfig.json`: GUT smoke test for the Shop/HUD boundary.
+- `addons/gut/`: vendored GUT 9.6.0. `requirements-dev.txt`: pinned gdtoolkit. `.github/workflows/ci.yml`: CI (4.6.3 import + GUT + lint).
 - `aLima.twee`: old interactive design prototype. Useful for route prose/tuning history, but subordinate to current invariants and PRD.
 
 ## Coding And Architecture Conventions
@@ -195,16 +197,14 @@ Current limitations: Godot 4.6.3 is installed but is not the executable selected
 
 ## Risks, Contradictions, And Unknowns
 
-- Godot 4.6.3 is installed and passes the project import/startup checks, but the bare `godot` command still selects 4.5.1. This can cause agents or CI instructions to verify against the wrong engine unless the executable is selected explicitly.
+- The bare `godot` command now resolves to 4.6.3 via a PATH shim (Phase 0). The change lives in the User PATH, so it applies to fresh shells and this machine only — CI and other machines must still select 4.6.3 explicitly (the CI workflow downloads it).
 - Nearly every P0 gameplay and submission system is unimplemented with 15 days remaining until June 30, 2026.
 - The README says the public repository was initialized June 1; Git history begins June 13, 2026. Correct the claim or document external evidence before submission.
 - The Twine intro starts the player with one fragment, while current design requires only the journal and all five fragments hidden. Current PRD/invariants win.
 - The old tracker requested two restoration mini-games; the current slice requires one complete pendant cleaning/opening interaction. Current PRD/phase tracker win.
 - Twine uses random success and automatic sales; Godot requires skill-based restoration, player judgment, and explicit sell/return/museum decisions.
 - Twine route names/logic are useful draft content but current PRD route lifecycle and schedules are authoritative.
-- The configured Shop HUD is hidden, includes a stray test button, and attaches orchestration to the HUD rather than the Shop root.
-- Shop logic is duplicated across three controllers. Consolidate before building dependent systems.
-- `prototype/Main.tscn` has a stale broken script path.
+- (Resolved in Phase 0) The Shop HUD is now visible, the stray test button is gone, orchestration is a single controller on the Shop root, the duplicate controllers and the whole `prototype/` directory were removed, and `prototype/Main.tscn`'s broken script path no longer exists.
 - Asset provenance, licensing, cultural review, final artifact choice, Portal/ADK access, and exact live Portal contract are not verified.
 - The default Godot icon, placeholder visitor art, and dialogue code adapted from named external references need provenance/license review against the jam's original-asset and disclosure rules.
 - No explicit performance budget, final controller/touch scheme, web compatibility result, judging score rubric, or completed export process is documented.

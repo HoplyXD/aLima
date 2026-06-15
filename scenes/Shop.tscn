@@ -3,7 +3,8 @@
 [ext_resource type="Texture2D" uid="uid://c5urpwhdwyj6r" path="res://icon.svg" id="1_rgcs7"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/Character Placeholder.png" id="3_cimqq"]
 [ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
-[ext_resource type="Script" uid="uid://b6g12k1wskqm6" path="res://scenes/hud.gd" id="4_yltc6"]
+[ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="4_yltc6"]
+[ext_resource type="Script" uid="uid://dv20ba7olxrka" path="res://scripts/shop/shop_controller.gd" id="5_ctrl"]
 
 [sub_resource type="Environment" id="Environment_ec5oe"]
 background_energy_multiplier = 5.0
@@ -15,6 +16,7 @@ reflected_light_source = 1
 albedo_texture = ExtResource("1_rgcs7")
 
 [node name="Node3D" type="Node3D" unique_id=395316236]
+script = ExtResource("5_ctrl")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1739411933]
 environment = SubResource("Environment_ec5oe")
@@ -44,7 +46,6 @@ billboard = 1
 texture = ExtResource("3_cimqq")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=70770043]
-visible = false
 script = ExtResource("4_yltc6")
 
 [node name="TopPanel" type="Panel" parent="HUD" unique_id=456457821]
@@ -209,13 +210,3 @@ text = "Phone"
 
 [node name="DialogueBox" parent="HUD" unique_id=900789323 instance=ExtResource("3_dlgbox")]
 visible = false
-
-[node name="Button" type="Button" parent="HUD" unique_id=710770686]
-offset_left = 353.0
-offset_top = 254.0
-offset_right = 570.0
-offset_bottom = 403.0
-text = "AAAAAAAAA
-"
-
-[connection signal="pressed" from="HUD/DoorButton" to="HUD" method="_on_door_button_pressed"]
