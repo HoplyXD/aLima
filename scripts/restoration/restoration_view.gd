@@ -23,6 +23,10 @@ const MOUSE_ROTATE_SENSITIVITY: float = 0.0065
 const KEY_ROTATE_SPEED: float = 2.2
 const STROKE_PIXEL_THRESHOLD: float = 64.0  ## Drag distance that commits one stroke.
 
+## Temporary diagnostic logging for the restoration interaction. Flip to false
+## (or remove) once the on-screen flow is confirmed working.
+const DEBUG_LOG: bool = true
+
 var _service: RestorationService
 var _selected_uid: String = ""
 var _selected_tool_id: String = ""
@@ -43,6 +47,7 @@ var _instance_uids: Array[String] = []
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
 @onready var _object: RestorationObject3D = $ViewportContainer/SubViewport/World/ObjectPivot
 @onready var _viewport_container: SubViewportContainer = $ViewportContainer
+@onready var _input_catcher: Control = $InputCatcher
 
 @onready var _instance_selector: OptionButton = %InstanceSelector
 @onready var _mode_button: Button = %ModeButton
@@ -66,6 +71,9 @@ func _ready() -> void:
 	visible = false
 	_ensure_input_actions()
 	_viewport_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# The catcher captures all pointer input over the 3D area so it cannot leak
+	# through to the Shop HUD buttons sitting behind this view.
+	_input_catcher.gui_input.connect(_on_catcher_gui_input)
 	_instance_selector.item_selected.connect(_on_instance_selected)
 	_mode_button.pressed.connect(_toggle_mode)
 	_reset_button.pressed.connect(reset_view)
@@ -83,6 +91,7 @@ func open() -> void:
 		_owns_pause = true
 	set_process(true)
 	_populate_instances()
+	_log("open(): %d restorable instance(s): %s" % [_instance_uids.size(), str(_instance_uids)])
 	if _instance_uids.is_empty():
 		_show_empty_state()
 	else:
@@ -146,6 +155,18 @@ func load_instance(uid: String) -> void:
 	reset_view()
 	_refresh(inst, template)
 	_caption_label.text = "Rotate to inspect, then choose a tool and work the surface."
+	_log(
+		(
+			"load_instance(%s): template=%s state=%s condition=%.0f tools=%d"
+			% [
+				uid,
+				template.id,
+				ModelEnums.obj_state_name(inst.state),
+				inst.condition,
+				_service.get_available_tools().size()
+			]
+		)
+	)
 
 
 func _rebuild_tool_palette() -> void:
@@ -171,6 +192,7 @@ func _rebuild_tool_palette() -> void:
 ## Selects an owned tool to clean with. Public so the Shop/tests can drive it.
 func select_tool(tool_id: String) -> void:
 	_selected_tool_id = tool_id
+	_log("select_tool(%s) -> mode CLEAN" % tool_id)
 	for child in _tool_container.get_children():
 		if child is Button:
 			child.button_pressed = (child as Button).text == _tool_display_name(tool_id)
@@ -197,11 +219,15 @@ func _tool_display_name(tool_id: String) -> String:
 ## tool, not DIRTY, or the stroke never touched the surface — i.e. empty space).
 func commit_stroke(worked_uvs: PackedVector2Array) -> RestorationService.ToolResult:
 	if not _is_open or worked_uvs.is_empty():
+		_log("commit_stroke skipped: no surface worked (missed the object)")
 		return null
 	if _selected_uid.is_empty() or _selected_tool_id.is_empty():
+		_log("commit_stroke skipped: no tool selected")
 		return null
 	var inst := _service.find_instance_by_id(_selected_uid)
 	if inst == null or inst.state != ModelEnums.ObjState.DIRTY:
+		var state_name := "missing" if inst == null else ModelEnums.obj_state_name(inst.state)
+		_log("commit_stroke skipped: instance not DIRTY (state=%s)" % state_name)
 		return null
 	var result := _service.apply_tool(_selected_uid, _selected_tool_id)
 	if result.ok and result.compatible:
@@ -209,6 +235,19 @@ func commit_stroke(worked_uvs: PackedVector2Array) -> RestorationService.ToolRes
 			_object.clean_brush_at_uv(uv)
 		if result.reached_clean:
 			_object.set_fully_clean()
+	_log(
+		(
+			"commit_stroke: tool=%s compatible=%s condition=%.0f->%.0f reached_clean=%s coverage=%.2f"
+			% [
+				_selected_tool_id,
+				str(result.compatible),
+				result.condition_before,
+				result.condition_after,
+				str(result.reached_clean),
+				_object.coverage()
+			]
+		)
+	)
 	_apply_action_feedback(result)
 	return result
 
@@ -357,6 +396,11 @@ func owns_pause() -> bool:
 	return _owns_pause
 
 
+func _log(msg: String) -> void:
+	if DEBUG_LOG:
+		print("[Restoration] ", msg)
+
+
 # --- View controls -----------------------------------------------------------
 
 
@@ -388,15 +432,25 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Keyboard/controller actions only; pointer input is handled by the InputCatcher
+	# so it cannot fall through to Controls on other CanvasLayers (the Shop HUD).
 	if not _is_open:
 		return
 	if _handle_action_event(event):
 		get_viewport().set_input_as_handled()
+
+
+## Mouse and (emulated) touch handling for the 3D area. Positions are in catcher-
+## local space, which equals screen space because the catcher fills the screen.
+func _on_catcher_gui_input(event: InputEvent) -> void:
+	if not _is_open:
 		return
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event as InputEventMouseButton)
+		_input_catcher.accept_event()
 	elif event is InputEventMouseMotion:
 		_handle_mouse_motion(event as InputEventMouseMotion)
+		_input_catcher.accept_event()
 
 
 func _handle_action_event(event: InputEvent) -> bool:
@@ -422,6 +476,18 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	var pos := event.position
 	if event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
+			var hit := _ray_at_pointer(pos)
+			_log(
+				(
+					"left press @%s mode=%s surface_hit=%s tool=%s"
+					% [
+						str(pos),
+						"CLEAN" if _mode == Mode.CLEAN else "ROTATE",
+						str(hit.get("hit", false)),
+						_selected_tool_id
+					]
+				)
+			)
 			if not _pointer_over_viewport(pos):
 				return
 			if _try_clasp_at_pointer(pos):

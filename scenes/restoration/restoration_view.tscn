@@ -27,6 +27,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 color = Color(0.05, 0.045, 0.04, 1)
 
 [node name="ViewportContainer" type="SubViewportContainer" parent="."]
@@ -67,6 +68,13 @@ material_override = SubResource("Material_bench")
 
 [node name="ObjectPivot" type="Node3D" parent="ViewportContainer/SubViewport/World"]
 script = ExtResource("2_object")
+
+[node name="InputCatcher" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="HUD" type="Control" parent="."]
 anchors_preset = 15
