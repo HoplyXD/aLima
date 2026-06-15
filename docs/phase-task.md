@@ -46,7 +46,7 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[x]` `scenes/Shop.tscn` is the configured main scene; its `HUD` CanvasLayer is now `visible = true` and is a usable production screen.
 - `[x]` Shop orchestration is consolidated into one controller on the Shop root (`scripts/shop/shop_controller.gd`) plus a presentation-only HUD (`scenes/ui/shop_hud.gd`). The old `scenes/hud.gd`, `scenes/shop_3d.gd`, and `prototype/` controllers were removed after migration.
 - `[x]` The stray `AAAAAAAAA` test button has been removed from `scenes/Shop.tscn`.
-- `[-]` Clock/day progression is placeholder state in the Shop controller with minute-level display (7:00 AM → 7:01 AM → …). A reusable `DayClock`, pause ownership, and split persistence are Phase 2.
+- `[x]` Clock/day/loop progression is now the real Phase 2 system: a reusable `DayClock` autoload (07:00->20:00 close, minute-level display, pause ownership) and a `LoopController` autoload (Day 1-5 progression + the five-day split reset). The Shop controller is the display + pause-owner driver only. Verified by GUT (`tests/core/test_day_clock.gd`, `test_loop_controller.gd`, `test_save_service.gd`; full suite 69/69, 2026-06-15). On-screen/real-time observation of the running clock remains a manual check (see Phase 2 Acceptance).
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
 - `[ ]` Object data pipeline, real delivery/triage, restoration, carriers, Spawn Director, Cultural Echoes, cached scanner, backend, mock Portal, journal, museum record, feature tests (beyond the Phase 0 smoke test), and exports are not implemented.
@@ -350,52 +350,58 @@ godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/models
 
 ### Tasks
 
-- `[ ]` **P2.1 Build `DayClock`.**
-  - Default to 60 real seconds per in-game hour.
-  - Start Day 1 at 07:00 and close each day after 20:00.
-  - Expose day, hour, loop index, running state, and debug speed.
-  - Emit hour/day signals exactly once per transition.
+- `[x]` **P2.1 Build `DayClock`.** (`scripts/core/day_clock.gd`, autoload `DayClock`)
+  - Reusable, presentation-free clock (no `class_name` to avoid the autoload/global-class clash; no `_process` — it advances only via `tick(delta)`).
+  - Defaults to 60 real seconds per in-game hour (`seconds_per_hour`, the debug speed).
+  - Starts each day at 07:00 and closes at the authoritative **20:00** boundary (latched), replacing the placeholder's run-to-21:00 bug. Exposes day, hour, minute, loop index, `running`, and pause state.
+  - Emits `hour_changed`/`day_changed` once per transition and `day_closed` exactly once at 20:00; a large `tick()` or accelerated speed cannot skip or duplicate transitions (leftover delta discarded at close).
+  - Evidence (2026-06-15): `tests/core/test_day_clock.gd` 11/11 (progression, exactly-once hour signals, debug speed, large delta, 20:00 boundary, start-day resume, pause edges).
 
-- `[ ]` **P2.2 Add pause ownership.**
-  - Full-screen systems request pause using a stable owner ID.
-  - Use a set/reference count so one screen cannot resume a clock paused by another.
-  - Dialogue, restoration, scanner, triage, journal, and Portal overlays release their pause on close.
+- `[x]` **P2.2 Add pause ownership.** (on `DayClock`; forwarded to `EventBus.clock_pause_changed` by `LoopController`)
+  - Full-screen systems acquire/release via stable owner IDs (`PAUSE_DIALOGUE/RESTORATION/SCANNER/TRIAGE/JOURNAL/PORTAL`).
+  - Owner **set** semantics: paused iff non-empty, so one screen cannot resume a clock another holds; duplicate acquire is idempotent; releasing an unknown owner is a harmless warned no-op.
+  - The Shop dialogue flow integrates the API (`request_pause`/`release_pause(PAUSE_DIALOGUE)`).
+  - Evidence (2026-06-15): pause cases in `tests/core/test_day_clock.gd` + `tests/test_shop_clock.gd::test_dialogue_pauses_and_resumes_via_pause_ownership`.
 
-- `[ ]` **P2.3 Build `LoopController`.**
-  - Advance Day 1 through Day 5.
-  - At Day 5 close, save persistent progress, clear loop state, increment loop index, and restart Day 1 at 07:00.
-  - Do not clear seated fragments or spawn history.
+- `[x]` **P2.3 Build `LoopController`.** (`scripts/core/loop_controller.gd`, autoload `LoopController`)
+  - Bridges DayClock signals onto EventBus + mirrors `current_day`/`current_hour` into `GameState.save_state.loop`; advances Day 1->5 cleanly at each 20:00 close.
+  - Day 5 reset, in fixed order: clear loop state -> `new_run()` (increment loop index + reseed) -> restart Day 1 07:00 -> atomic save -> emit `loop_reset`. Never clears seated fragments or spawn history. The `_closed` latch + `_resetting` guard prevent a duplicate `day_closed` from resetting twice.
+  - Evidence (2026-06-15): `tests/core/test_loop_controller.gd` 7/7.
 
-- `[ ]` **P2.4 Implement the save split.**
-  - Serialize the exact persistent and loop fields listed in Stable Interfaces.
-  - Validate loaded values and recover from missing optional fields.
-  - Never copy loop inventory into persistent state.
+- `[x]` **P2.4 Implement the save split.** (reconciled with existing `SaveState`; strict load checks in `SaveService`)
+  - The existing P0 persistent/loop fields already match the Stable Interfaces contract; no Phase 12-22 fields were added (forward-compatible defaults preserved).
+  - `SaveService.load_game` now strictly rejects unknown enum strings, non-numeric scalars, and wrong section types before trusting a save (model range/validation runs afterward); missing optional fields default safely. Loop inventory never leaks into persistent.
+  - Evidence (2026-06-15): `tests/core/test_save_service.gd` (missing-optional, out-of-range, unknown-enum, non-numeric, partition-separation) + `test_loop_controller.gd` (persistent survives / loop resets).
 
-- `[ ]` **P2.5 Implement atomic save writes.**
-  - Write and parse-check `user://save.tmp`.
-  - Replace `user://save.json` only after validation.
-  - Retain or report the previous valid save when replacement fails.
+- `[x]` **P2.5 Implement atomic save writes.** (write-temp -> parse -> validate -> rename)
+  - Save paths are injectable via `set_save_paths()` so tests never touch the developer's real save; the game default stays `user://save.json`/`.tmp`.
+  - An invalid/partial temp file is never promoted, so a valid `save.json` survives; the migration entrypoint is retained.
+  - Evidence (2026-06-15): `tests/core/test_save_service.gd::test_invalid_temp_does_not_replace_valid_save`, `test_rejects_malformed_save_file`. (Forced OS rename failure is not simulated; the invalid-temp guard is the tested protection.)
 
-- `[ ]` **P2.6 Test reset behavior.**
-  - Seed both state sections.
-  - Trigger a Day 5 reset.
-  - Assert persistent values survive and every loop-scoped value resets.
-  - Assert a seated fragment never returns to `RELEASED`.
+- `[x]` **P2.6 Test reset behavior.**
+  - Covered: normal progression, exactly-once signals, debug speed + large delta, two-owner independent release, duplicate acquire/release, Days 1-5 progression, Day 5 reset, persistent survival, every loop-scoped field resetting, seated fragment staying `SEATED`, spawn history surviving, round-trip save/load, missing optional fields, malformed/partial temp JSON, and loop inventory isolation.
+  - Evidence (2026-06-15): full GUT suite `69/69 passed` (234 asserts); `tests/core` focused suite green; gdformat/gdlint clean; `git diff --check` exit 0.
 
 ### Acceptance
 
-- [ ] A normal day lasts about 13 real minutes.
-- [ ] A five-day loop lasts about one hour without pauses.
-- [ ] Reset returns to Day 1, 07:00 with the correct state split.
-- [ ] Save interruption cannot replace a valid save with partial JSON.
+- `[-]` A normal day lasts about 13 real minutes. (By construction: 13 in-game hours x 60 s = 780 s; the 20:00 close is test-proven. Literal real-time stopwatch observation pending.)
+- `[-]` A five-day loop lasts about one hour without pauses. (5 x 13 min ~= 65 min by construction; test-proven at the simulation level. Real-time observation pending.)
+- `[x]` Reset returns to Day 1, 07:00 with the correct state split. (`tests/core/test_loop_controller.gd`, 2026-06-15.)
+- `[x]` Save interruption cannot replace a valid save with partial JSON. (`tests/core/test_save_service.gd`, 2026-06-15.)
 
 ### Verification
 
 ```powershell
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --headless --editor --path . --quit
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
+git diff --check
 ```
 
-Manual: run with `seconds_per_hour = 0.1`, pause from two owners, release them separately, and observe one complete reset.
+Manual (PENDING on-screen observation under windowed 4.6.3): run with `seconds_per_hour = 0.1`, pause from two different owners, release one (clock stays paused), release the second (progression resumes), observe one complete five-day reset to Day 1 07:00, and confirm the visible Shop clock advances minute-by-minute and freezes/resumes with dialogue.
 
 ---
 

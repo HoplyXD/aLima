@@ -20,6 +20,8 @@ config/icon="res://icon.svg"
 EventBus="*res://scripts/core/event_bus.gd"
 GameState="*res://scripts/core/game_state.gd"
 SaveService="*res://scripts/core/save_service.gd"
+DayClock="*res://scripts/core/day_clock.gd"
+LoopController="*res://scripts/core/loop_controller.gd"
 
 [display]
 

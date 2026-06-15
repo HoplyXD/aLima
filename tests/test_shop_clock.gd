@@ -1,9 +1,11 @@
 extends GutTest
 
-## Focused tests for the placeholder Shop clock's minute-level display.
-## Covers: H:MM AM/PM formatting, minute progression derived from seconds_per_hour,
-## dialogue pause/resume without skipping elapsed partial-hour time, and the
-## existing day/loop wrap behavior.
+## Integration tests for the Shop's clock PRESENTATION and dialogue pause ownership
+## on top of the real DayClock. The clock simulation (progression, exactly-once
+## transitions, 20:00 boundary, debug speed) is unit-tested in
+## tests/core/test_day_clock.gd; the loop reset in tests/core/test_loop_controller.gd.
+## Here we only verify the HUD reflects DayClock state and that dialogue freezes /
+## resumes shop time through the DayClock pause-ownership API.
 
 const SHOP_SCENE := preload("res://scenes/Shop.tscn")
 
@@ -18,34 +20,48 @@ func before_each() -> void:
 	await wait_physics_frames(1)
 	_hud = _shop.get_node("HUD")
 	_clock = _shop.get_node("%ClockLabel")
-	# Stop automatic _process so tests can tick the clock deterministically.
-	_shop.set_process(false)
+	# Disable the auto-driver so the display is exercised deterministically from
+	# explicit DayClock.tick() calls rather than real-frame time.
+	DayClock.running = false
+	DayClock.reset()
+
+
+func after_each() -> void:
+	DayClock.reset()
 
 
 func test_starts_at_seven_am() -> void:
+	_shop._update_clock_display()
 	assert_eq(_clock.text, "7:00 AM")
 
 
-func test_minute_progression_at_default_rate() -> void:
-	_shop.seconds_per_hour = 60.0
-	_shop._advance_clock(30.0)
+func test_display_reflects_clock_minutes() -> void:
+	DayClock.seconds_per_hour = 60.0
+	DayClock.start_day(1)
+	DayClock.tick(30.0)
+	_shop._update_clock_display()
 	assert_eq(_clock.text, "7:30 AM")
-	_shop._advance_clock(30.0)
+	DayClock.tick(30.0)
+	_shop._update_clock_display()
 	assert_eq(_clock.text, "8:00 AM")
 
 
 func test_minute_progresses_through_single_minute_ticks() -> void:
-	_shop.seconds_per_hour = 60.0
+	DayClock.seconds_per_hour = 60.0
+	DayClock.start_day(1)
 	for i in range(5):
+		_shop._update_clock_display()
 		assert_eq(_clock.text, "7:%02d AM" % i)
-		_shop._advance_clock(1.0)
+		DayClock.tick(1.0)
+	_shop._update_clock_display()
 	assert_eq(_clock.text, "7:05 AM")
 
 
-func test_arbitrary_rate_derives_minutes() -> void:
-	_shop.seconds_per_hour = 30.0
-	_shop._advance_clock(15.0)
-	assert_eq(_clock.text, "7:30 AM")
+func test_day_label_reflects_clock_day() -> void:
+	DayClock.start_day(3)
+	_shop._update_clock_display()
+	var day_label: Label = _shop.get_node("%DayLabel")
+	assert_eq(day_label.text, "Day 3 of 5")
 
 
 func test_format_uses_am_pm() -> void:
@@ -59,47 +75,16 @@ func test_format_uses_am_pm() -> void:
 	assert_eq(_clock.text, "7:00 AM")
 
 
-func test_dialogue_freezes_partial_minute_progress() -> void:
-	_shop.seconds_per_hour = 60.0
-	_shop._advance_clock(30.0)
-	assert_eq(_clock.text, "7:30 AM")
-
-	_shop._clock_paused = true
-	_shop._advance_clock(15.0)  # Should not advance while paused.
-	assert_eq(_clock.text, "7:30 AM")
-
-	_shop._clock_paused = false
-	_shop._advance_clock(15.0)
-	assert_eq(_clock.text, "7:45 AM")
-
-
-func test_dialogue_lifecycle_pauses_and_resumes_day_running() -> void:
+func test_dialogue_pauses_and_resumes_via_pause_ownership() -> void:
+	DayClock.running = true
+	DayClock.start_day(1)
 	assert_true(_shop.is_day_running(), "Clock runs when the shop opens")
 
 	_shop._open_dialogue(["A quick test line."], false)
 	await wait_physics_frames(1)
-	assert_false(_shop.is_day_running(), "Clock pauses while a visitor talks")
+	assert_false(_shop.is_day_running(), "Dialogue freezes the clock")
+	assert_true(DayClock.is_paused())
 
 	_shop._on_dialogue_finished()
 	assert_true(_shop.is_day_running(), "Clock resumes after dialogue")
-
-
-func test_day_wraps_after_end_hour() -> void:
-	_shop._day = 1
-	_shop._hour = 20
-	_shop._hour_elapsed = 0.0
-	_shop.seconds_per_hour = 1.0
-	_shop._advance_clock(1.0)
-	assert_eq(_shop._day, 2)
-	assert_eq(_shop._hour, 7)
-	assert_eq(_clock.text, "7:00 AM")
-
-
-func test_loop_wraps_after_day_five() -> void:
-	_shop._day = 5
-	_shop._hour = 20
-	_shop._hour_elapsed = 0.0
-	_shop.seconds_per_hour = 1.0
-	_shop._advance_clock(1.0)
-	assert_eq(_shop._day, 1)
-	assert_eq(_clock.text, "7:00 AM")
+	assert_false(DayClock.is_paused())

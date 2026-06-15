@@ -95,8 +95,8 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 - Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and reports `4.6.3.stable.official.7d41c59c4`.
 - The bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`). A 4.6.3 shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the `.cmd` file is shadowed by the earlier `godot.exe` on the effective PATH.
 - `--headless --editor --path . --quit` completes with exit 0; the main scene `scenes/Shop.tscn` starts and the controller prints `[Shop] ready`.
-- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `49/49 passed` (160 asserts), including existing Phase 0 tests and new `tests/models/` and `tests/core/` coverage.
-- Focused Phase 1 suites pass: `-gdir=res://tests/models` → `11/11 passed`; `-gdir=res://tests/core` → `22/22 passed`.
+- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `69/69 passed` (234 asserts), including Phase 0/1 tests and new Phase 2 clock/loop/persistence coverage (2026-06-15).
+- Focused suites pass: `-gdir=res://tests/models` → `11/11 passed`; `-gdir=res://tests/core` → `45/45 passed`.
 - `gdformat --check scripts scenes dialogue tests` and `gdlint scripts scenes dialogue tests` pass (scoped to exclude vendored `addons/gut`).
 - `dialogue/dialogue_box.tscn` loads. The `prototype/` directory was removed during Phase 0.
 - No tracked `.env`, secret, credential, or API-key file was found.
@@ -109,7 +109,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 - Orchestration lives in `scripts/shop/shop_controller.gd` (attached to the Shop root): placeholder rarity counts, a 07:00-20:00 timer, Day 1-5 wrapping, visitor visibility, and the hardcoded placeholder Auntie/"coming soon" dialogue. Presentation lives in `scenes/ui/shop_hud.gd` (`class_name ShopHud`), which emits typed intent signals and exposes `set_*`/`start_dialogue`/`set_actions_visible` and owns no game state.
 - Door opens the dialogue queue (with the visitor). Workbench, Journal, and Phone only show "coming soon" dialogue. No real navigation or game systems are connected.
 - Dialogue supports queued String/Dictionary lines, BBCode, typewriter reveal, skip/advance, keyboard, mouse, and a completion signal.
-- The clock shows minute-level placeholder progression (`7:00 AM` → `7:01 AM` → …), pauses during dialogue, and resumes without skipping partial-hour time. There is no loop reset transaction, save file, route schedule, or persistent state.
+- The clock is now the real Phase 2 `DayClock` autoload (07:00–20:00, minute-level display, configurable `seconds_per_hour`), driven by the Shop's `_process` and frozen via pause ownership during dialogue. The `LoopController` autoload advances Days 1–5 and performs the five-day split reset (clear loop, increment loop, restart Day 1, atomic save, emit `loop_reset`). Save files persist via `SaveService` (atomic, validated). Route schedules and most loop-scoped gameplay content are still later phases.
 - The dialogue lifecycle (open → clock pause + visitor show; advance via mouse/keyboard → close → clock resume + visitor hide) is verified headlessly by the GUT smoke test. On-screen mouse hit-testing/visuals under a real display remain a manual human check.
 
 ### Implemented Or Reusable Pieces
@@ -121,6 +121,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 - Phase 1 typed models, enums, validation, and serialization round-trips in `scripts/models/`.
 - Phase 1 `DataRepository` (`scripts/core/data_repository.gd`) loading and validating `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, and `data/scanner-cache/`.
 - Phase 1 core autoloads: `EventBus`, `GameState`, `SaveService` (registered in `project.godot`).
+- Phase 2 core autoloads: `DayClock` (reusable clock + ref-counted pause ownership) and `LoopController` (Day 1–5 progression, five-day split reset, DayClock->EventBus/GameState bridge).
 - Phase 1 deterministic run context owned by `GameState` using local `RandomNumberGenerator` instances.
 - Phase 1 slice fixtures: pendant template, two ordinary instance fixtures, tools/techniques, containers, Master Artifact + five fragments, Echo set, cached scanner response, and starting kit.
 - Toolchain: vendored GUT 9.6.0 + smoke test + Phase 1 model/core tests, pinned gdtoolkit (gdformat/gdlint), and a GitHub Actions CI workflow.
@@ -129,7 +130,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 
 ### Missing Runtime Systems
 
-- Real day clock, loop controller, and full split/atomic persistence gameplay semantics (Phase 2).
+- (Phase 2 implemented) Real day clock, loop controller, pause ownership, and the split/atomic persistence reset now exist as the `DayClock`/`LoopController` autoloads with strict-validated `SaveService` writes (GUT-verified; on-screen/real-time observation pending).
 - Delivery generation, 3D placement anchors, triage, inventory, and rarity glow behavior.
 - Pendant cleaning mini-game, tool consequences, clean/open state machine, and general open results.
 - Spawn Director, placement history, demo seeds/logging, Cultural Echo audio/meter/captions, and carrier flicker.
@@ -168,9 +169,10 @@ Verified with Godot `4.6.3.stable` on 2026-06-15 (after Phase 1 core architectur
 - `dialogue/dialogue_box.gd` and `.tscn`: reusable dialogue implementation.
 - `tests/test_shop_smoke.gd` + `.gutconfig.json`: GUT smoke test for the Shop/HUD boundary.
 - `tests/models/test_models.gd`: model round-trip and validation tests.
-- `tests/core/test_data_repository.gd`, `test_event_bus.gd`, `test_game_state.gd`, `test_save_service.gd`, `test_run_context.gd`: Phase 1 core tests.
+- `tests/core/test_data_repository.gd`, `test_event_bus.gd`, `test_game_state.gd`, `test_save_service.gd`, `test_run_context.gd`: Phase 1 core tests (`test_save_service.gd` extended in Phase 2).
+- `tests/core/test_day_clock.gd`, `test_loop_controller.gd`: Phase 2 clock/loop tests; `tests/test_shop_clock.gd` migrated to DayClock-backed display/pause integration.
 - `scripts/models/`: `model_enums.gd`, `model_utils.gd`, `validation_result.gd`, `scrap_object_template.gd`, `object_instance.gd`, `fragment.gd`, `master_artifact.gd`, `echo_set.gd`, `journal_entry.gd`, `museum_entry.gd`, `tool_definition.gd`, `technique_definition.gd`, `placement_container.gd`, `character_route.gd`, `scanner_cache_entry.gd`, `save_state.gd`.
-- `scripts/core/`: `event_bus.gd`, `game_state.gd`, `save_service.gd`, `data_repository.gd`.
+- `scripts/core/`: `event_bus.gd`, `game_state.gd`, `save_service.gd`, `data_repository.gd`, `day_clock.gd`, `loop_controller.gd`.
 - `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, `data/scanner-cache/`: authored JSON fixtures (schema_version = 1).
 - `addons/gut/`: vendored GUT 9.6.0. `requirements-dev.txt`: pinned gdtoolkit. `.github/workflows/ci.yml`: CI (4.6.3 import + GUT + lint).
 - `aLima.twee`: old interactive design prototype. Useful for route prose/tuning history, but subordinate to current invariants and PRD.

@@ -41,7 +41,7 @@
 alima/
 ├── CLAUDE.md                  ← you are here
 ├── README.md                  ← GDD / narrative and design source
-├── project.godot              ← Godot 4.6.3 project root; autoloads EventBus, GameState, SaveService
+├── project.godot              ← Godot 4.6.3 project root; autoloads EventBus, GameState, SaveService, DayClock, LoopController
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
@@ -49,7 +49,7 @@ alima/
 │   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
 ├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/
 ├── scripts/                   ← shop, core, models, discovery, restoration, scanner, journal, portal
-│   ├── core/                  ← EventBus, GameState, SaveService, DataRepository
+│   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController
 │   └── models/                ← typed data contracts + enums + validation
 ├── dialogue/                  ← reusable dialogue scene and script
 ├── addons/gut/                ← vendored GUT 9.6.0 (Godot Unit Test) runner
@@ -213,7 +213,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`49/49` passing, 160 asserts), focused model/core suites, and minute-level clock behavior pass under 4.6.3. Runtime tasks still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`69/69` passing, 234 asserts), focused model/core suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Runtime tasks (including on-screen/real-time clock observation) still require their own acceptance checks before `[x]`.
 
 ---
 

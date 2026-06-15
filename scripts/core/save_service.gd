@@ -5,12 +5,24 @@ extends Node
 ## provides a migration entrypoint, and writes atomically via temp file. It
 ## depends on GameState for the in-memory state but never touches scene nodes.
 
-const SAVE_PATH := "user://save.json"
-const TEMP_PATH := "user://save.tmp"
+const DEFAULT_SAVE_PATH := "user://save.json"
+const DEFAULT_TEMP_PATH := "user://save.tmp"
+
+## Active save paths. Defaulted to the real game save; overridable via
+## set_save_paths() so tests never write into the developer's real save location.
+var save_path: String = DEFAULT_SAVE_PATH
+var temp_path: String = DEFAULT_TEMP_PATH
 
 
 func _ready() -> void:
 	pass
+
+
+## Redirects save/temp writes (e.g. to an isolated test location). Both paths
+## must share the same directory so the atomic temp->final rename stays valid.
+func set_save_paths(new_save_path: String, new_temp_path: String) -> void:
+	save_path = new_save_path
+	temp_path = new_temp_path
 
 
 ## Serializes the current GameState into a JSON string and validates it.
@@ -33,17 +45,18 @@ func save_game() -> Dictionary:
 	var write_result := _atomic_write(json_text)
 	if not write_result.ok:
 		return write_result
-	return {"ok": true, "path": SAVE_PATH}
+	return {"ok": true, "path": save_path}
 
 
-## Loads and validates the save at SAVE_PATH, populating GameState.save_state.
-## Returns a result dictionary with `ok`, `schema_version`, and `error`.
+## Loads and validates the save at save_path, populating GameState.save_state.
+## On any failure the in-memory state is left untouched (a valid prior state and
+## the on-disk save survive). Returns a result with `ok`, `schema_version`, `error`.
 func load_game() -> Dictionary:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(save_path):
 		return {"ok": false, "error": "save file not found", "schema_version": -1}
 
-	var parsed: Variant = _load_raw_json(SAVE_PATH)
-	if parsed == null:
+	var parsed: Variant = _load_raw_json(save_path)
+	if not (parsed is Dictionary):
 		return {"ok": false, "error": "save file is malformed JSON", "schema_version": -1}
 
 	var version := ModelUtils.as_int(parsed.get("schema_version"), -1)
@@ -52,6 +65,16 @@ func load_game() -> Dictionary:
 		if not migrated.ok:
 			return {"ok": false, "error": migrated.error, "schema_version": version}
 		parsed = migrated.payload
+
+	# Strict checks the model's coercive from_dictionary cannot catch (unknown
+	# enum strings, non-numeric scalars, wrong section types).
+	var raw_validation := _validate_raw_payload(parsed)
+	if not raw_validation.is_valid():
+		return {
+			"ok": false,
+			"error": "save validation failed: %s" % ", ".join(raw_validation.errors()),
+			"schema_version": version
+		}
 
 	var validation := SaveState.from_dictionary(parsed).validate()
 	if not validation.is_valid():
@@ -73,21 +96,21 @@ func migrate_payload(payload: Dictionary, from_version: int) -> Dictionary:
 
 ## Deletes both the temp and final save files. Useful for tests.
 func delete_save_files() -> void:
-	for path in [SAVE_PATH, TEMP_PATH]:
+	for path in [save_path, temp_path]:
 		if FileAccess.file_exists(path):
-			DirAccess.open("user://").remove(path.get_file())
+			DirAccess.open(path.get_base_dir()).remove(path.get_file())
 
 
 func _atomic_write(json_text: String) -> Dictionary:
-	var temp_file := FileAccess.open(TEMP_PATH, FileAccess.WRITE)
+	var temp_file := FileAccess.open(temp_path, FileAccess.WRITE)
 	if temp_file == null:
 		var err := FileAccess.get_open_error()
 		return {"ok": false, "error": "could not open temp save file (error %d)" % err}
 	temp_file.store_string(json_text)
 	temp_file.close()
 
-	var parsed: Variant = _load_raw_json(TEMP_PATH)
-	if parsed == null:
+	var parsed: Variant = _load_raw_json(temp_path)
+	if not (parsed is Dictionary):
 		return {"ok": false, "error": "temp save file did not parse; original save kept"}
 
 	var validation := SaveState.from_dictionary(parsed).validate()
@@ -98,10 +121,10 @@ func _atomic_write(json_text: String) -> Dictionary:
 			"temp save payload failed SaveState validation: %s" % ", ".join(validation.errors())
 		}
 
-	var dir := DirAccess.open("user://")
+	var dir := DirAccess.open(save_path.get_base_dir())
 	if dir == null:
-		return {"ok": false, "error": "could not open user:// for rename"}
-	var rename_err := dir.rename(TEMP_PATH.get_file(), SAVE_PATH.get_file())
+		return {"ok": false, "error": "could not open save directory for rename"}
+	var rename_err := dir.rename(temp_path.get_file(), save_path.get_file())
 	if rename_err != OK:
 		return {"ok": false, "error": "rename failed with error %d" % rename_err}
 
@@ -117,6 +140,49 @@ func _migrate(payload: Dictionary, from_version: int) -> Dictionary:
 	return {"ok": false, "error": "no migration defined for schema version %d" % from_version}
 
 
+## Strict validation of a current-schema raw payload, catching what the models'
+## coercive from_dictionary() silently absorbs: unknown enum strings, non-numeric
+## scalars, and wrong section types. Range checks (current_day/hour, money) remain
+## the model's job and run afterwards.
+func _validate_raw_payload(parsed: Dictionary) -> ValidationResult:
+	var result := ValidationResult.new()
+
+	var loop_raw: Variant = parsed.get("loop")
+	if loop_raw != null and not (loop_raw is Dictionary):
+		result.add_error("loop section must be an object")
+	elif loop_raw is Dictionary:
+		_require_numeric(loop_raw, "current_day", result)
+		_require_numeric(loop_raw, "current_hour", result)
+		_require_numeric(loop_raw, "money", result)
+
+	var persistent_raw: Variant = parsed.get("persistent")
+	if persistent_raw != null and not (persistent_raw is Dictionary):
+		result.add_error("persistent section must be an object")
+	elif persistent_raw is Dictionary:
+		var fragments_raw: Variant = persistent_raw.get("fragments")
+		if fragments_raw is Dictionary:
+			for fragment_id in fragments_raw.keys():
+				var fragment: Variant = fragments_raw[fragment_id]
+				if fragment is Dictionary and fragment.has("state"):
+					var state_name := str(fragment["state"]).to_lower().strip_edges()
+					if ModelEnums.FRAGMENT_STATE_NAMES.find(state_name) < 0:
+						result.add_error(
+							(
+								"fragment '%s' has unknown state '%s'"
+								% [fragment_id, fragment["state"]]
+							)
+						)
+	return result
+
+
+## Flags a present-but-non-numeric scalar (e.g. a string where a number is required).
+func _require_numeric(section: Dictionary, key: String, result: ValidationResult) -> void:
+	if section.has(key):
+		var value: Variant = section[key]
+		if not (value is int or value is float):
+			result.add_error("loop.%s must be a number" % key)
+
+
 func _validate_json(text: String) -> bool:
 	return JSON.parse_string(text) != null
 
@@ -127,5 +193,9 @@ func _load_raw_json(path: String) -> Variant:
 		return null
 	var text := file.get_as_text()
 	file.close()
-	var parsed: Variant = JSON.parse_string(text)
-	return parsed
+	# Use the JSON instance parser (not the static parse_string) so malformed input
+	# returns an error code instead of pushing an engine error to the log.
+	var json := JSON.new()
+	if json.parse(text) != OK:
+		return null
+	return json.data
