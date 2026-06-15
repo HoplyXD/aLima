@@ -3,7 +3,7 @@ extends GutTest
 ## Phase 0 smoke test for the production Shop entry point and the
 ## controller <-> presentation-HUD boundary. Runs headless under Godot 4.6.3.
 ##
-## Covers: the HUD is visible, the stray test button is gone, the four action
+## Covers: the HUD is visible, the stray test button is gone, the five action
 ## buttons exist, the HUD formats clock/day text, and the dialogue lifecycle
 ## pauses/resumes the placeholder clock and toggles the visitor via both keyboard
 ## (ui_accept) and left-click advancement. Input is driven through the
@@ -36,8 +36,10 @@ func test_no_stray_test_button() -> void:
 		assert_false(String(button.text).contains("AAAAAAAAA"), "Stray test button must be removed")
 
 
-func test_four_action_buttons_exist() -> void:
-	for button_name in ["DoorButton", "WorkbenchButton", "JournalButton", "PhoneButton"]:
+func test_five_action_buttons_exist() -> void:
+	for button_name in [
+		"DoorButton", "WorkbenchButton", "JournalButton", "PhoneButton", "MorningDeliveryButton"
+	]:
 		var button := _hud.get_node_or_null(button_name)
 		assert_not_null(button, "%s should exist" % button_name)
 		assert_is(button, Button, "%s should be a Button" % button_name)

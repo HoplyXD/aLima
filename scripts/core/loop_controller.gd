@@ -75,6 +75,7 @@ func _perform_loop_reset() -> void:
 	_resetting = true
 	GameState.reset_loop_state()
 	GameState.new_run()
+	_plan_carrier_placements()
 	DayClock.loop_index = GameState.loop_index
 	DayClock.start_day(1)
 	var save_result := SaveService.save_game()
@@ -82,3 +83,12 @@ func _perform_loop_reset() -> void:
 		push_error("LoopController: loop-reset save failed: %s" % save_result.get("error", ""))
 	EventBus.loop_reset.emit(GameState.loop_index)
 	_resetting = false
+
+
+func _plan_carrier_placements() -> void:
+	var repo := DataRepository.singleton()
+	if not repo.is_loaded():
+		push_error("LoopController: data repository failed to load")
+		return
+	var director := SpawnDirector.new(repo, GameState)
+	director.plan_loop_placements()

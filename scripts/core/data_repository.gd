@@ -7,6 +7,9 @@ class_name DataRepository
 ## and container compatibility without hardcoding slice IDs.
 
 const SCHEMA_VERSION: int = 1
+
+static var _singleton: DataRepository = null
+
 var data_root: String = "res://data"  ## Overridable for tests.
 
 var scrap_object_templates: Dictionary = {}  ## id -> ScrapObjectTemplate
@@ -19,10 +22,20 @@ var technique_definitions: Dictionary = {}  ## id -> TechniqueDefinition
 var character_routes: Dictionary = {}  ## id -> CharacterRoute
 var placement_containers: Dictionary = {}  ## id -> PlacementContainer
 var scanner_cache_entries: Dictionary = {}  ## id -> ScannerCacheEntry
+var delivery_config: DeliveryConfig = DeliveryConfig.new()
 var starting_kit: Dictionary = {"tool_ids": [], "technique_ids": []}
 
 var _loaded := false
 var _validation: ValidationResult = ValidationResult.new()
+
+
+## Returns a shared, loaded repository instance. Tests that need an isolated
+## repository should still use DataRepository.new() directly.
+static func singleton() -> DataRepository:
+	if _singleton == null or not _singleton.is_loaded():
+		_singleton = DataRepository.new()
+		_singleton.load_from_filesystem()
+	return _singleton
 
 
 func _init() -> void:
@@ -41,6 +54,7 @@ func load_from_filesystem() -> ValidationResult:
 	_load_directory("echoes", _parse_echo_file)
 	_load_directory("routes", _parse_route_file)
 	_load_directory("scanner-cache", _parse_scanner_cache_file)
+	_load_directory("delivery", _parse_delivery_config_file)
 
 	if not _validation.is_valid():
 		_clear_state()
@@ -100,6 +114,10 @@ func get_scanner_cache(id: String) -> ScannerCacheEntry:
 	return scanner_cache_entries.get(id) as ScannerCacheEntry
 
 
+func get_delivery_config() -> DeliveryConfig:
+	return delivery_config
+
+
 func _clear_state() -> void:
 	_loaded = false
 	scrap_object_templates.clear()
@@ -112,6 +130,7 @@ func _clear_state() -> void:
 	character_routes.clear()
 	placement_containers.clear()
 	scanner_cache_entries.clear()
+	delivery_config = DeliveryConfig.new()
 	starting_kit = {"tool_ids": [], "technique_ids": []}
 
 
@@ -266,6 +285,15 @@ func _parse_scanner_cache_file(file_path: String) -> void:
 			var key := entry.id if not entry.id.is_empty() else entry.template_id
 			_add_record(scanner_cache_entries, key, entry, file_path, "scanner_cache")
 			entry.validate(_validation, file_path)
+
+
+func _parse_delivery_config_file(file_path: String) -> void:
+	var doc: Variant = _read_json_file(file_path)
+	if doc == null:
+		return
+	var cfg := DeliveryConfig.from_dictionary(doc)
+	cfg.validate(_validation, file_path)
+	delivery_config = cfg
 
 
 func _get_items(doc: Dictionary, file_path: String) -> Array:

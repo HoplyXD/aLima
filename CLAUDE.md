@@ -48,21 +48,23 @@ alima/
 │   ├── PROMPT_CONTEXT.md      ← verified context and prompt contract for agents
 │   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
 ├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/
-├── scripts/                   ← shop, core, models, discovery, restoration, scanner, journal, portal
+├── scripts/                   ← shop, core, models, delivery, discovery, restoration, scanner, journal, portal
 │   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController
-│   └── models/                ← typed data contracts + enums + validation
+│   ├── models/                ← typed data contracts + enums + validation
+│   └── delivery/              ← DeliveryGenerator, SpawnDirector v1, glow mapping, triage logic
 ├── dialogue/                  ← reusable dialogue scene and script
 ├── addons/gut/                ← vendored GUT 9.6.0 (Godot Unit Test) runner
 ├── resources/                 ← Godot .tres definitions
 ├── assets/                    ← original art/audio only
 ├── tests/                     ← GUT tests (test_*.gd)
 │   ├── models/                ← model round-trip/validation tests
-│   └── core/                  ← repository, autoload, save, run-context tests
+│   ├── core/                  ← repository, autoload, save, run-context tests
+│   └── delivery/              ← delivery generation, placement, glow, triage tests
 ├── .github/workflows/ci.yml   ← CI: 4.6.3 import + GUT + gdformat + gdlint
 ├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
 ├── server/                    ← Express: LLM proxy + portal client (Phase 8; not yet created)
 ├── mock-portal/               ← mock City-Wide Portal API (Phase 8; not yet created)
-└── data/                      ← objects, artifacts, echoes, routes, scanner-cache (JSON; artifact-agnostic)
+└── data/                      ← objects, artifacts, echoes, routes, scanner-cache, delivery (JSON; artifact-agnostic)
 ```
 
 ---

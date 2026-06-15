@@ -46,11 +46,24 @@ enum Verdict {
 	UNCERTAIN = 4,
 }
 
+## Fixed glow legend for presentation. Flickering is a special state, not a new
+## rarity tier (CLAUDE.md §4-E). The carrier uses its ordinary template rarity
+## glow until the Echo phase explicitly authorizes flicker.
+enum GlowState {
+	WHITE = 0,  ## Common apparent value.
+	GREEN = 1,  ## Uncommon.
+	BLUE = 2,  ## Antique.
+	PURPLE = 3,  ## Rare.
+	GOLD = 4,  ## Historically significant.
+	FLICKERING = 5,  ## Route-connected / carrier proximity reveal.
+}
+
 const RARITY_NAMES: Array[String] = ["white", "green", "blue", "purple", "gold"]
 const OBJ_STATE_NAMES: Array[String] = ["dirty", "clean", "open"]
 const FRAGMENT_STATE_NAMES: Array[String] = ["locked", "released", "seated"]
 const OPEN_RESULT_NAMES: Array[String] = ["empty", "temporal_echo", "fragment"]
 const VERDICT_NAMES: Array[String] = ["unknown", "authentic", "replica", "modified", "uncertain"]
+const GLOW_STATE_NAMES: Array[String] = ["white", "green", "blue", "purple", "gold", "flickering"]
 
 ## Helpers to convert between enum values and stable string IDs.
 
@@ -113,3 +126,15 @@ static func verdict_name(value: int) -> String:
 	if value < 0 or value >= VERDICT_NAMES.size():
 		return VERDICT_NAMES[Verdict.UNKNOWN]
 	return VERDICT_NAMES[value]
+
+
+static func glow_state_from_name(name: String) -> int:
+	var normalized := name.to_lower().strip_edges()
+	var idx := GLOW_STATE_NAMES.find(normalized)
+	return GlowState.WHITE if idx < 0 else idx
+
+
+static func glow_state_name(value: int) -> String:
+	if value < 0 or value >= GLOW_STATE_NAMES.size():
+		return GLOW_STATE_NAMES[GlowState.WHITE]
+	return GLOW_STATE_NAMES[value]

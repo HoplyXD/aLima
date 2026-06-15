@@ -28,7 +28,22 @@ func initialize(new_player_id: String = "local-player") -> void:
 	debug_seed_override = -1
 	save_state = SaveState.new()
 	save_state.player_id = player_id
+	_load_fragment_definitions()
 	_new_run_context()
+
+
+## Copies authored fragment definitions into persistent state so the loop can
+## track their lifecycle (LOCKED -> RELEASED -> SEATED).
+func _load_fragment_definitions() -> void:
+	var repo := DataRepository.singleton()
+	if not repo.is_loaded():
+		return
+	for fragment_id in repo.fragments.keys():
+		var source: Fragment = repo.fragments[fragment_id]
+		# Only populate if missing; never overwrite an existing persistent state.
+		if not save_state.persistent.fragments.has(fragment_id):
+			var copy := Fragment.from_dictionary(source.to_dictionary())
+			save_state.persistent.fragments[fragment_id] = copy
 
 
 ## Starts a new run with an optional explicit seed. If seed is negative, the

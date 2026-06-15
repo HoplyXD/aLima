@@ -73,6 +73,7 @@ class PersistentState:
 	var legacy_items: Array[String] = []
 	var leads: Array[String] = []
 	var spawn_history: Dictionary = {}  ## fragment_id -> Array of placement logs.
+	var neglect_history: Dictionary = {}  ## container_id -> int; recycled/ignored counts.
 	var safe_code_known: bool = false
 	var drawer_unlocked: bool = false
 
@@ -89,6 +90,7 @@ class PersistentState:
 		p.legacy_items = ModelUtils.as_string_array(data.get("legacy_items"))
 		p.leads = ModelUtils.as_string_array(data.get("leads"))
 		p.spawn_history = data.get("spawn_history", {}) as Dictionary
+		p.neglect_history = data.get("neglect_history", {}) as Dictionary
 		p.safe_code_known = ModelUtils.as_bool(data.get("safe_code_known"))
 		p.drawer_unlocked = ModelUtils.as_bool(data.get("drawer_unlocked"))
 		return p
@@ -106,6 +108,7 @@ class PersistentState:
 			"legacy_items": legacy_items.duplicate(),
 			"leads": leads.duplicate(),
 			"spawn_history": spawn_history.duplicate(),
+			"neglect_history": neglect_history.duplicate(),
 			"safe_code_known": safe_code_known,
 			"drawer_unlocked": drawer_unlocked,
 		}
@@ -136,6 +139,7 @@ class LoopState:
 	var pending_requests: Array = []  ## Request dictionaries.
 	var day_event_outcomes: Dictionary = {}
 	var current_delivery_ids: Array[String] = []
+	var current_carrier_placements: Dictionary = {}  ## fragment_id -> placement dict.
 
 	static func from_dictionary(data: Dictionary) -> LoopState:
 		var l := LoopState.new()
@@ -149,6 +153,7 @@ class LoopState:
 		l.pending_requests = SaveState._as_array(data.get("pending_requests", []))
 		l.day_event_outcomes = data.get("day_event_outcomes", {}) as Dictionary
 		l.current_delivery_ids = ModelUtils.as_string_array(data.get("current_delivery_ids"))
+		l.current_carrier_placements = data.get("current_carrier_placements", {}) as Dictionary
 		return l
 
 	func to_dictionary() -> Dictionary:
@@ -163,6 +168,7 @@ class LoopState:
 			"pending_requests": pending_requests.duplicate(),
 			"day_event_outcomes": day_event_outcomes.duplicate(),
 			"current_delivery_ids": current_delivery_ids.duplicate(),
+			"current_carrier_placements": current_carrier_placements.duplicate(),
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:

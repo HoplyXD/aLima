@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "batch_min": 3,
+  "batch_max": 6,
+  "storage_cap": 8,
+  "rarity_weights": {
+    "white": 40,
+    "green": 25,
+    "blue": 18,
+    "purple": 10,
+    "gold": 3
+  }
+}

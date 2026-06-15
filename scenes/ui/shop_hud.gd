@@ -12,6 +12,7 @@ signal door_pressed  ## Player wants to answer the door / accept a visitor.
 signal workbench_pressed  ## Player wants to go to the work desk.
 signal journal_pressed  ## Player wants to view the journal.
 signal phone_pressed  ## Player wants to view the phone (marketplace).
+signal morning_delivery_pressed  ## Player wants to start the morning delivery triage.
 signal dialogue_finished  ## Re-emitted when the dialogue box closes its queue.
 
 enum Rarity { WHITE, GREEN, BLUE, PURPLE, GOLD }
@@ -29,6 +30,7 @@ const RARITY := [
 @onready var _workbench_button: Button = $WorkbenchButton
 @onready var _journal_button: Button = $JournalButton
 @onready var _phone_button: Button = $PhoneButton
+@onready var _morning_button: Button = $MorningDeliveryButton
 @onready var _dialogue: DialogueBox = $DialogueBox
 
 @onready var _unrestored_counts: RichTextLabel = %UnrestoredCounts
@@ -43,6 +45,7 @@ func _ready() -> void:
 	_workbench_button.pressed.connect(func() -> void: workbench_pressed.emit())
 	_journal_button.pressed.connect(func() -> void: journal_pressed.emit())
 	_phone_button.pressed.connect(func() -> void: phone_pressed.emit())
+	_morning_button.pressed.connect(func() -> void: morning_delivery_pressed.emit())
 	_dialogue.finished.connect(func() -> void: dialogue_finished.emit())
 
 
@@ -76,6 +79,7 @@ func set_actions_visible(value: bool) -> void:
 	_workbench_button.visible = value
 	_journal_button.visible = value
 	_phone_button.visible = value
+	_morning_button.visible = value
 
 
 ## Render a queue of dialogue lines. The controller chooses the content and any

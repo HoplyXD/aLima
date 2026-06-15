@@ -15,6 +15,7 @@
       "required_clean_tool": "soft_cloth",
       "clean_minigame": "pendant_wipe",
       "base_value_range": [120, 280],
+      "storage_cost": 1,
       "counterfeit_profile": "",
       "historical_fact_ref": "",
       "can_hold_temporal_echo": false
@@ -59,6 +60,7 @@
       "required_clean_tool": "rust_brush",
       "clean_minigame": "tin_pry",
       "base_value_range": [10, 40],
+      "storage_cost": 2,
       "counterfeit_profile": "",
       "historical_fact_ref": "",
       "can_hold_temporal_echo": true

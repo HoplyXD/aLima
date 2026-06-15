@@ -17,6 +17,7 @@ var openable_type: String = ""  ## e.g. "pendant", "tin", "santo", "frame".
 var required_clean_tool: String = ""  ## ToolDefinition id.
 var clean_minigame: String = ""  ## Mini-game key used by restoration.
 var base_value_range: Vector2 = Vector2.ZERO
+var storage_cost: int = 1  ## Loop inventory slots this template occupies.
 var counterfeit_profile: String = ""  ## Optional ref; empty if none.
 var historical_fact_ref: String = ""  ## Optional ref; empty if none.
 var can_hold_temporal_echo: bool = false
@@ -41,6 +42,7 @@ static func from_dictionary(data: Dictionary) -> ScrapObjectTemplate:
 	t.required_clean_tool = ModelUtils.as_string(data.get("required_clean_tool"))
 	t.clean_minigame = ModelUtils.as_string(data.get("clean_minigame"))
 	t.base_value_range = ModelUtils.as_vector2(data.get("base_value_range"))
+	t.storage_cost = ModelUtils.as_int(data.get("storage_cost"), 1)
 	t.counterfeit_profile = ModelUtils.as_string(data.get("counterfeit_profile"))
 	t.historical_fact_ref = ModelUtils.as_string(data.get("historical_fact_ref"))
 	t.can_hold_temporal_echo = ModelUtils.as_bool(data.get("can_hold_temporal_echo"))
@@ -61,6 +63,7 @@ func to_dictionary() -> Dictionary:
 		"required_clean_tool": required_clean_tool,
 		"clean_minigame": clean_minigame,
 		"base_value_range": ModelUtils.vector2_to_array(base_value_range),
+		"storage_cost": storage_cost,
 		"counterfeit_profile": counterfeit_profile,
 		"historical_fact_ref": historical_fact_ref,
 		"can_hold_temporal_echo": can_hold_temporal_echo,
@@ -98,4 +101,6 @@ func validate(
 		)
 	if base_value_range.x < 0.0 or base_value_range.y < base_value_range.x:
 		result.add_field_error(file_path, id, "base_value_range", "invalid value range")
+	if storage_cost < 1:
+		result.add_field_error(file_path, id, "storage_cost", "storage_cost must be at least 1")
 	return result

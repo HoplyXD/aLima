@@ -13,6 +13,8 @@ var fragment_id: String = ""  ## Payload when is_carrier is true.
 var contents: int = ModelEnums.OpenResult.EMPTY
 var authenticity: int = ModelEnums.Verdict.UNKNOWN
 var is_counterfeit_truth: bool = false
+var storage_cost: int = 1  ## Copied from the template at creation time.
+var assigned_anchor_id: String = ""  ## Container/placement anchor for this instance.
 
 
 func _init() -> void:
@@ -30,6 +32,8 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	inst.contents = ModelEnums.open_result_from_name(ModelUtils.as_string(data.get("contents")))
 	inst.authenticity = ModelEnums.verdict_from_name(ModelUtils.as_string(data.get("authenticity")))
 	inst.is_counterfeit_truth = ModelUtils.as_bool(data.get("is_counterfeit_truth"))
+	inst.storage_cost = ModelUtils.as_int(data.get("storage_cost"), 1)
+	inst.assigned_anchor_id = ModelUtils.as_string(data.get("assigned_anchor_id"))
 	return inst
 
 
@@ -44,6 +48,8 @@ func to_dictionary() -> Dictionary:
 		"contents": ModelEnums.open_result_name(contents),
 		"authenticity": ModelEnums.verdict_name(authenticity),
 		"is_counterfeit_truth": is_counterfeit_truth,
+		"storage_cost": storage_cost,
+		"assigned_anchor_id": assigned_anchor_id,
 	}
 
 
@@ -68,4 +74,6 @@ func validate(
 		result.add_field_error(
 			file_path, uid, "fragment_id", "only carriers may carry a fragment_id"
 		)
+	if storage_cost < 1:
+		result.add_field_error(file_path, uid, "storage_cost", "storage_cost must be at least 1")
 	return result

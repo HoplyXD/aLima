@@ -32,6 +32,7 @@ var _quest_artifacts := 1
 
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
+@onready var _triage_screen: TriageController = $TriageScreen
 
 
 func _ready() -> void:
@@ -41,12 +42,15 @@ func _ready() -> void:
 	_hud.workbench_pressed.connect(_on_workbench_pressed)
 	_hud.journal_pressed.connect(_on_journal_pressed)
 	_hud.phone_pressed.connect(_on_phone_pressed)
+	_hud.morning_delivery_pressed.connect(_on_morning_delivery_pressed)
 	_hud.dialogue_finished.connect(_on_dialogue_finished)
 
 	_visitor.visible = false
 
 	DayClock.seconds_per_hour = seconds_per_hour
 	LoopController.begin_session()
+
+	_triage_screen.closed.connect(_on_triage_closed)
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -63,6 +67,8 @@ func _process(delta: float) -> void:
 func _exit_tree() -> void:
 	# Stop the autoload clock so its state does not bleed into later scenes/tests.
 	DayClock.reset()
+	if _triage_screen != null:
+		_triage_screen.close()
 
 
 ## True while the day clock is actively ticking (paused during dialogue). Exposed
@@ -72,9 +78,11 @@ func is_day_running() -> bool:
 
 
 func _refresh_ui() -> void:
-	_hud.set_unrestored(_unrestored)
-	_hud.set_restored(_restored)
-	_hud.set_quest_count(_quest_artifacts)
+	var unrestored := _count_inventory_by_glow(false)
+	var restored := _count_inventory_by_glow(true)
+	_hud.set_unrestored(unrestored)
+	_hud.set_restored(restored)
+	_hud.set_quest_count(_count_seated_fragments())
 	_update_clock_display()
 
 
@@ -126,6 +134,59 @@ func _open_dialogue(lines: Array, show_visitor: bool) -> void:
 	_hud.set_actions_visible(false)
 	_visitor.visible = show_visitor
 	_hud.start_dialogue(lines)
+
+
+func _generate_and_show_triage() -> void:
+	var repo := DataRepository.singleton()
+
+	# Plan carrier placements once per loop if missing.
+	if GameState.save_state.loop.current_carrier_placements.is_empty():
+		var director := SpawnDirector.new(repo, GameState)
+		director.plan_loop_placements()
+
+	var generator := DeliveryGenerator.new(repo, GameState)
+	var delivery := generator.generate_day_delivery(GameState.save_state.loop.current_day)
+	var cfg := repo.get_delivery_config()
+	_triage_screen.open(delivery, cfg.storage_cap)
+
+
+func _on_morning_delivery_pressed() -> void:
+	_generate_and_show_triage()
+
+
+func _on_triage_closed() -> void:
+	_refresh_ui()
+
+
+func _count_inventory_by_glow(restored_only: bool) -> Dictionary:
+	var counts := {}
+	for i in ShopHud.Rarity.size():
+		counts[i] = 0
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary:
+			var inst := ObjectInstance.from_dictionary(raw)
+			var template: ScrapObjectTemplate = DataRepository.singleton().get_template(
+				inst.template_id
+			)
+			if template == null:
+				continue
+			var is_restored := (
+				inst.state == ModelEnums.ObjState.CLEAN or inst.state == ModelEnums.ObjState.OPEN
+			)
+			if is_restored == restored_only:
+				var rarity: int = template.base_rarity
+				if rarity >= 0 and rarity < ShopHud.Rarity.size():
+					counts[rarity] = counts.get(rarity, 0) + 1
+	return counts
+
+
+func _count_seated_fragments() -> int:
+	var count := 0
+	for fragment_id in GameState.save_state.persistent.fragments.keys():
+		var fragment: Fragment = GameState.save_state.persistent.fragments[fragment_id]
+		if fragment.state == ModelEnums.FragmentState.SEATED:
+			count += 1
+	return count
 
 
 func _on_dialogue_finished() -> void:
