@@ -38,6 +38,14 @@ static func as_bool(value: Variant, default_value: bool = false) -> bool:
 	return default_value
 
 
+static func as_dictionary(value: Variant, default_value: Dictionary = {}) -> Dictionary:
+	if value == null:
+		return default_value.duplicate()
+	if value is Dictionary:
+		return value.duplicate()
+	return default_value.duplicate()
+
+
 static func as_string_array(value: Variant, default_value: Array[String] = []) -> Array[String]:
 	if value == null:
 		return default_value.duplicate()

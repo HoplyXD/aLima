@@ -62,8 +62,8 @@ alima/
 │   └── delivery/              ← delivery generation, placement, glow, triage tests
 ├── .github/workflows/ci.yml   ← CI: 4.6.3 import + GUT + gdformat + gdlint
 ├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
-├── server/                    ← Express: LLM proxy + portal client (Phase 8; not yet created)
-├── mock-portal/               ← mock City-Wide Portal API (Phase 8; not yet created)
+├── server/                    ← Express: LLM proxy + portal client (Phase 8; cached `/api/scan`, `/api/portal/discovery` proxy, `.env.example`, Jest tests)
+├── mock-portal/               ← mock City-Wide Portal API (Phase 8; deterministic fact cards, Jest tests)
 └── data/                      ← objects, artifacts, echoes, routes, scanner-cache, delivery (JSON; artifact-agnostic)
 ```
 
@@ -154,19 +154,27 @@ godot --version                                      # currently 4.5.1.stable; d
 gdformat --check scripts scenes dialogue tests
 gdlint scripts scenes dialogue tests
 
-# --- Backend (LLM proxy + portal client; Phase 8, not yet scaffolded) ---
+# --- Backend (LLM proxy + portal client; Phase 8) ---
 Push-Location server
 npm install
 Copy-Item .env.example .env     # fill in keys locally; NEVER commit .env
+# Required: PORT, PORTAL_BASE_URL, PORTAL_TIMEOUT_MS (see server/.env.example)
 npm run dev                     # run in a dedicated terminal
-npm test
+npm test                        # 12/12 passing as of 2026-06-16 (uses --forceExit due to open Supertest handles)
 Pop-Location
 
-# --- Mock Portal (Phase 8, not yet scaffolded) ---
+# --- Mock Portal (Phase 8) ---
 Push-Location mock-portal
 npm install
+Copy-Item .env.example .env     # optional; defaults in config
 npm start                       # run in a dedicated terminal
+npm test                        # 4/4 passing as of 2026-06-16
 Pop-Location
+
+# --- Full local end-to-end (run server + mock-portal first) ---
+Push-Location mock-portal; npm start   # terminal A
+Push-Location server; npm run dev      # terminal B (PORTAL_BASE_URL=http://localhost:3001 or mock-portal port)
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/portal -gexit
 ```
 
 > If a command above doesn't exist yet (early in the build), create the missing scaffolding (test runner, lint config, scripts) as part of the task and update this section.
@@ -215,7 +223,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`159/159` passing, 613 asserts as of 2026-06-16, including the Phase 4 P4.7 focused 3D restoration view), focused model/core/delivery/restoration/spawn suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Runtime tasks (including on-screen/real-time clock observation and the restoration mouse/controller/touch flow) still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`250/250` passing, 860 asserts as of 2026-06-16, including Phases 0–8), focused model/core/delivery/restoration/spawn/echo/scanner/portal suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Backend suites also pass: `server/npm test` → 12/12; `mock-portal/npm test` → 4/4. Runtime tasks (including on-screen/real-time clock observation, restoration mouse/controller/touch flow, and the full Found → Unlock end-to-end observation) still require their own acceptance checks before `[x]`.
 
 ---
 

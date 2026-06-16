@@ -46,6 +46,7 @@ var _last_pointer: Vector2 = Vector2.ZERO
 var _stroke_uvs: PackedVector2Array = PackedVector2Array()
 var _instance_uids: Array[String] = []
 var _scanner_screen: ScannerScreen
+var _journal_viewport: BookViewport
 
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
@@ -145,9 +146,6 @@ func _on_scan_pressed() -> void:
 ## The shared journal viewer (a BookViewport) is handed in by the Shop so the bench
 ## opens the very same book overlay the shop does — it renders on a layer above this
 ## view. Set by ShopController.set_journal_viewport().
-var _journal_viewport: BookViewport
-
-
 func set_journal_viewport(viewport: BookViewport) -> void:
 	_journal_viewport = viewport
 

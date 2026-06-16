@@ -22,6 +22,10 @@ __pycache__/
 .venv/
 venv/
 
+# Node.js backend / mock portal
+node_modules/
+server/cache/
+
 # Logs and OS cruft
 *.log
 .DS_Store

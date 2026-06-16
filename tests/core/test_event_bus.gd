@@ -37,7 +37,7 @@ func test_discovery_signals_compile_and_fire() -> void:
 	EventBus.carrier_activated.emit("inst_001", "fragment_01")
 	EventBus.echo_proximity_changed.emit("inst_001", 0.75, "voice")
 	EventBus.fragment_discovered.emit("fragment_01", "inst_001")
-	EventBus.portal_completed.emit("fragment_01", "museum_001", false)
+	EventBus.portal_completed.emit("fragment_01", "museum_001", false, "A recovered gear.")
 	EventBus.fragment_seated.emit("fragment_01", 0)
 	assert_signal_emitted_with_parameters(
 		EventBus, "carrier_activated", ["inst_001", "fragment_01"]
@@ -49,6 +49,6 @@ func test_discovery_signals_compile_and_fire() -> void:
 		EventBus, "fragment_discovered", ["fragment_01", "inst_001"]
 	)
 	assert_signal_emitted_with_parameters(
-		EventBus, "portal_completed", ["fragment_01", "museum_001", false]
+		EventBus, "portal_completed", ["fragment_01", "museum_001", false, "A recovered gear."]
 	)
 	assert_signal_emitted_with_parameters(EventBus, "fragment_seated", ["fragment_01", 0])

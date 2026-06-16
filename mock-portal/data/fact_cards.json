@@ -1,0 +1,47 @@
+{
+  "fragment_01": {
+    "fragment_index": 1,
+    "fact_card": "A small gear etched with an old workshop mark. The teeth still mesh cleanly, suggesting it belonged to a precision timepiece rather than a farm tool.",
+    "artifact_meta": {
+      "name": "Heirloom Timepiece Gear",
+      "period": "early 20th century",
+      "origin": "Western Visayas"
+    }
+  },
+  "fragment_02": {
+    "fragment_index": 2,
+    "fact_card": "A curved brass plate with faint engraving worn by handling. The patina pattern implies decades inside a closed case rather than open air.",
+    "artifact_meta": {
+      "name": "Heirloom Timepiece Plate",
+      "period": "early 20th century",
+      "origin": "Western Visayas"
+    }
+  },
+  "fragment_03": {
+    "fragment_index": 3,
+    "fact_card": "A glass crystal, lightly clouded at the edges. Its diameter matches the plate and gear, confirming these pieces once shared the same face.",
+    "artifact_meta": {
+      "name": "Heirloom Timepiece Crystal",
+      "period": "early 20th century",
+      "origin": "Western Visayas"
+    }
+  },
+  "fragment_04": {
+    "fragment_index": 4,
+    "fact_card": "A coiled mainspring, still retaining tension. The alloy and finish are consistent with local repair-workshop stock from the 1920s.",
+    "artifact_meta": {
+      "name": "Heirloom Timepiece Mainspring",
+      "period": "early 20th century",
+      "origin": "Western Visayas"
+    }
+  },
+  "fragment_05": {
+    "fragment_index": 5,
+    "fact_card": "A final bridge piece that joins the gear train to the escapement. With this fragment, the five pieces can be aligned into a single movement.",
+    "artifact_meta": {
+      "name": "Heirloom Timepiece Bridge",
+      "period": "early 20th century",
+      "origin": "Western Visayas"
+    }
+  }
+}

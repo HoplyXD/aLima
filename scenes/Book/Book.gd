@@ -81,7 +81,6 @@ var _move_tween: Tween
 @onready var pf3 = $Book/Turning/Page/Skeleton3D/Back
 @onready var pf4 = $Book/Turning/PageRight
 
-
 # Pages when static: left, right
 @onready var ps1 = $Book/Static/PageLeft
 @onready var ps2 = $Book/Static/PageRight
@@ -96,7 +95,7 @@ var _move_tween: Tween
 @onready var v6 = $Viewport6
 
 @onready var sfx: AudioStreamPlayer2D = $AudioStreamPlayer2D
-@onready var animationPlayer: AnimationPlayer = $Book/Turning/AnimationPlayer
+@onready var animation_player: AnimationPlayer = $Book/Turning/AnimationPlayer
 
 
 func _ready():
@@ -115,18 +114,21 @@ func _ready():
 	_presented = start_presented
 	transform = _current_target()
 
-	animationPlayer.animation_finished.connect(_on_animation_finished)
+	animation_player.animation_finished.connect(_on_animation_finished)
 	click_body.input_event.connect(_on_click_body_input_event)
 
 
 func _build_stowed_xform(presented: Transform3D) -> Transform3D:
 	var stowed := presented
 	stowed.origin += stow_offset
-	stowed.basis = stowed.basis * Basis.from_euler(
-		Vector3(
-			deg_to_rad(stow_rotation_deg.x),
-			deg_to_rad(stow_rotation_deg.y),
-			deg_to_rad(stow_rotation_deg.z)
+	stowed.basis = (
+		stowed.basis
+		* Basis.from_euler(
+			Vector3(
+				deg_to_rad(stow_rotation_deg.x),
+				deg_to_rad(stow_rotation_deg.y),
+				deg_to_rad(stow_rotation_deg.z)
+			)
 		)
 	)
 	return stowed

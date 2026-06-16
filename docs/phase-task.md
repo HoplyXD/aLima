@@ -4,7 +4,7 @@ Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, live/moc
 
 | Field | Value |
 |---|---|
-| Last audited | 2026-06-15 |
+| Last audited | 2026-06-16 |
 | Current milestone | June 30, 2026 vertical slice |
 | Engine target | Godot 4.6.3 |
 | Presentation | Hybrid 3D shop with 2D gameplay interfaces |
@@ -49,7 +49,7 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[x]` Clock/day/loop progression is now the real Phase 2 system: a reusable `DayClock` autoload (07:00->20:00 close, minute-level display, pause ownership) and a `LoopController` autoload (Day 1-5 progression + the five-day split reset). The Shop controller is the display + pause-owner driver only. Verified by GUT (`tests/core/test_day_clock.gd`, `test_loop_controller.gd`, `test_save_service.gd`; full suite 69/69, 2026-06-15). On-screen/real-time observation of the running clock remains a manual check (see Phase 2 Acceptance).
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
-- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, and Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating) are implemented and covered by GUT under Godot 4.6.3. Cached scanner, backend/mock Portal, journal, museum record, and exports are not implemented.
+- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, and atomic seating are implemented and covered by GUT/backend tests under Godot 4.6.3 / Node. The hybrid 2D/3D journal, full disposition/evening systems, exports, and submission evidence are not implemented.
 - `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate. Journal and Phone actions remain placeholder-only.
 
 ## Reconciliation With the Old Tracker
@@ -236,13 +236,13 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
   - Added `scripts/{core,models,shop,delivery,restoration,discovery,scanner,journal,portal}`.
   - Added `scenes/{ui,restoration}`, `resources`, `data/{objects,artifacts,echoes,routes,scanner-cache}`, and `tests`.
   - Empty dirs keep a `.gitkeep`; `scripts/shop`, `scenes/ui`, and `tests` hold real files instead.
-  - `server` and `mock-portal` intentionally not created (Phase 8).
+  - `server/` and `mock-portal/` created in Phase 8 with Express, Jest, env validation, and cached endpoints.
   - Evidence (2026-06-15): directories present in working tree; `git status` lists the new untracked paths.
 
 - `[x]` **P0.6 Install test and lint tooling.**
   - Vendored GUT 9.6.0 under `addons/gut`; smoke test `tests/test_shop_smoke.gd` + `.gutconfig.json`.
   - gdtoolkit pinned to `4.5.0` in `requirements-dev.txt` (`pip install -r requirements-dev.txt`).
-  - CI `.github/workflows/ci.yml`: a lint job (gdformat `--check` + gdlint, scoped to `scripts scenes dialogue tests`) and a Godot job (downloads pinned 4.6.3 Linux headless → editor import → GUT). No backend job by design (server/mock-portal not created yet — Phase 8).
+  - CI `.github/workflows/ci.yml`: a lint job (gdformat `--check` + gdlint, scoped to `scripts scenes dialogue tests`) and a Godot job (downloads pinned 4.6.3 Linux headless → editor import → GUT). A backend test job is not yet added; run `server/npm test` and `mock-portal/npm test` locally for Phase 8 coverage.
   - Evidence (2026-06-15, local): GUT `7/7 passed` (29 asserts, exit 0); `gdformat --check scripts scenes dialogue tests` exit 0; `gdlint ...` "no problems found". CI workflow added; first remote run is pending the next push.
   - Note: the literal `gdformat --check .` / `gdlint .` forms fail only on the 81 vendored `addons/gut` files (0 of ours), so the documented commands are scoped to our source.
 
@@ -726,46 +726,88 @@ Manual: complete one discovery with audio, then repeat muted using only captions
 
 ### Tasks
 
-- `[ ]` **P7.1 Define `ScannerService`.**
-  - Accept an `ObjectInstance` payload matching PRD §20.
-  - Return the same typed response model for fixture and HTTP transports.
-  - Keep endpoint/base URL in config, never in scene logic.
+- `[x]` **P7.1 Define `ScannerService`.**
+  - `scripts/scanner/scanner_service.gd` accepts an `ObjectInstance` and builds a typed `ScannerRequest`.
+  - Hidden truth fields (`is_carrier`, `fragment_id`, `contents`, `is_counterfeit_truth`) are excluded from the request.
+  - `ScannerResponse` is the shared typed model used by `ScannerCacheTransport` and the future `ScannerHttpTransport`.
+  - Endpoint/base URL lives in `ScannerHttpTransport` config, not scene logic; Phase 7 uses `ScannerCacheTransport` only.
+  - `ScannerResult.Status` explicitly covers `SUCCESS`, `FALLBACK`, `NOT_CLEAN`, `MISSING_CACHE`, `MALFORMED_RESPONSE`, and `TRANSPORT_ERROR`.
+  - Evidence: `tests/scanner/test_scanner_service.gd` 11/11 passed; request contract and hidden-field exclusion are tested.
 
-- `[ ]` **P7.2 Add cached slice responses.**
-  - Create a response for every slice object.
-  - Include type, period, materials, markings, condition note, cultural relevance, price range, and modification signs.
-  - Cite verified source references in data metadata for cultural/historical facts.
+- `[x]` **P7.2 Add cached slice responses.**
+  - `data/scanner-cache/scanner_cache.json` contains validated cached responses for all five current slice templates: `tarnished_pendant`, `rusted_tin`, `cracked_photo_frame`, `small_santo`, `dusty_locket`.
+  - Each response includes suggested type, possible period, materials, markings, condition note, cultural relevance, price range, modification/counterfeit signs, confidence, uncertainty notes, and source references.
+  - All current cultural/historical claims are marked `unverified` and noted as development placeholders pending workshop review; no fabricated citations are present.
+  - The cache never reveals carrier status; promoted carriers receive the same ordinary template response.
+  - Evidence: `tests/scanner/test_scanner_cache_validation.gd` 11/11 passed; `test_every_slice_template_has_cache_response` and `test_promoted_carrier_receives_ordinary_template_response` cover coverage and carrier hiding.
 
-- `[ ]` **P7.3 Build the 2D scanner interface.**
-  - Show the object and every advisory field.
-  - Visually separate scanner annotations from journal notes.
-  - Provide loading, success, fallback, and malformed-response states.
+- `[x]` **P7.3 Build the 2D scanner interface.**
+  - `scenes/ui/scanner_screen.tscn` + `scripts/scanner/scanner_screen.gd` provide the full-screen 2D scanner UI.
+  - Opens only for `CLEAN`/`OPEN` instances; dirty objects are rejected with a text status.
+  - Acquires `DayClock.PAUSE_SCANNER` on open and releases only its own pause on close/`_exit_tree`.
+  - Displays every advisory field from `ScannerResponse`; scanner annotations are separated from the player-verdict section by a visual separator and explanatory text.
+  - Handles `SUCCESS`, `FALLBACK`, `MISSING_CACHE`, `MALFORMED_RESPONSE`, `TRANSPORT_ERROR`, and `NOT_CLEAN` through text status labels.
+  - Launched from the restoration bench's Scan button after an object reaches `CLEAN`.
+  - Evidence: `tests/scanner/test_scanner_screen.gd` 6/6 passed; pause ownership, verdict selection, and state rendering are covered.
 
-- `[ ]` **P7.4 Require a player verdict.**
-  - Present `AUTHENTIC`, `REPLICA`, `MODIFIED`, and `UNCERTAIN`.
-  - Never auto-select or overwrite the verdict from scanner output.
-  - Store the player's choice in the object/journal record.
+- `[x]` **P7.4 Require a player verdict.**
+  - Verdict options are `AUTHENTIC`, `REPLICA`, `MODIFIED`, and `UNCERTAIN`; no verdict is preselected.
+  - Scanner output never writes `authenticity`; the player must press a verdict button and confirm.
+  - The player can choose a verdict that contradicts scanner implications.
+  - `ScannerService.commit_verdict()` is idempotent and writes the verdict to the runtime instance and to `PersistentState.scanned_records`, then saves atomically.
+  - Verdict and scan record survive save/load and loop reset; loop inventory never leaks into persistent state.
+  - Evidence: `tests/scanner/test_scanner_service.gd` verdict persistence + idempotency tests passed.
 
-- `[ ]` **P7.5 Test advisory behavior.**
-  - Cached responses parse through the production response model.
-  - Scanner fields cannot set authenticity.
-  - Player verdict persists.
-  - Missing cache produces a controlled error/fallback state.
+- `[x]` **P7.5 Test advisory behavior.**
+  - Cached responses parse through the production `ScannerResponse` model.
+  - Every current scannable slice object has a cache response.
+  - Request payload matches the PRD contract shape and excludes hidden truth fields.
+  - Scanner output cannot set `authenticity`.
+  - Dirty objects cannot be scanned; cleaned objects can.
+  - Missing cache returns `MISSING_CACHE`; malformed cache returns `MALFORMED_RESPONSE` without crashing or inventing data.
+  - All four verdicts can be selected and committed.
+  - Player verdict persists through save/load and loop reset.
+  - Repeated confirmation is idempotent.
+  - Promoted carrier receives the ordinary template response.
+  - Scanner UI pause ownership behaves correctly.
+  - No Godot client file contains API keys, direct provider calls, or secrets.
+  - Evidence: focused scanner suite `28/28 passed` (105 asserts); full GUT suite `235/235 passed` (815 asserts).
 
 ### Acceptance
 
-- [ ] A cleaned slice object can be scanned offline.
-- [ ] All required evidence fields display.
-- [ ] The player must choose the final verdict.
-- [ ] No API key exists in the Godot project.
+- `[x]` A cleaned slice object can be scanned offline (cached fixture transport).
+- `[x]` All required evidence fields display in the scanner UI.
+- `[x]` The player must choose the final verdict; scanner output is advisory only.
+- `[x]` No API key exists in the Godot project (tracked-secret and provider-string scans returned no matches).
+- `[-]` Manual on-screen verification of normal/suspicious fixture scanning, 1920x1080/1280x720 readability, and pause-ownership composition is pending human observation.
 
 ### Verification
 
 ```powershell
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/scanner
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/scanner
+# Result (2026-06-16): 28/28 passed, 105 asserts.
+
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-06-16): 235/235 passed, 815 asserts.
+
+gdformat --check scripts scenes dialogue tests
+# Result (2026-06-16): no files need reformatting.
+
+gdlint scripts scenes dialogue tests
+# Result (2026-06-16): no problems found.
+
+git diff --check
+# Result (2026-06-16): clean (CRLF normalization warning only for scenes/Book/Book.gd).
+
+git ls-files | Select-String -Pattern '(^|/)\.env$|secret|credential|api[_-]?key'
+# Result (2026-06-16): no matches.
+
+git ls-files | Select-String -Pattern '\.(gd|tscn|tres)$' | Select-String -Pattern 'api[_-]?key|apikey|openai|anthropic|claude|llm|api\.openai|api\.anthropic|generativelanguage|openrouter'
+# Result (2026-06-16): no provider URLs or keys found; only event/comment references to "portal" remain.
 ```
 
-Manual: scan one normal and one suspicious fixture, then choose different verdicts than the suggested interpretation.
+Manual (pending human on-screen observation under windowed 4.6.3): clean a `tarnished_pendant` and a `rusted_tin`, open the Scan button from the restoration bench, confirm every advisory field appears, confirm no verdict is preselected, choose a verdict that contradicts the scanner implication, confirm the scanner does not overwrite it, save/reload and verify the verdict and scan record persist, trigger a loop reset and verify they still persist, and confirm the clock pause owned by another system (e.g. dialogue) is not resumed when the scanner closes. Check readability at both 1920x1080 and 1280x720.
 
 ---
 
@@ -779,68 +821,99 @@ Manual: scan one normal and one suspicious fixture, then choose different verdic
 
 ### Tasks
 
-- `[ ]` **P8.1 Scaffold `server/`.**
-  - Add Express, environment validation, JSON size limits, request validation, rate limiting, and tests.
-  - Add `.env.example` with `PORTAL_BASE_URL`, timeouts, and placeholder keys.
-  - Keep controllers thin; put scan/Portal logic in services.
+- `[x]` **P8.1 Scaffold `server/`.**
+  - `server/package.json` with Express, dotenv, `express-rate-limit`, Jest, and Supertest.
+  - `server/.env.example` with `PORT`, `PORTAL_BASE_URL`, `PORTAL_TIMEOUT_MS`, cache paths, rate limits, and placeholder key name only.
+  - `server/src/app.js` factory, `src/index.js` entrypoint, `src/config.js` env validation.
+  - Thin controllers (`src/routes/scan.js`, `src/routes/portal.js`) and services (`src/services/scan_service.js`, `src/services/portal_service.js`).
+  - Middleware for JSON body limit (16 KB), centralized error handling, manual request validators, and per-endpoint rate limiting.
+  - Evidence: `server/tests/` pass 12/12 under Jest.
 
-- `[ ]` **P8.2 Implement cached `POST /api/scan`.**
-  - Validate the PRD §20 payload.
-  - Return the cached response for P0.
-  - Preserve the service boundary for a P1 live LLM implementation.
-  - Rate-limit even though the current response is cached.
+- `[x]` **P8.2 Implement cached `POST /api/scan`.**
+  - Validates PRD §20 payload shape; rejects hidden truth fields (`is_carrier`, `fragment_id`, `contents`, `is_counterfeit_truth`) with 400.
+  - Returns cached fixture from `server/data/scanner_cache.json`, injecting the request's `request_id`.
+  - Rate-limited to 30 requests/minute per IP.
+  - Godot `ScannerHttpTransport` remains a typed stub that documents the boundary; the backend endpoint is independently tested and ready for Phase 9/21 wiring.
+  - Evidence: `server/tests/scan.test.js` 5/5 passed.
 
-- `[ ]` **P8.3 Scaffold `mock-portal/`.**
-  - Implement `POST /discovery` with the response shape in PRD §20.
-  - Return deterministic fact cards for test fragment IDs.
-  - Support idempotent repeated requests.
+- `[x]` **P8.3 Scaffold `mock-portal/`.**
+  - `mock-portal/package.json` with Express, dotenv, Jest, and Supertest.
+  - `mock-portal/.env.example` with `PORT` and `FACT_CARDS_PATH`.
+  - `POST /discovery` validates request shape and returns deterministic fact cards from `mock-portal/data/fact_cards.json`.
+  - Unknown fragment returns 404; invalid payload returns 400; repeated requests return the same `museum_entry_id`.
+  - Evidence: `mock-portal/tests/discovery.test.js` 4/4 passed.
 
-- `[ ]` **P8.4 Implement server Portal proxy.**
-  - Validate discovery payloads.
-  - Add `player_id:fragment_id` idempotency.
-  - Apply timeout and cached fallback.
-  - Select mock/live base URL from environment only.
+- `[x]` **P8.4 Implement server Portal proxy.**
+  - `POST /api/portal/discovery` validates discovery payloads (PRD §20).
+  - Idempotency key = `player_id:fragment_id`; successful and fallback responses are cached in memory and on disk (`server/cache/portal_cache.json`, gitignored).
+  - Proxies to `PORTAL_BASE_URL` with `PORTAL_TIMEOUT_MS`; on timeout, network error, malformed upstream response, or upstream client error, returns a deterministic fallback with `used_fallback: true`.
+  - `PORTAL_BASE_URL` swap requires no code change.
+  - Rate-limited to 10 requests/minute per IP.
+  - Evidence: `server/tests/portal.test.js` and `rate_limit.test.js` cover success, 400, duplicate idempotency, timeout fallback, malformed fallback, and rate limiting.
 
-- `[ ]` **P8.5 Build Godot Portal client.**
-  - Call only the backend `/api/portal/discovery`.
-  - Expose success, fallback, and validation failures through typed signals.
-  - Do not seat a fragment before a success/fallback completion event.
+- `[x]` **P8.5 Build Godot Portal client.**
+  - `PortalClient` (`scripts/portal/portal_client.gd`) calls only backend `POST /api/portal/discovery`.
+  - Backend URL is read from `ProjectSettings.get_setting("network/portal/backend_url")` (default `http://localhost:3000`), not scene logic.
+  - Typed request/response models (`PortalDiscoveryRequest`, `PortalDiscoveryResponse`) and result wrapper (`PortalResult`) with `SUCCESS`, `FALLBACK`, `VALIDATION_ERROR`, `TIMEOUT_ERROR`, `NETWORK_ERROR` statuses.
+  - Emits `discovery_completed(PortalResult)`; no direct mock Portal or live LLM/Portal calls; no API keys in Godot.
+  - Evidence: `tests/portal/test_portal_client.gd` 7/7 passed.
 
-- `[ ]` **P8.6 Build Found and Unlock screens.**
-  - Artifact Found: render, name, origin, condition, and `n/5`.
-  - Loading state while the backend request is active.
-  - Portal Unlock: fact card, fallback indicator when applicable, and continue action.
-  - Make repeated clicks/retries unable to duplicate records or fragments.
+- `[x]` **P8.6 Build Found and Unlock screens.**
+  - `scenes/ui/artifact_found_screen.tscn` + `scripts/portal/artifact_found_screen.gd` show artifact name, origin, condition, and `n/5` progress.
+  - `scenes/ui/portal_unlock_screen.tscn` + `scripts/portal/portal_unlock_screen.gd` show the fact card, museum entry ID, and a text-readable fallback indicator.
+  - `PortalFlowController` (`scripts/shop/portal_flow_controller.gd`) autoload listens to `EventBus.fragment_discovered`, opens Found, sends the backend request on continue, opens Unlock on success/fallback, and emits `EventBus.portal_completed`.
+  - `SeatingService` (`scripts/journal/seating_service.gd`) autoload listens to `EventBus.portal_completed`, creates a `MuseumEntry`, marks the fragment `SEATED`, saves atomically, and emits `EventBus.fragment_seated`; duplicates are ignored; save failure rolls back in-memory state.
+  - Both screens acquire `DayClock.PAUSE_PORTAL` and release only their own pause owner.
+  - Evidence: `tests/portal/test_portal_flow_controller.gd` 4/4 passed; `tests/portal/test_seating_service.gd` 4/4 passed.
 
-- `[ ]` **P8.7 Test resilience.**
-  - Valid mock request succeeds.
-  - Invalid payload returns a controlled 4xx.
-  - Timeout returns cached fallback.
-  - Duplicate request returns the same museum entry ID.
-  - Changing `PORTAL_BASE_URL` requires no code change.
+- `[x]` **P8.7 Test resilience.**
+  - Backend: valid mock discovery succeeds; invalid payload returns 400; timeout returns `used_fallback: true`; duplicate request returns same `museum_entry_id`; malformed upstream returns fallback; `PORTAL_BASE_URL` env swap works; rate limiting returns 429.
+  - Godot: client distinguishes success/fallback/validation/timeout/network; flow controller does not emit `portal_completed` on failure; seating is idempotent and rolls back on save failure; fragment is not seated before completion; backend URL is configurable.
+  - Evidence: backend 12/12 tests passing; Godot portal suite 15/15 passing; full GUT suite 250/250 passing.
 
 ### Acceptance
 
-- [ ] Godot never calls an external LLM or Portal directly.
-- [ ] Found -> backend -> mock Portal -> Unlock completes.
-- [ ] Timeout/offline mode still returns a fact and completes the flow.
-- [ ] Duplicate submission cannot duplicate a museum record.
+- `[x]` Godot never calls an external LLM or Portal directly.
+- `[x]` Backend scanner endpoint validates and returns cached P0 scanner responses.
+- `[x]` Mock Portal returns deterministic fact cards.
+- `[-]` Found -> backend -> mock Portal -> Unlock completes (automated signal flow verified; on-screen end-to-end observation pending human verification).
+- `[-]` Timeout/offline mode still returns a fact and completes the flow (automated timeout fallback verified; on-screen observation pending).
+- `[x]` Duplicate submission cannot duplicate a museum record (automated idempotency tests passing).
 
 ### Verification
 
 ```powershell
 Push-Location mock-portal
 npm test
+# Result (2026-06-16): 4/4 passed.
 Pop-Location
 
 Push-Location server
 npm test
+# Result (2026-06-16): 12/12 passed.
 Pop-Location
 
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/portal
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/portal
+# Result (2026-06-16): 15/15 passed, 45 asserts.
+
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-06-16): 250/250 passed, 860 asserts.
+
+gdformat --check scripts scenes dialogue tests
+# Result (2026-06-16): no files need reformatting.
+
+gdlint scripts scenes dialogue tests
+# Result (2026-06-16): no problems found.
+
+git diff --check
+# Result (2026-06-16): clean (CRLF normalization warnings only).
+
+git ls-files | Select-String -Pattern '(^|/)\.env$|secret|credential|api[_-]?key'
+# Result (2026-06-16): no matches.
 ```
 
-Manual: run success, forced-timeout fallback, and duplicate-click scenarios.
+Manual (pending human on-screen observation under windowed 4.6.3): discover and open a carrier fragment, confirm the Artifact Found screen shows name/origin/condition/n/5, press Send to Portal, confirm the Portal Unlock screen shows the fact card and museum entry ID, continue, confirm one museum record and one seated fragment. Force the mock Portal offline or set a very short timeout, retry, confirm the fallback indicator appears and the flow still completes. Click Send to Portal repeatedly and retry the same discovery; confirm the same museum entry ID and no duplicate records/fragments. Check readability at 1920x1080 and 1280x720.
 
 ---
 
@@ -865,34 +938,31 @@ Manual: run success, forced-timeout fallback, and duplicate-click scenarios.
   - Update best condition, verdict, scanner annotations, and later sale data without duplicating entries.
   - Keep uncle notes visually distinct from scanner annotations.
 
-- `[ ]` **P9.3 Route archives by rarity.**
-  - Purple-and-below goes to Journal entries.
-  - Gold and Master Artifact discoveries produce persisted `MuseumEntry` records.
-  - The polished gallery remains P1.
+- `[-]` **P9.3 Route archives by rarity.**
+  - Gold and Master Artifact discoveries already produce persisted `MuseumEntry` records via `SeatingService` (Phase 8).
+  - Purple-and-below Journal entries are not implemented; the polished gallery remains P1.
 
-- `[ ]` **P9.4 Build the five-slot case.**
-  - Map stable fragment IDs to stable slot indices from artifact data.
-  - Show empty, pending-discovery, and seated states.
-  - Reject duplicate seating.
+- `[-]` **P9.4 Build the five-slot case.**
+  - Fragment `case_slot_index` already maps stable IDs to slots in `data/artifacts/master_artifact.json`.
+  - `SeatingService` rejects duplicate seating (Phase 8).
+  - The visual 2D/3D case UI is not implemented yet.
 
-- `[ ]` **P9.5 Implement the seating transaction.**
-  - Receive `portal_completed`.
-  - Persist the museum record and fragment `SEATED` state together.
-  - Emit `fragment_seated` after a successful atomic save.
-  - Clear active Echo/carrier state and prevent future respawn.
+- `[x]` **P9.5 Implement the seating transaction.**
+  - Implemented in Phase 8 by `SeatingService` (`scripts/journal/seating_service.gd`).
+  - Listens to `EventBus.portal_completed`, creates `MuseumEntry`, marks fragment `SEATED`, atomically saves, and emits `fragment_seated`.
+  - Duplicate seating is ignored; save failure rolls back both museum entry and fragment state.
+  - Clearing active Echo/carrier state and preventing future respawn is still a future phase integration (Phase 10/17).
 
-- `[ ]` **P9.6 Test persistence and routing.**
-  - Purple item creates Journal entry only.
-  - Gold discovery creates Museum entry.
-  - Seated slot survives a loop reset and application restart.
-  - Seated fragment is excluded from Spawn Director candidates.
+- `[-]` **P9.6 Test persistence and routing.**
+  - Gold/Master discovery creates Museum entry: covered by `tests/portal/test_seating_service.gd` and `tests/portal/test_portal_flow_controller.gd`.
+  - Purple item Journal entry and Spawn Director exclusion of seated fragments are not implemented yet.
 
 ### Acceptance
 
-- [ ] Restoring/scanning updates one stable journal entry.
-- [ ] Portal completion fills exactly one persistent case slot.
-- [ ] A reset and reload preserve the slot.
-- [ ] Archive routing follows the fixed rarity rule.
+- `[ ]` Restoring/scanning updates one stable journal entry (not implemented; depends on P9.1/P9.2).
+- `[-]` Portal completion fills exactly one persistent case slot (Phase 8: `SeatingService` creates one `MuseumEntry`, marks the fragment `SEATED`, and saves; the visual case UI is pending P9.4).
+- `[-]` A reset and reload preserve the slot (Phase 8: seated state and museum entry are in `PersistentState`; full case UI persistence is pending P9.4).
+- `[-]` Archive routing follows the fixed rarity rule (Phase 8: Gold/Master Artifact → `MuseumEntry`; Purple-and-below journal entries pending P9.2/P9.3).
 
 ### Verification
 

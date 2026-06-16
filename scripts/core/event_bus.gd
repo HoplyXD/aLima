@@ -27,7 +27,9 @@ signal scanner_verdict_committed(instance_id: String, verdict: String)
 signal carrier_activated(instance_id: String, fragment_id: String)
 signal echo_proximity_changed(instance_id: String, proximity: float, band: String)
 signal fragment_discovered(fragment_id: String, instance_id: String)
-signal portal_completed(fragment_id: String, museum_entry_id: String, used_fallback: bool)
+signal portal_completed(
+	fragment_id: String, museum_entry_id: String, used_fallback: bool, fact_card: String
+)
 signal fragment_seated(fragment_id: String, slot_index: int)
 
 

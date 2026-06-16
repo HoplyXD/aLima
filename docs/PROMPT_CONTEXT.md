@@ -8,7 +8,7 @@ Canonical repository context for agents that write implementation prompts for aL
 - Then inspect the current code, scene, data, test, and documentation files relevant to the requested work. This snapshot does not replace source inspection.
 - Treat running code and assets as truth for what exists. Authority is `CLAUDE.md` Section 4 implementation invariants -> `README.md` full-game promises -> `docs/PRD.md` testable build contract -> `docs/phase-task.md` implementation order and evidence. The PRD may clarify but may not omit a GDD promise.
 - If source and docs disagree, report the disagreement. Do not silently rewrite behavior or requirements.
-- Snapshot last audited 2026-06-16; refreshed after the P4.7 focused **3D** restoration view was implemented (REST-R8): the 2D placeholder `scenes/ui/restoration_screen.*` was retired and the Workbench now opens `scenes/restoration/restoration_view.tscn`, reusing `RestorationService` unchanged. Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate. The hybrid 2D/3D journal (JRN-R6, Phase 9) is still docs-ahead-of-code. Repository branch is `main`. Refresh this file when implementation materially changes.
+- Snapshot last audited 2026-06-16; refreshed after Phase 8 (backend, mock Portal, and Found/Unlock flow) completed. The P4.7 focused **3D** restoration view (REST-R8) remains implemented, the 2D placeholder was retired, and the hybrid 2D/3D journal (JRN-R6, Phase 9) is still docs-ahead-of-code. Repository branch is `main`. Refresh this file when implementation materially changes.
 
 ## Game Identity
 
@@ -90,16 +90,17 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 
 ## Verified Repository State
 
-Verified with Godot `4.6.3.stable` on 2026-06-16 (after the P4.7 focused 3D restoration view):
+Verified with Godot `4.6.3.stable` on 2026-06-16 (after Phase 8 backend, mock Portal, and Found/Unlock flow integration):
 
 - Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and reports `4.6.3.stable.official.7d41c59c4`.
 - The bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`). A 4.6.3 shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the `.cmd` file is shadowed by the earlier `godot.exe` on the effective PATH.
 - `--headless --editor --path . --quit` completes with exit 0; the main scene `scenes/Shop.tscn` starts and the controller prints `[Shop] ready`.
-- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `159/159 passed` (613 asserts), including Phase 0/1/2 tests, Phase 3 delivery/triage coverage, Phase 4 restoration/opening + 3D-view coverage, and Phase 5 Spawn Director coverage (2026-06-16).
-- Focused suites pass: `-gdir=res://tests/models` → `11/11 passed`; `-gdir=res://tests/core` → `45/45 passed`; `-gdir=res://tests/delivery` → `33/33 passed` (197 asserts); `-gdir=res://tests/restoration -ginclude_subdirs` → `32/32 passed` (121 asserts; 17 service + 15 view); `-gdir=res://tests/discovery/spawn_director` → `25/25 passed`.
+- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `250/250 passed` (860 asserts), including Phase 0/1/2 tests, Phase 3 delivery/triage coverage, Phase 4 restoration/opening + 3D-view coverage, Phase 5 Spawn Director coverage, Phase 6 Cultural Echoes coverage, Phase 7 cached scanner coverage, and Phase 8 portal/Found/Unlock/seating coverage (2026-06-16).
+- Focused suites pass: `-gdir=res://tests/models` → `11/11 passed`; `-gdir=res://tests/core` → `45/45 passed`; `-gdir=res://tests/delivery` → `33/33 passed` (197 asserts); `-gdir=res://tests/restoration -ginclude_subdirs` → `32/32 passed` (121 asserts; 17 service + 15 view); `-gdir=res://tests/discovery/spawn_director` → `25/25 passed`; `-gdir=res://tests/scanner` → `28/28 passed` (105 asserts).
 - `gdformat --check scripts scenes dialogue tests` and `gdlint scripts scenes dialogue tests` pass (scoped to exclude vendored `addons/gut`).
+- Backend suites pass: `mock-portal/npm test` → 4/4; `server/npm test` → 12/12.
 - `dialogue/dialogue_box.tscn` loads. The `prototype/` directory was removed during Phase 0.
-- No tracked `.env`, secret, credential, or API-key file was found.
+- No tracked `.env`, secret, credential, or API-key file was found; no Godot source file contains API keys, provider URLs, or direct LLM calls. `.gitignore` excludes `node_modules/` and `server/cache/`.
 
 ### Current Playable State
 
@@ -112,6 +113,8 @@ Verified with Godot `4.6.3.stable` on 2026-06-16 (after the P4.7 focused 3D rest
 - The clock is now the real Phase 2 `DayClock` autoload (07:00–20:00, minute-level display, configurable `seconds_per_hour`), driven by the Shop's `_process` and frozen via pause ownership during dialogue. The `LoopController` autoload advances Days 1–5 and performs the five-day split reset (clear loop, increment loop, restart Day 1, atomic save, emit `loop_reset`). Save files persist via `SaveService` (atomic, validated). Route schedules and most loop-scoped gameplay content are still later phases.
 - The dialogue lifecycle (open → clock pause + visitor show; advance via mouse/keyboard → close → clock resume + visitor hide) is verified headlessly by the GUT smoke test.
 - The restoration lifecycle (select instance → rotate/inspect → select tool → work the 3D surface → reach CLEAN → activate the 3D clasp → resolve EMPTY/TEMPORAL_ECHO/FRAGMENT) runs in the focused 3D view and is verified headlessly by `tests/restoration/` (analytic ray hit-testing, stroke→service delegation, clasp gate, carrier-identity hiding, pause ownership). On-screen rendered visuals (dirt clearing, camera framing) and the mouse/controller/touch manual flow at 1920x1080 and 1280x720 remain a human verification gate.
+- The cached scanner (Phase 7) is implemented and wired to the restoration bench: after an object reaches `CLEAN`, the Scan button opens `scenes/ui/scanner_screen.tscn`, which displays advisory evidence, requires an explicit `AUTHENTIC/REPLICA/MODIFIED/UNCERTAIN` verdict, and persists the choice in the runtime instance and `PersistentState.scanned_records`. The scanner uses offline fixture data from `data/scanner-cache/scanner_cache.json`; no API keys or direct LLM calls exist in Godot. Headless verification passes; on-screen readability and manual pause-ownership composition remain human verification gates.
+- The Found/Unlock flow (Phase 8) is implemented: opening a carrier emits `EventBus.fragment_discovered`, which triggers `PortalFlowController` to show the Artifact Found screen; pressing Send to Portal calls the backend `/api/portal/discovery` through `PortalClient`; success or fallback shows the Portal Unlock screen and emits `EventBus.portal_completed`; `SeatingService` then creates a `MuseumEntry`, marks the fragment `SEATED`, saves, and emits `EventBus.fragment_seated`. The backend is selectable between mock and live via `PORTAL_BASE_URL`; timeout/offline falls back to deterministic fact cards. Headless verification passes; on-screen end-to-end observation remains a human verification gate.
 
 ### Implemented Or Reusable Pieces
 
@@ -124,7 +127,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-16 (after the P4.7 focused 3D rest
 - Phase 1 core autoloads: `EventBus`, `GameState`, `SaveService` (registered in `project.godot`).
 - Phase 2 core autoloads: `DayClock` (reusable clock + ref-counted pause ownership) and `LoopController` (Day 1–5 progression, five-day split reset, DayClock->EventBus/GameState bridge, Phase 3 carrier placement planning on reset).
 - Phase 1 deterministic run context owned by `GameState` using local `RandomNumberGenerator` instances.
-- Phase 1 slice fixtures: pendant template (now with authored cleaning tuning), two ordinary instance fixtures, tools/techniques (with quality/value bonuses), containers, Master Artifact + five fragments, Echo set, cached scanner response, starting kit, delivery config, and spawn config.
+- Phase 1 slice fixtures: pendant template (now with authored cleaning tuning), two ordinary instance fixtures, tools/techniques (with quality/value bonuses), containers, Master Artifact + five fragments, Echo set, cached scanner responses, starting kit, delivery config, and spawn config.
 - Phase 5 Spawn Director (`scripts/delivery/spawn_director.gd`), typed `PlacementCandidate` model (`scripts/discovery/placement_candidate.gd`), deterministic audit log, and a three-seed demo helper (`scripts/discovery/spawn_director_demo.gd`).
 - Toolchain: vendored GUT 9.6.0 + smoke test + Phase 1 model/core tests, pinned gdtoolkit (gdformat/gdlint), and a GitHub Actions CI workflow.
 - Twine/Chapbook narrative and economy prototype in `aLima.twee`, with generated `aLima.html`.
@@ -138,12 +141,14 @@ Verified with Godot `4.6.3.stable` on 2026-06-16 (after the P4.7 focused 3D rest
 - (Phase 4 implemented — P4.7 3D presentation) The **focused 3D restoration view** (`RestorationView` + `RestorationObject3D` under `scripts/restoration/`, `scenes/restoration/restoration_view.tscn`): a `SubViewport` 3D pendant the player rotates and cleans across its surface via a shader **dirt mask** (`restoration_dirt.gdshader`), with a 2D HUD overlay, analytic ray hit-testing, threshold-gated strokes, a separate revealed-at-CLEAN 3D clasp, and runtime-registered keyboard/controller Input Map actions. It reuses `RestorationService` unchanged and never branches on carrier identity. The 2D placeholder was retired. Automated verification passes; on-screen mouse/controller/touch verification is pending.
 - (Not yet built) The **hybrid 2D/3D journal** (JRN-R6 / Phase 9) with 3D Fragment Case / object viewers.
 - (Phase 5 implemented) Full Spawn Director with explicit candidate enumeration, hard filters (tool obtainability, compatibility, capacity, locked locations, Safe code), weighted scoring (neglect + day-spread), never-twice history with documented soft reset, deterministic audit log, and a three-seed demo helper. Automated verification passes; manual three-seed demo observation is pending.
-- Cultural Echo audio/meter/captions and proximity-authorized carrier flicker.
-- Cached scanner, verdict UI, Node/Express backend, mock Portal, Godot HTTP clients, Found/Unlock flow, museum record, journal, and fragment case.
+- (Phase 6 implemented) Cultural Echo audio/meter/captions and proximity-authorized carrier flicker; four-band additive mixer with silence/heartbeat gates.
+- (Phase 7 implemented) Cached scanner + verdict UI; offline-safe fixture responses, typed request/response models, and persistence of player verdicts.
+- (Phase 8 implemented) Node/Express backend (`server/`) with cached `POST /api/scan` and Portal proxy `POST /api/portal/discovery`; separate mock Portal (`mock-portal/`) returning deterministic fact cards; Godot `PortalClient` calling only the backend; `PortalFlowController` + Artifact Found / Portal Unlock screens; `SeatingService` persisting museum entries and seating fragments atomically. Headless verification passes; on-screen end-to-end observation remains a human verification gate.
+- Journal, fragment case UI, and full disposition/evening systems.
 - Auntie scheduling and scripted photo showcase.
 - Backend tests, export presets, Windows/web exports, and submission evidence. (GUT 9.6.0, pinned gdtoolkit, and a GitHub Actions CI workflow now exist as of Phase 0.)
-- `scripts/core/`, `scripts/models/`, `data/`, `resources/`, `tests/`, and `addons/gut/` now hold Phase 1 code and fixtures; `server/` and `mock-portal/` still do not (Phase 8).
-- No npm package manifests or lockfiles exist yet; `requirements-dev.txt` pins the Python gdtoolkit version.
+- `scripts/core/`, `scripts/models/`, `data/`, `resources/`, `tests/`, `addons/gut/`, `server/`, and `mock-portal/` now hold Phase 0–8 code and fixtures.
+- `requirements-dev.txt` pins the Python gdtoolkit version; `server/package.json` and `mock-portal/package.json` pin the Node/Jest dependencies.
 
 ### Mandatory Phase Map
 
@@ -185,8 +190,10 @@ Verified with Godot `4.6.3.stable` on 2026-06-16 (after the P4.7 focused 3D rest
 - `scenes/restoration/`: `restoration_view.tscn` (the production Workbench 3D view: `SubViewport` world + 2D HUD) and `restoration_dirt.gdshader` (the GL-Compatibility/HTML5 surface dirt-mask shader, REST-R8 / D8). The 2D placeholder `scenes/ui/restoration_screen.*` was retired in P4.7.
 - `tests/restoration/`: Phase 4 restoration/opening tests — `test_restoration_service.gd` (rules) + `test_restoration_view.gd` (3D presentation boundary).
 - `tests/discovery/spawn_director/`: Phase 5 Spawn Director tests.
+- `tests/portal/`: Phase 8 portal client, flow controller, and seating service tests.
 - `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, `data/scanner-cache/`, `data/delivery/`: authored JSON fixtures (schema_version = 1), including `data/delivery/spawn_config.json`.
 - `scripts/models/`: includes `placement_candidate.gd`.
+- `server/` and `mock-portal/`: Node/Express backend and mock Portal services with Jest tests.
 - `addons/gut/`: vendored GUT 9.6.0. `requirements-dev.txt`: pinned gdtoolkit. `.github/workflows/ci.yml`: CI (4.6.3 import + GUT + lint).
 - `aLima.twee`: old interactive design prototype. Useful for route prose/tuning history, but subordinate to current invariants and PRD.
 
