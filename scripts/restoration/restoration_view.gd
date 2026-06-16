@@ -16,6 +16,8 @@ extends CanvasLayer
 ## invokes apply_tool() exactly once — never per-frame or per-pixel.
 
 signal closed  ## Emitted after the view is dismissed.
+signal journal_requested  ## Player tapped the bench Journal button.
+signal phone_requested  ## Player tapped the bench Phone button.
 
 enum Mode { ROTATE, CLEAN }
 
@@ -67,6 +69,8 @@ var _scanner_screen: ScannerScreen
 @onready var _reset_button: Button = %ResetButton
 @onready var _scan_button: Button = %ScanButton
 @onready var _close_button: Button = %CloseButton
+@onready var _journal_button: Button = %JournalButton
+@onready var _phone_button: Button = %PhoneButton
 
 
 func _ready() -> void:
@@ -85,6 +89,8 @@ func _ready() -> void:
 	_reset_button.pressed.connect(reset_view)
 	_scan_button.pressed.connect(_on_scan_pressed)
 	_close_button.pressed.connect(close)
+	_journal_button.pressed.connect(_on_journal_pressed)
+	_phone_button.pressed.connect(_on_phone_pressed)
 	set_process(false)
 
 
@@ -134,6 +140,30 @@ func _on_scan_pressed() -> void:
 	if inst == null or inst.state != ModelEnums.ObjState.CLEAN:
 		return
 	_scanner_screen.open(inst)
+
+
+## The shared journal viewer (a BookViewport) is handed in by the Shop so the bench
+## opens the very same book overlay the shop does — it renders on a layer above this
+## view. Set by ShopController.set_journal_viewport().
+var _journal_viewport: BookViewport
+
+
+func set_journal_viewport(viewport: BookViewport) -> void:
+	_journal_viewport = viewport
+
+
+## Bench shortcut to the journal: opens the shared book viewer over the bench.
+func _on_journal_pressed() -> void:
+	journal_requested.emit()
+	if _journal_viewport != null:
+		_journal_viewport.open()
+	else:
+		_feedback_label.text = "Journal — viewer not available."
+
+
+func _on_phone_pressed() -> void:
+	_feedback_label.text = "Phone marketplace — selling restored pieces lands here soon."
+	phone_requested.emit()
 
 
 func _on_scanner_closed() -> void:

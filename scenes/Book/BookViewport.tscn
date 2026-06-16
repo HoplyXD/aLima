@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://ccwtajkvqpjyu"]
+
+[ext_resource type="Script" path="res://scenes/Book/book_viewport.gd" id="1_bv"]
+[ext_resource type="PackedScene" uid="uid://byxkmj117ohx0" path="res://scenes/Book/Book.tscn" id="2_book"]
+
+[node name="BookViewport" type="CanvasLayer"]
+layer = 8
+script = ExtResource("1_bv")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.02, 0.03, 0.72)
+
+[node name="ViewportContainer" type="SubViewportContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="ViewportContainer"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(1920, 1080)
+render_target_update_mode = 4
+
+[node name="Book" parent="ViewportContainer/SubViewport" instance=ExtResource("2_book")]
+start_presented = true
+
+[node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
+fov = 60.0
+
+[node name="InputCatcher" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CloseButton" type="Button" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -208.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = 58.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 18
+text = "Close Journal (Esc)"
