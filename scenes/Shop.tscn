@@ -1,23 +1,20 @@
 [gd_scene format=3 uid="uid://dgc2dadcifuf2"]
 
-[ext_resource type="Texture2D" uid="uid://c5urpwhdwyj6r" path="res://icon.svg" id="1_rgcs7"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/Character Placeholder.png" id="3_cimqq"]
 [ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="4_yltc6"]
 [ext_resource type="Script" uid="uid://dv20ba7olxrka" path="res://scripts/shop/shop_controller.gd" id="5_ctrl"]
-[ext_resource type="PackedScene" path="res://scenes/ui/triage_screen.tscn" id="6_triage"]
-[ext_resource type="PackedScene" path="res://scenes/ui/echo_hud.tscn" id="7_echo"]
-[ext_resource type="Script" path="res://scripts/shop/echo_scene_bridge.gd" id="8_bridge"]
-[ext_resource type="Script" path="res://scripts/shop/echo_focus_controller.gd" id="9_focus"]
+[ext_resource type="PackedScene" uid="uid://bwmj5triq5qvx" path="res://scenes/ui/triage_screen.tscn" id="6_triage"]
+[ext_resource type="PackedScene" uid="uid://b5vdlwu6lrg0" path="res://scenes/ui/echo_hud.tscn" id="7_echo"]
+[ext_resource type="Script" uid="uid://jxyuvepu18pl" path="res://scripts/shop/echo_scene_bridge.gd" id="8_bridge"]
+[ext_resource type="Script" uid="uid://dkwru0jku76m4" path="res://scripts/shop/echo_focus_controller.gd" id="9_focus"]
+[ext_resource type="PackedScene" uid="uid://ccwtajkvqpjyu" path="res://scenes/Book/BookViewport.tscn" id="9_skkvx"]
 
 [sub_resource type="Environment" id="Environment_ec5oe"]
 background_energy_multiplier = 5.0
 reflected_light_source = 1
 
 [sub_resource type="QuadMesh" id="QuadMesh_ohui2"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_t4md6"]
-albedo_texture = ExtResource("1_rgcs7")
 
 [node name="Node3D" type="Node3D" unique_id=395316236]
 script = ExtResource("5_ctrl")
@@ -33,14 +30,6 @@ transform = Transform3D(10.496742, 0, 0, 0, 3.3215854, 0, 0, 0, 1, 0, 2.5706012,
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Background" unique_id=1804701253]
 transform = Transform3D(1.0577251, 0, 0, 0, 1.8982875, 0, 0, 0, 1, 0, 0.29517978, 0)
-mesh = SubResource("QuadMesh_ohui2")
-
-[node name="Book" type="Skeleton3D" parent="." unique_id=99337713]
-transform = Transform3D(1.7751245, 0, 0, 0, 1.34561, 0, 0, 0, 1, 0, 2.5706012, -2.4507947)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Book" unique_id=316344323]
-transform = Transform3D(1.0577253, 0, 0, 0, 1.8982875, 0, 0, 0, 1, -2.5413516, 0.7349527, -0.8361771)
-material_override = SubResource("StandardMaterial3D_t4md6")
 mesh = SubResource("QuadMesh_ohui2")
 
 [node name="Visitor" type="Sprite3D" parent="." unique_id=1414777339]
@@ -242,11 +231,12 @@ visible = false
 [node name="TriageScreen" parent="." unique_id=900789324 instance=ExtResource("6_triage")]
 visible = false
 
-[node name="EchoHud" parent="." instance=ExtResource("7_echo")]
+[node name="EchoHud" parent="." unique_id=1054958045 instance=ExtResource("7_echo")]
 
-[node name="EchoSceneBridge" type="Node3D" parent="."]
+[node name="EchoSceneBridge" type="Node3D" parent="." unique_id=494119039]
 script = ExtResource("8_bridge")
-camera_path = NodePath("../Camera3D")
 
-[node name="EchoFocusController" type="Node" parent="."]
+[node name="EchoFocusController" type="Node" parent="." unique_id=1390290459]
 script = ExtResource("9_focus")
+
+[node name="BookViewport" parent="." instance=ExtResource("9_skkvx")]

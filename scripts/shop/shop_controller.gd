@@ -35,6 +35,7 @@ var _quest_artifacts := 1
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
 @onready var _triage_screen: TriageController = $TriageScreen
+@onready var _book_viewport: BookViewport = $BookViewport
 @onready var _restoration_view: RestorationView = _create_restoration_view()
 
 
@@ -55,6 +56,9 @@ func _ready() -> void:
 
 	_triage_screen.closed.connect(_on_triage_closed)
 	_restoration_view.closed.connect(_on_restoration_closed)
+	# The restoration bench opens the same shared journal viewer.
+	_restoration_view.set_journal_viewport(_book_viewport)
+	_book_viewport.closed.connect(_on_journal_closed)
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -120,8 +124,14 @@ func _on_workbench_pressed() -> void:
 
 
 func _on_journal_pressed() -> void:
-	var line := "You flip open the journal. [i]Entries and the fragment case land here soon.[/i]"
-	_open_dialogue([line], false)
+	# The journal is the book rendered in its own viewport overlay. Opening it covers
+	# the shop; it closes via Esc, the Close button, or clicking off the book.
+	_book_viewport.open()
+	_hud.set_journal_open(true)
+
+
+func _on_journal_closed() -> void:
+	_hud.set_journal_open(false)
 
 
 func _on_phone_pressed() -> void:
@@ -209,4 +219,8 @@ func _count_seated_fragments() -> int:
 func _on_dialogue_finished() -> void:
 	_visitor.visible = false
 	_hud.set_actions_visible(true)
+	# Restoring all actions can re-show buttons that sit under an open journal;
+	# re-apply the journal layout so it stays consistent.
+	if _book_viewport.is_open():
+		_hud.set_journal_open(true)
 	DayClock.release_pause(DayClock.PAUSE_DIALOGUE)

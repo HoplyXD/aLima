@@ -82,6 +82,16 @@ func set_actions_visible(value: bool) -> void:
 	_morning_button.visible = value
 
 
+## Reflects the journal book being presented (centered for reading). While open,
+## the shop's other action buttons are hidden so they don't overlap or block clicks
+## on the book; the Journal button stays as the way to put it away.
+func set_journal_open(open: bool) -> void:
+	_door_button.visible = not open
+	_workbench_button.visible = not open
+	_morning_button.visible = not open
+	_journal_button.text = "Close Journal" if open else "Journal"
+
+
 ## Render a queue of dialogue lines. The controller chooses the content and any
 ## side effects; this only displays.
 func start_dialogue(lines: Array) -> void:
