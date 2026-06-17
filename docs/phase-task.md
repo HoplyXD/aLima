@@ -50,7 +50,8 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input, but the placeholder lines are still hardcoded in the Shop controller (Phase 10 moves prose to `data/routes/`).
 - `[-]` The Auntie beat has placeholder dialogue and a visitor sprite. Scheduling, route state, and the scripted photo sequence do not exist.
 - `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, and atomic seating are implemented and covered by GUT/backend tests under Godot 4.6.3 / Node. The hybrid 2D/3D journal, full disposition/evening systems, exports, and submission evidence are not implemented.
-- `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate. Journal and Phone actions remain placeholder-only.
+- `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. Cleaning tools are now **visible, selectable 3D props on the bench** (`RestorationToolTray`, REST-R9 / task P4.8); the HUD tool buttons are a labelled accessibility/fallback. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate.
+- `[-]` The major shop actions (door, workbench, journal, phone, morning delivery) are now **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
 
 ## Reconciliation With the Old Tracker
 
@@ -547,29 +548,48 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
   - Replaced and retired `scenes/ui/restoration_screen.*` (2D placeholder) and migrated its GUT coverage into `tests/restoration/test_restoration_view.gd`.
   - Evidence: `tests/restoration/test_restoration_view.gd` (15 tests) + the unchanged `tests/restoration/test_restoration_service.gd` (17) pass. **Pending:** human on-screen mouse verification and controller/touch device verification.
 
+- `[-]` **P4.8 Make cleaning tools visible 3D props on the bench.** (REST-R9; implemented + automated-verified; on-screen manual gate pending)
+  - Added `scripts/restoration/restoration_tool_tray.gd` (`RestorationToolTray`, presentation-only `Node3D`) and a `ToolTray` node in `restoration_view.tscn` under the SubViewport world. It builds one selectable 3D prop per owned tool, data-driven from `RestorationService.get_available_tools()` (artifact-agnostic; `PRESENTATION` adapter keyed by tool id with a `_default`). Geometry is original placeholder dev geometry (cloth pad, wire brush) pending authored models (Phase 13/20).
+  - Picking a prop (pointer ray; or the new `restoration_cycle_tool` keyboard/controller action) calls the existing `select_tool()` → `RestorationService` path; the props never read carrier identity. The selected prop is visibly distinguished (raised/tilted + emission highlight). Pointer pick is inserted after the clasp check and before a cleaning stroke/rotate, so it never competes with cleaning.
+  - The 2D HUD tool buttons are kept but relabelled "Tools (fallback):" as a clearly-labelled accessibility/fallback path; the production interaction no longer requires a flat "Cloth" button.
+  - Evidence: `tests/restoration/test_restoration_tool_tray.gd` (7) + `tests/restoration/test_restoration_tool_props_view.gd` (5) pass; existing Phase 4 logic/view suites unchanged and green. **Pending:** human on-screen verification (prop visibility, pick, highlight, controller cycle).
+
+- `[-]` **P4.9 (cross-cutting) Diegetic 3D shop interactables.** (SHELL-R1/R2; implemented + automated-verified; on-screen manual gate pending)
+  - Added a reusable `scripts/shop/interactable_3d.gd` (`Interactable3D`, `Area3D`): hover prompt/highlight + `activated`/`hover_changed` signals + `activate()`/`set_enabled()`; owns no game logic. Added `Interactables/{Door,Workbench,Journal,Phone,Delivery}Interactable` placeholder props to `scenes/Shop.tscn`, a HUD `PromptLabel`, and a `FallbackHint`.
+  - `ShopController` enables viewport `physics_object_picking`, connects each prop's `activated` to the **existing** action handler (no behavior change), routes `hover_changed` to `ShopHud.set_prompt()`, and disables all props while a full-screen overlay (dialogue/triage/restoration/journal) is open so clicks can't fall through. HUD buttons stay as labelled accessibility/fallback (signals intact).
+  - Placeholder geometry/positions are dev-only; final art and exact in-frame composition are a Phase 20 / manual gate.
+  - Evidence: `tests/shop/test_interactable_3d.gd` (6) + extended `tests/test_shop_smoke.gd` (interactable existence, prop-opens-overlay parity, hover prompt, overlay gating) pass. **Pending:** human on-screen click-through, hover prompts, and per-overlay input-blocking verification on mouse/controller/touch.
+
 ### Acceptance
 
 - `[x]` Pendant clean -> clasp open -> result works end to end at the logic level (automated coverage via `RestorationService`).
 - `[x]` Wrong-tool use has visible (feedback label) and recorded (`recorded_damage`) consequences.
 - `[x]` Carrier is an injected role (`is_carrier`/`contents` on an ordinary pendant instance), not a special pendant type.
 - `[-]` Cleaning and opening are performed in the focused **3D** view (rotate + clean the 3D object). Implemented (`scenes/restoration/restoration_view.tscn`) and automated-verified via `test_restoration_view.gd`; human on-screen mouse/controller/touch verification is the remaining gate.
+- `[-]` Tool choice is a physical 3D act: the bench shows a selectable 3D prop per owned tool (REST-R9), the selected prop is visibly distinguished, and the HUD tool buttons are a labelled accessibility/fallback only. Automated-verified via `test_restoration_tool_tray.gd` + `test_restoration_tool_props_view.gd`; on-screen verification pending.
+- `[-]` Major shop actions are diegetic 3D interactables wired to the existing handlers (SHELL-R1/R2), with HUD fallback retained. Automated-verified via `test_interactable_3d.gd` + the extended shop smoke test; on-screen click-through + per-overlay input-blocking verification pending.
 
 ### Verification
 
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/restoration -ginclude_subdirs -gexit
-# Result (2026-06-16): 32/32 passed, 121 asserts (17 service + 15 view).
+# Result (2026-06-17): 44/44 passed, 152 asserts (17 service + 15 view + 7 tool-tray + 5 tool-props-view).
+
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/shop -ginclude_subdirs -gexit
+# Result (2026-06-17): 6/6 passed (Interactable3D).
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result (2026-06-16): 159/159 passed, 613 asserts.
+# Result (2026-06-17): 273/273 passed, 921 asserts.
 
-gdformat --check scripts scenes dialogue tests   # 57 files unchanged
+gdformat --check scripts scenes dialogue tests   # 100 files unchanged
 gdlint scripts scenes dialogue tests             # no problems
 git diff --check                                 # clean
 ```
 
-Manual (pending human on-screen observation): open the Workbench, confirm the clock pauses, rotate the pendant and inspect multiple surfaces, clean empty space (no change), use the wrong tool (visible + captioned damage), close/reopen (damage persists), clean correctly until CLEAN (clasp does not auto-open), perform the 3D clasp interaction (result resolves once), and repeat with a promoted pendant (carrier role hidden until opened). Mouse, then controller/touch where hardware is available; check 1920x1080 and 1280x720.
+Manual (pending human on-screen observation):
+- Restoration: open the Workbench, confirm the clock pauses, see the cloth/brush props on the bench, pick a prop (it highlights/poses), rotate the pendant and inspect multiple surfaces, clean empty space (no change), use the wrong tool (visible + captioned damage), close/reopen (damage persists), clean correctly until CLEAN (clasp does not auto-open), perform the 3D clasp interaction (result resolves once), repeat with a promoted pendant (carrier role hidden until opened), and confirm the controller cycle-tool + fallback buttons work. Mouse, then controller/touch where hardware is available; check 1920x1080 and 1280x720.
+- Shop: hover each prop (door/workbench/journal/phone/delivery) for prompt + highlight, click each and confirm it matches its HUD button's behavior, confirm no click falls through dialogue/triage/journal/restoration overlays, and confirm the fallback buttons still work.
 
 ---
 

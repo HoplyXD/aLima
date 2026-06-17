@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://b3drest0rview3d"]
+[gd_scene load_steps=7 format=3 uid="uid://b3drest0rview3d"]
 
 [ext_resource type="Script" path="res://scripts/restoration/restoration_view.gd" id="1_view"]
 [ext_resource type="Script" path="res://scripts/restoration/restoration_object_3d.gd" id="2_object"]
+[ext_resource type="Script" path="res://scripts/restoration/restoration_tool_tray.gd" id="3_tray"]
 
 [sub_resource type="Environment" id="Environment_rest"]
 background_mode = 1
@@ -68,6 +69,9 @@ material_override = SubResource("Material_bench")
 
 [node name="ObjectPivot" type="Node3D" parent="ViewportContainer/SubViewport/World"]
 script = ExtResource("2_object")
+
+[node name="ToolTray" type="Node3D" parent="ViewportContainer/SubViewport/World"]
+script = ExtResource("3_tray")
 
 [node name="InputCatcher" type="Control" parent="."]
 anchors_preset = 15
@@ -235,7 +239,8 @@ theme_override_constants/separation = 10
 
 [node name="ToolsLabel" type="Label" parent="HUD/BottomPanel/Margin/VBox/ToolRow"]
 layout_mode = 2
-text = "Tools:"
+tooltip_text = "Pick up a tool on the bench, or use these accessibility buttons."
+text = "Tools (fallback):"
 
 [node name="ToolContainer" type="HBoxContainer" parent="HUD/BottomPanel/Margin/VBox/ToolRow"]
 unique_name_in_owner = true
@@ -252,7 +257,7 @@ autowrap_mode = 3
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
-text = "Rotate to inspect, then choose a tool and work the surface."
+text = "Rotate to inspect, then pick up a tool from the bench and work the surface."
 
 [node name="Buttons" type="HBoxContainer" parent="HUD/BottomPanel/Margin/VBox"]
 layout_mode = 2

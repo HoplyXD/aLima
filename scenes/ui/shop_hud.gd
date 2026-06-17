@@ -38,6 +38,7 @@ const RARITY := [
 @onready var _quest_count: Label = %QuestCount
 @onready var _day_label: Label = %DayLabel
 @onready var _clock_label: Label = %ClockLabel
+@onready var _prompt_label: Label = $PromptLabel
 
 
 func _ready() -> void:
@@ -61,6 +62,11 @@ func set_restored(counts: Dictionary) -> void:
 
 func set_quest_count(amount: int) -> void:
 	_quest_count.text = str(amount)
+
+
+## Shows the diegetic hover prompt for a focused shop interactable (empty clears).
+func set_prompt(text: String) -> void:
+	_prompt_label.text = text
 
 
 func set_day(day: int, total_days: int) -> void:

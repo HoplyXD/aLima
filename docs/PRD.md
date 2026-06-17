@@ -124,6 +124,10 @@ flowchart LR
 - **ARCH-R5 (P0).** All object/fragment/route/echo definitions load from `data/` or `resources/`. No hardcoded artifact specifics anywhere in logic. *(Invariant §4 / G5.)*
 - **ARCH-R6 (P1).** Full-game integrations extend the typed event surface rather than coupling UI to services. At minimum it carries disposition selected/completed, sale completed, object returned, evening started/committed, mini-event started/resolved, route beat completed, and ending triggered events.
 
+**Shop shell & diegetic interaction**
+- **SHELL-R1 (P1).** The major shop actions are **diegetic 3D interactables** in the shop scene — at minimum the door, restoration workbench, journal, phone, and morning-delivery pile are physical props the player hovers (prompt + highlight) and clicks/confirms, rather than abstract HUD buttons. A reusable `Interactable3D` component owns hover/highlight/activation and emits an `activated` signal; the `ShopController` connects it to the existing action handler, so the diegetic prop and any fallback button trigger identical behavior. Interactables expose hover and pressed states; keyboard/controller/touch parity is provided by the labelled fallback controls (3D nodes cannot hold Control focus). Props are disabled while a full-screen overlay is open so input cannot fall through. *(Presentation contract; CLAUDE.md §0 / §4-N.)*
+- **SHELL-R2 (P1, dev).** HUD action buttons may remain as **clearly-labelled accessibility/fallback/debug** controls during development, but the production direction is physical 3D interaction with clear prompts. A flat-button-only shop does not satisfy SHELL-R1. Final art and in-frame composition of the props are a production/manual gate (§29); placeholder dev geometry is acceptable in the interim if disclosed.
+
 **Full-game event contract**
 
 ```gdscript
@@ -441,12 +445,14 @@ class SaveState:
 - **REST-R5 (P1).** A mini-game may require a learned **Technique** (persistent) and an owned **Tool** (loop-scoped unless legacy) — §4.9.
 - **REST-R6 (P1).** Some techniques are learnable only from characters (e.g., the Artisan), not the shop.
 - **REST-R7 (P0, slice).** For the slice, build the **one** mini-game the pendant uses; ensure its tool is in the kit at slice start so the demo is always winnable.
-- **REST-R8 (P0).** Restoration presents the object as a **manipulable 3D model in a focused restoration view**: the player orbits/rotates it and applies the selected tool **across its 3D surface** (grime/dirt is represented on the surface and cleared by working the tool over it; see D8), framed by a 2D background + HUD overlay carrying tool selection, condition/value meters, feedback, and captions. The clean→open gate (REST-R4), tool consequences (REST-R3), and tools-vs-techniques rules (REST-R5) are unchanged; only the presentation is 3D. The underlying restoration logic is presentation-agnostic and shared across input methods (INPUT-R5). The slice's pendant clean→clasp-open is built in this 3D view (REST-R7).
+- **REST-R8 (P0).** Restoration presents the object as a **manipulable 3D model in a focused restoration view**: the player orbits/rotates it and applies the selected tool **across its 3D surface** (grime/dirt is represented on the surface and cleared by working the tool over it; see D8), framed by a 2D background + HUD overlay carrying **supportive** condition/value meters, feedback, and captions. The 2D HUD supports the interaction (labels, meters, accessibility) but is not the primary tool chooser — tool selection is a physical 3D act (see REST-R9). The clean→open gate (REST-R4), tool consequences (REST-R3), and tools-vs-techniques rules (REST-R5) are unchanged; only the presentation is 3D. The underlying restoration logic is presentation-agnostic and shared across input methods (INPUT-R5). The slice's pendant clean→clasp-open is built in this 3D view (REST-R7).
+- **REST-R9 (P0).** The cleaning tools are **visible, selectable 3D props on the workbench** — one prop per owned tool, built data-driven from the owned `ToolDefinition`s (artifact-agnostic). The player picks up a prop (pointer ray, or a controller/keyboard cycle action) to choose the active tool; the selected prop is visibly distinguished (highlight/pose) so it reads as "in hand." Selection drives the same `RestorationService` path as before — the props are presentation only and never read carrier identity. The 2D HUD tool buttons remain only as a **clearly-labelled accessibility/fallback** path; the production interaction must not require clicking a flat text "Cloth" button.
 
 **Acceptance**
 - [ ] Cleaning raises condition and gates opening.
 - [ ] Wrong-tool use is punished (value/condition loss) and recorded.
 - [ ] Restoration runs in the focused 3D view: the object can be rotated and is cleaned across its surface; the clean→open gate and tool consequences behave identically to the underlying logic.
+- [ ] Tool choice is made by selecting a visible 3D tool prop on the bench (REST-R9); the HUD tool buttons are a labelled accessibility/fallback, not the primary control.
 
 ---
 

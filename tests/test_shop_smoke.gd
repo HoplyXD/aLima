@@ -93,6 +93,59 @@ func test_dialogue_advances_via_left_click() -> void:
 	assert_true(_shop.is_day_running(), "Clock resumes after the placeholder dialogue")
 
 
+# --- Diegetic 3D interactables ------------------------------------------
+
+
+func test_five_diegetic_interactables_exist() -> void:
+	for node_name in [
+		"DoorInteractable",
+		"WorkbenchInteractable",
+		"JournalInteractable",
+		"PhoneInteractable",
+		"DeliveryInteractable"
+	]:
+		var prop := _shop.get_node_or_null("Interactables/%s" % node_name)
+		assert_not_null(prop, "%s prop should exist in the shop" % node_name)
+		assert_is(prop, Interactable3D, "%s should be an Interactable3D" % node_name)
+
+
+func test_workbench_prop_opens_restoration_like_its_button() -> void:
+	var prop: Interactable3D = _shop.get_node("Interactables/WorkbenchInteractable")
+	prop.activate()
+	await wait_physics_frames(1)
+	var view: RestorationView = _shop.get_node("RestorationView")
+	assert_true(view.visible, "Clicking the workbench prop opens the restoration view")
+
+
+func test_door_prop_opens_dialogue_like_its_button() -> void:
+	var prop: Interactable3D = _shop.get_node("Interactables/DoorInteractable")
+	prop.activate()
+	await wait_physics_frames(1)
+	var dialogue: DialogueBox = _hud.get_node("DialogueBox")
+	assert_true(dialogue.visible, "Clicking the door prop opens the visitor dialogue")
+	assert_true(_visitor.visible, "The visitor appears for the door prop")
+
+
+func test_hovering_a_prop_shows_its_prompt() -> void:
+	var prop: Interactable3D = _shop.get_node("Interactables/WorkbenchInteractable")
+	var prompt: Label = _hud.get_node("PromptLabel")
+	prop.mouse_entered.emit()
+	assert_eq(prompt.text, prop.prompt_text, "Hovering a prop surfaces its prompt on the HUD")
+	prop.mouse_exited.emit()
+	assert_eq(prompt.text, "", "Leaving the prop clears the prompt")
+
+
+func test_overlays_disable_shop_props() -> void:
+	var workbench: Interactable3D = _shop.get_node("Interactables/WorkbenchInteractable")
+	_hud.door_pressed.emit()  # Opens the visitor dialogue overlay.
+	await wait_physics_frames(1)
+	assert_false(workbench.interactable_enabled, "Shop props are disabled while an overlay is open")
+
+	var dialogue: DialogueBox = _hud.get_node("DialogueBox")
+	await _advance_until_closed(dialogue, _make_accept_event)
+	assert_true(workbench.interactable_enabled, "Shop props re-enable after the overlay closes")
+
+
 # --- Helpers ------------------------------------------------------------
 
 
