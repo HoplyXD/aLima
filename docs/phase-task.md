@@ -4,7 +4,7 @@ Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, live/moc
 
 | Field | Value |
 |---|---|
-| Last audited | 2026-06-16 |
+| Last audited | 2026-06-17 |
 | Current milestone | June 30, 2026 vertical slice |
 | Engine target | Godot 4.6.3 |
 | Presentation | Hybrid 3D shop with 2D gameplay interfaces |
@@ -933,14 +933,17 @@ Manual (pending human on-screen observation under windowed 4.6.3): discover and 
   - Provide first-page Fragment Case and object-entry navigation.
   - Support mouse-first controls and readable scaling; the 3D viewers honor input parity (INPUT-R5).
 
-- `[ ]` **P9.2 Implement journal entry updates.**
-  - Create an entry after first restoration.
-  - Update best condition, verdict, scanner annotations, and later sale data without duplicating entries.
-  - Keep uncle notes visually distinct from scanner annotations.
+- `[-]` **P9.2 Implement journal entry updates.** (logic + tests done; UI display is P9.1)
+  - `scripts/journal/journal_service.gd` (`JournalService` autoload) listens to `EventBus.restoration_completed` and `EventBus.scanner_verdict_committed`, creating one stable persistent `JournalEntry` (keyed by `template_id`) on first restoration and updating it in place afterward — entries are never duplicated.
+  - First restoration seeds authored template facts (materials, weight/value ranges, historical-fact ref); later restorations update `best_condition` (kept as the maximum) and the `clean_method` used.
+  - A scan writes the advisory scanner snapshot to `ai_annotations` and `counterfeit_indicators`, which are separate fields from `uncle_notes`, so the uncle's notes are never overwritten by scanner output (visual distinction is the P9.1 UI gate).
+  - Sale data (`best_sale`) wiring is deferred to Phase 14 (disposition/marketplace).
+  - Evidence (2026-06-17): `tests/journal/test_journal_service.gd` 8/8 passed (25 asserts) under Godot 4.6.
 
-- `[-]` **P9.3 Route archives by rarity.**
-  - Gold and Master Artifact discoveries already produce persisted `MuseumEntry` records via `SeatingService` (Phase 8).
-  - Purple-and-below Journal entries are not implemented; the polished gallery remains P1.
+- `[x]` **P9.3 Route archives by rarity.**
+  - Gold and Master Artifact discoveries produce persisted `MuseumEntry` records via `SeatingService` (Phase 8); `JournalService.is_journal_rarity()` excludes Gold-and-above from the journal so they route to the museum, never both.
+  - Purple-and-below restorations are archived as journal entries by `JournalService` (P9.2). The polished in-game gallery/journal UI and the full additional-Gold museum gallery remain Phase 9 UI (P9.1) / Phase 16.
+  - Evidence (2026-06-17): `tests/journal/test_journal_service.gd::test_is_journal_rarity_boundary` and `test_gold_rarity_does_not_create_journal_entry` passed.
 
 - `[-]` **P9.4 Build the five-slot case.**
   - Fragment `case_slot_index` already maps stable IDs to slots in `data/artifacts/master_artifact.json`.
@@ -953,21 +956,28 @@ Manual (pending human on-screen observation under windowed 4.6.3): discover and 
   - Duplicate seating is ignored; save failure rolls back both museum entry and fragment state.
   - Clearing active Echo/carrier state and preventing future respawn is still a future phase integration (Phase 10/17).
 
-- `[-]` **P9.6 Test persistence and routing.**
+- `[-]` **P9.6 Test persistence and routing.** (logic coverage complete; UI behavior pending P9.1/P9.4)
   - Gold/Master discovery creates Museum entry: covered by `tests/portal/test_seating_service.gd` and `tests/portal/test_portal_flow_controller.gd`.
-  - Purple item Journal entry and Spawn Director exclusion of seated fragments are not implemented yet.
+  - Purple-and-below journal entry creation/update, no-duplicate updates, best-condition retention, scan annotations kept distinct from uncle notes, gold rarity routing exclusion, save/reload persistence, and loop-reset survival: covered by `tests/journal/test_journal_service.gd` (8/8).
+  - Spawn Director exclusion of `SEATED` fragments is covered by the Phase 5 suite (`tests/discovery/spawn_director/`).
+  - Evidence (2026-06-17): full GUT suite `258/258 passed` (885 asserts) under Godot 4.6.
 
 ### Acceptance
 
-- `[ ]` Restoring/scanning updates one stable journal entry (not implemented; depends on P9.1/P9.2).
+- `[-]` Restoring/scanning updates one stable journal entry (logic implemented and tested via `JournalService`; the on-screen journal entry view is the pending P9.1 UI gate).
 - `[-]` Portal completion fills exactly one persistent case slot (Phase 8: `SeatingService` creates one `MuseumEntry`, marks the fragment `SEATED`, and saves; the visual case UI is pending P9.4).
 - `[-]` A reset and reload preserve the slot (Phase 8: seated state and museum entry are in `PersistentState`; full case UI persistence is pending P9.4).
-- `[-]` Archive routing follows the fixed rarity rule (Phase 8: Gold/Master Artifact → `MuseumEntry`; Purple-and-below journal entries pending P9.2/P9.3).
+- `[x]` Archive routing follows the fixed rarity rule (Gold/Master Artifact → `MuseumEntry` via `SeatingService`; Purple-and-below → `JournalEntry` via `JournalService`, with Gold excluded from the journal — verified 2026-06-17).
 
 ### Verification
 
 ```powershell
-godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/journal
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/journal -gexit
+# Result (2026-06-17): 8/8 passed, 25 asserts (run on this machine with Godot 4.6.stable).
+
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-06-17): 258/258 passed, 885 asserts.
 ```
 
 Manual: seat the demo fragment, restart the game, trigger a loop reset, and confirm it remains seated and cannot respawn.
