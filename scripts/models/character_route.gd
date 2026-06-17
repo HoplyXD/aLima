@@ -12,6 +12,7 @@ var mutual_exclusions: Array[String] = []  ## Route ids that cannot co-occur.
 var holds_fragment_id: String = ""  ## Empty for Yuyu/finale.
 var rewards: Array[String] = []  ## Reward ids (tools, codes, leads).
 var has_ending: bool = false
+var beats: Array = []  ## Authored quest beats; raw dicts (id, day, object_template, summary).
 
 
 func _init() -> void:
@@ -30,6 +31,9 @@ static func from_dictionary(data: Dictionary) -> CharacterRoute:
 	r.holds_fragment_id = ModelUtils.as_string(data.get("holds_fragment_id"))
 	r.rewards = ModelUtils.as_string_array(data.get("rewards"))
 	r.has_ending = ModelUtils.as_bool(data.get("has_ending"))
+	if data.get("beats") is Array:
+		for beat in data["beats"]:
+			r.beats.append(beat)
 	return r
 
 
@@ -43,6 +47,7 @@ func to_dictionary() -> Dictionary:
 		"holds_fragment_id": holds_fragment_id,
 		"rewards": rewards.duplicate(),
 		"has_ending": has_ending,
+		"beats": beats.duplicate(),
 	}
 
 
@@ -58,7 +63,24 @@ func validate(
 		if window is Dictionary:
 			_validate_window(window, window_idx, result, file_path)
 		window_idx += 1
+	var beat_idx := 0
+	for beat in beats:
+		if beat is Dictionary:
+			_validate_beat(beat, beat_idx, result, file_path)
+		else:
+			result.add_field_error(file_path, id, "beats[%d]" % beat_idx, "beat must be a dictionary")
+		beat_idx += 1
 	return result
+
+
+func _validate_beat(
+	beat: Dictionary, idx: int, result: ValidationResult, file_path: String
+) -> void:
+	if ModelUtils.as_string(beat.get("id")).is_empty():
+		result.add_field_error(file_path, id, "beats[%d].id" % idx, "beat requires an id")
+	var day := ModelUtils.as_int(beat.get("day"), -1)
+	if day < 1 or day > 5:
+		result.add_field_error(file_path, id, "beats[%d].day" % idx, "beat day must be 1..5")
 
 
 func _validate_window(

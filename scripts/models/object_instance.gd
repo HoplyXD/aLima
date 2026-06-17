@@ -17,6 +17,8 @@ var storage_cost: int = 1  ## Copied from the template at creation time.
 var assigned_anchor_id: String = ""  ## Container/placement anchor for this instance.
 var value: int = 0  ## Current assessed market value, initialized from the template.
 var recorded_damage: int = 0  ## Accumulated damage from wrong tools; persists with the instance.
+var removed_decals: Array[String] = []  ## Decal ids cleared so far (decal-based templates).
+var is_joined: bool = false  ## True once a join-step object has been reassembled.
 
 
 func _init() -> void:
@@ -38,6 +40,8 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	inst.assigned_anchor_id = ModelUtils.as_string(data.get("assigned_anchor_id"))
 	inst.value = ModelUtils.as_int(data.get("value"))
 	inst.recorded_damage = ModelUtils.as_int(data.get("recorded_damage"))
+	inst.removed_decals = ModelUtils.as_string_array(data.get("removed_decals"))
+	inst.is_joined = ModelUtils.as_bool(data.get("is_joined"))
 	return inst
 
 
@@ -56,6 +60,8 @@ func to_dictionary() -> Dictionary:
 		"assigned_anchor_id": assigned_anchor_id,
 		"value": value,
 		"recorded_damage": recorded_damage,
+		"removed_decals": removed_decals.duplicate(),
+		"is_joined": is_joined,
 	}
 
 

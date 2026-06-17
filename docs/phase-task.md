@@ -1018,6 +1018,7 @@ Manual: seat the demo fragment, restart the game, trigger a loop reset, and conf
   - Existing dialogue box, visitor placeholder, and sample lines are usable scaffolding.
   - Move lines out of shop controllers into `data/routes/auntie.json`.
   - Keep the controller responsible for flow, not prose.
+  - Progress (2026-06-17): Auntie's 3-quest line is authored as data — `CharacterRoute.beats` on the `auntie` route (Days 1/3/5) in `data/routes/routes.json`, three non-deliverable quest templates with decal sets (`auntie_photo_faded`, `auntie_frame_portrait`, `auntie_halfphoto_torn`) in `data/objects/objects.json`, and the supporting tools (incl. `archival_tape` for the join step) in `data/objects/tools.json`. The decal-cleaning + join restoration mechanics they drive are the Phase 13 down-payment below. Visit scheduling/Day-5 gating (P10.2) and the dialogue/showcase flow (P10.3) are not yet implemented.
 
 - `[ ]` **P10.2 Implement visit scheduling.**
   - Offer Auntie from 12:00-14:00 on Days 1, 3, and 5.
@@ -1171,7 +1172,8 @@ Manual: review the locked artifact packet and manifest with the named cultural r
 ### Tasks
 
 - `[ ]` **P13.1 Author at least 30 restorable object templates.** Cover all rarity tiers and nine restoration categories with distinct materials, tools, values, history, and disposition hooks.
-- `[ ]` **P13.2 Implement all nine restoration interactions.** Build brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, and mechanism inspection as focused **3D** object-manipulation interactions (REST-R8) on the object's surface, with input-specific tuning. Reuse `RestorationService` / the P4.7 3D restoration view.
+- `[-]` **P13.2 Implement all nine restoration interactions.** Build brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, and mechanism inspection as focused **3D** object-manipulation interactions (REST-R8) on the object's surface, with input-specific tuning. Reuse `RestorationService` / the P4.7 3D restoration view.
+  - Progress (2026-06-17): added a **data-driven decal cleaning model** as the foundation for the surface-grime interactions (brushing/wiping/rust/polishing/paper care/frame repair/photo restoration). `SurfaceDecal` (`scripts/models/surface_decal.gd`) authors each blemish with a placeholder hex `color` (texture-swappable later) and a `required_tool`; `RestorationService.clean_decal()` clears the matching decal (wrong tool uses the existing wrong-tool damage; clearing the last decal reaches CLEAN and emits `restoration_completed`) and `join_object()` adds a clean-gated reassembly step (torn-photo halves rejoined with `archival_tape`). Covered by `tests/restoration/test_decal_restoration.gd` (11 tests). Authored use lives in Auntie's 3 quest templates (P10.1). The on-screen 3D presentation (decals as surface quads on a scaled Page / future 3D frame model) and the remaining interactions (engraving reveal, mechanism inspection) are still to do.
 - `[ ]` **P13.3 Complete tools and techniques.** Support shop-bought loop-scoped tools, persistent learned techniques, character-only techniques, legacy tools, upkeep, and wrong-tool consequences.
 - `[ ]` **P13.4 Author six solvable counterfeit variants.** Each exposes journal/scanner-comparable evidence without an automatic verdict.
 - `[ ]` **P13.5 Integrate catalog records.** Every object updates condition, best result, variants, scanner evidence, value, and applicable journal history without duplicate entries.

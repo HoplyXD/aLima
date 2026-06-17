@@ -16,7 +16,27 @@
       "mutual_exclusions": [],
       "holds_fragment_id": "fragment_01",
       "rewards": ["safe_code", "drawer_clue"],
-      "has_ending": true
+      "has_ending": true,
+      "beats": [
+        {
+          "id": "auntie_beat_1",
+          "day": 1,
+          "object_template": "auntie_photo_faded",
+          "summary": "Auntie brings a faded family photo. Brush off the dust, lift the grime and water stain, and restore the faded image."
+        },
+        {
+          "id": "auntie_beat_2",
+          "day": 3,
+          "object_template": "auntie_frame_portrait",
+          "summary": "She returns with her framed portrait. Clean the glass, polish the tarnished corners, and consolidate the cracked molding."
+        },
+        {
+          "id": "auntie_beat_3",
+          "day": 5,
+          "object_template": "auntie_halfphoto_torn",
+          "summary": "On the final day she shares a photograph torn in two. Clean both halves, remove the old tape, then rejoin them with archival tape to reveal the uncle. Completing it releases her fragment."
+        }
+      ]
     },
     {
       "record_type": "route",

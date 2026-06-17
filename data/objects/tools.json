@@ -18,6 +18,78 @@
       "quality": 1,
       "cost": 80,
       "is_legacy": false
+    },
+    {
+      "record_type": "tool",
+      "id": "soft_brush",
+      "display_name": "Soft Brush",
+      "enables": ["decal_clean"],
+      "quality": 1,
+      "cost": 0,
+      "is_legacy": true
+    },
+    {
+      "record_type": "tool",
+      "id": "damp_cloth",
+      "display_name": "Damp Cloth",
+      "enables": ["decal_clean"],
+      "quality": 1,
+      "cost": 0,
+      "is_legacy": true
+    },
+    {
+      "record_type": "tool",
+      "id": "photo_kit",
+      "display_name": "Photo Restoration Kit",
+      "enables": ["decal_clean", "photo_restoration"],
+      "quality": 2,
+      "cost": 120,
+      "is_legacy": false
+    },
+    {
+      "record_type": "tool",
+      "id": "stain_lifter",
+      "display_name": "Stain Lifter",
+      "enables": ["decal_clean"],
+      "quality": 1,
+      "cost": 60,
+      "is_legacy": false
+    },
+    {
+      "record_type": "tool",
+      "id": "polishing_cloth",
+      "display_name": "Polishing Cloth",
+      "enables": ["decal_clean"],
+      "quality": 1,
+      "cost": 40,
+      "is_legacy": false
+    },
+    {
+      "record_type": "tool",
+      "id": "consolidant",
+      "display_name": "Consolidant",
+      "enables": ["decal_clean", "frame_repair"],
+      "quality": 2,
+      "cost": 90,
+      "is_legacy": false
+    },
+    {
+      "record_type": "tool",
+      "id": "solvent",
+      "display_name": "Solvent",
+      "enables": ["decal_clean"],
+      "quality": 1,
+      "cost": 70,
+      "is_legacy": false
+    },
+    {
+      "record_type": "tool",
+      "id": "archival_tape",
+      "display_name": "Archival Tape",
+      "enables": ["photo_join"],
+      "quality": 2,
+      "cost": 100,
+      "is_legacy": false
     }
   ]
 }

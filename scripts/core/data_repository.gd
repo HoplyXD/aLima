@@ -343,6 +343,25 @@ func _validate_cross_references() -> void:
 				"required_clean_tool",
 				"unknown tool reference '%s'" % template.required_clean_tool
 			)
+		for decal in template.decals:
+			if not decal.required_tool.is_empty() and not tool_definitions.has(decal.required_tool):
+				_validation.add_field_error(
+					"data/objects",
+					template_id,
+					"decals",
+					"decal '%s' references unknown tool '%s'" % [decal.id, decal.required_tool]
+				)
+		if (
+			template.requires_join
+			and not template.join_tool.is_empty()
+			and not tool_definitions.has(template.join_tool)
+		):
+			_validation.add_field_error(
+				"data/objects",
+				template_id,
+				"join_tool",
+				"unknown tool reference '%s'" % template.join_tool
+			)
 
 	for fragment_id in fragments.keys():
 		var fragment: Fragment = fragments[fragment_id]
@@ -425,6 +444,17 @@ func _validate_cross_references() -> void:
 					route_id,
 					"mutual_exclusions",
 					"unknown route reference '%s'" % exclusion
+				)
+		for beat in route.beats:
+			if not beat is Dictionary:
+				continue
+			var beat_template := ModelUtils.as_string(beat.get("object_template"))
+			if not beat_template.is_empty() and not scrap_object_templates.has(beat_template):
+				_validation.add_field_error(
+					"data/routes",
+					route_id,
+					"beats",
+					"beat references unknown template '%s'" % beat_template
 				)
 
 	for tool_id in starting_kit.tool_ids:

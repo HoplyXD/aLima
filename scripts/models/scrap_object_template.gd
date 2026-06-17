@@ -27,6 +27,10 @@ var storage_cost: int = 1  ## Loop inventory slots this template occupies.
 var counterfeit_profile: String = ""  ## Optional ref; empty if none.
 var historical_fact_ref: String = ""  ## Optional ref; empty if none.
 var can_hold_temporal_echo: bool = false
+var deliverable: bool = true  ## False => quest/given item; excluded from the delivery pool.
+var decals: Array[SurfaceDecal] = []  ## Authored grime/damage; empty => condition-based cleaning.
+var requires_join: bool = false  ## True => a join step (e.g. torn photo halves) completes restoration.
+var join_tool: String = ""  ## ToolDefinition id required for the join step.
 
 
 func _init() -> void:
@@ -58,6 +62,14 @@ static func from_dictionary(data: Dictionary) -> ScrapObjectTemplate:
 	t.counterfeit_profile = ModelUtils.as_string(data.get("counterfeit_profile"))
 	t.historical_fact_ref = ModelUtils.as_string(data.get("historical_fact_ref"))
 	t.can_hold_temporal_echo = ModelUtils.as_bool(data.get("can_hold_temporal_echo"))
+	t.deliverable = ModelUtils.as_bool(data.get("deliverable"), true)
+	var raw_decals: Variant = data.get("decals", [])
+	if raw_decals is Array:
+		for raw_decal in raw_decals:
+			if raw_decal is Dictionary:
+				t.decals.append(SurfaceDecal.from_dictionary(raw_decal))
+	t.requires_join = ModelUtils.as_bool(data.get("requires_join"))
+	t.join_tool = ModelUtils.as_string(data.get("join_tool"))
 	return t
 
 
@@ -85,6 +97,10 @@ func to_dictionary() -> Dictionary:
 		"counterfeit_profile": counterfeit_profile,
 		"historical_fact_ref": historical_fact_ref,
 		"can_hold_temporal_echo": can_hold_temporal_echo,
+		"deliverable": deliverable,
+		"decals": decals.map(func(d: SurfaceDecal) -> Dictionary: return d.to_dictionary()),
+		"requires_join": requires_join,
+		"join_tool": join_tool,
 	}
 
 
@@ -138,4 +154,19 @@ func validate(
 		result.add_field_error(file_path, id, "base_value_range", "invalid value range")
 	if storage_cost < 1:
 		result.add_field_error(file_path, id, "storage_cost", "storage_cost must be at least 1")
+	var seen_decal_ids := {}
+	for decal in decals:
+		decal.validate(result, file_path)
+		if seen_decal_ids.has(decal.id):
+			result.add_field_error(file_path, id, "decals", "duplicate decal id '%s'" % decal.id)
+		seen_decal_ids[decal.id] = true
+	if requires_join:
+		if join_tool.is_empty():
+			result.add_field_error(
+				file_path, id, "join_tool", "requires_join objects must declare a join_tool"
+			)
+		if decals.is_empty():
+			result.add_field_error(
+				file_path, id, "decals", "requires_join objects must author at least one decal"
+			)
 	return result

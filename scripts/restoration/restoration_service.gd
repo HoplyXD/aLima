@@ -29,6 +29,27 @@ class OpenAttemptResult:
 	var content_id: String = ""
 
 
+## Result of working a tool against one surface decal.
+class DecalResult:
+	var ok: bool = false
+	var compatible: bool = false  ## True when the tool matched the decal's required tool.
+	var feedback: String = ""
+	var decal_id: String = ""
+	var removed: bool = false  ## True when this action cleared the decal.
+	var reached_clean: bool = false  ## True when this action cleared the last decal.
+	var condition_after: float = 0.0
+	var value_after: int = 0
+	var recorded_damage: int = 0
+	var remaining_decals: int = 0
+
+
+## Result of attempting the join step (e.g. taping torn photo halves).
+class JoinResult:
+	var ok: bool = false
+	var error: String = ""
+	var joined: bool = false
+
+
 var _game_state: GameState
 var _repo: DataRepository
 
@@ -240,3 +261,138 @@ func _write_instance_back(inst: ObjectInstance) -> void:
 		if raw is Dictionary and raw.get("uid") == inst.uid:
 			inventory[i] = inst.to_dictionary()
 			return
+
+
+## ---------------------------------------------------------------------------
+## Decal-based cleaning (photos, frames, paper) and the join step.
+## ---------------------------------------------------------------------------
+
+
+## True when the template cleans by removing discrete decals rather than by a
+## condition threshold.
+func is_decal_based(template: ScrapObjectTemplate) -> bool:
+	return template != null and not template.decals.is_empty()
+
+
+## Returns the authored decal with the given id on the template, or null.
+func _find_decal(template: ScrapObjectTemplate, decal_id: String) -> SurfaceDecal:
+	for decal in template.decals:
+		if decal.id == decal_id:
+			return decal
+	return null
+
+
+## Works the selected tool against one decal. The matching tool removes the
+## decal and raises condition/value proportionally; the wrong tool applies the
+## template's wrong-tool damage and leaves the decal in place. The object reaches
+## CLEAN once the final decal is removed. Saves on a successful action.
+func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
+	var result := DecalResult.new()
+	result.decal_id = decal_id
+	var inst := find_instance_by_id(uid)
+	if inst == null:
+		result.feedback = "Item not found."
+		return result
+
+	var template := _repo.get_template(inst.template_id)
+	if template == null or not is_decal_based(template):
+		result.feedback = "This object is not cleaned with decals."
+		return result
+	if not is_tool_owned(tool_id):
+		result.feedback = "Tool not available."
+		return result
+	if inst.state == ModelEnums.ObjState.OPEN:
+		result.feedback = "Already finished."
+		return result
+
+	var decal := _find_decal(template, decal_id)
+	if decal == null:
+		result.feedback = "No such blemish."
+		return result
+	if inst.removed_decals.has(decal_id):
+		result.feedback = "That spot is already clean."
+		result.removed = false
+		result.condition_after = inst.condition
+		result.value_after = inst.value
+		result.remaining_decals = _remaining_decals(template, inst)
+		return result
+
+	result.compatible = decal.required_tool == tool_id
+	var tool := _repo.get_tool(tool_id)
+	var tool_name := tool.display_name if tool != null else tool_id
+	if result.compatible:
+		inst.removed_decals.append(decal_id)
+		var total := template.decals.size()
+		inst.condition = minf(float(inst.removed_decals.size()) / float(total) * 100.0, 100.0)
+		inst.value = clampi(
+			inst.value + template.clean_value_bonus,
+			int(template.base_value_range.x),
+			int(template.base_value_range.y)
+		)
+		result.removed = true
+		result.feedback = "%s lifted the %s." % [tool_name, decal.type]
+		if _remaining_decals(template, inst) == 0 and inst.state == ModelEnums.ObjState.DIRTY:
+			inst.state = ModelEnums.ObjState.CLEAN
+			result.reached_clean = true
+			EventBus.restoration_completed.emit(inst.uid, inst.condition, tool_id)
+	else:
+		var condition_damage := template.wrong_tool_condition_damage
+		var value_damage := template.wrong_tool_value_damage
+		inst.condition = maxf(inst.condition - float(condition_damage), 0.0)
+		inst.value = maxi(inst.value - value_damage, int(template.base_value_range.x))
+		inst.recorded_damage += condition_damage + value_damage
+		result.feedback = (
+			template.wrong_tool_feedback
+			if not template.wrong_tool_feedback.is_empty()
+			else "%s is wrong for the %s." % [tool_name, decal.type]
+		)
+
+	result.condition_after = inst.condition
+	result.value_after = inst.value
+	result.recorded_damage = inst.recorded_damage
+	result.remaining_decals = _remaining_decals(template, inst)
+	_write_instance_back(inst)
+	SaveService.save_game()
+	result.ok = true
+	return result
+
+
+func _remaining_decals(template: ScrapObjectTemplate, inst: ObjectInstance) -> int:
+	var remaining := 0
+	for decal in template.decals:
+		if not inst.removed_decals.has(decal.id):
+			remaining += 1
+	return remaining
+
+
+## Performs the join step on a reassemblable object (e.g. taping torn halves).
+## Requires every decal removed (state CLEAN) and the authored join tool. Saves
+## on success. The join is single-use and idempotent.
+func join_object(uid: String, tool_id: String) -> JoinResult:
+	var out := JoinResult.new()
+	var inst := find_instance_by_id(uid)
+	if inst == null:
+		out.error = "Item not found."
+		return out
+
+	var template := _repo.get_template(inst.template_id)
+	if template == null or not template.requires_join:
+		out.error = "This object does not need joining."
+		return out
+	if inst.is_joined:
+		out.joined = true
+		out.ok = true
+		return out
+	if inst.state != ModelEnums.ObjState.CLEAN:
+		out.error = "Clean every blemish before joining the pieces."
+		return out
+	if not is_tool_owned(tool_id) or tool_id != template.join_tool:
+		out.error = "You need the right tool to join the pieces."
+		return out
+
+	inst.is_joined = true
+	out.joined = true
+	out.ok = true
+	_write_instance_back(inst)
+	SaveService.save_game()
+	return out

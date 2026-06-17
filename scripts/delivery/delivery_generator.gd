@@ -60,6 +60,9 @@ func _group_templates_by_rarity() -> Dictionary:
 	var groups := {}
 	for id in _repo.scrap_object_templates.keys():
 		var template: ScrapObjectTemplate = _repo.scrap_object_templates[id]
+		if not template.deliverable:
+			# Quest/given items (e.g. Auntie's photos) never enter the random pool.
+			continue
 		var rarity_name := ModelEnums.rarity_name(template.base_rarity)
 		if not groups.has(rarity_name):
 			groups[rarity_name] = []
