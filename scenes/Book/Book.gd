@@ -116,6 +116,7 @@ func _ready():
 
 	animation_player.animation_finished.connect(_on_animation_finished)
 	click_body.input_event.connect(_on_click_body_input_event)
+	EventBus.fragment_seated.connect(_on_fragment_seated)
 
 
 func _build_stowed_xform(presented: Transform3D) -> Transform3D:
@@ -379,6 +380,27 @@ func set_texture(page, viewport):
 	else:
 		mat.albedo_texture = viewport.get_texture()
 	page.material_override = mat
+
+
+## Re-renders every paper page from current GameState. Called when the book is
+## opened and whenever a fragment is seated, so the case and entries stay current.
+func refresh_content() -> void:
+	_update_max_pages()
+	for v in [v1, v2, v3, v4, v5, v6]:
+		var page: Page = v.get_node("Page") as Page
+		if page != null:
+			page.set_number(page.number)
+
+
+func _update_max_pages() -> void:
+	var entry_count: int = Page.entry_page_count()
+	# Page 4 = case, page 5 = index, pages 6+ = individual entries.
+	var needed: int = maxi(20, 5 + entry_count)
+	max_pages = maxi(max_pages, needed)
+
+
+func _on_fragment_seated(_fragment_id: String, _slot_index: int) -> void:
+	refresh_content()
 
 
 func _on_animation_finished(anim_name):

@@ -167,3 +167,8 @@ func is_running() -> bool:
 ## Number of distinct pause owners currently holding the clock (for debugging/tests).
 func pause_owner_count() -> int:
 	return _pause_owners.size()
+
+
+## True if `owner_id` currently holds a pause.
+func has_pause_owner(owner_id: String) -> bool:
+	return _pause_owners.has(owner_id)

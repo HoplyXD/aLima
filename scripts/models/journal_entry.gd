@@ -15,6 +15,7 @@ var variants_found: Array[String] = []
 var uncle_notes: String = ""
 var ai_annotations: String = ""
 var temporal_echoes_unlocked: Array[String] = []
+var player_verdict: int = ModelEnums.Verdict.UNKNOWN
 
 
 func _init() -> void:
@@ -37,6 +38,9 @@ static func from_dictionary(data: Dictionary) -> JournalEntry:
 	j.uncle_notes = ModelUtils.as_string(data.get("uncle_notes"))
 	j.ai_annotations = ModelUtils.as_string(data.get("ai_annotations"))
 	j.temporal_echoes_unlocked = ModelUtils.as_string_array(data.get("temporal_echoes_unlocked"))
+	j.player_verdict = ModelEnums.verdict_from_name(
+		ModelUtils.as_string(data.get("player_verdict"))
+	)
 	return j
 
 
@@ -56,6 +60,7 @@ func to_dictionary() -> Dictionary:
 		"uncle_notes": uncle_notes,
 		"ai_annotations": ai_annotations,
 		"temporal_echoes_unlocked": temporal_echoes_unlocked.duplicate(),
+		"player_verdict": ModelEnums.verdict_name(player_verdict),
 	}
 
 
@@ -74,4 +79,6 @@ func validate(
 		result.add_field_error(
 			file_path, template_id, "best_sale", "best_sale must be non-negative"
 		)
+	if ModelEnums.VERDICT_NAMES.find(ModelEnums.verdict_name(player_verdict)) < 0:
+		result.add_field_error(file_path, template_id, "player_verdict", "unknown verdict")
 	return result
