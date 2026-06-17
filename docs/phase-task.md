@@ -4,7 +4,7 @@ Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, live/moc
 
 | Field | Value |
 |---|---|
-| Last audited | 2026-06-16 |
+| Last audited | 2026-06-17 |
 | Current milestone | June 30, 2026 vertical slice |
 | Engine target | Godot 4.6.3 |
 | Presentation | Hybrid 3D shop with 2D gameplay interfaces |
@@ -956,14 +956,15 @@ Manual (pending human on-screen observation under windowed 4.6.3): discover and 
 
 - `[x]` **P9.2 Implement journal entry updates.**
   - Added `JournalService` autoload (`scripts/journal/journal_service.gd`).
-  - Listens to `EventBus.restoration_completed` and creates/updates one `JournalEntry` per Purple-and-below template.
+  - Listens to `EventBus.restoration_completed` and creates/updates one `JournalEntry` per Purple-and-below template; carrier instances are skipped (they route to `SeatingService`/`MuseumEntry`).
   - Listens to `EventBus.scanner_verdict_committed` and updates the same entry with `player_verdict` and a formatted scanner-annotation snapshot.
   - Stores `best_condition` (max across restorations), `player_verdict`, and `ai_annotations`; does not duplicate entries on repeated restoration/scanning.
   - `JournalEntry` model extended with `player_verdict`; uncle notes and scanner annotations are rendered in distinct sections on entry pages.
+  - `JournalService.is_journal_rarity()` is a public static helper for boundary tests.
   - `best_sale` updates and full sale-data append remain P1 marketplace integration.
 
 - `[x]` **P9.3 Route archives by rarity.**
-  - `JournalService._should_route_to_museum()` routes carriers/fragments and `GOLD` non-fragment finds away from the journal.
+  - `JournalService.is_journal_rarity()` routes Gold-and-above and carrier instances away from the journal.
   - `SeatingService` continues to create `MuseumEntry` records for fragment/Master Artifact discoveries.
   - Purple-and-below restorations create/update `JournalEntry` records; they never also create a `MuseumEntry`.
 
@@ -981,7 +982,7 @@ Manual (pending human on-screen observation under windowed 4.6.3): discover and 
   - Verified by existing `tests/portal/test_seating_service.gd` (4/4) and `tests/portal/test_portal_flow_controller.gd` (11/11); no regressions.
 
 - `[x]` **P9.6 Test persistence and routing.**
-  - Added `tests/journal/test_journal_service.gd` (9 tests): entry creation, repeated-restoration update, scanner-verdict update, rarity routing, no loop-inventory leak, event-driven creation.
+  - Added `tests/journal/test_journal_service.gd` (10 tests): rarity boundary, gold exclusion, carrier exclusion, entry creation, repeated-restoration update, scanner-annotation update, player-verdict storage, scan creates entry when none exists, save/reload persistence, loop-reset survival.
   - Added `tests/journal/test_journal_case.gd` (9 tests): five-slot rendering, case_slot_index mapping, fragment_seated fills one slot, duplicate suppression, save/load persistence, loop-reset persistence, museum vs journal routing.
   - Added `tests/journal/test_journal_viewport.gd` (3 tests): journal pause ownership, close releases pause, pause composes with other owners.
 
@@ -996,14 +997,14 @@ Manual (pending human on-screen observation under windowed 4.6.3): discover and 
 
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
-& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/journal
-# Result (2026-06-17): 22/22 passed, 50 asserts.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/journal -gexit
+# Result (2026-06-17): 23/23 passed (after merge).
 
-& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/portal
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/portal -gexit
 # Result (2026-06-17): 15/15 passed, 45 asserts.
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result (2026-06-17): 295/295 passed, 971 asserts.
+# Result (2026-06-17): 295/295 passed, 971 asserts (pre-merge; rerun after merge commit).
 
 gdformat --check scripts scenes dialogue tests
 # Result (2026-06-17): no files need reformatting.

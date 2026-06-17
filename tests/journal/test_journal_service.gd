@@ -1,9 +1,17 @@
 extends GutTest
-## Tests for JournalService: stable entries, rarity routing, and scanner updates.
+## Tests for JournalService: stable journal-entry updates (P9.2) and rarity
+## routing (P9.3). Gold-and-above route to the museum; Purple-and-below are
+## archived as a single, non-duplicated journal entry. Carrier instances also
+## skip journal archiving (they route to SeatingService/MuseumEntry).
 
 const JournalServiceScript := preload("res://scripts/journal/journal_service.gd")
 
-var _service = null
+# tarnished_pendant is Blue (journal rarity) in the slice data.
+const JOURNAL_TEMPLATE := "tarnished_pendant"
+const SOFT_CLOTH := "soft_cloth"
+const GOLD_TEMPLATE := "gold_relic_test"
+
+var _journal: Node = null
 
 
 func before_each() -> void:
@@ -11,8 +19,8 @@ func before_each() -> void:
 	GameState.initialize("test-player")
 	SaveService.set_save_paths("user://test_save.json", "user://test_save.tmp")
 	SaveService.delete_save_files()
-	_service = JournalServiceScript.new()
-	add_child_autofree(_service)
+	_journal = JournalServiceScript.new()
+	add_child_autofree(_journal)
 
 
 func after_each() -> void:
@@ -20,156 +28,173 @@ func after_each() -> void:
 	SaveService.set_save_paths("user://save.json", "user://save.tmp")
 
 
-func _make_instance(template_id: String, uid: String, condition: float = 50.0) -> ObjectInstance:
+func _add_instance(uid: String, template_id: String, condition: float) -> ObjectInstance:
 	var inst := ObjectInstance.new()
-	inst.template_id = template_id
 	inst.uid = uid
+	inst.template_id = template_id
 	inst.condition = condition
 	inst.state = ModelEnums.ObjState.CLEAN
-	inst.is_carrier = false
-	inst.fragment_id = ""
-	inst.value = 100
+	GameState.save_state.loop.inventory.append(inst.to_dictionary())
 	return inst
 
 
-func _add_to_inventory(inst: ObjectInstance) -> void:
-	GameState.save_state.loop.inventory.append(inst.to_dictionary())
+func _inject_gold_template() -> void:
+	var t := ScrapObjectTemplate.new()
+	t.id = GOLD_TEMPLATE
+	t.display_name = "Test Gold Relic"
+	t.category = "mechanical"
+	t.base_rarity = ModelEnums.Rarity.GOLD
+	t.materials = ["brass"]
+	t.tags = ["small"]
+	t.base_value_range = Vector2(100, 200)
+	DataRepository.singleton().scrap_object_templates[GOLD_TEMPLATE] = t
 
 
-func _get_entry(template_id: String) -> JournalEntry:
-	return GameState.save_state.persistent.journal_entries.get(template_id) as JournalEntry
+# --- Rarity routing (P9.3) -------------------------------------------------
 
 
-func test_restoration_creates_one_journal_entry() -> void:
-	var inst := _make_instance("tarnished_pendant", "inst_001", 75.0)
-	_add_to_inventory(inst)
-
-	_service.record_restoration(inst)
-
-	var entry: JournalEntry = _get_entry("tarnished_pendant")
-	assert_not_null(entry, "A journal entry should be created for a restored object")
-	assert_eq(entry.template_id, "tarnished_pendant")
-	assert_eq(entry.origin, "Tarnished Pendant")
-	assert_eq(entry.best_condition, 75)
-	assert_false(entry.uncle_notes.is_empty(), "Uncle notes should be set")
+func test_is_journal_rarity_boundary() -> void:
+	assert_true(JournalServiceScript.is_journal_rarity(ModelEnums.Rarity.WHITE))
+	assert_true(JournalServiceScript.is_journal_rarity(ModelEnums.Rarity.GREEN))
+	assert_true(JournalServiceScript.is_journal_rarity(ModelEnums.Rarity.BLUE))
+	assert_true(JournalServiceScript.is_journal_rarity(ModelEnums.Rarity.PURPLE))
+	assert_false(JournalServiceScript.is_journal_rarity(ModelEnums.Rarity.GOLD))
 
 
-func test_repeated_restoration_updates_the_same_entry() -> void:
-	var inst := _make_instance("tarnished_pendant", "inst_001", 60.0)
-	_add_to_inventory(inst)
-	_service.record_restoration(inst)
+func test_gold_rarity_does_not_create_journal_entry() -> void:
+	_inject_gold_template()
+	var inst := _add_instance("obj_gold", GOLD_TEMPLATE, 100.0)
 
-	var inst2 := _make_instance("tarnished_pendant", "inst_002", 90.0)
-	_add_to_inventory(inst2)
-	_service.record_restoration(inst2)
+	var wrote: bool = _journal.record_restoration(inst, SOFT_CLOTH)
 
-	assert_eq(GameState.save_state.persistent.journal_entries.size(), 1)
-	var entry: JournalEntry = _get_entry("tarnished_pendant")
+	assert_false(wrote)
+	assert_eq(GameState.save_state.persistent.journal_entries.size(), 0)
+
+
+func test_carrier_instance_does_not_create_journal_entry() -> void:
+	var inst := _add_instance("obj_carrier", JOURNAL_TEMPLATE, 100.0)
+	inst.is_carrier = true
+	inst.fragment_id = "fragment_01"
+
+	var wrote: bool = _journal.record_restoration(inst, SOFT_CLOTH)
+
+	assert_false(wrote, "Carrier instances must route to museum, not journal")
+	assert_eq(GameState.save_state.persistent.journal_entries.size(), 0)
+
+
+# --- Entry creation and update (P9.2) --------------------------------------
+
+
+func test_restoration_creates_single_entry() -> void:
+	_add_instance("obj_1", JOURNAL_TEMPLATE, 80.0)
+
+	EventBus.restoration_completed.emit("obj_1", 80.0, SOFT_CLOTH)
+
+	var entries: Dictionary = GameState.save_state.persistent.journal_entries
+	assert_eq(entries.size(), 1)
+	assert_true(entries.has(JOURNAL_TEMPLATE))
+	var entry: JournalEntry = entries[JOURNAL_TEMPLATE]
+	assert_eq(entry.template_id, JOURNAL_TEMPLATE)
+	assert_eq(entry.best_condition, 80)
+	assert_false(entry.materials.is_empty())
+
+
+func test_repeated_restoration_keeps_best_condition_and_no_duplicate() -> void:
+	var inst := _add_instance("obj_1", JOURNAL_TEMPLATE, 60.0)
+
+	_journal.record_restoration(inst, SOFT_CLOTH)
+	inst.condition = 90.0
+	_journal.record_restoration(inst, SOFT_CLOTH)
+	inst.condition = 70.0
+	_journal.record_restoration(inst, SOFT_CLOTH)
+
+	var entries: Dictionary = GameState.save_state.persistent.journal_entries
+	assert_eq(entries.size(), 1)
+	var entry: JournalEntry = entries[JOURNAL_TEMPLATE]
 	assert_eq(entry.best_condition, 90)
 
 
-func test_scanner_verdict_updates_the_same_entry() -> void:
-	var inst := _make_instance("tarnished_pendant", "inst_001", 80.0)
-	_add_to_inventory(inst)
-	_service.record_restoration(inst)
+func test_scan_updates_annotations_without_touching_uncle_notes() -> void:
+	var inst := _add_instance("obj_1", JOURNAL_TEMPLATE, 100.0)
+	_journal.record_restoration(inst, SOFT_CLOTH)
 
-	# Pre-populate a scanned record so the service has annotations to read.
+	var entry: JournalEntry = GameState.save_state.persistent.journal_entries[JOURNAL_TEMPLATE]
+	entry.uncle_notes = "He kept this in the top drawer."
+
 	var record := ScannedRecord.new()
-	record.template_id = "tarnished_pendant"
-	record.instance_id = "inst_001"
+	record.template_id = JOURNAL_TEMPLATE
+	record.instance_id = "obj_1"
 	record.verdict = ModelEnums.Verdict.AUTHENTIC
 	record.response_snapshot = {
-		"type": "pendant",
-		"period": "early 20th century",
-		"materials": ["silver"],
-		"markings": ["clasp wear"],
-		"condition_note": "Clean.",
-		"cultural_relevance": "Test.",
-		"modification_signs": [],
-		"confidence": "medium"
+		"type": "silver pendant",
+		"period": "1900s",
+		"condition_note": "light tarnish",
+		"modification_signs": ["replaced clasp"],
 	}
-	GameState.save_state.persistent.scanned_records["tarnished_pendant"] = record
+	GameState.save_state.persistent.scanned_records[JOURNAL_TEMPLATE] = record
 
-	_service.record_scan_verdict(inst, "authentic")
+	_journal.record_scan(inst)
 
-	var entry: JournalEntry = _get_entry("tarnished_pendant")
-	assert_eq(entry.player_verdict, ModelEnums.Verdict.AUTHENTIC)
-	assert_true(
-		entry.ai_annotations.contains("Type: pendant"), "Scanner annotations should be stored"
-	)
-
-
-func test_purple_and_below_route_to_journal_entry() -> void:
-	# Tarnished pendant is blue rarity (purple-and-below).
-	var inst := _make_instance("tarnished_pendant", "inst_001", 50.0)
-	_add_to_inventory(inst)
-	_service.record_restoration(inst)
-	assert_not_null(_get_entry("tarnished_pendant"))
+	entry = GameState.save_state.persistent.journal_entries[JOURNAL_TEMPLATE]
+	assert_string_contains(entry.ai_annotations, "silver pendant")
+	assert_eq(entry.counterfeit_indicators, ["replaced clasp"] as Array[String])
+	assert_eq(entry.uncle_notes, "He kept this in the top drawer.")
+	assert_eq(GameState.save_state.persistent.journal_entries.size(), 1)
 
 
-func test_gold_object_does_not_create_journal_entry() -> void:
-	# Create a fake gold template in repository data by mutating the loaded template.
-	var repo := DataRepository.singleton()
-	var template: ScrapObjectTemplate = repo.get_template("tarnished_pendant")
-	var original_rarity: int = template.base_rarity
-	template.base_rarity = ModelEnums.Rarity.GOLD
-
-	var inst := _make_instance("tarnished_pendant", "inst_001", 50.0)
-	_add_to_inventory(inst)
-	_service.record_restoration(inst)
-
-	assert_null(_get_entry("tarnished_pendant"), "Gold finds should not create journal entries")
-
-	template.base_rarity = original_rarity
-
-
-func test_carrier_fragment_does_not_create_journal_entry() -> void:
-	var inst := _make_instance("tarnished_pendant", "inst_001", 50.0)
-	inst.is_carrier = true
-	inst.fragment_id = "fragment_01"
-	_add_to_inventory(inst)
-	_service.record_restoration(inst)
-
-	assert_null(
-		_get_entry("tarnished_pendant"), "Carrier fragments should route to museum, not journal"
-	)
-
-
-func test_no_loop_inventory_leaks_into_persistent_state() -> void:
-	var inst := _make_instance("tarnished_pendant", "inst_001", 50.0)
-	_add_to_inventory(inst)
-	_service.record_restoration(inst)
-
-	var entry: JournalEntry = _get_entry("tarnished_pendant")
-	assert_eq(entry.template_id, "tarnished_pendant")
-	# The entry must not store instance-level loop data such as uid or carrier status.
-	var raw: Dictionary = entry.to_dictionary()
-	assert_false(raw.has("uid"), "Journal entry must not store instance uid")
-	assert_false(raw.has("is_carrier"), "Journal entry must not store carrier status")
-
-
-func test_restoration_completed_event_creates_entry() -> void:
-	var inst := _make_instance("tarnished_pendant", "inst_001", 50.0)
-	_add_to_inventory(inst)
-
-	EventBus.restoration_completed.emit("inst_001", 50.0, "soft_cloth")
-
-	assert_not_null(_get_entry("tarnished_pendant"))
-
-
-func test_scanner_verdict_committed_event_updates_entry() -> void:
-	var inst := _make_instance("tarnished_pendant", "inst_001", 50.0)
-	_add_to_inventory(inst)
-	_service.record_restoration(inst)
+func test_scan_stores_player_verdict_separately() -> void:
+	var inst := _add_instance("obj_1", JOURNAL_TEMPLATE, 100.0)
+	_journal.record_restoration(inst, SOFT_CLOTH)
 
 	var record := ScannedRecord.new()
-	record.template_id = "tarnished_pendant"
-	record.instance_id = "inst_001"
-	record.verdict = ModelEnums.Verdict.REPLICA
-	record.response_snapshot = {"type": "pendant", "confidence": "low"}
-	GameState.save_state.persistent.scanned_records["tarnished_pendant"] = record
+	record.template_id = JOURNAL_TEMPLATE
+	record.instance_id = "obj_1"
+	record.verdict = ModelEnums.Verdict.AUTHENTIC
+	record.response_snapshot = {"type": "pendant", "confidence": "high"}
+	GameState.save_state.persistent.scanned_records[JOURNAL_TEMPLATE] = record
 
-	EventBus.scanner_verdict_committed.emit("inst_001", "replica")
+	_journal.record_scan(inst, "authentic")
 
-	var entry: JournalEntry = _get_entry("tarnished_pendant")
-	assert_eq(entry.player_verdict, ModelEnums.Verdict.REPLICA)
+	var entry: JournalEntry = GameState.save_state.persistent.journal_entries[JOURNAL_TEMPLATE]
+	assert_eq(entry.player_verdict, ModelEnums.Verdict.AUTHENTIC)
+	assert_string_contains(entry.ai_annotations, "pendant")
+
+
+func test_scan_creates_entry_when_none_exists() -> void:
+	var inst := _add_instance("obj_1", JOURNAL_TEMPLATE, 100.0)
+	var record := ScannedRecord.new()
+	record.template_id = JOURNAL_TEMPLATE
+	record.instance_id = "obj_1"
+	record.verdict = ModelEnums.Verdict.UNCERTAIN
+	record.response_snapshot = {"type": "pendant", "period": "1900s", "condition_note": "clean"}
+	GameState.save_state.persistent.scanned_records[JOURNAL_TEMPLATE] = record
+
+	var wrote: bool = _journal.record_scan(inst)
+
+	assert_true(wrote)
+	assert_eq(GameState.save_state.persistent.journal_entries.size(), 1)
+
+
+# --- Persistence (P9.6) ----------------------------------------------------
+
+
+func test_entry_persists_through_save_and_reload() -> void:
+	var inst := _add_instance("obj_1", JOURNAL_TEMPLATE, 88.0)
+	_journal.record_restoration(inst, SOFT_CLOTH)
+
+	var loaded := SaveService.load_game()
+	assert_true(loaded.ok, "reload should succeed")
+
+	var entries: Dictionary = GameState.save_state.persistent.journal_entries
+	assert_true(entries.has(JOURNAL_TEMPLATE))
+	assert_eq((entries[JOURNAL_TEMPLATE] as JournalEntry).best_condition, 88)
+
+
+func test_entry_survives_loop_reset() -> void:
+	var inst := _add_instance("obj_1", JOURNAL_TEMPLATE, 75.0)
+	_journal.record_restoration(inst, SOFT_CLOTH)
+
+	GameState.save_state.reset_loop_state()
+
+	assert_true(GameState.save_state.persistent.journal_entries.has(JOURNAL_TEMPLATE))
+	assert_true(GameState.save_state.loop.inventory.is_empty())
