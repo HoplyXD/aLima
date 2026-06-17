@@ -86,11 +86,15 @@ func get_restorable_instances() -> Array[ObjectInstance]:
 	return out
 
 
-## Returns all owned tools with their definitions.
+## Returns all owned tools with their definitions. Includes the id-set ownership
+## (starting kit / legacy rewards) and any usable durability-tracked instances.
 func get_available_tools() -> Array[ToolDefinition]:
 	var owned_ids: Array[String] = []
 	owned_ids.append_array(_game_state.save_state.loop.tool_items)
 	owned_ids.append_array(_game_state.save_state.persistent.legacy_items)
+	for raw in _game_state.save_state.loop.owned_tools:
+		if raw is Dictionary and _instance_usable(raw):
+			owned_ids.append(ModelUtils.as_string(raw.get("tool_id")))
 
 	var seen := {}
 	var out: Array[ToolDefinition] = []
@@ -104,12 +108,80 @@ func get_available_tools() -> Array[ToolDefinition]:
 	return out
 
 
-## True if the player currently owns the named tool.
+## The tools loaded into the bench (max 10), as definitions. Falls back to all
+## available tools when no loadout has been set, so existing flows are unchanged.
+func get_workbench_tools() -> Array[ToolDefinition]:
+	var loadout: Array = _game_state.save_state.loop.workbench_tools
+	if loadout.is_empty():
+		return get_available_tools()
+	var out: Array[ToolDefinition] = []
+	var seen := {}
+	for raw in _game_state.save_state.loop.owned_tools:
+		if not (raw is Dictionary):
+			continue
+		var uid := ModelUtils.as_string(raw.get("uid"))
+		if not loadout.has(uid) or not _instance_usable(raw):
+			continue
+		var tool_id := ModelUtils.as_string(raw.get("tool_id"))
+		if seen.has(tool_id):
+			continue
+		seen[tool_id] = true
+		var tool := _repo.get_tool(tool_id)
+		if tool != null:
+			out.append(tool)
+	return out
+
+
+## True if the player currently owns the named tool (id-set ownership or a usable
+## durability-tracked instance).
 func is_tool_owned(tool_id: String) -> bool:
-	return (
+	if (
 		_game_state.save_state.loop.tool_items.has(tool_id)
 		or _game_state.save_state.persistent.legacy_items.has(tool_id)
-	)
+	):
+		return true
+	for raw in _game_state.save_state.loop.owned_tools:
+		if raw is Dictionary and raw.get("tool_id") == tool_id and _instance_usable(raw):
+			return true
+	return false
+
+
+func _instance_usable(raw: Dictionary) -> bool:
+	var max_d := ModelUtils.as_int(raw.get("max_durability"))
+	return max_d <= 0 or ModelUtils.as_int(raw.get("durability")) > 0
+
+
+## Wears down one durability-tracked instance of the given tool after a use. The
+## most-worn usable instance is consumed first; when it breaks it is removed from
+## owned tools and the bench loadout, and EventBus.tool_broke is emitted. Tools
+## owned only via the id-set (starting kit / legacy) never wear.
+func _consume_tool_durability(tool_id: String) -> void:
+	var owned: Array = _game_state.save_state.loop.owned_tools
+	var best := -1
+	var best_durability := 0
+	for i in range(owned.size()):
+		var raw = owned[i]
+		if not (raw is Dictionary) or raw.get("tool_id") != tool_id:
+			continue
+		if ModelUtils.as_int(raw.get("max_durability")) <= 0:
+			continue  # infinite tool; never wears.
+		var durability := ModelUtils.as_int(raw.get("durability"))
+		if durability <= 0:
+			continue  # already broken.
+		# Wear the most-worn usable instance first, so backups stay fresh.
+		if best < 0 or durability < best_durability:
+			best = i
+			best_durability = durability
+	if best < 0:
+		return
+	var inst: Dictionary = owned[best]
+	inst["durability"] = ModelUtils.as_int(inst.get("durability")) - 1
+	owned[best] = inst
+	if ModelUtils.as_int(inst.get("durability")) <= 0:
+		var uid := ModelUtils.as_string(inst.get("uid"))
+		owned.remove_at(best)
+		_game_state.save_state.loop.workbench_tools.erase(uid)
+		EventBus.tool_broke.emit(tool_id, uid)
 
 
 ## Applies one deliberate tool action to the instance. Saves on success.
@@ -173,6 +245,7 @@ func apply_tool(uid: String, tool_id: String) -> ToolResult:
 	result.condition_after = inst.condition
 	result.value_after = inst.value
 	result.recorded_damage = inst.recorded_damage
+	_consume_tool_durability(tool_id)
 	_write_instance_back(inst)
 	SaveService.save_game()
 	result.ok = true
@@ -355,6 +428,7 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 	result.value_after = inst.value
 	result.recorded_damage = inst.recorded_damage
 	result.remaining_decals = _remaining_decals(template, inst)
+	_consume_tool_durability(tool_id)
 	_write_instance_back(inst)
 	SaveService.save_game()
 	result.ok = true
@@ -397,6 +471,7 @@ func join_object(uid: String, tool_id: String) -> JoinResult:
 	inst.is_joined = true
 	out.joined = true
 	out.ok = true
+	_consume_tool_durability(tool_id)
 	_write_instance_back(inst)
 	SaveService.save_game()
 	return out

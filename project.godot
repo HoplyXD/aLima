@@ -26,6 +26,7 @@ EchoController="*res://scripts/discovery/echo_controller.gd"
 PortalFlowController="*res://scripts/shop/portal_flow_controller.gd"
 SeatingService="*res://scripts/journal/seating_service.gd"
 JournalService="*res://scripts/journal/journal_service.gd"
+MarketplaceService="*res://scripts/economy/marketplace_service.gd"
 
 [display]
 

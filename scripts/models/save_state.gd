@@ -144,6 +144,10 @@ class LoopState:
 	var current_delivery_ids: Array[String] = []
 	var last_delivery_day: int = 0  ## Day on which the most recent Morning Delivery arrived.
 	var current_carrier_placements: Dictionary = {}  ## fragment_id -> placement dict.
+	var owned_tools: Array = []  ## ToolInstance dictionaries (durability-tracked, loop-scoped).
+	var workbench_tools: Array[String] = []  ## Tool instance uids loaded into the bench (<= 10).
+	var tool_shipments: Array = []  ## Pending purchases: {tool_id, arrival_index}.
+	var restore_target_uid: String = ""  ## Instance selected to restore at the bench.
 
 	static func from_dictionary(data: Dictionary) -> LoopState:
 		var l := LoopState.new()
@@ -159,6 +163,10 @@ class LoopState:
 		l.current_delivery_ids = ModelUtils.as_string_array(data.get("current_delivery_ids"))
 		l.last_delivery_day = ModelUtils.as_int(data.get("last_delivery_day"), 0)
 		l.current_carrier_placements = data.get("current_carrier_placements", {}) as Dictionary
+		l.owned_tools = SaveState._as_array(data.get("owned_tools", []))
+		l.workbench_tools = ModelUtils.as_string_array(data.get("workbench_tools"))
+		l.tool_shipments = SaveState._as_array(data.get("tool_shipments", []))
+		l.restore_target_uid = ModelUtils.as_string(data.get("restore_target_uid"))
 		return l
 
 	func to_dictionary() -> Dictionary:
@@ -175,6 +183,10 @@ class LoopState:
 			"current_delivery_ids": current_delivery_ids.duplicate(),
 			"last_delivery_day": last_delivery_day,
 			"current_carrier_placements": current_carrier_placements.duplicate(),
+			"owned_tools": owned_tools.duplicate(),
+			"workbench_tools": workbench_tools.duplicate(),
+			"tool_shipments": tool_shipments.duplicate(),
+			"restore_target_uid": restore_target_uid,
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:

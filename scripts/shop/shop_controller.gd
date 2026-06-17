@@ -9,6 +9,7 @@ extends Node3D
 ## the count placeholders in later phases (see docs/phase-task.md).
 
 const RESTORATION_VIEW_SCENE := preload("res://scenes/restoration/restoration_view.tscn")
+const MARKETPLACE_SCREEN_SCENE := preload("res://scenes/ui/marketplace_screen.tscn")
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector (e.g. 0.1) to watch the clock move faster while
@@ -37,6 +38,7 @@ var _quest_artifacts := 1
 @onready var _triage_screen: TriageController = $TriageScreen
 @onready var _book_viewport: BookViewport = $BookViewport
 @onready var _restoration_view: RestorationView = _create_restoration_view()
+@onready var _marketplace_screen: MarketplaceScreen = _create_marketplace_screen()
 
 # Diegetic 3D shop interactables. Each one fires the same controller handler as
 # its HUD fallback button, so the physical prop and the accessibility button are
@@ -69,6 +71,7 @@ func _ready() -> void:
 
 	_triage_screen.closed.connect(_on_triage_closed)
 	_restoration_view.closed.connect(_on_restoration_closed)
+	_marketplace_screen.closed.connect(_on_marketplace_closed)
 	# The restoration bench opens the same shared journal viewer.
 	_restoration_view.set_journal_viewport(_book_viewport)
 	_book_viewport.closed.connect(_on_journal_closed)
@@ -151,8 +154,15 @@ func _on_journal_closed() -> void:
 
 
 func _on_phone_pressed() -> void:
-	var line := "You check your phone. [i]The marketplace to sell restored pieces lands here soon.[/i]"
-	_open_dialogue([line], false)
+	# The phone opens the Marketplace app (Buy tools now; selling comes with the
+	# Phase-14 buyer negotiation). It covers the shop and pauses time via PAUSE_PHONE.
+	_set_interactables_enabled(false)
+	_marketplace_screen.open()
+
+
+func _on_marketplace_closed() -> void:
+	_set_interactables_enabled(true)
+	_refresh_ui()
 
 
 ## Opens the dialogue box, optionally showing the visitor sprite, and freezes the
@@ -203,6 +213,12 @@ func _create_restoration_view() -> RestorationView:
 	var view: RestorationView = RESTORATION_VIEW_SCENE.instantiate()
 	add_child(view)
 	return view
+
+
+func _create_marketplace_screen() -> MarketplaceScreen:
+	var screen: MarketplaceScreen = MARKETPLACE_SCREEN_SCENE.instantiate()
+	add_child(screen)
+	return screen
 
 
 # --- Diegetic interactables ---------------------------------------------------

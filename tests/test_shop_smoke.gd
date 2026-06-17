@@ -80,17 +80,30 @@ func test_door_dialogue_pauses_and_resumes_clock_via_keyboard() -> void:
 
 
 func test_dialogue_advances_via_left_click() -> void:
-	_hud.phone_pressed.emit()
+	_hud.door_pressed.emit()
 	await wait_physics_frames(1)
 
 	var dialogue: DialogueBox = _hud.get_node("DialogueBox")
-	assert_true(dialogue.visible, "Phone placeholder opens a dialogue")
-	assert_false(_visitor.visible, "No visitor for the phone placeholder")
+	assert_true(dialogue.visible, "Door opens a dialogue")
 
 	await _advance_until_closed(dialogue, _make_click_event)
 
 	assert_false(dialogue.visible, "Left click advances and closes the dialogue")
-	assert_true(_shop.is_day_running(), "Clock resumes after the placeholder dialogue")
+	assert_true(_shop.is_day_running(), "Clock resumes after the dialogue")
+
+
+func test_phone_opens_marketplace_and_pauses() -> void:
+	_hud.phone_pressed.emit()
+	await wait_physics_frames(1)
+
+	var marketplace: MarketplaceScreen = _shop.get_node("MarketplaceScreen")
+	assert_true(marketplace.visible, "Phone opens the Marketplace app")
+	assert_false(_shop.is_day_running(), "Shop time pauses while the phone is open")
+	assert_false(_visitor.visible, "No visitor for the phone")
+
+	marketplace.close()
+	await wait_physics_frames(1)
+	assert_true(_shop.is_day_running(), "Clock resumes after the phone closes")
 
 
 # --- Diegetic 3D interactables ------------------------------------------

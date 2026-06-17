@@ -8,7 +8,10 @@
       "enables": ["pendant_wipe"],
       "quality": 1,
       "cost": 0,
-      "is_legacy": true
+      "is_legacy": true,
+      "durability": 0,
+      "buyable": false,
+      "ship_hours": 0
     },
     {
       "record_type": "tool",
@@ -17,7 +20,10 @@
       "enables": ["tin_pry"],
       "quality": 1,
       "cost": 80,
-      "is_legacy": false
+      "is_legacy": false,
+      "durability": 12,
+      "buyable": true,
+      "ship_hours": 2
     },
     {
       "record_type": "tool",
@@ -26,7 +32,10 @@
       "enables": ["decal_clean"],
       "quality": 1,
       "cost": 0,
-      "is_legacy": true
+      "is_legacy": true,
+      "durability": 0,
+      "buyable": false,
+      "ship_hours": 0
     },
     {
       "record_type": "tool",
@@ -35,7 +44,10 @@
       "enables": ["decal_clean"],
       "quality": 1,
       "cost": 0,
-      "is_legacy": true
+      "is_legacy": true,
+      "durability": 0,
+      "buyable": false,
+      "ship_hours": 0
     },
     {
       "record_type": "tool",
@@ -44,7 +56,10 @@
       "enables": ["decal_clean", "photo_restoration"],
       "quality": 2,
       "cost": 120,
-      "is_legacy": false
+      "is_legacy": false,
+      "durability": 10,
+      "buyable": true,
+      "ship_hours": 3
     },
     {
       "record_type": "tool",
@@ -53,7 +68,10 @@
       "enables": ["decal_clean"],
       "quality": 1,
       "cost": 60,
-      "is_legacy": false
+      "is_legacy": false,
+      "durability": 12,
+      "buyable": true,
+      "ship_hours": 2
     },
     {
       "record_type": "tool",
@@ -62,7 +80,10 @@
       "enables": ["decal_clean"],
       "quality": 1,
       "cost": 40,
-      "is_legacy": false
+      "is_legacy": false,
+      "durability": 15,
+      "buyable": true,
+      "ship_hours": 2
     },
     {
       "record_type": "tool",
@@ -71,7 +92,10 @@
       "enables": ["decal_clean", "frame_repair"],
       "quality": 2,
       "cost": 90,
-      "is_legacy": false
+      "is_legacy": false,
+      "durability": 8,
+      "buyable": true,
+      "ship_hours": 3
     },
     {
       "record_type": "tool",
@@ -80,7 +104,10 @@
       "enables": ["decal_clean"],
       "quality": 1,
       "cost": 70,
-      "is_legacy": false
+      "is_legacy": false,
+      "durability": 12,
+      "buyable": true,
+      "ship_hours": 2
     },
     {
       "record_type": "tool",
@@ -89,7 +116,10 @@
       "enables": ["photo_join"],
       "quality": 2,
       "cost": 100,
-      "is_legacy": false
+      "is_legacy": false,
+      "durability": 6,
+      "buyable": true,
+      "ship_hours": 3
     }
   ]
 }

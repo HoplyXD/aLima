@@ -19,6 +19,11 @@ signal triage_completed(kept_ids: Array[String], recycled_ids: Array[String])
 signal restoration_completed(instance_id: String, condition: float, tool_id: String)
 signal object_opened(instance_id: String, result: String, content_id: String)
 
+# --- Tool economy events ---
+signal tool_broke(tool_id: String, uid: String)
+signal tool_purchased(tool_id: String, arrival_index: int)
+signal tool_arrived(tool_id: String, uid: String)
+
 # --- Scanner events ---
 signal scanner_response_received(instance_id: String, status: String)
 signal scanner_verdict_committed(instance_id: String, verdict: String)
