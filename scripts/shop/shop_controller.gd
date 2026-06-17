@@ -38,9 +38,20 @@ var _quest_artifacts := 1
 @onready var _book_viewport: BookViewport = $BookViewport
 @onready var _restoration_view: RestorationView = _create_restoration_view()
 
+# Diegetic 3D shop interactables. Each one fires the same controller handler as
+# its HUD fallback button, so the physical prop and the accessibility button are
+# interchangeable.
+@onready var _door_interactable: Interactable3D = $Interactables/DoorInteractable
+@onready var _workbench_interactable: Interactable3D = $Interactables/WorkbenchInteractable
+@onready var _journal_interactable: Interactable3D = $Interactables/JournalInteractable
+@onready var _phone_interactable: Interactable3D = $Interactables/PhoneInteractable
+@onready var _delivery_interactable: Interactable3D = $Interactables/DeliveryInteractable
+
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	# Required for the diegetic Interactable3D props to receive mouse clicks/hover.
+	get_viewport().physics_object_picking = true
 
 	_hud.door_pressed.connect(_on_door_pressed)
 	_hud.workbench_pressed.connect(_on_workbench_pressed)
@@ -48,6 +59,8 @@ func _ready() -> void:
 	_hud.phone_pressed.connect(_on_phone_pressed)
 	_hud.morning_delivery_pressed.connect(_on_morning_delivery_pressed)
 	_hud.dialogue_finished.connect(_on_dialogue_finished)
+
+	_connect_interactables()
 
 	_visitor.visible = false
 
@@ -120,17 +133,20 @@ func _on_door_pressed() -> void:
 
 
 func _on_workbench_pressed() -> void:
+	_set_interactables_enabled(false)
 	_restoration_view.open()
 
 
 func _on_journal_pressed() -> void:
 	# The journal is the book rendered in its own viewport overlay. Opening it covers
 	# the shop; it closes via Esc, the Close button, or clicking off the book.
+	_set_interactables_enabled(false)
 	_book_viewport.open()
 	_hud.set_journal_open(true)
 
 
 func _on_journal_closed() -> void:
+	_set_interactables_enabled(true)
 	_hud.set_journal_open(false)
 
 
@@ -145,11 +161,13 @@ func _on_phone_pressed() -> void:
 func _open_dialogue(lines: Array, show_visitor: bool) -> void:
 	DayClock.request_pause(DayClock.PAUSE_DIALOGUE)
 	_hud.set_actions_visible(false)
+	_set_interactables_enabled(false)
 	_visitor.visible = show_visitor
 	_hud.start_dialogue(lines)
 
 
 func _generate_and_show_triage() -> void:
+	_set_interactables_enabled(false)
 	var repo := DataRepository.singleton()
 
 	# Plan carrier placements once per loop if missing.
@@ -172,10 +190,12 @@ func _on_morning_delivery_pressed() -> void:
 
 
 func _on_triage_closed() -> void:
+	_set_interactables_enabled(true)
 	_refresh_ui()
 
 
 func _on_restoration_closed() -> void:
+	_set_interactables_enabled(true)
 	_refresh_ui()
 
 
@@ -183,6 +203,43 @@ func _create_restoration_view() -> RestorationView:
 	var view: RestorationView = RESTORATION_VIEW_SCENE.instantiate()
 	add_child(view)
 	return view
+
+
+# --- Diegetic interactables ---------------------------------------------------
+
+
+func _connect_interactables() -> void:
+	# Each physical prop reuses the existing HUD-button handler unchanged.
+	_door_interactable.activated.connect(_on_door_pressed)
+	_workbench_interactable.activated.connect(_on_workbench_pressed)
+	_journal_interactable.activated.connect(_on_journal_pressed)
+	_phone_interactable.activated.connect(_on_phone_pressed)
+	_delivery_interactable.activated.connect(_on_morning_delivery_pressed)
+	for entry in _interactables():
+		entry.hover_changed.connect(_on_interactable_hover.bind(entry))
+
+
+func _interactables() -> Array[Interactable3D]:
+	return [
+		_door_interactable,
+		_workbench_interactable,
+		_journal_interactable,
+		_phone_interactable,
+		_delivery_interactable,
+	]
+
+
+func _on_interactable_hover(hovering: bool, source: Interactable3D) -> void:
+	_hud.set_prompt(source.prompt_text if hovering else "")
+
+
+## Switches every shop prop on/off together. Called whenever a full-screen overlay
+## opens or closes so a click can't fall through to the shop behind it.
+func _set_interactables_enabled(value: bool) -> void:
+	for entry in _interactables():
+		entry.set_enabled(value)
+	if not value:
+		_hud.set_prompt("")
 
 
 func _count_inventory_by_glow(restored_only: bool) -> Dictionary:
@@ -223,4 +280,6 @@ func _on_dialogue_finished() -> void:
 	# re-apply the journal layout so it stays consistent.
 	if _book_viewport.is_open():
 		_hud.set_journal_open(true)
+	else:
+		_set_interactables_enabled(true)
 	DayClock.release_pause(DayClock.PAUSE_DIALOGUE)

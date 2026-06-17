@@ -51,6 +51,7 @@ var _journal_viewport: BookViewport
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
 @onready var _object: RestorationObject3D = $ViewportContainer/SubViewport/World/ObjectPivot
+@onready var _tool_tray: RestorationToolTray = $ViewportContainer/SubViewport/World/ToolTray
 @onready var _viewport_container: SubViewportContainer = $ViewportContainer
 @onready var _input_catcher: Control = $InputCatcher
 
@@ -208,9 +209,10 @@ func load_instance(uid: String) -> void:
 	_title.text = template.display_name
 	_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()
+	_tool_tray.build_tools(_service.get_available_tools())
 	reset_view()
 	_refresh(inst, template)
-	_caption_label.text = "Rotate to inspect, then choose a tool and work the surface."
+	_caption_label.text = "Rotate to inspect, then pick up a tool from the bench and work the surface."
 	_log(
 		(
 			"load_instance(%s): template=%s state=%s condition=%.0f tools=%d"
@@ -249,6 +251,9 @@ func _rebuild_tool_palette() -> void:
 func select_tool(tool_id: String) -> void:
 	_selected_tool_id = tool_id
 	_log("select_tool(%s) -> mode CLEAN" % tool_id)
+	# The bench tool prop is the primary selection surface; the HUD buttons are a
+	# labelled accessibility/fallback that we keep visually in sync.
+	_tool_tray.set_selected(tool_id)
 	for child in _tool_container.get_children():
 		if child is Button:
 			child.button_pressed = (child as Button).text == _tool_display_name(tool_id)
@@ -416,6 +421,7 @@ func _show_empty_state() -> void:
 	_clasp_prompt.visible = false
 	for child in _tool_container.get_children():
 		child.queue_free()
+	_tool_tray.build_tools([] as Array[ToolDefinition])
 
 
 func _show_invalid_state() -> void:
@@ -445,8 +451,16 @@ func get_selected_uid() -> String:
 	return _selected_uid
 
 
+func get_selected_tool_id() -> String:
+	return _selected_tool_id
+
+
 func get_restoration_object() -> RestorationObject3D:
 	return _object
+
+
+func get_tool_tray() -> RestorationToolTray:
+	return _tool_tray
 
 
 func owns_pause() -> bool:
@@ -511,21 +525,20 @@ func _on_catcher_gui_input(event: InputEvent) -> void:
 
 
 func _handle_action_event(event: InputEvent) -> bool:
-	if event.is_action_pressed("restoration_clean"):
-		_controller_clean()
-		return true
-	if event.is_action_pressed("restoration_open"):
-		try_open_clasp()
-		return true
-	if event.is_action_pressed("restoration_reset_view"):
-		reset_view()
-		return true
-	if event.is_action_pressed("restoration_toggle_mode"):
-		_toggle_mode()
-		return true
-	if event.is_action_pressed("ui_cancel"):
-		close()
-		return true
+	# action -> zero-arg handler. Keeps a single dispatch point (and stays under the
+	# lint return-count cap) as more keyboard/controller actions are added.
+	var handlers := {
+		"restoration_clean": _controller_clean,
+		"restoration_open": try_open_clasp,
+		"restoration_reset_view": reset_view,
+		"restoration_toggle_mode": _toggle_mode,
+		"restoration_cycle_tool": func() -> void: cycle_tool(1),
+		"ui_cancel": close,
+	}
+	for action in handlers:
+		if event.is_action_pressed(action):
+			(handlers[action] as Callable).call()
+			return true
 	return false
 
 
@@ -548,6 +561,10 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			if not _pointer_over_viewport(pos):
 				return
 			if _try_clasp_at_pointer(pos):
+				return
+			# Picking up a bench tool prop selects it (off to the side of the object,
+			# so it never competes with a cleaning stroke or a rotate drag).
+			if _try_tool_pick_at_pointer(pos):
 				return
 			_last_pointer = pos
 			if _mode == Mode.CLEAN:
@@ -630,6 +647,37 @@ func _try_clasp_at_pointer(pos: Vector2) -> bool:
 	return false
 
 
+func _try_tool_pick_at_pointer(pos: Vector2) -> bool:
+	var origin := _camera.project_ray_origin(_to_viewport(pos))
+	var dir := _camera.project_ray_normal(_to_viewport(pos))
+	var tool_id := _tool_tray.ray_pick(origin, dir)
+	if tool_id.is_empty():
+		return false
+	select_tool(tool_id)
+	return true
+
+
+## Ray-tests the bench tool props and selects the hit tool. Returns the selected
+## tool id, or "" on a miss (so aiming at empty space is a no-op). Test seam that
+## mirrors attempt_clean_with_ray().
+func attempt_select_tool_with_ray(origin: Vector3, direction: Vector3) -> String:
+	var tool_id := _tool_tray.ray_pick(origin, direction)
+	if not tool_id.is_empty():
+		select_tool(tool_id)
+	return tool_id
+
+
+## Cycles selection to the next owned tool prop. Gives controller/keyboard players
+## a diegetic-equivalent path to picking up a tool without precision aiming.
+func cycle_tool(step: int = 1) -> void:
+	var ids := _tool_tray.get_tool_ids()
+	if ids.is_empty():
+		return
+	var current := ids.find(_selected_tool_id)
+	var next := 0 if current < 0 else posmod(current + step, ids.size())
+	select_tool(ids[next])
+
+
 func _ray_at_pointer(pos: Vector2) -> Dictionary:
 	var vp := _to_viewport(pos)
 	var origin := _camera.project_ray_origin(vp)
@@ -672,6 +720,7 @@ func _ensure_input_actions() -> void:
 	_add_action("restoration_open", [_key(KEY_E)], [_joy_button(JOY_BUTTON_X)])
 	_add_action("restoration_reset_view", [_key(KEY_R)], [_joy_button(JOY_BUTTON_Y)])
 	_add_action("restoration_toggle_mode", [_key(KEY_TAB)], [_joy_button(JOY_BUTTON_LEFT_SHOULDER)])
+	_add_action("restoration_cycle_tool", [_key(KEY_Q)], [_joy_button(JOY_BUTTON_RIGHT_SHOULDER)])
 
 
 func _add_action(action: String, keys: Array, pads: Array) -> void:
