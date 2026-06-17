@@ -9,9 +9,10 @@ extends Control
 ## journal entries. All persistence and archive routing live in JournalService and
 ## SeatingService.
 
-const CASE_PAGE_NUMBER: int = 4  ## First paper page (left side of the open spread).
-const INDEX_PAGE_NUMBER: int = 5  ## Right side of the first spread: entry list.
-const FIRST_ENTRY_PAGE_NUMBER: int = 6
+const CASE_PAGE_NUMBER: int = 4  ## First paper page: the Fragment Case (?/5 found).
+const BLEMISH_PAGE_NUMBER: int = 5  ## Blemish Guide: each blemish and the tool that cleans it.
+const INDEX_PAGE_NUMBER: int = 6  ## Object Archive entry list.
+const FIRST_ENTRY_PAGE_NUMBER: int = 7
 
 ## Placeholder colors for the five fragment slots. These are development stand-ins
 ## for the final fragment art/geometry; see docs/phase-task.md P9.4.
@@ -44,6 +45,8 @@ func set_number(value: int) -> void:
 	_number_label.text = ("- " + str(value - 3) + " -") if value >= 4 else ""
 	if value == CASE_PAGE_NUMBER:
 		_render_case_page()
+	elif value == BLEMISH_PAGE_NUMBER:
+		_render_blemish_page()
 	elif value == INDEX_PAGE_NUMBER:
 		_render_index_page()
 	elif value >= FIRST_ENTRY_PAGE_NUMBER:
@@ -105,6 +108,13 @@ func _render_case_page() -> void:
 		if fragment.state == ModelEnums.FragmentState.SEATED:
 			seated_slot_by_index[fragment.case_slot_index] = fragment
 
+	var counter := Label.new()
+	counter.text = "%d / 5 fragments found" % seated_slot_by_index.size()
+	counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	counter.add_theme_font_size_override("font_size", 18)
+	counter.add_theme_color_override("font_color", Color(0.1, 0.05, 0.02))
+	container.add_child(counter)
+
 	for slot_index in range(5):
 		var panel := Panel.new()
 		panel.custom_minimum_size = Vector2(56, 80)
@@ -165,7 +175,77 @@ func _render_case_page() -> void:
 	container.add_child(note)
 
 
-# --- Entry index (page 5) ----------------------------------------------------
+# --- Blemish Guide (page 2) --------------------------------------------------
+
+
+func _render_blemish_page() -> void:
+	_text.visible = false
+	_text.text = ""
+
+	var container := VBoxContainer.new()
+	container.anchors_preset = Control.PRESET_FULL_RECT
+	container.offset_left = 20.0
+	container.offset_top = 20.0
+	container.offset_right = -20.0
+	container.offset_bottom = -40.0
+	container.add_theme_constant_override("separation", 6)
+	_background.add_child(container)
+	_slot_container = container
+
+	var title := Label.new()
+	title.text = "Blemish Guide"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color(0.1, 0.05, 0.02))
+	container.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "What sticks to the artifacts — and the tool that lifts each one."
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle.add_theme_font_size_override("font_size", 13)
+	subtitle.add_theme_color_override("font_color", Color(0.2, 0.15, 0.1))
+	container.add_child(subtitle)
+
+	for blemish in DataRepository.singleton().get_blemish_types_sorted():
+		container.add_child(_make_blemish_note(blemish as BlemishType))
+
+
+## Builds one blemish "note": a colour swatch (placeholder for a picture), the
+## blemish name, and the tool that cleans it.
+func _make_blemish_note(blemish: BlemishType) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var swatch := ColorRect.new()
+	swatch.custom_minimum_size = Vector2(40, 40)
+	swatch.color = blemish.to_color()
+	swatch.tooltip_text = "Placeholder swatch — final blemish picture pending art."
+	row.add_child(swatch)
+
+	var text := VBoxContainer.new()
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(text)
+
+	var name_label := Label.new()
+	name_label.text = blemish.display_name
+	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_color_override("font_color", Color(0.1, 0.05, 0.02))
+	text.add_child(name_label)
+
+	var tool := DataRepository.singleton().get_tool(blemish.cleaning_tool)
+	var tool_name := tool.display_name if tool != null else blemish.cleaning_tool
+	var tool_label := Label.new()
+	tool_label.text = "Clean with: %s" % tool_name
+	tool_label.add_theme_font_size_override("font_size", 12)
+	tool_label.add_theme_color_override("font_color", Color(0.3, 0.2, 0.15))
+	text.add_child(tool_label)
+
+	return row
+
+
+# --- Entry index (page 6) ----------------------------------------------------
 
 
 func _render_index_page() -> void:
@@ -187,7 +267,7 @@ func _render_index_page() -> void:
 	_text.scroll_to_line(0)
 
 
-# --- Individual entry pages (page 6+) ----------------------------------------
+# --- Individual entry pages (page 7+) ----------------------------------------
 
 
 func _render_entry_page(entry_index: int) -> void:

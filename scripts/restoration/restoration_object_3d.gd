@@ -62,6 +62,18 @@ var _pitch: float = AUTHORED_PITCH
 var _authored_basis: Basis = Basis.IDENTITY
 var _clasp_closed_position: Vector3 = Vector3(0.0, 0.62, 0.0)
 
+## Photo/blemish mode (decal-based templates: photos, frames, paper). Instead of a
+## shader dirt mask, the object becomes a flat photo plane carrying discrete
+## blemish hotspots the player clicks to clean. Placeholder development geometry.
+const PHOTO_HALF_W: float = 0.78
+const PHOTO_HALF_H: float = 0.56
+const BLEMISH_RADIUS: float = 0.13  ## Pick radius for a blemish hotspot.
+const PHOTO_COLOR := Color(0.90, 0.87, 0.79)
+
+var _photo_mode: bool = false
+var _photo: MeshInstance3D
+var _blemishes: Dictionary = {}  ## blemish_id -> {node: MeshInstance3D, center: Vector3}
+
 
 func _ready() -> void:
 	_authored_basis = Basis.from_euler(Vector3(AUTHORED_PITCH, AUTHORED_YAW, 0.0))
@@ -76,6 +88,9 @@ func _ready() -> void:
 func configure(template: ScrapObjectTemplate, inst: ObjectInstance) -> void:
 	if not _built:
 		_build()
+	# Default back to medallion presentation; the view re-enters photo mode for
+	# decal-based templates after configuring.
+	_set_photo_mode(false)
 	var preset: Dictionary = PRESENTATION.get(
 		template.openable_type if template != null else "", PRESENTATION["_default"]
 	)
@@ -273,6 +288,165 @@ func _ray_sphere(origin: Vector3, direction: Vector3, center: Vector3, radius: f
 		if t < 0.0:
 			return {"hit": false}
 	return {"hit": true, "point": origin + dir * t, "t": t}
+
+
+# --- Photo / blemish mode ----------------------------------------------------
+
+
+## Switches into the flat photo presentation used by decal-based templates and
+## builds one clickable hotspot per authored blemish. `colors` maps a blemish
+## type to its placeholder swatch colour; `removed_ids` hides already-cleaned
+## blemishes so a reopened photo reconstructs saved progress.
+func enter_photo_mode(decals: Array, removed_ids: Array, colors: Dictionary) -> void:
+	if not _built:
+		_build()
+	_set_photo_mode(true)
+	_clear_blemishes()
+	var count := decals.size()
+	var index := 0
+	for decal in decals:
+		var center := _blemish_layout(index, count)
+		var node := _make_blemish_node(center, colors.get(decal.type, Color(0.5, 0.5, 0.5)))
+		add_child(node)
+		_blemishes[decal.id] = {"node": node, "center": center}
+		node.visible = not removed_ids.has(decal.id)
+		index += 1
+	reset_orientation()
+
+
+func _set_photo_mode(enabled: bool) -> void:
+	_photo_mode = enabled
+	if _medallion != null:
+		_medallion.visible = not enabled
+	if _bail != null:
+		_bail.visible = not enabled
+	if _clasp != null and enabled:
+		_clasp.visible = false
+		_clasp_interactive = false
+	if enabled and _photo == null:
+		_build_photo()
+	if _photo != null:
+		_photo.visible = enabled
+	if not enabled:
+		_clear_blemishes()
+
+
+func is_photo_mode() -> bool:
+	return _photo_mode
+
+
+## Ray test against the visible blemish hotspots. Returns {hit, blemish_id, point}.
+## Analytic (ray-sphere) so it runs headlessly, like the medallion surface test.
+func ray_test_blemish(origin: Vector3, direction: Vector3) -> Dictionary:
+	var best := {"hit": false}
+	var best_t := INF
+	for blemish_id in _blemishes.keys():
+		var entry: Dictionary = _blemishes[blemish_id]
+		var node: MeshInstance3D = entry["node"]
+		if node == null or not node.visible:
+			continue
+		var center: Vector3 = to_global(entry["center"])
+		var hit := _ray_sphere(origin, direction, center, BLEMISH_RADIUS)
+		if hit.get("hit", false) and hit["t"] < best_t:
+			best_t = hit["t"]
+			best = {"hit": true, "blemish_id": blemish_id, "point": hit["point"]}
+	return best
+
+
+## Hides a cleaned blemish hotspot. Presentation only; the view calls this after
+## RestorationService confirms the matching tool removed it.
+func remove_blemish(blemish_id: String) -> void:
+	if _blemishes.has(blemish_id):
+		var node: MeshInstance3D = _blemishes[blemish_id]["node"]
+		if node != null:
+			node.visible = false
+
+
+## A still-dirty blemish id for controller/keyboard cleaning (auto-target), or "".
+func auto_target_blemish_id() -> String:
+	for blemish_id in _blemishes.keys():
+		var node: MeshInstance3D = _blemishes[blemish_id]["node"]
+		if node != null and node.visible:
+			return blemish_id
+	return ""
+
+
+## Test/integration seam: ids of blemishes still showing.
+func get_visible_blemish_ids() -> Array[String]:
+	var out: Array[String] = []
+	for blemish_id in _blemishes.keys():
+		var node: MeshInstance3D = _blemishes[blemish_id]["node"]
+		if node != null and node.visible:
+			out.append(blemish_id)
+	return out
+
+
+## Test/integration seam: world-space centre of a blemish hotspot (for aiming a ray).
+func get_blemish_global_center(blemish_id: String) -> Vector3:
+	if _blemishes.has(blemish_id):
+		return to_global(_blemishes[blemish_id]["center"])
+	return Vector3.ZERO
+
+
+func has_visible_blemishes() -> bool:
+	for blemish_id in _blemishes.keys():
+		var node: MeshInstance3D = _blemishes[blemish_id]["node"]
+		if node != null and node.visible:
+			return true
+	return false
+
+
+func _clear_blemishes() -> void:
+	for blemish_id in _blemishes.keys():
+		var node: MeshInstance3D = _blemishes[blemish_id]["node"]
+		if node != null:
+			node.queue_free()
+	_blemishes.clear()
+
+
+## Lays blemishes out in a tidy grid across the photo face, slightly proud of it.
+func _blemish_layout(index: int, count: int) -> Vector3:
+	var cols := maxi(1, int(ceil(sqrt(float(count)))))
+	var rows := maxi(1, int(ceil(float(count) / float(cols))))
+	var col := index % cols
+	var row := index / cols
+	var fx := (float(col) + 0.5) / float(cols)
+	var fy := (float(row) + 0.5) / float(rows)
+	var x := lerpf(-PHOTO_HALF_W * 0.7, PHOTO_HALF_W * 0.7, fx)
+	var y := lerpf(PHOTO_HALF_H * 0.7, -PHOTO_HALF_H * 0.7, fy)
+	return Vector3(x, y, 0.04)
+
+
+func _make_blemish_node(center: Vector3, color: Color) -> MeshInstance3D:
+	var mesh := SphereMesh.new()
+	mesh.radius = BLEMISH_RADIUS * 0.7
+	mesh.height = BLEMISH_RADIUS * 1.4
+	mesh.radial_segments = 12
+	mesh.rings = 6
+	var node := MeshInstance3D.new()
+	node.name = "Blemish"
+	node.mesh = mesh
+	node.position = center
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.roughness = 0.9
+	node.material_override = mat
+	return node
+
+
+func _build_photo() -> void:
+	var quad := QuadMesh.new()
+	quad.size = Vector2(PHOTO_HALF_W * 2.0, PHOTO_HALF_H * 2.0)
+	_photo = MeshInstance3D.new()
+	_photo.name = "Photo"
+	_photo.mesh = quad
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = PHOTO_COLOR
+	mat.roughness = 1.0
+	# A photo reads from one side; keep it lit from the front without cull surprises.
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_photo.material_override = mat
+	add_child(_photo)
 
 
 # --- Geometry construction ---------------------------------------------------

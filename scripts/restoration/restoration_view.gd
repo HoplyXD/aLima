@@ -206,6 +206,8 @@ func load_instance(uid: String) -> void:
 		return
 	_object.visible = true
 	_object.configure(template, inst)
+	if _is_decal_based(template):
+		_object.enter_photo_mode(template.decals, inst.removed_decals, _blemish_colors(template))
 	_title.text = template.display_name
 	_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()
@@ -270,6 +272,97 @@ func select_tool(tool_id: String) -> void:
 func _tool_display_name(tool_id: String) -> String:
 	var tool := _service.get_repository().get_tool(tool_id)
 	return tool.display_name if tool != null else tool_id
+
+
+# --- Blemish cleaning (decal-based photos/frames/paper) ----------------------
+
+
+## True when the loaded template cleans by removing discrete blemishes rather than
+## by working a shader dirt mask.
+func _is_decal_based(template: ScrapObjectTemplate) -> bool:
+	return template != null and not template.decals.is_empty()
+
+
+## Builds a {blemish_type: Color} map from the journal blemish catalog so the photo
+## hotspots match the colours shown in the Blemish Guide.
+func _blemish_colors(template: ScrapObjectTemplate) -> Dictionary:
+	var colors := {}
+	var repo := _service.get_repository()
+	for decal in template.decals:
+		var blemish := repo.get_blemish_type(decal.type)
+		colors[decal.type] = blemish.to_color() if blemish != null else decal.to_color()
+	return colors
+
+
+## Cleans one blemish by id with the selected tool (delegates the rule to the
+## service). Removes the hotspot on success and surfaces join/scan prompts when the
+## photo becomes fully clean. Returns the service result, or null when no tool is
+## selected.
+func clean_blemish(blemish_id: String) -> RestorationService.DecalResult:
+	if _selected_tool_id.is_empty():
+		_caption_label.text = "Pick up a tool from the bench first."
+		return null
+	var result := _service.clean_decal(_selected_uid, blemish_id, _selected_tool_id)
+	if not result.ok:
+		_feedback_label.text = result.feedback
+		return result
+	if result.removed:
+		_object.remove_blemish(blemish_id)
+	_feedback_label.text = result.feedback
+	if not result.compatible:
+		_caption_label.text = "Wrong tool — %s" % result.feedback
+	elif result.reached_clean:
+		_caption_label.text = _clean_photo_caption()
+	else:
+		_caption_label.text = "Lifted one blemish. %d left." % result.remaining_decals
+	var inst := _service.find_instance_by_id(_selected_uid)
+	var template := (
+		_service.get_repository().get_template(inst.template_id) if inst != null else null
+	)
+	if inst != null:
+		_refresh(inst, template)
+	return result
+
+
+## Ray-tests the photo's blemishes and cleans the one hit. Returns true when a
+## blemish was targeted (so aiming at bare photo is a no-op). Test seam mirroring
+## attempt_clean_with_ray().
+func attempt_clean_blemish_with_ray(origin: Vector3, direction: Vector3) -> bool:
+	var hit := _object.ray_test_blemish(origin, direction)
+	if not hit.get("hit", false):
+		return false
+	clean_blemish(hit["blemish_id"])
+	return true
+
+
+## Performs the join step (e.g. taping torn photo halves) with the selected tool.
+## The service enforces the clean-gate and the correct join tool. Returns the
+## service result.
+func try_join() -> RestorationService.JoinResult:
+	var result := _service.join_object(_selected_uid, _selected_tool_id)
+	if result.ok and result.joined:
+		_feedback_label.text = "The pieces hold together again."
+		_caption_label.text = "Rejoined — the photograph is whole."
+	else:
+		_feedback_label.text = result.error
+		_caption_label.text = result.error
+	var inst := _service.find_instance_by_id(_selected_uid)
+	var template := (
+		_service.get_repository().get_template(inst.template_id) if inst != null else null
+	)
+	if inst != null:
+		_refresh(inst, template)
+	return result
+
+
+func _clean_photo_caption() -> String:
+	var inst := _service.find_instance_by_id(_selected_uid)
+	var template := (
+		_service.get_repository().get_template(inst.template_id) if inst != null else null
+	)
+	if template != null and template.requires_join and inst != null and not inst.is_joined:
+		return "Every blemish is gone. Pick up the Archival Tape and join the pieces."
+	return "The photograph is clean. Scan and judge it."
 
 
 # --- Cleaning (delegates every rule to RestorationService) -------------------
@@ -394,8 +487,12 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	_condition_label.text = "Condition %d / %d" % [int(inst.condition), threshold]
 	_value_label.text = "Value: P%d" % inst.value
 	_damage_label.text = "Recorded damage: %d" % inst.recorded_damage
-	_surface_bar.value = _object.coverage() * 100.0
 
+	if _object.is_photo_mode():
+		_refresh_photo(inst, template)
+		return
+
+	_surface_bar.value = _object.coverage() * 100.0
 	var is_clean := inst.state == ModelEnums.ObjState.CLEAN
 	var is_open := inst.state == ModelEnums.ObjState.OPEN
 	_object.set_clasp_revealed(is_clean)
@@ -407,6 +504,35 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_clasp_prompt.text = "Pendant is clean — scan and judge, or click the clasp to open."
 	elif is_open:
 		_clasp_prompt.visible = false
+
+
+## Refresh for decal-based photos/frames: blemish-progress bar plus join/scan
+## prompts (no clasp).
+func _refresh_photo(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
+	var total := template.decals.size() if template != null else 0
+	var cleaned := total - _remaining_blemishes(inst, template)
+	_surface_bar.value = (float(cleaned) / float(total) * 100.0) if total > 0 else 0.0
+
+	var is_clean := inst.state == ModelEnums.ObjState.CLEAN
+	_scan_button.visible = is_clean
+	var needs_join := template != null and template.requires_join and not inst.is_joined
+	_clasp_prompt.visible = is_clean
+	if is_clean and needs_join:
+		_clasp_prompt.text = "Clean — pick up the Archival Tape and join the pieces."
+	elif is_clean:
+		_clasp_prompt.text = "The photograph is clean — scan and judge it."
+	else:
+		_clasp_prompt.visible = false
+
+
+func _remaining_blemishes(inst: ObjectInstance, template: ScrapObjectTemplate) -> int:
+	if template == null:
+		return 0
+	var remaining := 0
+	for decal in template.decals:
+		if not inst.removed_decals.has(decal.id):
+			remaining += 1
+	return remaining
 
 
 func _show_empty_state() -> void:
@@ -529,7 +655,7 @@ func _handle_action_event(event: InputEvent) -> bool:
 	# lint return-count cap) as more keyboard/controller actions are added.
 	var handlers := {
 		"restoration_clean": _controller_clean,
-		"restoration_open": try_open_clasp,
+		"restoration_open": _open_or_join,
 		"restoration_reset_view": reset_view,
 		"restoration_toggle_mode": _toggle_mode,
 		"restoration_cycle_tool": func() -> void: cycle_tool(1),
@@ -567,9 +693,15 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			if _try_tool_pick_at_pointer(pos):
 				return
 			_last_pointer = pos
+			_left_down = true
+			if _object.is_photo_mode():
+				# A photo cleans by clicking discrete blemishes (or joining once clean),
+				# not by stroking a dirt mask.
+				if _mode == Mode.CLEAN and _try_photo_action_at_pointer(pos):
+					_left_down = false
+				return
 			if _mode == Mode.CLEAN:
 				_begin_stroke(pos)
-			_left_down = true
 		else:
 			if _stroke_active:
 				_end_stroke()
@@ -599,10 +731,31 @@ func _controller_clean() -> void:
 	if _selected_tool_id.is_empty():
 		_caption_label.text = "Select a tool first."
 		return
+	if _object.is_photo_mode():
+		var blemish_id := _object.auto_target_blemish_id()
+		if blemish_id.is_empty():
+			_open_or_join()
+		else:
+			clean_blemish(blemish_id)
+		return
 	var inst := _service.find_instance_by_id(_selected_uid)
 	if inst == null or inst.state != ModelEnums.ObjState.DIRTY:
 		return
 	clean_stroke_at_uv(_object.auto_target_dirty_uv())
+
+
+## Keyboard/controller "open" action: opens the clasp on an openable object, or
+## performs the join on a decal-based photo that needs reassembly.
+func _open_or_join() -> void:
+	if _object.is_photo_mode():
+		var inst := _service.find_instance_by_id(_selected_uid)
+		var template := (
+			_service.get_repository().get_template(inst.template_id) if inst != null else null
+		)
+		if template != null and template.requires_join:
+			try_join()
+		return
+	try_open_clasp()
 
 
 func _begin_stroke(pos: Vector2) -> void:
@@ -645,6 +798,28 @@ func _try_clasp_at_pointer(pos: Vector2) -> bool:
 		try_open_clasp()
 		return true
 	return false
+
+
+## In photo mode, a click either joins the cleaned halves (when the photo is clean
+## and needs joining) or cleans the blemish under the pointer. Returns true when it
+## acted, so a click on bare photo falls through to a rotate drag.
+func _try_photo_action_at_pointer(pos: Vector2) -> bool:
+	var inst := _service.find_instance_by_id(_selected_uid)
+	var template := (
+		_service.get_repository().get_template(inst.template_id) if inst != null else null
+	)
+	if (
+		inst != null
+		and template != null
+		and template.requires_join
+		and not inst.is_joined
+		and inst.state == ModelEnums.ObjState.CLEAN
+	):
+		try_join()
+		return true
+	var origin := _camera.project_ray_origin(_to_viewport(pos))
+	var dir := _camera.project_ray_normal(_to_viewport(pos))
+	return attempt_clean_blemish_with_ray(origin, dir)
 
 
 func _try_tool_pick_at_pointer(pos: Vector2) -> bool:

@@ -22,6 +22,7 @@ var technique_definitions: Dictionary = {}  ## id -> TechniqueDefinition
 var character_routes: Dictionary = {}  ## id -> CharacterRoute
 var placement_containers: Dictionary = {}  ## id -> PlacementContainer
 var scanner_cache_entries: Dictionary = {}  ## id -> ScannerCacheEntry
+var blemish_types: Dictionary = {}  ## id -> BlemishType
 var delivery_config: DeliveryConfig = DeliveryConfig.new()
 var spawn_config: SpawnConfig = SpawnConfig.new()
 var starting_kit: Dictionary = {"tool_ids": [], "technique_ids": []}
@@ -56,6 +57,7 @@ func load_from_filesystem() -> ValidationResult:
 	_load_directory("routes", _parse_route_file)
 	_load_directory("scanner-cache", _parse_scanner_cache_file)
 	_load_directory("delivery", _parse_delivery_file)
+	_load_directory("journal", _parse_journal_file)
 
 	if not _validation.is_valid():
 		_clear_state()
@@ -115,6 +117,20 @@ func get_scanner_cache(id: String) -> ScannerCacheEntry:
 	return scanner_cache_entries.get(id) as ScannerCacheEntry
 
 
+func get_blemish_type(id: String) -> BlemishType:
+	return blemish_types.get(id) as BlemishType
+
+
+## Returns the blemish catalog sorted by id for a stable Blemish Guide order.
+func get_blemish_types_sorted() -> Array:
+	var ids := blemish_types.keys()
+	ids.sort()
+	var out: Array = []
+	for id in ids:
+		out.append(blemish_types[id])
+	return out
+
+
 func get_delivery_config() -> DeliveryConfig:
 	return delivery_config
 
@@ -135,6 +151,7 @@ func _clear_state() -> void:
 	character_routes.clear()
 	placement_containers.clear()
 	scanner_cache_entries.clear()
+	blemish_types.clear()
 	delivery_config = DeliveryConfig.new()
 	spawn_config = SpawnConfig.new()
 	starting_kit = {"tool_ids": [], "technique_ids": []}
@@ -308,6 +325,26 @@ func _parse_delivery_file(file_path: String) -> void:
 		delivery_config = delivery_cfg
 
 
+func _parse_journal_file(file_path: String) -> void:
+	var doc: Variant = _read_json_file(file_path)
+	if doc == null:
+		return
+	var items := _get_items(doc, file_path)
+	for item in items:
+		if not item is Dictionary:
+			continue
+		var record_type := ModelUtils.as_string(item.get("record_type"))
+		match record_type:
+			"blemish":
+				var blemish := BlemishType.from_dictionary(item)
+				_add_record(blemish_types, blemish.id, blemish, file_path, "blemish")
+				blemish.validate(_validation, file_path)
+			_:
+				_validation.add_field_error(
+					file_path, "", "record_type", "unknown record_type '%s'" % record_type
+				)
+
+
 func _get_items(doc: Dictionary, file_path: String) -> Array:
 	if not doc.has("items"):
 		return [doc]
@@ -456,6 +493,16 @@ func _validate_cross_references() -> void:
 					"beats",
 					"beat references unknown template '%s'" % beat_template
 				)
+
+	for blemish_id in blemish_types.keys():
+		var blemish: BlemishType = blemish_types[blemish_id]
+		if not blemish.cleaning_tool.is_empty() and not tool_definitions.has(blemish.cleaning_tool):
+			_validation.add_field_error(
+				"data/journal",
+				blemish_id,
+				"cleaning_tool",
+				"unknown tool reference '%s'" % blemish.cleaning_tool
+			)
 
 	for tool_id in starting_kit.tool_ids:
 		if not tool_definitions.has(tool_id):

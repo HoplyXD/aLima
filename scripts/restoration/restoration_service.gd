@@ -213,7 +213,11 @@ func open_clasp(uid: String) -> OpenAttemptResult:
 
 func _can_restore_instance(inst: ObjectInstance) -> bool:
 	var template := _repo.get_template(inst.template_id)
-	if template == null or not template.is_openable:
+	if template == null:
+		return false
+	# Openable objects clean toward a clasp; decal-based objects (photos/frames)
+	# clean by removing blemishes. Anything else is not a bench object.
+	if not template.is_openable and template.decals.is_empty():
 		return false
 	if inst.state == ModelEnums.ObjState.OPEN:
 		return false

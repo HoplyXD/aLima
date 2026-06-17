@@ -27,15 +27,19 @@ PortalFlowController="*res://scripts/shop/portal_flow_controller.gd"
 SeatingService="*res://scripts/journal/seating_service.gd"
 JournalService="*res://scripts/journal/journal_service.gd"
 
-[network]
-
-portal/backend_url="http://localhost:3000"
-
 [display]
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
+
+[filesystem]
+
+import/blender/enabled=false
+
+[network]
+
+portal/backend_url="http://localhost:3000"
 
 [physics]
 
