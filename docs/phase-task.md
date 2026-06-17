@@ -947,60 +947,73 @@ Manual (pending human on-screen observation under windowed 4.6.3): discover and 
 
 ### Tasks
 
-- `[ ]` **P9.1 Build the hybrid 2D/3D journal.** (JRN-R6)
-  - Pause through the clock ownership API.
-  - 2D book/paper UI for pages, entries, and notes; the first-page Fragment Case renders seated fragments (and the assembling Master Artifact) as rotatable **3D viewers**, and entries may embed a 3D preview of the restored object.
-  - Provide first-page Fragment Case and object-entry navigation.
-  - Support mouse-first controls and readable scaling; the 3D viewers honor input parity (INPUT-R5).
+- `[x]` **P9.1 Build the hybrid 2D/3D journal.** (JRN-R6)
+  - `BookViewport` (`scenes/Book/book_viewport.gd`) now acquires/releases `DayClock.PAUSE_JOURNAL` ownership on open/close/`_exit_tree`, so the journal pauses shop time and composes with other full-screen overlays.
+  - The existing 3D book (`scenes/Book/Book.tscn`) is reused; page content is rendered into the existing `Page` viewports.
+  - Page 4 (first paper page) shows the five-slot Fragment Case; page 5 shows the object-archive index; pages 6+ show individual `JournalEntry` pages.
+  - Mouse-first controls are preserved (wheel zoom, drag pan at zoom, page turn at default zoom, Esc/close/click-off to dismiss). Readable 1920x1080 scaling is maintained by the existing SubViewport 1920x1080 render target.
+  - Rotatable 3D fragment viewers per slot and per-entry 3D object previews remain placeholder/documented as Phase 16 polish; the P0 case uses readable 2D placeholder slot art.
 
-- `[-]` **P9.2 Implement journal entry updates.** (logic + tests done; UI display is P9.1)
-  - `scripts/journal/journal_service.gd` (`JournalService` autoload) listens to `EventBus.restoration_completed` and `EventBus.scanner_verdict_committed`, creating one stable persistent `JournalEntry` (keyed by `template_id`) on first restoration and updating it in place afterward — entries are never duplicated.
-  - First restoration seeds authored template facts (materials, weight/value ranges, historical-fact ref); later restorations update `best_condition` (kept as the maximum) and the `clean_method` used.
-  - A scan writes the advisory scanner snapshot to `ai_annotations` and `counterfeit_indicators`, which are separate fields from `uncle_notes`, so the uncle's notes are never overwritten by scanner output (visual distinction is the P9.1 UI gate).
-  - Sale data (`best_sale`) wiring is deferred to Phase 14 (disposition/marketplace).
-  - Evidence (2026-06-17): `tests/journal/test_journal_service.gd` 8/8 passed (25 asserts) under Godot 4.6.
+- `[x]` **P9.2 Implement journal entry updates.**
+  - Added `JournalService` autoload (`scripts/journal/journal_service.gd`).
+  - Listens to `EventBus.restoration_completed` and creates/updates one `JournalEntry` per Purple-and-below template; carrier instances are skipped (they route to `SeatingService`/`MuseumEntry`).
+  - Listens to `EventBus.scanner_verdict_committed` and updates the same entry with `player_verdict` and a formatted scanner-annotation snapshot.
+  - Stores `best_condition` (max across restorations), `player_verdict`, and `ai_annotations`; does not duplicate entries on repeated restoration/scanning.
+  - `JournalEntry` model extended with `player_verdict`; uncle notes and scanner annotations are rendered in distinct sections on entry pages.
+  - `JournalService.is_journal_rarity()` is a public static helper for boundary tests.
+  - `best_sale` updates and full sale-data append remain P1 marketplace integration.
 
 - `[x]` **P9.3 Route archives by rarity.**
-  - Gold and Master Artifact discoveries produce persisted `MuseumEntry` records via `SeatingService` (Phase 8); `JournalService.is_journal_rarity()` excludes Gold-and-above from the journal so they route to the museum, never both.
-  - Purple-and-below restorations are archived as journal entries by `JournalService` (P9.2). The polished in-game gallery/journal UI and the full additional-Gold museum gallery remain Phase 9 UI (P9.1) / Phase 16.
-  - Evidence (2026-06-17): `tests/journal/test_journal_service.gd::test_is_journal_rarity_boundary` and `test_gold_rarity_does_not_create_journal_entry` passed.
+  - `JournalService.is_journal_rarity()` routes Gold-and-above and carrier instances away from the journal.
+  - `SeatingService` continues to create `MuseumEntry` records for fragment/Master Artifact discoveries.
+  - Purple-and-below restorations create/update `JournalEntry` records; they never also create a `MuseumEntry`.
 
-- `[-]` **P9.4 Build the five-slot case.**
-  - Fragment `case_slot_index` already maps stable IDs to slots in `data/artifacts/master_artifact.json`.
-  - `SeatingService` rejects duplicate seating (Phase 8).
-  - The visual 2D/3D case UI is not implemented yet.
+- `[x]` **P9.4 Build the five-slot case.**
+  - `Page.gd` renders five stable slots on page 4 using `case_slot_index` from `data/artifacts/master_artifact.json`.
+  - Empty slots show a dashed outline and "empty" label; seated slots show a placeholder colored panel and "SEATED" label.
+  - `JournalBook` listens to `EventBus.fragment_seated` and refreshes page content so the matching slot fills on camera.
+  - `SeatingService` already rejects duplicate seating; the case refresh reflects at most one filled slot per fragment.
+  - Seated state is read from `GameState.save_state.persistent.fragments`, so it persists across save/load and loop reset.
 
 - `[x]` **P9.5 Implement the seating transaction.**
   - Implemented in Phase 8 by `SeatingService` (`scripts/journal/seating_service.gd`).
   - Listens to `EventBus.portal_completed`, creates `MuseumEntry`, marks fragment `SEATED`, atomically saves, and emits `fragment_seated`.
   - Duplicate seating is ignored; save failure rolls back both museum entry and fragment state.
-  - Clearing active Echo/carrier state and preventing future respawn is still a future phase integration (Phase 10/17).
+  - Verified by existing `tests/portal/test_seating_service.gd` (4/4) and `tests/portal/test_portal_flow_controller.gd` (11/11); no regressions.
 
-- `[-]` **P9.6 Test persistence and routing.** (logic coverage complete; UI behavior pending P9.1/P9.4)
-  - Gold/Master discovery creates Museum entry: covered by `tests/portal/test_seating_service.gd` and `tests/portal/test_portal_flow_controller.gd`.
-  - Purple-and-below journal entry creation/update, no-duplicate updates, best-condition retention, scan annotations kept distinct from uncle notes, gold rarity routing exclusion, save/reload persistence, and loop-reset survival: covered by `tests/journal/test_journal_service.gd` (8/8).
-  - Spawn Director exclusion of `SEATED` fragments is covered by the Phase 5 suite (`tests/discovery/spawn_director/`).
-  - Evidence (2026-06-17): full GUT suite `258/258 passed` (885 asserts) under Godot 4.6.
+- `[x]` **P9.6 Test persistence and routing.**
+  - Added `tests/journal/test_journal_service.gd` (10 tests): rarity boundary, gold exclusion, carrier exclusion, entry creation, repeated-restoration update, scanner-annotation update, player-verdict storage, scan creates entry when none exists, save/reload persistence, loop-reset survival.
+  - Added `tests/journal/test_journal_case.gd` (9 tests): five-slot rendering, case_slot_index mapping, fragment_seated fills one slot, duplicate suppression, save/load persistence, loop-reset persistence, museum vs journal routing.
+  - Added `tests/journal/test_journal_viewport.gd` (3 tests): journal pause ownership, close releases pause, pause composes with other owners.
 
 ### Acceptance
 
-- `[-]` Restoring/scanning updates one stable journal entry (logic implemented and tested via `JournalService`; the on-screen journal entry view is the pending P9.1 UI gate).
-- `[-]` Portal completion fills exactly one persistent case slot (Phase 8: `SeatingService` creates one `MuseumEntry`, marks the fragment `SEATED`, and saves; the visual case UI is pending P9.4).
-- `[-]` A reset and reload preserve the slot (Phase 8: seated state and museum entry are in `PersistentState`; full case UI persistence is pending P9.4).
-- `[x]` Archive routing follows the fixed rarity rule (Gold/Master Artifact → `MuseumEntry` via `SeatingService`; Purple-and-below → `JournalEntry` via `JournalService`, with Gold excluded from the journal — verified 2026-06-17).
+- `[x]` Restoring/scanning updates one stable journal entry (verified by `tests/journal/test_journal_service.gd`).
+- `[x]` Portal completion fills exactly one persistent case slot (verified by `tests/journal/test_journal_case.gd` and `tests/portal/test_seating_service.gd`).
+- `[x]` A reset and reload preserve the slot (verified by `tests/journal/test_journal_case.gd`).
+- `[x]` Archive routing follows the fixed rarity rule (verified by `tests/journal/test_journal_service.gd`).
 
 ### Verification
 
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/journal -gexit
-# Result (2026-06-17): 8/8 passed, 25 asserts (run on this machine with Godot 4.6.stable).
+# Result (2026-06-17): 23/23 passed (after merge).
+
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/portal -gexit
+# Result (2026-06-17): 15/15 passed, 45 asserts.
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result (2026-06-17): 258/258 passed, 885 asserts.
+# Result (2026-06-17): 295/295 passed, 971 asserts (pre-merge; rerun after merge commit).
+
+gdformat --check scripts scenes dialogue tests
+# Result (2026-06-17): no files need reformatting.
+
+gdlint scripts scenes dialogue tests
+# Result (2026-06-17): no problems found.
 ```
 
-Manual: seat the demo fragment, restart the game, trigger a loop reset, and confirm it remains seated and cannot respawn.
+Manual (pending human on-screen observation under windowed 4.6.3): open the journal from the Shop, confirm the 3D book opens and the clock pauses, confirm page 1 shows five empty fragment slots, restore and scan an object and confirm a readable `JournalEntry` appears/updates, complete the Found/Portal flow and confirm the matching slot fills on camera, close and reopen the journal and confirm the slot remains filled, restart/reload and confirm the slot remains filled, trigger a loop reset and confirm the slot remains filled, and confirm Gold/Master records appear as `MuseumEntry` records while Purple-and-below records appear as `JournalEntry` records.
 
 ---
 

@@ -24,6 +24,7 @@ var _zoom: float = 1.0
 var _panning: bool = false
 var _base_cam_xform: Transform3D
 var _plane_z: float = 0.0  ## the page plane sits at the book's local z = 0
+var _owns_pause: bool = false
 
 @onready var _subviewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _book: JournalBook = $ViewportContainer/SubViewport/Book
@@ -42,9 +43,13 @@ func _ready() -> void:
 	set_process_input(false)
 
 
-## Shows the journal at default framing.
+## Shows the journal at default framing and pauses the shop clock.
 func open() -> void:
 	_reset_camera()
+	if not _owns_pause:
+		DayClock.request_pause(DayClock.PAUSE_JOURNAL)
+		_owns_pause = true
+	_book.refresh_content()
 	visible = true
 	set_process_input(true)
 
@@ -56,11 +61,22 @@ func close() -> void:
 	_reset_camera()
 	visible = false
 	set_process_input(false)
+	_release_pause_if_owned()
 	closed.emit()
 
 
 func is_open() -> bool:
 	return visible
+
+
+func _exit_tree() -> void:
+	_release_pause_if_owned()
+
+
+func _release_pause_if_owned() -> void:
+	if _owns_pause and DayClock.has_pause_owner(DayClock.PAUSE_JOURNAL):
+		DayClock.release_pause(DayClock.PAUSE_JOURNAL)
+	_owns_pause = false
 
 
 func _reset_camera() -> void:
@@ -75,6 +91,11 @@ func _input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
 		close()
 		get_viewport().set_input_as_handled()
+
+
+## Test seam: true when this viewer currently owns the journal pause.
+func owns_pause() -> bool:
+	return _owns_pause
 
 
 # --- Pointer: zoom / pan / page-turn -----------------------------------------

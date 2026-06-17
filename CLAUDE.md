@@ -41,7 +41,7 @@
 alima/
 ├── CLAUDE.md                  ← you are here
 ├── README.md                  ← GDD / narrative and design source
-├── project.godot              ← Godot 4.6.3 project root; autoloads EventBus, GameState, SaveService, DayClock, LoopController
+├── project.godot              ← Godot 4.6.3 project root; autoloads EventBus, GameState, SaveService, DayClock, LoopController, EchoController, PortalFlowController, SeatingService, JournalService
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
@@ -59,7 +59,8 @@ alima/
 ├── tests/                     ← GUT tests (test_*.gd)
 │   ├── models/                ← model round-trip/validation tests
 │   ├── core/                  ← repository, autoload, save, run-context tests
-│   └── delivery/              ← delivery generation, placement, glow, triage tests
+│   ├── delivery/              ← delivery generation, placement, glow, triage tests
+│   └── journal/               ← journal entries, fragment case, and BookViewport pause tests
 ├── .github/workflows/ci.yml   ← CI: 4.6.3 import + GUT + gdformat + gdlint
 ├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
 ├── server/                    ← Express: LLM proxy + portal client (Phase 8; cached `/api/scan`, `/api/portal/discovery` proxy, `.env.example`, Jest tests)
@@ -223,7 +224,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`250/250` passing, 860 asserts as of 2026-06-16, including Phases 0–8), focused model/core/delivery/restoration/spawn/echo/scanner/portal suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Backend suites also pass: `server/npm test` → 12/12; `mock-portal/npm test` → 4/4. Runtime tasks (including on-screen/real-time clock observation, restoration mouse/controller/touch flow, and the full Found → Unlock end-to-end observation) still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`295/295` passing, 971 asserts as of 2026-06-17, including Phases 0–9), focused model/core/delivery/restoration/spawn/echo/scanner/portal/journal suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Backend suites also pass: `server/npm test` → 12/12; `mock-portal/npm test` → 4/4. Runtime tasks (including on-screen/real-time clock observation, restoration mouse/controller/touch flow, journal/case readability, and the full Found → Unlock end-to-end observation) still require their own acceptance checks before `[x]`.
 
 ---
 

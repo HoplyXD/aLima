@@ -1,7 +1,8 @@
 extends GutTest
 ## Tests for JournalService: stable journal-entry updates (P9.2) and rarity
 ## routing (P9.3). Gold-and-above route to the museum; Purple-and-below are
-## archived as a single, non-duplicated journal entry.
+## archived as a single, non-duplicated journal entry. Carrier instances also
+## skip journal archiving (they route to SeatingService/MuseumEntry).
 
 const JournalServiceScript := preload("res://scripts/journal/journal_service.gd")
 
@@ -70,6 +71,17 @@ func test_gold_rarity_does_not_create_journal_entry() -> void:
 	assert_eq(GameState.save_state.persistent.journal_entries.size(), 0)
 
 
+func test_carrier_instance_does_not_create_journal_entry() -> void:
+	var inst := _add_instance("obj_carrier", JOURNAL_TEMPLATE, 100.0)
+	inst.is_carrier = true
+	inst.fragment_id = "fragment_01"
+
+	var wrote: bool = _journal.record_restoration(inst, SOFT_CLOTH)
+
+	assert_false(wrote, "Carrier instances must route to museum, not journal")
+	assert_eq(GameState.save_state.persistent.journal_entries.size(), 0)
+
+
 # --- Entry creation and update (P9.2) --------------------------------------
 
 
@@ -106,11 +118,9 @@ func test_scan_updates_annotations_without_touching_uncle_notes() -> void:
 	var inst := _add_instance("obj_1", JOURNAL_TEMPLATE, 100.0)
 	_journal.record_restoration(inst, SOFT_CLOTH)
 
-	# Author an uncle note on the existing entry.
 	var entry: JournalEntry = GameState.save_state.persistent.journal_entries[JOURNAL_TEMPLATE]
 	entry.uncle_notes = "He kept this in the top drawer."
 
-	# Stash a scanned record snapshot keyed by template_id.
 	var record := ScannedRecord.new()
 	record.template_id = JOURNAL_TEMPLATE
 	record.instance_id = "obj_1"
@@ -130,6 +140,24 @@ func test_scan_updates_annotations_without_touching_uncle_notes() -> void:
 	assert_eq(entry.counterfeit_indicators, ["replaced clasp"] as Array[String])
 	assert_eq(entry.uncle_notes, "He kept this in the top drawer.")
 	assert_eq(GameState.save_state.persistent.journal_entries.size(), 1)
+
+
+func test_scan_stores_player_verdict_separately() -> void:
+	var inst := _add_instance("obj_1", JOURNAL_TEMPLATE, 100.0)
+	_journal.record_restoration(inst, SOFT_CLOTH)
+
+	var record := ScannedRecord.new()
+	record.template_id = JOURNAL_TEMPLATE
+	record.instance_id = "obj_1"
+	record.verdict = ModelEnums.Verdict.AUTHENTIC
+	record.response_snapshot = {"type": "pendant", "confidence": "high"}
+	GameState.save_state.persistent.scanned_records[JOURNAL_TEMPLATE] = record
+
+	_journal.record_scan(inst, "authentic")
+
+	var entry: JournalEntry = GameState.save_state.persistent.journal_entries[JOURNAL_TEMPLATE]
+	assert_eq(entry.player_verdict, ModelEnums.Verdict.AUTHENTIC)
+	assert_string_contains(entry.ai_annotations, "pendant")
 
 
 func test_scan_creates_entry_when_none_exists() -> void:
