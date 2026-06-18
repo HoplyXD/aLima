@@ -331,6 +331,18 @@ func _learned_technique(minigame: String) -> TechniqueDefinition:
 	return null
 
 
+## Persists the exact dirt-mask PNG onto the instance so the cleaned spots survive
+## save/reload. Called by the view (presentation) since the mask lives there; the
+## write + save stay in the service.
+func persist_dirt_mask(uid: String, png_bytes: PackedByteArray) -> void:
+	var inst := find_instance_by_id(uid)
+	if inst == null:
+		return
+	inst.dirt_mask = png_bytes
+	_write_instance_back(inst)
+	SaveService.save_game()
+
+
 func _write_instance_back(inst: ObjectInstance) -> void:
 	var inventory := _game_state.save_state.loop.inventory
 	for i in range(inventory.size()):

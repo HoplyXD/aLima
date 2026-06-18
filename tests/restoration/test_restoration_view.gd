@@ -91,6 +91,57 @@ func _clean_until_clean(view: RestorationView, uid: String) -> void:
 			break
 
 
+func test_switching_artifacts_preserves_exact_cleaned_spots() -> void:
+	_add_pendant("p_a")
+	_add_pendant("p_b")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("p_a")
+	_view.select_tool("soft_cloth")
+
+	# One stroke — partial clean (does not reach CLEAN) in a specific spot.
+	var result := _view.attempt_clean_with_ray(HIT_ORIGIN, HIT_DIR)
+	assert_not_null(result, "a surface hit cleans")
+	var coverage_a := _view.get_restoration_object().coverage()
+	assert_gt(coverage_a, 0.0, "some surface was cleaned")
+
+	# Switch to another artifact and back.
+	_view.load_instance("p_b")
+	_view.load_instance("p_a")
+
+	var coverage_back := _view.get_restoration_object().coverage()
+	assert_almost_eq(
+		coverage_back, coverage_a, 0.001, "exact cleaned spots restored, not rebuilt from condition"
+	)
+
+
+func test_cleaned_spots_persist_through_save_and_reload() -> void:
+	_add_pendant("p_a")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("p_a")
+	_view.select_tool("soft_cloth")
+	_view.attempt_clean_with_ray(HIT_ORIGIN, HIT_DIR)
+	var coverage_a := _view.get_restoration_object().coverage()
+	assert_gt(coverage_a, 0.0, "some surface was cleaned")
+	_view.close()  # persists the mask onto the instance and saves
+
+	# Reload from disk into a brand-new view (no in-memory cache to fall back on).
+	var loaded := SaveService.load_game()
+	assert_true(loaded.ok, "save reloads")
+	var view2: RestorationView = VIEW_SCENE.instantiate()
+	add_child_autofree(view2)
+	await wait_physics_frames(1)
+	view2.open()
+	view2.load_instance("p_a")
+
+	var coverage_reloaded := view2.get_restoration_object().coverage()
+	view2.close()
+	assert_almost_eq(
+		coverage_reloaded, coverage_a, 0.001, "cleaned spots survive save/reload"
+	)
+
+
 # --- Workbench integration / pause ownership --------------------------------
 
 

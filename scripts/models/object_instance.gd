@@ -19,6 +19,7 @@ var value: int = 0  ## Current assessed market value, initialized from the templ
 var recorded_damage: int = 0  ## Accumulated damage from wrong tools; persists with the instance.
 var removed_decals: Array[String] = []  ## Decal ids cleared so far (decal-based templates).
 var is_joined: bool = false  ## True once a join-step object has been reassembled.
+var dirt_mask: PackedByteArray = PackedByteArray()  ## PNG of the exact cleaned grime mask (condition-based objects); empty => rebuild from condition.
 
 
 func _init() -> void:
@@ -42,6 +43,9 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	inst.recorded_damage = ModelUtils.as_int(data.get("recorded_damage"))
 	inst.removed_decals = ModelUtils.as_string_array(data.get("removed_decals"))
 	inst.is_joined = ModelUtils.as_bool(data.get("is_joined"))
+	var raw_mask: Variant = data.get("dirt_mask", "")
+	if raw_mask is String and not (raw_mask as String).is_empty():
+		inst.dirt_mask = Marshalls.base64_to_raw(raw_mask)
 	return inst
 
 
@@ -62,6 +66,7 @@ func to_dictionary() -> Dictionary:
 		"recorded_damage": recorded_damage,
 		"removed_decals": removed_decals.duplicate(),
 		"is_joined": is_joined,
+		"dirt_mask": Marshalls.raw_to_base64(dirt_mask) if not dirt_mask.is_empty() else "",
 	}
 
 

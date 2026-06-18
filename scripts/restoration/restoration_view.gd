@@ -46,6 +46,11 @@ var _stroke_pixels: float = 0.0
 var _last_pointer: Vector2 = Vector2.ZERO
 var _stroke_uvs: PackedVector2Array = PackedVector2Array()
 var _instance_uids: Array[String] = []
+## Per-instance dirt-mask snapshots so switching artifacts mid-clean and back
+## restores the exact spots the player cleaned (condition alone can't rebuild them).
+## Decal photos persist their own removed_decals, so only condition-based masks
+## are cached. Lives for the view's lifetime (survives close/reopen of the bench).
+var _dirt_cache: Dictionary = {}
 var _scanner_screen: ScannerScreen
 var _journal_viewport: BookViewport
 var _phone: Phone
@@ -128,11 +133,24 @@ func open() -> void:
 ## Closes the view and releases pause ownership exactly once.
 func close() -> void:
 	if _is_open:
+		# Preserve the current artifact's cleaned spots so reopening restores them.
+		_cache_current_dirt()
 		_is_open = false
 		visible = false
 		set_process(false)
 		_release_pause_if_owned()
 	closed.emit()
+
+
+## Snapshots the loaded condition-based artifact's exact dirt mask into the in-memory
+## cache and persists it onto the instance (survives save/reload).
+func _cache_current_dirt() -> void:
+	if _selected_uid.is_empty() or _object.is_photo_mode():
+		return
+	var png := _object.snapshot_dirt_png()
+	if not png.is_empty():
+		_dirt_cache[_selected_uid] = png
+		_service.persist_dirt_mask(_selected_uid, png)
 
 
 func _exit_tree() -> void:
@@ -226,6 +244,8 @@ func _populate_instances() -> void:
 ## Loads a specific instance into the 3D view. Public so the Shop/tests can drive
 ## selection directly; presentation is rebuilt purely from saved instance state.
 func load_instance(uid: String) -> void:
+	# Preserve where the player cleaned on the outgoing artifact before switching.
+	_cache_current_dirt()
 	_selected_uid = uid
 	_selected_tool_id = ""
 	var inst := _service.find_instance_by_id(uid)
@@ -239,6 +259,13 @@ func load_instance(uid: String) -> void:
 	_object.configure(template, inst)
 	if _is_decal_based(template):
 		_object.enter_photo_mode(template.decals, inst.removed_decals, _blemish_colors(template))
+	elif _dirt_cache.has(uid):
+		# Restore the exact cleaned spots from this session, overriding the
+		# condition-based reconstruction.
+		_object.restore_dirt_png(_dirt_cache[uid])
+	elif not inst.dirt_mask.is_empty():
+		# Reloaded from a save: restore the persisted cleaned spots.
+		_object.restore_dirt_png(inst.dirt_mask)
 	_title.text = template.display_name
 	_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()

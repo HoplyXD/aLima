@@ -11,21 +11,20 @@ extends CanvasLayer
 
 signal closed
 
-const BG_COLOR := Color(0.06, 0.07, 0.08, 0.97)
-
 var _owns_pause: bool = false
 var _tools: ToolService
-var _artifacts_list: VBoxContainer
-var _tools_list: VBoxContainer
-var _keyitems_list: VBoxContainer
-var _status_label: Label
-var _close_button: Button
+
+@onready var _artifacts_list: VBoxContainer = %ArtifactsList
+@onready var _tools_list: VBoxContainer = %ToolsList
+@onready var _keyitems_list: VBoxContainer = %KeyItemsList
+@onready var _status_label: Label = %StatusLabel
+@onready var _close_button: Button = %CloseButton
 
 
 func _ready() -> void:
 	visible = false
 	_tools = ToolService.new()
-	_build_ui()
+	_close_button.pressed.connect(close)
 
 
 func open() -> void:
@@ -241,59 +240,3 @@ func _make_header(text: String) -> Label:
 func _clear(list: VBoxContainer) -> void:
 	for child in list.get_children():
 		child.queue_free()
-
-
-func _make_tab(title: String) -> VBoxContainer:
-	var scroll := ScrollContainer.new()
-	scroll.name = title
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 8)
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	_tab_root.add_child(scroll)
-	return list
-
-
-var _tab_root: TabContainer
-
-
-func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = BG_COLOR
-	bg.anchors_preset = Control.PRESET_FULL_RECT
-	bg.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(bg)
-
-	var margin := MarginContainer.new()
-	margin.anchors_preset = Control.PRESET_FULL_RECT
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 48)
-	bg.add_child(margin)
-
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 12)
-	margin.add_child(root)
-
-	var title := Label.new()
-	title.text = "Storage"
-	title.add_theme_font_size_override("font_size", 34)
-	root.add_child(title)
-
-	_tab_root = TabContainer.new()
-	_tab_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(_tab_root)
-	_artifacts_list = _make_tab("Artifacts")
-	_tools_list = _make_tab("Tools")
-	_keyitems_list = _make_tab("Key Items")
-
-	_status_label = Label.new()
-	_status_label.add_theme_font_size_override("font_size", 15)
-	_status_label.add_theme_color_override("font_color", Color(0.8, 0.85, 0.9))
-	root.add_child(_status_label)
-
-	_close_button = Button.new()
-	_close_button.text = "Close"
-	_close_button.focus_mode = Control.FOCUS_ALL
-	_close_button.pressed.connect(close)
-	root.add_child(_close_button)

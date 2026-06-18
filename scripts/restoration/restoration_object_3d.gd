@@ -205,6 +205,38 @@ func set_fully_clean() -> void:
 	_dirt_texture.update(_dirt_image)
 
 
+## Returns the exact dirt mask as a (small, lossless) PNG so the view can preserve
+## where the player cleaned when switching artifacts and persist it to the save.
+## Empty in photo mode (decal removal is already persisted on the instance).
+func snapshot_dirt_png() -> PackedByteArray:
+	if _photo_mode or _dirt_image == null:
+		return PackedByteArray()
+	return _dirt_image.save_png_to_buffer()
+
+
+## Restores a previously snapshotted dirt mask, re-creating the exact cleaned spots.
+func restore_dirt_png(bytes: PackedByteArray) -> void:
+	if bytes.is_empty() or _photo_mode or _dirt_image == null:
+		return
+	var img := Image.new()
+	if img.load_png_from_buffer(bytes) != OK:
+		return
+	if img.get_width() != MASK_SIZE or img.get_height() != MASK_SIZE:
+		return
+	img.convert(_dirt_image.get_format())
+	_dirt_image.copy_from(img)
+	_dirt_texture.update(_dirt_image)
+
+
+## True when the texel under the given UV has been cleaned (test/integration seam).
+func is_uv_cleaned(uv: Vector2) -> bool:
+	if _dirt_image == null:
+		return false
+	var x := clampi(int(uv.x * MASK_SIZE), 0, MASK_SIZE - 1)
+	var y := clampi(int(uv.y * MASK_SIZE), 0, MASK_SIZE - 1)
+	return _dirt_image.get_pixel(x, y).r < CLEAN_THRESHOLD
+
+
 # --- Clasp -------------------------------------------------------------------
 
 
