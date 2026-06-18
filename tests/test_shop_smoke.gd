@@ -92,18 +92,35 @@ func test_dialogue_advances_via_left_click() -> void:
 	assert_true(_shop.is_day_running(), "Clock resumes after the dialogue")
 
 
-func test_phone_opens_marketplace_and_pauses() -> void:
+func test_phone_opens_and_pauses() -> void:
 	_hud.phone_pressed.emit()
 	await wait_physics_frames(1)
 
-	var marketplace: MarketplaceScreen = _shop.get_node("MarketplaceScreen")
-	assert_true(marketplace.visible, "Phone opens the Marketplace app")
+	var phone: Phone = _shop.get_node("Phone")
+	assert_true(phone.visible, "Phone button opens the phone")
+	assert_eq(phone.get_current_app(), "", "phone opens on its home screen")
 	assert_false(_shop.is_day_running(), "Shop time pauses while the phone is open")
 	assert_false(_visitor.visible, "No visitor for the phone")
 
-	marketplace.close()
+	phone.open_app("marketplace")
+	assert_eq(phone.get_current_app(), "marketplace", "Marketplace app opens from the home grid")
+
+	phone.close()
 	await wait_physics_frames(1)
 	assert_true(_shop.is_day_running(), "Clock resumes after the phone closes")
+
+
+func test_storage_button_opens_storage_and_pauses() -> void:
+	_hud.storage_pressed.emit()
+	await wait_physics_frames(1)
+
+	var storage: StorageScreen = _shop.get_node("StorageScreen")
+	assert_true(storage.visible, "Storage button opens the Storage screen")
+	assert_false(_shop.is_day_running(), "Shop time pauses while Storage is open")
+
+	storage.close()
+	await wait_physics_frames(1)
+	assert_true(_shop.is_day_running(), "Clock resumes after Storage closes")
 
 
 # --- Diegetic 3D interactables ------------------------------------------

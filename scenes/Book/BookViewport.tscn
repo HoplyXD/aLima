@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ccwtajkvqpjyu"]
 
 [ext_resource type="Script" path="res://scenes/Book/book_viewport.gd" id="1_bv"]
-[ext_resource type="PackedScene" uid="uid://byxkmj117ohx0" path="res://scenes/Book/Book.tscn" id="2_book"]
+[ext_resource type="PackedScene" uid="uid://byxkmj117ohx0" path="res://scenes/Book/Journal.tscn" id="2_book"]
 
 [node name="BookViewport" type="CanvasLayer"]
 layer = 8

@@ -38,6 +38,7 @@ const PAUSE_TRIAGE: String = "triage"
 const PAUSE_JOURNAL: String = "journal"
 const PAUSE_PORTAL: String = "portal"
 const PAUSE_PHONE: String = "phone"
+const PAUSE_STORAGE: String = "storage"
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this (e.g. 0.1) to watch/verify the clock move faster (debug speed).

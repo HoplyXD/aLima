@@ -1,0 +1,117 @@
+[gd_scene load_steps=4 format=3 uid="uid://cph0ne5cr33na"]
+
+[ext_resource type="Script" path="res://scripts/economy/phone.gd" id="1_phone"]
+
+[sub_resource type="StyleBoxFlat" id="body"]
+bg_color = Color(0.1, 0.1, 0.12, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.02, 0.02, 0.03, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="screen"]
+bg_color = Color(0.06, 0.07, 0.09, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[node name="Phone" type="CanvasLayer"]
+process_mode = 3
+layer = 10
+script = ExtResource("1_phone")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="Center" type="CenterContainer" parent="Dim"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Body" type="PanelContainer" parent="Dim/Center"]
+custom_minimum_size = Vector2(440, 820)
+theme_override_styles/panel = SubResource("body")
+
+[node name="Margin" type="MarginContainer" parent="Dim/Center/Body"]
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="Dim/Center/Body/Margin"]
+theme_override_constants/separation = 12
+
+[node name="TopBar" type="HBoxContainer" parent="Dim/Center/Body/Margin/VBox"]
+
+[node name="Title" type="Label" parent="Dim/Center/Body/Margin/VBox/TopBar"]
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "Phone"
+
+[node name="CloseButton" type="Button" parent="Dim/Center/Body/Margin/VBox/TopBar"]
+unique_name_in_owner = true
+text = "✕"
+
+[node name="Screen" type="PanelContainer" parent="Dim/Center/Body/Margin/VBox"]
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("screen")
+
+[node name="ScreenMargin" type="MarginContainer" parent="Dim/Center/Body/Margin/VBox/Screen"]
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="Home" type="VBoxContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin"]
+unique_name_in_owner = true
+theme_override_constants/separation = 12
+
+[node name="HomeTitle" type="Label" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/Home"]
+theme_override_font_sizes/font_size = 18
+text = "Apps"
+
+[node name="AppGrid" type="GridContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/Home"]
+unique_name_in_owner = true
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 3
+
+[node name="AppView" type="VBoxContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin"]
+unique_name_in_owner = true
+visible = false
+theme_override_constants/separation = 10
+
+[node name="AppTitle" type="Label" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/AppView"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 20
+text = "Marketplace"
+
+[node name="AppScroll" type="ScrollContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/AppView"]
+size_flags_vertical = 3
+
+[node name="AppContent" type="VBoxContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/AppView/AppScroll"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BottomBar" type="HBoxContainer" parent="Dim/Center/Body/Margin/VBox"]
+theme_override_constants/separation = 10
+
+[node name="HomeButton" type="Button" parent="Dim/Center/Body/Margin/VBox/BottomBar"]
+unique_name_in_owner = true
+text = "⌂ Home"
+
+[node name="FeedbackLabel" type="Label" parent="Dim/Center/Body/Margin/VBox/BottomBar"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)

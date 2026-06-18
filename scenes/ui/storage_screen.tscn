@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://ybrc7qdq3rvs"]
+
+[ext_resource type="Script" path="res://scripts/economy/storage_screen.gd" id="1_storage"]
+
+[node name="StorageScreen" type="CanvasLayer"]
+process_mode = 3
+layer = 10
+script = ExtResource("1_storage")

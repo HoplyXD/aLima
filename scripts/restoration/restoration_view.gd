@@ -18,6 +18,7 @@ extends CanvasLayer
 signal closed  ## Emitted after the view is dismissed.
 signal journal_requested  ## Player tapped the bench Journal button.
 signal phone_requested  ## Player tapped the bench Phone button.
+signal storage_requested  ## Player tapped the bench Storage button.
 
 enum Mode { ROTATE, CLEAN }
 
@@ -47,6 +48,8 @@ var _stroke_uvs: PackedVector2Array = PackedVector2Array()
 var _instance_uids: Array[String] = []
 var _scanner_screen: ScannerScreen
 var _journal_viewport: BookViewport
+var _phone: Phone
+var _storage_screen: StorageScreen
 
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
@@ -73,6 +76,7 @@ var _journal_viewport: BookViewport
 @onready var _close_button: Button = %CloseButton
 @onready var _journal_button: Button = %JournalButton
 @onready var _phone_button: Button = %PhoneButton
+@onready var _storage_button: Button = %StorageButton
 
 
 func _ready() -> void:
@@ -93,6 +97,7 @@ func _ready() -> void:
 	_close_button.pressed.connect(close)
 	_journal_button.pressed.connect(_on_journal_pressed)
 	_phone_button.pressed.connect(_on_phone_pressed)
+	_storage_button.pressed.connect(_on_storage_pressed)
 	set_process(false)
 
 
@@ -110,8 +115,13 @@ func open() -> void:
 	if _instance_uids.is_empty():
 		_show_empty_state()
 	else:
-		_instance_selector.select(0)
-		load_instance(_instance_uids[0])
+		# Honour the artifact chosen in Storage, if it is on the bench.
+		var target := GameState.save_state.loop.restore_target_uid
+		var idx := _instance_uids.find(target)
+		if idx < 0:
+			idx = 0
+		_instance_selector.select(idx)
+		load_instance(_instance_uids[idx])
 	_grab_initial_focus()
 
 
@@ -151,6 +161,16 @@ func set_journal_viewport(viewport: BookViewport) -> void:
 	_journal_viewport = viewport
 
 
+## The shared Phone and Storage screens are handed in by the Shop so the bench
+## opens the very same overlays the shop's HUD buttons do.
+func set_phone(phone: Phone) -> void:
+	_phone = phone
+
+
+func set_storage_screen(screen: StorageScreen) -> void:
+	_storage_screen = screen
+
+
 ## Bench shortcut to the journal: opens the shared book viewer over the bench.
 func _on_journal_pressed() -> void:
 	journal_requested.emit()
@@ -161,8 +181,19 @@ func _on_journal_pressed() -> void:
 
 
 func _on_phone_pressed() -> void:
-	_feedback_label.text = "Phone marketplace — selling restored pieces lands here soon."
 	phone_requested.emit()
+	if _phone != null:
+		_phone.open()
+	else:
+		_feedback_label.text = "Phone — not available."
+
+
+func _on_storage_pressed() -> void:
+	storage_requested.emit()
+	if _storage_screen != null:
+		_storage_screen.open()
+	else:
+		_feedback_label.text = "Storage — not available."
 
 
 func _on_scanner_closed() -> void:
@@ -211,7 +242,7 @@ func load_instance(uid: String) -> void:
 	_title.text = template.display_name
 	_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()
-	_tool_tray.build_tools(_service.get_available_tools())
+	_tool_tray.build_tools(_service.get_workbench_tools())
 	reset_view()
 	_refresh(inst, template)
 	_caption_label.text = "Rotate to inspect, then pick up a tool from the bench and work the surface."
@@ -232,7 +263,7 @@ func load_instance(uid: String) -> void:
 func _rebuild_tool_palette() -> void:
 	for child in _tool_container.get_children():
 		child.queue_free()
-	var tools := _service.get_available_tools()
+	var tools := _service.get_workbench_tools()
 	if tools.is_empty():
 		var none := Label.new()
 		none.text = "No tools available."

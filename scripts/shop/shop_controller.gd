@@ -9,7 +9,8 @@ extends Node3D
 ## the count placeholders in later phases (see docs/phase-task.md).
 
 const RESTORATION_VIEW_SCENE := preload("res://scenes/restoration/restoration_view.tscn")
-const MARKETPLACE_SCREEN_SCENE := preload("res://scenes/ui/marketplace_screen.tscn")
+const PHONE_SCENE := preload("res://scenes/ui/phone.tscn")
+const STORAGE_SCREEN_SCENE := preload("res://scenes/ui/storage_screen.tscn")
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector (e.g. 0.1) to watch the clock move faster while
@@ -38,7 +39,8 @@ var _quest_artifacts := 1
 @onready var _triage_screen: TriageController = $TriageScreen
 @onready var _book_viewport: BookViewport = $BookViewport
 @onready var _restoration_view: RestorationView = _create_restoration_view()
-@onready var _marketplace_screen: MarketplaceScreen = _create_marketplace_screen()
+@onready var _phone: Phone = _create_phone()
+@onready var _storage_screen: StorageScreen = _create_storage_screen()
 
 # Diegetic 3D shop interactables. Each one fires the same controller handler as
 # its HUD fallback button, so the physical prop and the accessibility button are
@@ -59,6 +61,7 @@ func _ready() -> void:
 	_hud.workbench_pressed.connect(_on_workbench_pressed)
 	_hud.journal_pressed.connect(_on_journal_pressed)
 	_hud.phone_pressed.connect(_on_phone_pressed)
+	_hud.storage_pressed.connect(_on_storage_pressed)
 	_hud.morning_delivery_pressed.connect(_on_morning_delivery_pressed)
 	_hud.dialogue_finished.connect(_on_dialogue_finished)
 
@@ -71,9 +74,12 @@ func _ready() -> void:
 
 	_triage_screen.closed.connect(_on_triage_closed)
 	_restoration_view.closed.connect(_on_restoration_closed)
-	_marketplace_screen.closed.connect(_on_marketplace_closed)
-	# The restoration bench opens the same shared journal viewer.
+	_phone.closed.connect(_on_phone_closed)
+	_storage_screen.closed.connect(_on_storage_closed)
+	# The restoration bench opens the same shared journal / marketplace / storage overlays.
 	_restoration_view.set_journal_viewport(_book_viewport)
+	_restoration_view.set_phone(_phone)
+	_restoration_view.set_storage_screen(_storage_screen)
 	_book_viewport.closed.connect(_on_journal_closed)
 
 	_refresh_ui()
@@ -154,13 +160,25 @@ func _on_journal_closed() -> void:
 
 
 func _on_phone_pressed() -> void:
-	# The phone opens the Marketplace app (Buy tools now; selling comes with the
-	# Phase-14 buyer negotiation). It covers the shop and pauses time via PAUSE_PHONE.
+	# The phone opens to its home screen of apps (Marketplace now; selling comes
+	# with the Phase-14 buyer negotiation). It covers the shop and pauses time.
 	_set_interactables_enabled(false)
-	_marketplace_screen.open()
+	_phone.open()
 
 
-func _on_marketplace_closed() -> void:
+func _on_phone_closed() -> void:
+	_set_interactables_enabled(true)
+	_refresh_ui()
+
+
+func _on_storage_pressed() -> void:
+	# Storage prepares the bench: choose the artifact to restore and which tools
+	# (max 10) to load. It covers the shop and pauses time via PAUSE_STORAGE.
+	_set_interactables_enabled(false)
+	_storage_screen.open()
+
+
+func _on_storage_closed() -> void:
 	_set_interactables_enabled(true)
 	_refresh_ui()
 
@@ -215,8 +233,14 @@ func _create_restoration_view() -> RestorationView:
 	return view
 
 
-func _create_marketplace_screen() -> MarketplaceScreen:
-	var screen: MarketplaceScreen = MARKETPLACE_SCREEN_SCENE.instantiate()
+func _create_phone() -> Phone:
+	var phone: Phone = PHONE_SCENE.instantiate()
+	add_child(phone)
+	return phone
+
+
+func _create_storage_screen() -> StorageScreen:
+	var screen: StorageScreen = STORAGE_SCREEN_SCENE.instantiate()
 	add_child(screen)
 	return screen
 

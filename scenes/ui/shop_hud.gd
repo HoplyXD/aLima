@@ -12,6 +12,7 @@ signal door_pressed  ## Player wants to answer the door / accept a visitor.
 signal workbench_pressed  ## Player wants to go to the work desk.
 signal journal_pressed  ## Player wants to view the journal.
 signal phone_pressed  ## Player wants to view the phone (marketplace).
+signal storage_pressed  ## Player wants to open Storage (bench loadout / restore target).
 signal morning_delivery_pressed  ## Player wants to start the morning delivery triage.
 signal dialogue_finished  ## Re-emitted when the dialogue box closes its queue.
 
@@ -33,6 +34,8 @@ const RARITY := [
 @onready var _morning_button: Button = $MorningDeliveryButton
 @onready var _dialogue: DialogueBox = $DialogueBox
 
+var _storage_button: Button
+
 @onready var _unrestored_counts: RichTextLabel = %UnrestoredCounts
 @onready var _restored_counts: RichTextLabel = %RestoredCounts
 @onready var _quest_count: Label = %QuestCount
@@ -48,6 +51,29 @@ func _ready() -> void:
 	_phone_button.pressed.connect(func() -> void: phone_pressed.emit())
 	_morning_button.pressed.connect(func() -> void: morning_delivery_pressed.emit())
 	_dialogue.finished.connect(func() -> void: dialogue_finished.emit())
+	_build_storage_button()
+
+
+## The Storage button is created in code (the rest of the HUD is authored in
+## Shop.tscn). It sits on the right, just below the Phone button.
+func _build_storage_button() -> void:
+	_storage_button = Button.new()
+	_storage_button.name = "StorageButton"
+	_storage_button.text = "Storage"
+	_storage_button.anchor_left = 1.0
+	_storage_button.anchor_right = 1.0
+	_storage_button.anchor_top = 0.5
+	_storage_button.anchor_bottom = 0.5
+	_storage_button.offset_left = -188.0
+	_storage_button.offset_right = -28.0
+	_storage_button.offset_top = 60.0
+	_storage_button.offset_bottom = 160.0
+	_storage_button.grow_horizontal = 0
+	_storage_button.grow_vertical = 2
+	_storage_button.focus_mode = Control.FOCUS_ALL
+	_storage_button.add_theme_font_size_override("font_size", 18)
+	_storage_button.pressed.connect(func() -> void: storage_pressed.emit())
+	add_child(_storage_button)
 
 
 ## counts: Dictionary keyed by Rarity enum -> int.
@@ -86,6 +112,8 @@ func set_actions_visible(value: bool) -> void:
 	_journal_button.visible = value
 	_phone_button.visible = value
 	_morning_button.visible = value
+	if _storage_button != null:
+		_storage_button.visible = value
 
 
 ## Reflects the journal book being presented (centered for reading). While open,
@@ -95,6 +123,8 @@ func set_journal_open(open: bool) -> void:
 	_door_button.visible = not open
 	_workbench_button.visible = not open
 	_morning_button.visible = not open
+	if _storage_button != null:
+		_storage_button.visible = not open
 	_journal_button.text = "Close Journal" if open else "Journal"
 
 

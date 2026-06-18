@@ -1,8 +1,0 @@
-[gd_scene format=3 uid="uid://d0d21wr3al425"]
-
-[ext_resource type="Script" path="res://scripts/economy/marketplace_screen.gd" id="1_market"]
-
-[node name="MarketplaceScreen" type="CanvasLayer"]
-process_mode = 3
-layer = 10
-script = ExtResource("1_market")
