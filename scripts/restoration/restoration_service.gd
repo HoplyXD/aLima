@@ -396,7 +396,7 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 
 	var decal := _find_decal(template, decal_id)
 	if decal == null:
-		result.feedback = "No such blemish."
+		result.feedback = "No such mark."
 		return result
 	if inst.removed_decals.has(decal_id):
 		result.feedback = "That spot is already clean."
@@ -474,7 +474,7 @@ func join_object(uid: String, tool_id: String) -> JoinResult:
 		out.ok = true
 		return out
 	if inst.state != ModelEnums.ObjState.CLEAN:
-		out.error = "Clean every blemish before joining the pieces."
+		out.error = "Treat every mark before joining the pieces."
 		return out
 	if not is_tool_owned(tool_id) or tool_id != template.join_tool:
 		out.error = "You need the right tool to join the pieces."

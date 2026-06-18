@@ -10,7 +10,7 @@ extends Control
 ## SeatingService.
 
 const CASE_PAGE_NUMBER: int = 4  ## First paper page: the Fragment Case (?/5 found).
-const BLEMISH_PAGE_NUMBER: int = 5  ## Blemish Guide: each blemish and the tool that cleans it.
+const CONDITION_PAGE_NUMBER: int = 5  ## Condition Guide: each surface condition and its tool.
 const INDEX_PAGE_NUMBER: int = 6  ## Object Archive entry list.
 const FIRST_ENTRY_PAGE_NUMBER: int = 7
 
@@ -45,8 +45,8 @@ func set_number(value: int) -> void:
 	_number_label.text = ("- " + str(value - 3) + " -") if value >= 4 else ""
 	if value == CASE_PAGE_NUMBER:
 		_render_case_page()
-	elif value == BLEMISH_PAGE_NUMBER:
-		_render_blemish_page()
+	elif value == CONDITION_PAGE_NUMBER:
+		_render_condition_page()
 	elif value == INDEX_PAGE_NUMBER:
 		_render_index_page()
 	elif value >= FIRST_ENTRY_PAGE_NUMBER:
@@ -175,10 +175,10 @@ func _render_case_page() -> void:
 	container.add_child(note)
 
 
-# --- Blemish Guide (page 2) --------------------------------------------------
+# --- Condition Guide (page 2) ------------------------------------------------
 
 
-func _render_blemish_page() -> void:
+func _render_condition_page() -> void:
 	_text.visible = false
 	_text.text = ""
 
@@ -193,35 +193,52 @@ func _render_blemish_page() -> void:
 	_slot_container = container
 
 	var title := Label.new()
-	title.text = "Blemish Guide"
+	title.text = "Condition Guide"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color(0.1, 0.05, 0.02))
 	container.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "What sticks to the artifacts — and the tool that lifts each one."
+	subtitle.text = "Surface conditions, grouped by kind — and the tool that treats each."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	subtitle.add_theme_font_size_override("font_size", 13)
 	subtitle.add_theme_color_override("font_color", Color(0.2, 0.15, 0.1))
 	container.add_child(subtitle)
 
-	for blemish in DataRepository.singleton().get_blemish_types_sorted():
-		container.add_child(_make_blemish_note(blemish as BlemishType))
+	# Group the catalog by category, rendered in conservator-triage order.
+	var by_category := {}
+	for condition in DataRepository.singleton().get_surface_conditions_sorted():
+		var typed := condition as SurfaceCondition
+		by_category.get_or_add(typed.category, []).append(typed)
+	for category in SurfaceCondition.CATEGORY_ORDER:
+		if not by_category.has(category):
+			continue
+		container.add_child(_make_category_header(SurfaceCondition.CATEGORY_LABELS[category]))
+		for condition in by_category[category]:
+			container.add_child(_make_condition_note(condition))
 
 
-## Builds one blemish "note": a colour swatch (placeholder for a picture), the
-## blemish name, and the tool that cleans it.
-func _make_blemish_note(blemish: BlemishType) -> Control:
+func _make_category_header(label_text: String) -> Control:
+	var header := Label.new()
+	header.text = label_text
+	header.add_theme_font_size_override("font_size", 18)
+	header.add_theme_color_override("font_color", Color(0.35, 0.2, 0.08))
+	return header
+
+
+## Builds one condition "note": a colour swatch (placeholder for a picture), the
+## condition name, and the tool that treats it.
+func _make_condition_note(condition: SurfaceCondition) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var swatch := ColorRect.new()
 	swatch.custom_minimum_size = Vector2(40, 40)
-	swatch.color = blemish.to_color()
-	swatch.tooltip_text = "Placeholder swatch — final blemish picture pending art."
+	swatch.color = condition.to_color()
+	swatch.tooltip_text = "Placeholder swatch — final condition picture pending art."
 	row.add_child(swatch)
 
 	var text := VBoxContainer.new()
@@ -229,15 +246,15 @@ func _make_blemish_note(blemish: BlemishType) -> Control:
 	row.add_child(text)
 
 	var name_label := Label.new()
-	name_label.text = blemish.display_name
+	name_label.text = condition.display_name
 	name_label.add_theme_font_size_override("font_size", 16)
 	name_label.add_theme_color_override("font_color", Color(0.1, 0.05, 0.02))
 	text.add_child(name_label)
 
-	var tool := DataRepository.singleton().get_tool(blemish.cleaning_tool)
-	var tool_name := tool.display_name if tool != null else blemish.cleaning_tool
+	var tool := DataRepository.singleton().get_tool(condition.cleaning_tool)
+	var tool_name := tool.display_name if tool != null else condition.cleaning_tool
 	var tool_label := Label.new()
-	tool_label.text = "Clean with: %s" % tool_name
+	tool_label.text = "Treat with: %s" % tool_name
 	tool_label.add_theme_font_size_override("font_size", 12)
 	tool_label.add_theme_color_override("font_color", Color(0.3, 0.2, 0.15))
 	text.add_child(tool_label)

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dgc2dadcifuf2"]
 
-[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/Character Placeholder.png" id="3_cimqq"]
+[ext_resource type="Texture2D" uid="uid://ltqwia2q6ivn" path="res://assets/Characters/Uncle.png" id="2_eo1la"]
 [ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="4_yltc6"]
 [ext_resource type="Script" uid="uid://dv20ba7olxrka" path="res://scripts/shop/shop_controller.gd" id="5_ctrl"]
@@ -9,7 +9,7 @@
 [ext_resource type="Script" uid="uid://jxyuvepu18pl" path="res://scripts/shop/echo_scene_bridge.gd" id="8_bridge"]
 [ext_resource type="Script" uid="uid://dkwru0jku76m4" path="res://scripts/shop/echo_focus_controller.gd" id="9_focus"]
 [ext_resource type="PackedScene" uid="uid://ccwtajkvqpjyu" path="res://scenes/Book/BookViewport.tscn" id="9_skkvx"]
-[ext_resource type="Script" path="res://scripts/shop/interactable_3d.gd" id="10_inter"]
+[ext_resource type="Script" uid="uid://cmnncy5e8fmri" path="res://scripts/shop/interactable_3d.gd" id="10_inter"]
 
 [sub_resource type="Environment" id="Environment_ec5oe"]
 background_energy_multiplier = 5.0
@@ -17,15 +17,20 @@ reflected_light_source = 1
 
 [sub_resource type="QuadMesh" id="QuadMesh_ohui2"]
 
+[sub_resource type="StandardMaterial3D" id="Mat_door"]
+albedo_color = Color(0.4, 0.26, 0.16, 1)
+emission = Color(0.85, 0.62, 0.35, 1)
+emission_energy_multiplier = 0.5
+
 [sub_resource type="BoxMesh" id="BoxMesh_door"]
 size = Vector3(1, 2.2, 0.15)
 
 [sub_resource type="BoxShape3D" id="BoxShape_door"]
 size = Vector3(1, 2.2, 0.15)
 
-[sub_resource type="StandardMaterial3D" id="Mat_door"]
-albedo_color = Color(0.4, 0.26, 0.16, 1)
-emission = Color(0.85, 0.62, 0.35, 1)
+[sub_resource type="StandardMaterial3D" id="Mat_bench"]
+albedo_color = Color(0.3, 0.21, 0.14, 1)
+emission = Color(0.8, 0.6, 0.35, 1)
 emission_energy_multiplier = 0.5
 
 [sub_resource type="BoxMesh" id="BoxMesh_bench"]
@@ -34,9 +39,9 @@ size = Vector3(1.6, 0.5, 0.8)
 [sub_resource type="BoxShape3D" id="BoxShape_bench"]
 size = Vector3(1.6, 0.5, 0.8)
 
-[sub_resource type="StandardMaterial3D" id="Mat_bench"]
-albedo_color = Color(0.3, 0.21, 0.14, 1)
-emission = Color(0.8, 0.6, 0.35, 1)
+[sub_resource type="StandardMaterial3D" id="Mat_journal"]
+albedo_color = Color(0.5, 0.17, 0.16, 1)
+emission = Color(0.9, 0.55, 0.4, 1)
 emission_energy_multiplier = 0.5
 
 [sub_resource type="BoxMesh" id="BoxMesh_journal"]
@@ -45,10 +50,10 @@ size = Vector3(0.5, 0.12, 0.66)
 [sub_resource type="BoxShape3D" id="BoxShape_journal"]
 size = Vector3(0.5, 0.12, 0.66)
 
-[sub_resource type="StandardMaterial3D" id="Mat_journal"]
-albedo_color = Color(0.5, 0.17, 0.16, 1)
-emission = Color(0.9, 0.55, 0.4, 1)
-emission_energy_multiplier = 0.5
+[sub_resource type="StandardMaterial3D" id="Mat_phone"]
+albedo_color = Color(0.12, 0.13, 0.16, 1)
+emission = Color(0.4, 0.7, 0.95, 1)
+emission_energy_multiplier = 0.6
 
 [sub_resource type="BoxMesh" id="BoxMesh_phone"]
 size = Vector3(0.32, 0.05, 0.6)
@@ -56,21 +61,16 @@ size = Vector3(0.32, 0.05, 0.6)
 [sub_resource type="BoxShape3D" id="BoxShape_phone"]
 size = Vector3(0.32, 0.05, 0.6)
 
-[sub_resource type="StandardMaterial3D" id="Mat_phone"]
-albedo_color = Color(0.12, 0.13, 0.16, 1)
-emission = Color(0.4, 0.7, 0.95, 1)
-emission_energy_multiplier = 0.6
+[sub_resource type="StandardMaterial3D" id="Mat_delivery"]
+albedo_color = Color(0.55, 0.42, 0.26, 1)
+emission = Color(0.85, 0.68, 0.4, 1)
+emission_energy_multiplier = 0.5
 
 [sub_resource type="BoxMesh" id="BoxMesh_delivery"]
 size = Vector3(1, 0.7, 0.8)
 
 [sub_resource type="BoxShape3D" id="BoxShape_delivery"]
 size = Vector3(1, 0.7, 0.8)
-
-[sub_resource type="StandardMaterial3D" id="Mat_delivery"]
-albedo_color = Color(0.55, 0.42, 0.26, 1)
-emission = Color(0.85, 0.68, 0.4, 1)
-emission_energy_multiplier = 0.5
 
 [node name="Node3D" type="Node3D" unique_id=395316236]
 script = ExtResource("5_ctrl")
@@ -89,10 +89,10 @@ transform = Transform3D(1.0577251, 0, 0, 0, 1.8982875, 0, 0, 0, 1, 0, 0.29517978
 mesh = SubResource("QuadMesh_ohui2")
 
 [node name="Visitor" type="Sprite3D" parent="." unique_id=1414777339]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.0851084, 0, 3.618494, -3.2)
-pixel_size = 0.005
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.0851084, 0, 2.8192577, -3.2)
+pixel_size = 0.0015
 billboard = 1
-texture = ExtResource("3_cimqq")
+texture = ExtResource("2_eo1la")
 
 [node name="pile_left" type="Marker3D" parent="." unique_id=1001]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -1.5)
@@ -103,66 +103,66 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
 [node name="shelf_right" type="Marker3D" parent="." unique_id=1003]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1, -2)
 
-[node name="Interactables" type="Node3D" parent="."]
+[node name="Interactables" type="Node3D" parent="." unique_id=2007952486]
 
-[node name="DoorInteractable" type="Area3D" parent="Interactables"]
+[node name="DoorInteractable" type="Area3D" parent="Interactables" unique_id=1178317894]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 3.5, -3.4)
 script = ExtResource("10_inter")
 prompt_text = "Answer the door"
 
-[node name="Mesh" type="MeshInstance3D" parent="Interactables/DoorInteractable"]
-mesh = SubResource("BoxMesh_door")
+[node name="Mesh" type="MeshInstance3D" parent="Interactables/DoorInteractable" unique_id=1974465512]
 material_override = SubResource("Mat_door")
+mesh = SubResource("BoxMesh_door")
 
-[node name="Collision" type="CollisionShape3D" parent="Interactables/DoorInteractable"]
+[node name="Collision" type="CollisionShape3D" parent="Interactables/DoorInteractable" unique_id=1936851686]
 shape = SubResource("BoxShape_door")
 
-[node name="WorkbenchInteractable" type="Area3D" parent="Interactables"]
+[node name="WorkbenchInteractable" type="Area3D" parent="Interactables" unique_id=223193831]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, -2.6)
 script = ExtResource("10_inter")
 prompt_text = "Work at the restoration bench"
 
-[node name="Mesh" type="MeshInstance3D" parent="Interactables/WorkbenchInteractable"]
-mesh = SubResource("BoxMesh_bench")
+[node name="Mesh" type="MeshInstance3D" parent="Interactables/WorkbenchInteractable" unique_id=788682916]
 material_override = SubResource("Mat_bench")
+mesh = SubResource("BoxMesh_bench")
 
-[node name="Collision" type="CollisionShape3D" parent="Interactables/WorkbenchInteractable"]
+[node name="Collision" type="CollisionShape3D" parent="Interactables/WorkbenchInteractable" unique_id=2048878825]
 shape = SubResource("BoxShape_bench")
 
-[node name="JournalInteractable" type="Area3D" parent="Interactables"]
+[node name="JournalInteractable" type="Area3D" parent="Interactables" unique_id=973191371]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 2.57, -2.45)
 script = ExtResource("10_inter")
 prompt_text = "Open the journal"
 
-[node name="Mesh" type="MeshInstance3D" parent="Interactables/JournalInteractable"]
-mesh = SubResource("BoxMesh_journal")
+[node name="Mesh" type="MeshInstance3D" parent="Interactables/JournalInteractable" unique_id=1694959799]
 material_override = SubResource("Mat_journal")
+mesh = SubResource("BoxMesh_journal")
 
-[node name="Collision" type="CollisionShape3D" parent="Interactables/JournalInteractable"]
+[node name="Collision" type="CollisionShape3D" parent="Interactables/JournalInteractable" unique_id=2080782993]
 shape = SubResource("BoxShape_journal")
 
-[node name="PhoneInteractable" type="Area3D" parent="Interactables"]
+[node name="PhoneInteractable" type="Area3D" parent="Interactables" unique_id=784256697]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, 2.56, -2.45)
 script = ExtResource("10_inter")
 prompt_text = "Check the phone marketplace"
 
-[node name="Mesh" type="MeshInstance3D" parent="Interactables/PhoneInteractable"]
-mesh = SubResource("BoxMesh_phone")
+[node name="Mesh" type="MeshInstance3D" parent="Interactables/PhoneInteractable" unique_id=26897118]
 material_override = SubResource("Mat_phone")
+mesh = SubResource("BoxMesh_phone")
 
-[node name="Collision" type="CollisionShape3D" parent="Interactables/PhoneInteractable"]
+[node name="Collision" type="CollisionShape3D" parent="Interactables/PhoneInteractable" unique_id=1752869578]
 shape = SubResource("BoxShape_phone")
 
-[node name="DeliveryInteractable" type="Area3D" parent="Interactables"]
+[node name="DeliveryInteractable" type="Area3D" parent="Interactables" unique_id=2048950292]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.45, -2.9)
 script = ExtResource("10_inter")
 prompt_text = "Open the morning delivery"
 
-[node name="Mesh" type="MeshInstance3D" parent="Interactables/DeliveryInteractable"]
-mesh = SubResource("BoxMesh_delivery")
+[node name="Mesh" type="MeshInstance3D" parent="Interactables/DeliveryInteractable" unique_id=330678558]
 material_override = SubResource("Mat_delivery")
+mesh = SubResource("BoxMesh_delivery")
 
-[node name="Collision" type="CollisionShape3D" parent="Interactables/DeliveryInteractable"]
+[node name="Collision" type="CollisionShape3D" parent="Interactables/DeliveryInteractable" unique_id=1179184410]
 shape = SubResource("BoxShape_delivery")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=70770043]
@@ -343,7 +343,8 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 18
 text = "Phone"
 
-[node name="PromptLabel" type="Label" parent="HUD"]
+[node name="PromptLabel" type="Label" parent="HUD" unique_id=111024861]
+anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
@@ -354,12 +355,13 @@ offset_right = 320.0
 offset_bottom = -116.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.96, 0.88, 0.55, 1)
+theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="FallbackHint" type="Label" parent="HUD"]
+[node name="FallbackHint" type="Label" parent="HUD" unique_id=1159430787]
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -320.0
@@ -367,10 +369,10 @@ offset_top = 110.0
 offset_right = 320.0
 offset_bottom = 132.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.7, 0.7, 0.74, 1)
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
 text = "Tip: click the objects in the shop. The buttons are accessibility/fallback controls."
+horizontal_alignment = 1
 
 [node name="DialogueBox" parent="HUD" unique_id=900789323 instance=ExtResource("3_dlgbox")]
 visible = false
@@ -386,4 +388,4 @@ script = ExtResource("8_bridge")
 [node name="EchoFocusController" type="Node" parent="." unique_id=1390290459]
 script = ExtResource("9_focus")
 
-[node name="BookViewport" parent="." instance=ExtResource("9_skkvx")]
+[node name="BookViewport" parent="." unique_id=720618707 instance=ExtResource("9_skkvx")]

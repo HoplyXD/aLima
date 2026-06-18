@@ -11,6 +11,9 @@ signal day_changed(day: int)
 signal loop_reset(loop_index: int)
 signal clock_pause_changed(is_paused: bool, owner_id: String)
 
+# --- Route / story events ---
+signal route_completed(route_id: String)
+
 # --- Delivery and triage events ---
 signal delivery_generated(day: int, instance_ids: Array[String])
 signal triage_completed(kept_ids: Array[String], recycled_ids: Array[String])

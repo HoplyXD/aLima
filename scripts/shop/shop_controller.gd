@@ -34,6 +34,10 @@ var _restored := {
 }
 var _quest_artifacts := 1
 
+## Route id of the character currently at the door, or "" for a non-visitor line.
+## Marked "met" when their dialogue closes so the next visit plays the return set.
+var _active_visitor_route_id := ""
+
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
 @onready var _triage_screen: TriageController = $TriageScreen
@@ -76,6 +80,7 @@ func _ready() -> void:
 	_restoration_view.closed.connect(_on_restoration_closed)
 	_phone.closed.connect(_on_phone_closed)
 	_storage_screen.closed.connect(_on_storage_closed)
+	_storage_screen.restore_requested.connect(_on_storage_restore_requested)
 	# The restoration bench opens the same shared journal / marketplace / storage overlays.
 	_restoration_view.set_journal_viewport(_book_viewport)
 	_restoration_view.set_phone(_phone)
@@ -125,19 +130,22 @@ func _update_clock_display() -> void:
 
 
 func _on_door_pressed() -> void:
-	# Demo visitor — the Elderly Auntie's Day 1 beat from aLima.twee. Phase 10
-	# moves authored prose to data/routes/.
-	var lines: Array = [
-		{
-			"name": "Elderly Auntie",
-			"text": "A frail knock. She clutches a [i]cracked photo frame[/i].",
-		},
-		{
-			"name": "You",
-			"text": "Let me see it. I can free the photo without tearing the emulsion.",
-		},
-		"[b]Elderly Auntie Quest 1 available.[/b]",
-	]
+	# Authored dialogue + portraits live in data/routes/routes.json. The door shows
+	# whichever character RouteService schedules for the current in-game day/hour,
+	# branching their lines on whether the player has met them before.
+	var route := RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
+	if route == null:
+		_open_dialogue(["No one is at the door right now."], false)
+		return
+	var key := RouteService.dialogue_key(route, DayClock.get_day())
+	var lines := route.dialogue_for(key)
+	if lines.is_empty():
+		lines = ["%s steps in, but has nothing to say today." % route.display_name]
+	if not route.portrait.is_empty():
+		var tex: Texture2D = load(route.portrait)
+		if tex != null:
+			_visitor.texture = tex
+	_active_visitor_route_id = route.id
 	_open_dialogue(lines, true)
 
 
@@ -181,6 +189,12 @@ func _on_storage_pressed() -> void:
 func _on_storage_closed() -> void:
 	_set_interactables_enabled(true)
 	_refresh_ui()
+
+
+## Storage's Restore button already set the restore target and closed; open the
+## bench directly on that artifact.
+func _on_storage_restore_requested(_uid: String) -> void:
+	_on_workbench_pressed()
 
 
 ## Opens the dialogue box, optionally showing the visitor sprite, and freezes the
@@ -315,6 +329,12 @@ func _count_seated_fragments() -> int:
 
 func _on_dialogue_finished() -> void:
 	_visitor.visible = false
+	# Finishing a visitor's conversation records that the player has met them, so
+	# the next visit (this loop or a later one — the flag is persistent) branches to
+	# their return dialogue.
+	if not _active_visitor_route_id.is_empty():
+		RouteService.mark_met(_active_visitor_route_id)
+		_active_visitor_route_id = ""
 	_hud.set_actions_visible(true)
 	# Restoring all actions can re-show buttons that sit under an open journal;
 	# re-apply the journal layout so it stays consistent.

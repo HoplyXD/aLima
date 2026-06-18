@@ -341,14 +341,14 @@ func _is_decal_based(template: ScrapObjectTemplate) -> bool:
 	return template != null and not template.decals.is_empty()
 
 
-## Builds a {blemish_type: Color} map from the journal blemish catalog so the photo
-## hotspots match the colours shown in the Blemish Guide.
+## Builds a {condition_type: Color} map from the journal surface-condition catalog
+## so the photo hotspots match the colours shown in the Condition Guide.
 func _blemish_colors(template: ScrapObjectTemplate) -> Dictionary:
 	var colors := {}
 	var repo := _service.get_repository()
 	for decal in template.decals:
-		var blemish := repo.get_blemish_type(decal.type)
-		colors[decal.type] = blemish.to_color() if blemish != null else decal.to_color()
+		var condition := repo.get_surface_condition(decal.type)
+		colors[decal.type] = condition.to_color() if condition != null else decal.to_color()
 	return colors
 
 
@@ -372,7 +372,7 @@ func clean_blemish(blemish_id: String) -> RestorationService.DecalResult:
 	elif result.reached_clean:
 		_caption_label.text = _clean_photo_caption()
 	else:
-		_caption_label.text = "Lifted one blemish. %d left." % result.remaining_decals
+		_caption_label.text = "Treated one mark. %d left." % result.remaining_decals
 	var inst := _service.find_instance_by_id(_selected_uid)
 	var template := (
 		_service.get_repository().get_template(inst.template_id) if inst != null else null
@@ -419,7 +419,7 @@ func _clean_photo_caption() -> String:
 		_service.get_repository().get_template(inst.template_id) if inst != null else null
 	)
 	if template != null and template.requires_join and inst != null and not inst.is_joined:
-		return "Every blemish is gone. Pick up the Archival Tape and join the pieces."
+		return "Every mark is gone. Pick up the Archival Tape and join the pieces."
 	return "The photograph is clean. Scan and judge it."
 
 

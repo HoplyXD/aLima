@@ -394,7 +394,7 @@ func refresh_content() -> void:
 
 func _update_max_pages() -> void:
 	var entry_count: int = Page.entry_page_count()
-	# Page 4 = case, page 5 = blemish guide, page 6 = index, pages 7+ = entries.
+	# Page 4 = case, page 5 = condition guide, page 6 = index, pages 7+ = entries.
 	var needed: int = maxi(20, 6 + entry_count)
 	max_pages = maxi(max_pages, needed)
 

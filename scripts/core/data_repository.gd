@@ -22,7 +22,7 @@ var technique_definitions: Dictionary = {}  ## id -> TechniqueDefinition
 var character_routes: Dictionary = {}  ## id -> CharacterRoute
 var placement_containers: Dictionary = {}  ## id -> PlacementContainer
 var scanner_cache_entries: Dictionary = {}  ## id -> ScannerCacheEntry
-var blemish_types: Dictionary = {}  ## id -> BlemishType
+var surface_conditions: Dictionary = {}  ## id -> SurfaceCondition
 var delivery_config: DeliveryConfig = DeliveryConfig.new()
 var spawn_config: SpawnConfig = SpawnConfig.new()
 var starting_kit: Dictionary = {"tool_ids": [], "technique_ids": []}
@@ -117,17 +117,18 @@ func get_scanner_cache(id: String) -> ScannerCacheEntry:
 	return scanner_cache_entries.get(id) as ScannerCacheEntry
 
 
-func get_blemish_type(id: String) -> BlemishType:
-	return blemish_types.get(id) as BlemishType
+func get_surface_condition(id: String) -> SurfaceCondition:
+	return surface_conditions.get(id) as SurfaceCondition
 
 
-## Returns the blemish catalog sorted by id for a stable Blemish Guide order.
-func get_blemish_types_sorted() -> Array:
-	var ids := blemish_types.keys()
+## Returns the surface-condition catalog sorted by id for a stable Condition Guide
+## order.
+func get_surface_conditions_sorted() -> Array:
+	var ids := surface_conditions.keys()
 	ids.sort()
 	var out: Array = []
 	for id in ids:
-		out.append(blemish_types[id])
+		out.append(surface_conditions[id])
 	return out
 
 
@@ -151,7 +152,7 @@ func _clear_state() -> void:
 	character_routes.clear()
 	placement_containers.clear()
 	scanner_cache_entries.clear()
-	blemish_types.clear()
+	surface_conditions.clear()
 	delivery_config = DeliveryConfig.new()
 	spawn_config = SpawnConfig.new()
 	starting_kit = {"tool_ids": [], "technique_ids": []}
@@ -335,10 +336,12 @@ func _parse_journal_file(file_path: String) -> void:
 			continue
 		var record_type := ModelUtils.as_string(item.get("record_type"))
 		match record_type:
-			"blemish":
-				var blemish := BlemishType.from_dictionary(item)
-				_add_record(blemish_types, blemish.id, blemish, file_path, "blemish")
-				blemish.validate(_validation, file_path)
+			"surface_condition":
+				var condition := SurfaceCondition.from_dictionary(item)
+				_add_record(
+					surface_conditions, condition.id, condition, file_path, "surface_condition"
+				)
+				condition.validate(_validation, file_path)
 			_:
 				_validation.add_field_error(
 					file_path, "", "record_type", "unknown record_type '%s'" % record_type
@@ -494,14 +497,17 @@ func _validate_cross_references() -> void:
 					"beat references unknown template '%s'" % beat_template
 				)
 
-	for blemish_id in blemish_types.keys():
-		var blemish: BlemishType = blemish_types[blemish_id]
-		if not blemish.cleaning_tool.is_empty() and not tool_definitions.has(blemish.cleaning_tool):
+	for condition_id in surface_conditions.keys():
+		var condition: SurfaceCondition = surface_conditions[condition_id]
+		if (
+			not condition.cleaning_tool.is_empty()
+			and not tool_definitions.has(condition.cleaning_tool)
+		):
 			_validation.add_field_error(
 				"data/journal",
-				blemish_id,
+				condition_id,
 				"cleaning_tool",
-				"unknown tool reference '%s'" % blemish.cleaning_tool
+				"unknown tool reference '%s'" % condition.cleaning_tool
 			)
 
 	for tool_id in starting_kit.tool_ids:

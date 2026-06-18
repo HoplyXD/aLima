@@ -221,6 +221,46 @@ func test_save_state_split() -> void:
 	assert_eq(copy.persistent.techniques_learned.size(), 1)
 
 
+func test_character_route_dialogue_round_trip() -> void:
+	var data := {
+		"id": "auntie",
+		"display_name": "Elderly Auntie",
+		"portrait": "res://assets/Characters/Auntie.png",
+		"schedule": [{"days": [1, 3, 5], "start_hour": 12, "end_hour": 14}],
+		"holds_fragment_id": "fragment_01",
+		"dialogue": {
+			"default": [
+				{"name": "Nang Shine", "text": "Ay, kamusta na?"},
+				"A line with no speaker.",
+			],
+		},
+	}
+	var route := CharacterRoute.from_dictionary(data)
+	assert_eq(route.portrait, "res://assets/Characters/Auntie.png")
+	assert_eq(route.dialogue_for("1").size(), 2, "Missing day key falls back to default")
+	assert_eq(route.dialogue_for("default")[0]["name"], "Nang Shine")
+
+	var result := route.validate()
+	assert_true(result.is_valid(), "Authored dialogue should validate: %s" % str(result.errors()))
+
+	var round := CharacterRoute.from_dictionary(route.to_dictionary())
+	assert_eq(round.portrait, route.portrait)
+	assert_eq(round.dialogue_for("default").size(), 2, "Dialogue survives round-trip")
+
+
+func test_character_route_rejects_non_array_dialogue() -> void:
+	var route := CharacterRoute.from_dictionary(
+		{
+			"id": "bad",
+			"display_name": "Bad Route",
+			"dialogue": {"default": "not an array"},
+		}
+	)
+	var result := route.validate()
+	assert_false(result.is_valid(), "A non-array dialogue value should fail validation")
+	assert_true(_errors_contain(result, "dialogue[default]"), "Error names the offending key")
+
+
 func _errors_contain(result: ValidationResult, snippet: String) -> bool:
 	for err in result.errors():
 		if err.find(snippet) >= 0:

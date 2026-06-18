@@ -18,9 +18,9 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_constants/margin_left = 48
-theme_override_constants/margin_top = 48
+theme_override_constants/margin_top = 36
 theme_override_constants/margin_right = 48
-theme_override_constants/margin_bottom = 48
+theme_override_constants/margin_bottom = 36
 
 [node name="VBox" type="VBoxContainer" parent="Dim/Margin"]
 theme_override_constants/separation = 12
@@ -33,29 +33,25 @@ text = "Storage"
 unique_name_in_owner = true
 size_flags_vertical = 3
 
-[node name="Artifacts" type="ScrollContainer" parent="Dim/Margin/VBox/Tabs"]
-horizontal_scroll_mode = 0
-
-[node name="ArtifactsList" type="VBoxContainer" parent="Dim/Margin/VBox/Tabs/Artifacts"]
+[node name="Artifacts" type="HBoxContainer" parent="Dim/Margin/VBox/Tabs"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+size_flags_vertical = 3
+theme_override_constants/separation = 16
 
-[node name="Tools" type="ScrollContainer" parent="Dim/Margin/VBox/Tabs"]
-horizontal_scroll_mode = 0
-
-[node name="ToolsList" type="VBoxContainer" parent="Dim/Margin/VBox/Tabs/Tools"]
+[node name="Tools" type="HBoxContainer" parent="Dim/Margin/VBox/Tabs"]
 unique_name_in_owner = true
+visible = false
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+size_flags_vertical = 3
+theme_override_constants/separation = 16
 
-[node name="Key Items" type="ScrollContainer" parent="Dim/Margin/VBox/Tabs"]
-horizontal_scroll_mode = 0
-
-[node name="KeyItemsList" type="VBoxContainer" parent="Dim/Margin/VBox/Tabs/Key Items"]
+[node name="Key Items" type="HBoxContainer" parent="Dim/Margin/VBox/Tabs"]
 unique_name_in_owner = true
+visible = false
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+size_flags_vertical = 3
+theme_override_constants/separation = 16
 
 [node name="StatusLabel" type="Label" parent="Dim/Margin/VBox"]
 unique_name_in_owner = true

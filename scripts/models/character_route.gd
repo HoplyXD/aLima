@@ -13,6 +13,8 @@ var holds_fragment_id: String = ""  ## Empty for Yuyu/finale.
 var rewards: Array[String] = []  ## Reward ids (tools, codes, leads).
 var has_ending: bool = false
 var beats: Array = []  ## Authored quest beats; raw dicts (id, day, object_template, summary).
+var portrait: String = ""  ## res:// texture path for the visitor sprite.
+var dialogue: Dictionary = {}  ## Key (e.g. day string or "default") -> Array of line dicts/strings.
 
 
 func _init() -> void:
@@ -34,6 +36,8 @@ static func from_dictionary(data: Dictionary) -> CharacterRoute:
 	if data.get("beats") is Array:
 		for beat in data["beats"]:
 			r.beats.append(beat)
+	r.portrait = ModelUtils.as_string(data.get("portrait"))
+	r.dialogue = ModelUtils.as_dictionary(data.get("dialogue"))
 	return r
 
 
@@ -48,7 +52,19 @@ func to_dictionary() -> Dictionary:
 		"rewards": rewards.duplicate(),
 		"has_ending": has_ending,
 		"beats": beats.duplicate(),
+		"portrait": portrait,
+		"dialogue": dialogue.duplicate(true),
 	}
+
+
+## Returns the line list for a visit key, falling back to the "intro" set and then
+## a generic "default". Lines are Strings or Dictionaries with "name"/"text" —
+## exactly the shape DialogueBox.start() consumes.
+func dialogue_for(key: String) -> Array:
+	for candidate in [key, "intro", "default"]:
+		if dialogue.has(candidate) and dialogue[candidate] is Array:
+			return dialogue[candidate]
+	return []
 
 
 func validate(
@@ -70,6 +86,23 @@ func validate(
 		else:
 			result.add_field_error(file_path, id, "beats[%d]" % beat_idx, "beat must be a dictionary")
 		beat_idx += 1
+	for key in dialogue.keys():
+		var lines: Variant = dialogue[key]
+		if not lines is Array:
+			result.add_field_error(
+				file_path, id, "dialogue[%s]" % key, "dialogue value must be an array of lines"
+			)
+			continue
+		var line_idx := 0
+		for line in lines:
+			if not (line is String or line is Dictionary):
+				result.add_field_error(
+					file_path,
+					id,
+					"dialogue[%s][%d]" % [key, line_idx],
+					"line must be a string or a dictionary"
+				)
+			line_idx += 1
 	return result
 
 

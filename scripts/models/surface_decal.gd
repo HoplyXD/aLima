@@ -1,8 +1,8 @@
 class_name SurfaceDecal
 ## Authored grime/damage decal on a restorable object's surface.
 ##
-## A decal is a single removable blemish (dust, dirt, rust, fading, tape
-## residue, ...). For now it renders as a flat `color`; an authored texture can
+## A decal is a single removable surface condition (dust, grime, rust, fading,
+## tape residue, ...). For now it renders as a flat `color`; an authored texture can
 ## replace the colour later with no logic change. Each decal is cleared by one
 ## matching `required_tool`; applying the wrong tool damages the object. An
 ## object is CLEAN once every decal is removed.

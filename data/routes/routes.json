@@ -5,6 +5,7 @@
       "record_type": "route",
       "id": "auntie",
       "display_name": "Elderly Auntie",
+      "portrait": "res://assets/Characters/Auntie.png",
       "schedule": [
         {
           "days": [1, 3, 5],
@@ -36,12 +37,68 @@
           "object_template": "auntie_halfphoto_torn",
           "summary": "On the final day she shares a photograph torn in two. Clean both halves, remove the old tape, then rejoin them with archival tape to reveal the uncle. Completing it releases her fragment."
         }
-      ]
+      ],
+      "dialogue": {
+        "intro": [
+          {
+            "name": "Nang Shine",
+            "text": "[i]A frail knock. She peers over your shoulder at the half-open biscuit tin.[/i] Ay, kamusta na? Nakita mo na ang sulod?"
+          },
+          {
+            "name": "You",
+            "text": "I cleaned what I could, Nang Shine — but the water damage... I don't have the right kit yet for paper this fragile. I don't want to ruin it trying."
+          },
+          {
+            "name": "Nang Shine",
+            "text": "Ah, husto man na. Indi gid kinahanglan dasohon. [i]She tucks the tin back into her basket — habit, not mistrust.[/i] That's the right call, anak."
+          },
+          {
+            "name": "Nang Shine",
+            "text": "Kon may husto ka na nga gamit — ihatag ko liwat ina sa imo. May— [i]She hesitates, then waves the thought away with a small laugh.[/i] Wala, lain lang. Old woman things. Same time Wednesday, ha?"
+          },
+          {
+            "text": "[b]Note saved:[/b] Nang Shine's photo — paper too fragile for current tools. Needs the proper kit. She seemed to recognize something in it before I could ask."
+          }
+        ],
+        "return": [
+          {
+            "name": "Nang Shine",
+            "text": "[i]She steps in without quite waiting, a paper bag of ampaw peeking from her basket.[/i] Maayong hapon, anak. Ay— [i]her basket lowers as her eyes catch the photograph on the table.[/i]"
+          },
+          {
+            "name": "You",
+            "text": "Sulod, Nang Shine. We finished cleaning something — from the tin you dropped off."
+          },
+          {
+            "name": "Nang Shine",
+            "text": "[i]She lifts the restored photo with both hands. A young woman laughing; beside her, a young man caught mid-turn, like he'd been looking at her instead of the camera.[/i] Ay sus, gali ti, kami gid ini."
+          },
+          {
+            "text": "[i]A low hum rises from beneath the floorboards. For one heartbeat the corner is a wide porch, the same two faces, younger — then it folds back. A Temporal Echo.[/i]"
+          },
+          {
+            "name": "Nang Shine",
+            "text": "[i]A hand pressed to her chest, eyes wet.[/i] Diutay lang... pero amo gid na. That was him. That was Yuyu."
+          },
+          {
+            "name": "You",
+            "text": "You knew him? Before—"
+          },
+          {
+            "name": "Nang Shine",
+            "text": "Before your Lola, anak. Way, way before. [i]She presses the photo gently back into your hands.[/i] Keep it safe for me, ha? Maybe it wants to stay here, sa imo anay, until I am."
+          },
+          {
+            "text": "[b]Note saved:[/b] Yuyu and Nang Shine — his first love, long before Lola. The bahay-na-bato in the photo still stands here in Iloilo."
+          }
+        ]
+      }
     },
     {
       "record_type": "route",
       "id": "artisan",
       "display_name": "Local Artisan",
+      "portrait": "res://assets/Characters/Artisan.png",
       "schedule": [
         {
           "days": [2, 4, 5],
@@ -53,12 +110,66 @@
       "mutual_exclusions": ["scavenger"],
       "holds_fragment_id": "fragment_02",
       "rewards": ["delicate_tool"],
-      "has_ending": true
+      "has_ending": true,
+      "dialogue": {
+        "intro": [
+          {
+            "name": "Nong Lave",
+            "text": "[i]Forearms like rope, hands stained the color of old varnish. He leans into the doorway.[/i] Maayo nga hapon. May tawag ka guwa nga may bag-o — old wood, daw galing pa sa altar. Mind kung tan-awon ko lang?"
+          },
+          {
+            "name": "You",
+            "text": "Go ahead, Nong Lave. Found it in this morning's delivery — was about to clean it up."
+          },
+          {
+            "name": "Nong Lave",
+            "text": "[i]He sees the brass polish open in your hand, and his shoulders drop a little.[/i] Ay — hulat anay. That brass polish — indi gid na para sa kahoy. You'll strip the patina — the dulom. That's not dirt, anak. That's eighty years of hands."
+          },
+          {
+            "name": "You",
+            "text": "I just wanted it to look good before I—"
+          },
+          {
+            "name": "Nong Lave",
+            "text": "Maayo na siya the way nag-tigulang siya. [i]He sets it down exactly where it was.[/i] Pasensya na ko. Pero kon imo na ginsalakay sang amerilyo — wala ka na sang ma-ibalik."
+          },
+          {
+            "name": "Nong Lave",
+            "text": "Ginatudluan ko anay sang akon Lola kon paano makilala ang tinuod nga daan sa ginhimo lang nga daan. Basi makasugod ka diri. [i]He's gone before you can ask which Lola he means.[/i]"
+          }
+        ],
+        "return": [
+          {
+            "name": "Nong Lave",
+            "text": "[i]The same careful half-entrance. He watches you work — the soft brush, the restraint — and stops.[/i] Gali ti. Sin-o naghambal sa imo parte sa dulom? Indi ina common nga kaalam sa mga bata subong."
+          },
+          {
+            "name": "You",
+            "text": "Someone explained it to me once. It stuck."
+          },
+          {
+            "name": "Nong Lave",
+            "text": "[i]He picks up the santo with the respect of someone handling a relative's hands.[/i] Akon Lola usually ang naga-asoy sini — paano makilala ang daan sa tinuod. She learned it from someone too. Sang una pa."
+          },
+          {
+            "text": "[i]Light catches the santo's chipped shoulder wrong. For half a breath: a family altar, candlelight, a younger Nang Shine's hands lighting a wick beside this very santo. It folds shut.[/i]"
+          },
+          {
+            "name": "Nong Lave",
+            "text": "[i]He produces a cloth roll of hand-worn tools.[/i] Abyan na ta subong, ha? Diri — para sa mga butang nga maluya gani, indi lang daan. Indi mo na kinahanglan ang polish nga ina."
+          },
+          {
+            "name": "Nong Lave",
+            "text": "May ginsulat akon Lola sa iya mga daan nga litrato — parte sa isa nga lalaki nga nakatudlo sa iya. Daw kilala ko na siya gamay, through her. Same time Thursday, ha?"
+          }
+        ]
+      }
     },
     {
       "record_type": "route",
       "id": "scavenger",
       "display_name": "Trash Scavenger",
+      "portrait": "res://assets/Characters/Scavenger.png",
       "schedule": [
         {
           "days": [2, 4, 5],
@@ -70,12 +181,69 @@
       "mutual_exclusions": ["artisan"],
       "holds_fragment_id": "fragment_03",
       "rewards": ["archeologist_lead"],
-      "has_ending": true
+      "has_ending": true,
+      "dialogue": {
+        "intro": [
+          {
+            "name": "Ayla",
+            "text": "[i]The door gets a shove, not a knock. She drops a sack with a clatter.[/i] Oy! May tesoro ko diri, ha! Tan-awa ina nga lunchbox sa imo lamesa — ina, may history ina!"
+          },
+          {
+            "name": "You",
+            "text": "That one's just rusted tin, Ayla. It's going in the recycle bin."
+          },
+          {
+            "name": "Ayla",
+            "text": "[i]Her grin falters for half a second before she covers it, louder.[/i] Indi ka makasiguro sina kon wala ka nag-tan-aw maayo! May sticker pa ina sang daan nga sine — abi mo basura lang, pero—"
+          },
+          {
+            "name": "You",
+            "text": "It's rust and a torn sticker. I've got better things to restore today."
+          },
+          {
+            "name": "Ayla",
+            "text": "[i]She picks the lunchbox back up herself — quick, like it shouldn't sit where it isn't wanted.[/i] Sige lang. Wala man, basura man gali, ikaw ang nakahibalo. Same time Thursday — pero tama lang, indi ko na pilitan."
+          },
+          {
+            "text": "[b]Note saved:[/b] Ayla brought in a lunchbox, said it had history. Didn't check. She didn't push back twice."
+          }
+        ],
+        "return": [
+          {
+            "name": "Ayla",
+            "text": "[i]The same shove. She stops — the lunchbox is already on the table, half the rust lifted.[/i] Oy! May tesoro ko diri— ...ay, gina-restore mo na siya?"
+          },
+          {
+            "name": "You",
+            "text": "Figured I should actually look first."
+          },
+          {
+            "name": "Ayla",
+            "text": "Tuod gid ko, bala? Indi tanan nga daan basura. [i]The last rust comes away, revealing scratched initials and a date. She goes quiet for the first time since walking in.[/i]"
+          },
+          {
+            "name": "Ayla",
+            "text": "...That's akon Tatay's initials. He used to sell scrap to a Manong with a notebook — said he always paid fair, never haggled mean, even kon basura gid lang ang dala mo."
+          },
+          {
+            "name": "You",
+            "text": "The Manong with the notebook — was that—"
+          },
+          {
+            "name": "Ayla",
+            "text": "Imo Yuyu, siguro gid. [i]She taps the lunchbox once, gently.[/i] May isa pa ko ka tawo nga dapat mo kilalahon — nagadig sang daan nga mga butang, sa guwa sang syudad. Ihatag ko sa imo iya address."
+          },
+          {
+            "text": "[b]Lead saved:[/b] Sam, the Archeologist — Ayla's contact who digs old things professionally, outside the city."
+          }
+        ]
+      }
     },
     {
       "record_type": "route",
       "id": "archeologist",
       "display_name": "Archeologist",
+      "portrait": "res://assets/Characters/Archeologist.png",
       "schedule": [
         {
           "days": [1, 3, 5],
@@ -87,12 +255,66 @@
       "mutual_exclusions": [],
       "holds_fragment_id": "fragment_04",
       "rewards": ["excavation_tools"],
-      "has_ending": true
+      "has_ending": true,
+      "dialogue": {
+        "intro": [
+          {
+            "name": "Sam",
+            "text": "[i]He measures the room from across it before approaching.[/i] Maayo nga aga. I was told there might be something worth seeing here. [i]He lifts the mended jar.[/i] ...This was broken."
+          },
+          {
+            "name": "You",
+            "text": "It was. I fixed it — you can barely tell now."
+          },
+          {
+            "name": "Sam",
+            "text": "Tuod — you can barely tell. That's the problem. You didn't fix the jar. You erased the part of its history where it broke."
+          },
+          {
+            "name": "You",
+            "text": "Isn't that the point of restoration?"
+          },
+          {
+            "name": "Sam",
+            "text": "Indi gid. A maker built this with two hands. It broke with someone else's. If you hide that, you're just hiding evidence. Real mastery is re-forging it so both hands still show."
+          },
+          {
+            "name": "Sam",
+            "text": "Pasensya ko, ah. Pero kon may sunod ka pa nga daan nga butang nga nabuong — don't disguise the break. Show it. Then we'll talk."
+          }
+        ],
+        "return": [
+          {
+            "name": "Sam",
+            "text": "[i]He holds a folded paper. His eyes go straight to the jar — to the visible seam, not hidden.[/i] Maayo nga hapon. Ayla said you'd want this address. You left the break showing."
+          },
+          {
+            "name": "You",
+            "text": "Hiding it would just be lying about whose hands touched it."
+          },
+          {
+            "name": "Sam",
+            "text": "[i]A real smile, the measuring look gone.[/i] Sige — now we can talk properly. Most people want history invisible. You left it where I could see it."
+          },
+          {
+            "name": "Sam",
+            "text": "I knew your Yuyu. Tuod gid — I was the last one who saw him, before— [i]He doesn't finish.[/i] He used to say almost the same thing: indi mo paglimpyohan ang kasaysayan hasta mawala ang ebidensya."
+          },
+          {
+            "name": "Sam",
+            "text": "[i]He sets a small, worn case on the table.[/i] A proper excavation kit. There are objects in this city too sturdy for your current methods — I can open that door, kon gusto mo."
+          },
+          {
+            "text": "[b]Note saved:[/b] Sam was the last person seen with Yuyu before he vanished."
+          }
+        ]
+      }
     },
     {
       "record_type": "route",
       "id": "buyer",
       "display_name": "Mysterious Buyer",
+      "portrait": "res://assets/Characters/Mysterious Buyer.png",
       "schedule": [
         {
           "days": [1, 2, 3, 4, 5],
@@ -104,18 +326,100 @@
       "mutual_exclusions": [],
       "holds_fragment_id": "fragment_05",
       "rewards": ["encoded_ledger"],
-      "has_ending": false
+      "has_ending": false,
+      "dialogue": {
+        "intro": [
+          {
+            "name": "Mr. Maverick",
+            "text": "[i]Dressed a half-step nicer than the shop deserves. His eyes sweep the shelves once — fast, practiced.[/i] Maayo nga hapon. Thought I'd stop by, see if anything interesting came through."
+          },
+          {
+            "name": "You",
+            "text": "Nothing special this week, sorry. Mostly sold straight through the regular buyers."
+          },
+          {
+            "name": "Mr. Maverick",
+            "text": "[i]A small, unreadable smile. He sets a blank business card on the counter without quite handing it over.[/i] Sige lang. Some people take a few weeks before they understand which pieces are worth my prices."
+          },
+          {
+            "name": "Mr. Maverick",
+            "text": "Though — between us — there are objects out there with a small mark. A spiral, pressed into the base, easy to miss. Kon you ever see one, I'd pay it more attention than the glow suggests."
+          },
+          {
+            "name": "You",
+            "text": "Why? What does the mark mean?"
+          },
+          {
+            "name": "Mr. Maverick",
+            "text": "Lain-lain ang storya. Maybe another time. [i]He's gone before the bell finishes ringing — just a card with a phone number and nothing else.[/i]"
+          }
+        ],
+        "return": [
+          {
+            "name": "Mr. Maverick",
+            "text": "[i]No business-card performance this time. He's already inside, gentler than before.[/i] Maayo nga aga. You sold me that spiral-marked piece without asking my price first. Nobody's done that in a long time, lagi."
+          },
+          {
+            "name": "You",
+            "text": "You said you'd pay attention to the mark. Trusting you once wouldn't hurt."
+          },
+          {
+            "name": "Mr. Maverick",
+            "text": "[i]He sets a battered ledger on the counter — pages of handwriting that isn't his.[/i] Your Yuyu kept me on a short list of people he trusted to deal honestly. I've kept that list longer than I should have."
+          },
+          {
+            "name": "Mr. Maverick",
+            "text": "He asked me to look into something the week before he disappeared. Indi ko gusto i-drop ina nga investigation nga half-done — pero wala ko sang partner. Until now, maybe."
+          },
+          {
+            "text": "[i]From an inner pocket, wrapped in cloth, he produces a fragment — its spiral mark matching the trinket you sold him.[/i]"
+          },
+          {
+            "name": "Mr. Maverick",
+            "text": "This is yours now. Seat it properly. I had to be sure you weren't just another collector chasing the glow."
+          }
+        ]
+      }
     },
     {
       "record_type": "route",
       "id": "yuyu",
       "display_name": "Uncle's Legacy",
+      "portrait": "res://assets/Characters/Uncle.png",
       "schedule": [],
       "prerequisites": ["all_fragments_seated"],
       "mutual_exclusions": [],
       "holds_fragment_id": "",
       "rewards": ["perfect_loop"],
-      "has_ending": true
+      "has_ending": true,
+      "dialogue": {
+        "intro": [
+          {
+            "name": "Yuyu",
+            "text": "[i]Where there was only lamplight, there is a man — translucent at the edges, already steadying.[/i] —and that's why the Chronos Emulsion shouldn't ever be sealed with— [i]He stops. Looks at you.[/i] ...Ah."
+          },
+          {
+            "name": "You",
+            "text": "Yuyu—"
+          },
+          {
+            "name": "Yuyu",
+            "text": "Naku... look at you. [i]He reaches out, not quite touching your shoulder, like his hands aren't entirely back yet.[/i] How long was I...?"
+          },
+          {
+            "name": "You",
+            "text": "Five days. Looped. Over and over, until—"
+          },
+          {
+            "name": "Yuyu",
+            "text": "Until five people I trusted held five pieces, and one stubborn anak went and found every single one of them. [i]He laughs, real this time, a little wet at the edges.[/i]"
+          },
+          {
+            "name": "Yuyu",
+            "text": "Alima. Passing something forward, hand to hand, until it's too heavy for one person to carry alone. I think I finally understand why your Lola said it like that."
+          }
+        ]
+      }
     }
   ]
 }

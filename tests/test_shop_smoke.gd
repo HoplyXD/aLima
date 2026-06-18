@@ -62,6 +62,7 @@ func test_hud_day_formatting() -> void:
 func test_door_dialogue_pauses_and_resumes_clock_via_keyboard() -> void:
 	assert_true(_shop.is_day_running(), "Clock runs when the shop opens")
 
+	_advance_clock_to(1, 12)  # Auntie's visit window (Day 1, 12:00-14:00).
 	watch_signals(_hud)
 	_hud.door_pressed.emit()  # Identical to clicking the Door button.
 	await wait_physics_frames(1)
@@ -148,6 +149,7 @@ func test_workbench_prop_opens_restoration_like_its_button() -> void:
 
 
 func test_door_prop_opens_dialogue_like_its_button() -> void:
+	_advance_clock_to(1, 12)  # Auntie's visit window so a visitor is scheduled.
 	var prop: Interactable3D = _shop.get_node("Interactables/DoorInteractable")
 	prop.activate()
 	await wait_physics_frames(1)
@@ -177,6 +179,15 @@ func test_overlays_disable_shop_props() -> void:
 
 
 # --- Helpers ------------------------------------------------------------
+
+
+## Drives the shared DayClock to a specific day/hour via its public tick API so a
+## scheduled visitor (per data/routes) answers the door deterministically.
+func _advance_clock_to(day: int, hour: int) -> void:
+	DayClock.seconds_per_hour = 1.0
+	DayClock.start_day(day)
+	for _i in range(hour - DayClock.DAY_START_HOUR):
+		DayClock.tick(1.0)
 
 
 func _advance_until_closed(dialogue: DialogueBox, event_factory: Callable) -> void:

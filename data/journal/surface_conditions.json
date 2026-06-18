@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "surface_condition",
+      "id": "dust",
+      "display_name": "Dust",
+      "category": "surface_soil",
+      "color": "#C9C2B0",
+      "cleaning_tool": "soft_brush",
+      "description": "Loose surface dust. A soft brush lifts it without scratching."
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "dirt",
+      "display_name": "Grime",
+      "category": "surface_soil",
+      "color": "#6B4A2B",
+      "cleaning_tool": "damp_cloth",
+      "description": "Ingrained dirt and greasy residue. Wipe it away with a damp cloth."
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "tape_residue",
+      "display_name": "Tape Residue",
+      "category": "accretion",
+      "color": "#D9C27A",
+      "cleaning_tool": "solvent",
+      "description": "A foreign accretion: sticky adhesive left by old tape. Dissolve it gently with solvent."
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "rust",
+      "display_name": "Rust",
+      "category": "corrosion",
+      "color": "#B5511E",
+      "cleaning_tool": "rust_brush",
+      "description": "Iron corrosion. Work it off and stabilise the metal with the wire brush."
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "tarnish",
+      "display_name": "Tarnish",
+      "category": "corrosion",
+      "color": "#4A5240",
+      "cleaning_tool": "polishing_cloth",
+      "description": "Dull oxidation on silver or brass. Buff it back with a polishing cloth."
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "water_stain",
+      "display_name": "Water Stain",
+      "category": "staining",
+      "color": "#C8A24B",
+      "cleaning_tool": "stain_lifter",
+      "description": "Yellow-brown blotches soaked into paper or photos. Draw them out with the stain lifter."
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "fading",
+      "display_name": "Fading",
+      "category": "structural_damage",
+      "color": "#D8CFC0",
+      "cleaning_tool": "photo_kit",
+      "description": "Media loss: a washed-out, discoloured image. Restore it with the photo restoration kit."
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "crack",
+      "display_name": "Cracking",
+      "category": "structural_damage",
+      "color": "#3A3A3A",
+      "cleaning_tool": "consolidant",
+      "description": "Structural cracks in a frame, glaze, or paint. Stabilise them with consolidant."
+    }
+  ]
+}

@@ -7,6 +7,7 @@ class_name ScrapObjectTemplate
 
 var id: String = ""
 var display_name: String = ""
+var description: String = ""  ## Optional flavour blurb for Storage; synthesized when empty.
 var category: String = ""  ## e.g. "jewelry", "paper", "mechanical", "ceramic".
 var base_rarity: int = ModelEnums.Rarity.WHITE
 var weight_range: Vector2 = Vector2.ZERO
@@ -42,6 +43,7 @@ static func from_dictionary(data: Dictionary) -> ScrapObjectTemplate:
 	var t := ScrapObjectTemplate.new()
 	t.id = ModelUtils.as_string(data.get("id"))
 	t.display_name = ModelUtils.as_string(data.get("display_name"))
+	t.description = ModelUtils.as_string(data.get("description"))
 	t.category = ModelUtils.as_string(data.get("category"))
 	t.base_rarity = ModelEnums.rarity_from_name(ModelUtils.as_string(data.get("base_rarity")))
 	t.weight_range = ModelUtils.as_vector2(data.get("weight_range"))
@@ -77,6 +79,7 @@ func to_dictionary() -> Dictionary:
 	return {
 		"id": id,
 		"display_name": display_name,
+		"description": description,
 		"category": category,
 		"base_rarity": ModelEnums.rarity_name(base_rarity),
 		"weight_range": ModelUtils.vector2_to_array(weight_range),

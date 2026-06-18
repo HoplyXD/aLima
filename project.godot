@@ -12,7 +12,7 @@ config_version=5
 
 config/name="aLima"
 run/main_scene="uid://dgc2dadcifuf2"
-config/features=PackedStringArray("4.6", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -26,6 +26,7 @@ EchoController="*res://scripts/discovery/echo_controller.gd"
 PortalFlowController="*res://scripts/shop/portal_flow_controller.gd"
 SeatingService="*res://scripts/journal/seating_service.gd"
 JournalService="*res://scripts/journal/journal_service.gd"
+RouteService="*res://scripts/core/route_service.gd"
 MarketplaceService="*res://scripts/economy/marketplace_service.gd"
 
 [display]
