@@ -1,6 +1,6 @@
 extends GutTest
 ## Storage screen: pause ownership, choosing the restore target, and loading tools
-## into the bench (max 10) through the UI seams.
+## into the bench (max 5) through the UI seams.
 
 const SCREEN_SCENE := preload("res://scenes/ui/storage_screen.tscn")
 const TEST_SAVE := "user://test_storage_save.json"
@@ -88,11 +88,11 @@ func test_toggle_tool_loads_and_unloads_bench() -> void:
 	assert_true(GameState.save_state.loop.workbench_tools.has(inst.uid), "toggling again reloads it")
 
 
-func test_auto_equip_never_loads_more_than_ten() -> void:
-	for i in range(11):
+func test_auto_equip_never_loads_more_than_five() -> void:
+	for i in range(6):
 		_tools.grant_tool("solvent")
 	await _open_screen()
-	assert_eq(GameState.save_state.loop.workbench_tools.size(), 10, "auto-equip caps the bench at ten")
+	assert_eq(GameState.save_state.loop.workbench_tools.size(), 5, "auto-equip caps the bench at five")
 
 
 func test_open_renders_all_three_tabs_without_error() -> void:

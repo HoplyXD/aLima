@@ -6,8 +6,10 @@ extends CanvasLayer
 ##     selected item's condition, name, and description, with a Restore button
 ##     (Sell once it has been restored).
 ##   * Tools     — owned tools as draggable chips; the left panel shows durability
-##     and which surface conditions the tool treats. Drag chips into the ten
-##     workbench slots to equip, drag them back out to unequip.
+##     and which surface conditions the tool treats. Drag chips onto the five
+##     workbench slots to equip; dropping on an occupied slot replaces just that
+##     tool, and the hovered slot highlights to show where the drop will land. Drag
+##     a chip back out to unequip.
 ##   * Key Items — quest artifacts (restorable like ordinary ones) and the five
 ##     fragments with their lifecycle state.
 ##
@@ -117,7 +119,7 @@ func sell_artifact(uid: String) -> void:
 	refresh()
 
 
-## Loads/unloads an owned tool from the bench (max 10). Accessibility fallback for
+## Loads/unloads an owned tool from the bench (max 5). Accessibility fallback for
 ## the drag-and-drop loadout.
 func toggle_tool(uid: String) -> void:
 	if GameState.save_state.loop.workbench_tools.has(uid):
@@ -256,7 +258,9 @@ func _build_tools_tab() -> void:
 	_render_tool_detail(detail_host, _selected_tool_uid)
 
 
-## The ten workbench slots, wrapped in a drop zone that equips a dropped tool.
+## The five workbench slots. Each slot is its own drop target that highlights on
+## hover and equips/replaces the tool dropped onto it; the surrounding zone is a
+## fallback that equips into the first free slot when a drop lands between slots.
 func _make_equip_area() -> Control:
 	var zone := ToolDropZone.new()
 	zone.on_drop = _on_equip_drop
@@ -269,12 +273,19 @@ func _make_equip_area() -> Control:
 
 	var equipped: Array = GameState.save_state.loop.workbench_tools
 	for i in range(ToolService.MAX_WORKBENCH_TOOLS):
+		var slot := ToolSlot.new()
+		slot.slot_index = i
+		slot.on_drop_to_slot = _on_slot_drop
+		slot.setup(SLOT_MIN, Color(0.08, 0.09, 0.10, 0.5), Color(0.20, 0.34, 0.22, 0.95))
+		var inst: ToolInstance = null
 		if i < equipped.size():
-			var inst := _find_owned(ModelUtils.as_string(equipped[i]))
-			if inst != null:
-				grid.add_child(_make_tool_chip(inst, true))
-				continue
-		grid.add_child(_make_empty_slot())
+			inst = _find_owned(ModelUtils.as_string(equipped[i]))
+		if inst != null:
+			slot.occupant_uid = inst.uid
+			slot.add_child(_make_tool_chip(inst, true))
+		else:
+			slot.add_child(_make_slot_placeholder())
+		grid.add_child(slot)
 	return zone
 
 
@@ -331,20 +342,18 @@ func _on_chip_dragged_out(uid: String) -> void:
 	if GameState.save_state.loop.workbench_tools.has(uid):
 		_tools.remove_from_workbench(uid)
 		SaveService.save_game()
+		_status_label.text = ""  # let the bench summary recompute.
 		refresh()
 
 
-func _make_empty_slot() -> Control:
-	var slot := PanelContainer.new()
-	slot.custom_minimum_size = SLOT_MIN
-	_style_zone(slot, Color(0.08, 0.09, 0.10, 0.5))
+## The "empty slot" interior label shown inside an unoccupied ToolSlot.
+func _make_slot_placeholder() -> Control:
 	var label := Label.new()
 	label.text = "—"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.45))
-	slot.add_child(label)
-	return slot
+	return label
 
 
 func _show_tool(uid: String) -> void:
@@ -396,6 +405,21 @@ func _on_equip_drop(data: Dictionary) -> void:
 		refresh()
 		return
 	SaveService.save_game()
+	_status_label.text = ""  # let the bench summary recompute.
+	refresh()
+
+
+## Drop onto a specific workbench slot: equip into an empty slot, or replace/swap
+## the tool already sitting there. Only that one slot changes. A drop onto an
+## occupied slot of a full bench replaces that slot's tool rather than failing.
+func _on_slot_drop(slot_index: int, data: Dictionary) -> void:
+	var uid := ModelUtils.as_string(data.get("uid"))
+	if uid.is_empty():
+		return
+	if not _tools.equip_to_slot(uid, slot_index):
+		return  # only fails for a tool the player doesn't own (can't happen via the UI).
+	SaveService.save_game()
+	_status_label.text = ""  # let the bench summary recompute.
 	refresh()
 
 
@@ -405,6 +429,7 @@ func _on_unequip_drop(data: Dictionary) -> void:
 	var uid := ModelUtils.as_string(data.get("uid"))
 	_tools.remove_from_workbench(uid)
 	SaveService.save_game()
+	_status_label.text = ""  # let the bench summary recompute.
 	refresh()
 
 
@@ -687,19 +712,28 @@ class ToolChip:
 	## Called with the uid when an equipped chip is dropped anywhere that is not the
 	## workbench (i.e. dragged "out"), so it unequips.
 	var on_drag_out: Callable
+	## True only on the chip the player is actually dragging. NOTIFICATION_DRAG_END is
+	## broadcast to every chip in the tree, so without this flag every equipped chip
+	## would unequip itself on one failed drop — the "unequips everything" bug.
+	var _is_dragging: bool = false
 
 	func _get_drag_data(_at_position: Vector2) -> Variant:
 		var preview := Label.new()
 		preview.text = text
 		preview.add_theme_color_override("font_color", Color(1, 1, 1))
 		set_drag_preview(preview)
+		_is_dragging = true
 		return {"kind": StorageScreen.DRAG_KIND, "uid": tool_uid, "from_equipped": from_equipped}
 
 	func _notification(what: int) -> void:
-		# A drag that ended without a drop zone accepting it (dropped in empty space
-		# or the owned shelf) unequips an equipped tool — "drag it out of the bench".
+		# Only the chip being dragged reacts. An equipped chip dropped without a zone
+		# accepting it (empty space or the owned shelf) unequips itself — "drag it out
+		# of the bench". A successful drop (equip/replace/swap onto a slot) does nothing.
 		if what != NOTIFICATION_DRAG_END:
 			return
+		if not _is_dragging:
+			return
+		_is_dragging = false
 		if not from_equipped or not is_instance_valid(self):
 			return
 		if get_viewport().gui_is_drag_successful():
@@ -719,3 +753,69 @@ class ToolDropZone:
 	func _drop_data(_at_position: Vector2, data: Variant) -> void:
 		if on_drop.is_valid():
 			on_drop.call(data)
+
+
+## A single workbench slot (holds one tool chip or an empty placeholder). It is its
+## own drop target so the player can aim at one slot, and it lights up while a tool
+## is hovered over it so the drop target is obvious. `_active` tracks the one slot
+## currently lit so moving between slots can't leave several glowing at once.
+class ToolSlot:
+	extends PanelContainer
+	static var _active: ToolSlot = null
+
+	var slot_index: int = -1
+	var occupant_uid: String = ""  ## "" when the slot is empty.
+	## Called with (slot_index, data) when a tool chip is dropped onto this slot.
+	var on_drop_to_slot: Callable
+
+	var _base_style: StyleBoxFlat
+	var _highlight_style: StyleBoxFlat
+	var _lit: bool = false
+
+	func setup(min_size: Vector2, base: Color, highlight: Color) -> void:
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		custom_minimum_size = min_size
+		_base_style = _flat(base, Color(0, 0, 0, 0))
+		_highlight_style = _flat(highlight, Color(0.55, 0.9, 0.55, 0.95))
+		add_theme_stylebox_override("panel", _base_style)
+
+	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+		var ok: bool = data is Dictionary and data.get("kind") == StorageScreen.DRAG_KIND
+		if ok:
+			_set_lit(true)
+		return ok
+
+	func _drop_data(_at_position: Vector2, data: Variant) -> void:
+		_set_lit(false)
+		if on_drop_to_slot.is_valid():
+			on_drop_to_slot.call(slot_index, data)
+
+	func _notification(what: int) -> void:
+		# Clear the highlight when the pointer leaves the slot or the drag ends, so a
+		# slot never stays lit after the tool moves elsewhere or the drag is dropped.
+		if what == NOTIFICATION_MOUSE_EXIT or what == NOTIFICATION_DRAG_END:
+			_set_lit(false)
+
+	func _set_lit(on: bool) -> void:
+		if on == _lit or _base_style == null:
+			return
+		if on:
+			if _active != null and _active != self and is_instance_valid(_active):
+				_active._set_lit(false)
+			_active = self
+			add_theme_stylebox_override("panel", _highlight_style)
+		else:
+			if _active == self:
+				_active = null
+			add_theme_stylebox_override("panel", _base_style)
+		_lit = on
+
+	static func _flat(bg: Color, border: Color) -> StyleBoxFlat:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = bg
+		sb.set_corner_radius_all(6)
+		sb.set_content_margin_all(4)
+		if border.a > 0.0:
+			sb.set_border_width_all(2)
+			sb.border_color = border
+		return sb

@@ -181,7 +181,7 @@ func _on_phone_closed() -> void:
 
 func _on_storage_pressed() -> void:
 	# Storage prepares the bench: choose the artifact to restore and which tools
-	# (max 10) to load. It covers the shop and pauses time via PAUSE_STORAGE.
+	# (max 5) to load. It covers the shop and pauses time via PAUSE_STORAGE.
 	_set_interactables_enabled(false)
 	_storage_screen.open()
 

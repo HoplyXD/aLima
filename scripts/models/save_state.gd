@@ -145,7 +145,7 @@ class LoopState:
 	var last_delivery_day: int = 0  ## Day on which the most recent Morning Delivery arrived.
 	var current_carrier_placements: Dictionary = {}  ## fragment_id -> placement dict.
 	var owned_tools: Array = []  ## ToolInstance dictionaries (durability-tracked, loop-scoped).
-	var workbench_tools: Array[String] = []  ## Tool instance uids loaded into the bench (<= 10).
+	var workbench_tools: Array[String] = []  ## Tool instance uids loaded into the bench (<= 5).
 	var tool_shipments: Array = []  ## Pending purchases: {tool_id, arrival_index}.
 	var restore_target_uid: String = ""  ## Instance selected to restore at the bench.
 

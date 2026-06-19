@@ -365,7 +365,9 @@ func enter_conditions_mode(decals: Array, removed_ids: Array, colors: Dictionary
 	var index := 0
 	for decal in decals:
 		var center := _condition_layout(index, count)
-		var node := _make_blemish_node(center, colors.get(decal.type, Color(0.5, 0.5, 0.5)))
+		# Conditions render as flat decals pasted flush onto the artifact surface
+		# (oriented to the surface normal), not protruding spheres.
+		var node := _make_decal_node(center, colors.get(decal.type, Color(0.5, 0.5, 0.5)))
 		add_child(node)
 		_blemishes[decal.id] = {"node": node, "center": center}
 		node.visible = not removed_ids.has(decal.id)
@@ -515,6 +517,44 @@ func _make_blemish_node(center: Vector3, color: Color) -> MeshInstance3D:
 	mat.roughness = 0.9
 	node.material_override = mat
 	return node
+
+
+## A flat condition decal pasted onto the artifact surface: a thin quad sitting
+## flush on the medallion and oriented to its surface normal, so the grime reads as
+## stuck-on rather than a sphere poking out. Placeholder colour swatch until authored
+## decal textures replace it (Phase 13/20).
+func _make_decal_node(center: Vector3, color: Color) -> MeshInstance3D:
+	var quad := QuadMesh.new()
+	var diameter := BLEMISH_RADIUS * 1.6
+	quad.size = Vector2(diameter, diameter)
+	var node := MeshInstance3D.new()
+	node.name = "ConditionDecal"
+	node.mesh = quad
+	node.position = center
+	_orient_to_normal(node, center)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(color.r, color.g, color.b, 0.88)
+	mat.roughness = 1.0
+	mat.metallic = 0.0
+	# A pasted-on decal reads from the front and shouldn't be culled at grazing angles.
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	node.material_override = mat
+	return node
+
+
+## Orients `node` so its facing axis (+Z, the QuadMesh normal) points along `normal`,
+## i.e. the decal lies flat against the spherical surface at that point.
+func _orient_to_normal(node: Node3D, normal: Vector3) -> void:
+	var n := normal.normalized()
+	if n.is_zero_approx():
+		return
+	var up := Vector3.UP
+	if absf(n.dot(up)) > 0.99:
+		up = Vector3.RIGHT
+	var x_axis := up.cross(n).normalized()
+	var y_axis := n.cross(x_axis).normalized()
+	node.basis = Basis(x_axis, y_axis, n)
 
 
 func _build_photo() -> void:

@@ -108,7 +108,7 @@ func get_available_tools() -> Array[ToolDefinition]:
 	return out
 
 
-## The tools loaded into the bench (max 10), as definitions. Owned tools auto-equip
+## The tools loaded into the bench (max 5), as definitions. Owned tools auto-equip
 ## on grant, so the loadout is the source of truth: an empty loadout means the
 ## player deliberately removed everything (bench shows nothing). The only fallback
 ## to "all available" is the id-set-only path (no durability instances at all),
