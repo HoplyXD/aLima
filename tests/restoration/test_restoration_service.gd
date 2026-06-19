@@ -66,6 +66,34 @@ func _make_tin(uid: String, contents: int = ModelEnums.OpenResult.EMPTY) -> Obje
 	return inst
 
 
+func test_instance_with_spawned_conditions_cleans_to_clean() -> void:
+	GameState.save_state.loop.tool_items.append("soft_brush")  # treats dust
+	var inst := _make_pendant("cond_pendant")
+	inst.spawned_decals = [
+		{"id": "dust_0", "type": "dust", "color": "#C9C2B0", "required_tool": "soft_brush"},
+		{"id": "rust_1", "type": "rust", "color": "#B5511E", "required_tool": "rust_brush"},
+	]
+	_add_instance(inst)
+	var template := _repo.get_template("tarnished_pendant")
+
+	assert_true(
+		_service.instance_is_decal_based(inst, template), "spawned conditions make it decal-based"
+	)
+	assert_eq(_service.effective_decals(inst, template).size(), 2)
+
+	var r1 := _service.clean_decal("cond_pendant", "dust_0", "soft_brush")
+	assert_true(r1.removed, "the matching tool removes the dust condition")
+	assert_false(r1.reached_clean, "one condition still remains")
+
+	var r2 := _service.clean_decal("cond_pendant", "rust_1", "rust_brush")
+	assert_true(r2.reached_clean, "removing the last condition reaches CLEAN")
+	assert_eq(
+		_service.find_instance_by_id("cond_pendant").state,
+		ModelEnums.ObjState.CLEAN,
+		"the artifact is now clean"
+	)
+
+
 func test_bench_follows_loadout_once_instances_exist() -> void:
 	# Id-set-only tools (no durability instances) still show via the legacy fallback.
 	assert_gt(_service.get_workbench_tools().size(), 0, "id-set tools show via fallback")

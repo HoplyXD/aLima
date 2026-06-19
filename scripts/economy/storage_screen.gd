@@ -320,9 +320,18 @@ func _make_tool_chip(inst: ToolInstance, equipped: bool) -> ToolChip:
 	chip.text = "%s\n%s" % [def.display_name if def != null else inst.tool_id, wear]
 	if not inst.is_usable():
 		chip.add_theme_color_override("font_color", Color(0.7, 0.4, 0.4))
+	chip.on_drag_out = _on_chip_dragged_out
 	var uid := inst.uid
 	chip.pressed.connect(func() -> void: _show_tool(uid))
 	return chip
+
+
+## An equipped chip dropped outside the workbench unequips.
+func _on_chip_dragged_out(uid: String) -> void:
+	if GameState.save_state.loop.workbench_tools.has(uid):
+		_tools.remove_from_workbench(uid)
+		SaveService.save_game()
+		refresh()
 
 
 func _make_empty_slot() -> Control:
@@ -675,6 +684,9 @@ class ToolChip:
 	extends Button
 	var tool_uid: String = ""
 	var from_equipped: bool = false
+	## Called with the uid when an equipped chip is dropped anywhere that is not the
+	## workbench (i.e. dragged "out"), so it unequips.
+	var on_drag_out: Callable
 
 	func _get_drag_data(_at_position: Vector2) -> Variant:
 		var preview := Label.new()
@@ -682,6 +694,18 @@ class ToolChip:
 		preview.add_theme_color_override("font_color", Color(1, 1, 1))
 		set_drag_preview(preview)
 		return {"kind": StorageScreen.DRAG_KIND, "uid": tool_uid, "from_equipped": from_equipped}
+
+	func _notification(what: int) -> void:
+		# A drag that ended without a drop zone accepting it (dropped in empty space
+		# or the owned shelf) unequips an equipped tool — "drag it out of the bench".
+		if what != NOTIFICATION_DRAG_END:
+			return
+		if not from_equipped or not is_instance_valid(self):
+			return
+		if get_viewport().gui_is_drag_successful():
+			return
+		if on_drag_out.is_valid():
+			on_drag_out.call(tool_uid)
 
 
 ## A panel that accepts tool chips and forwards the drop to `on_drop`.

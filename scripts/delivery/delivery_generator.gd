@@ -42,6 +42,7 @@ func generate_day_delivery(day: int) -> Array[ObjectInstance]:
 		if template == null:
 			break
 		var inst := _create_instance(template, day)
+		_assign_random_conditions(inst, rng)
 		while used_uids.has(inst.uid):
 			inst.uid = _make_uid(day)
 		used_uids[inst.uid] = true
@@ -112,6 +113,32 @@ func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance
 	return inst
 
 
+## Scatters a random set of surface conditions onto an ordinary instance so each
+## delivered artifact arrives with different marks to clean. Carriers are left
+## untouched (they keep the surface-stroke clean toward their clasp). Deterministic
+## via the delivery RNG.
+func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator) -> void:
+	var catalog := _repo.get_surface_conditions_sorted()
+	if catalog.is_empty():
+		return
+	var count := mini(rng.randi_range(2, 4), catalog.size())
+	var available: Array = range(catalog.size())
+	var decals: Array = []
+	for i in count:
+		var pick := rng.randi_range(0, available.size() - 1)
+		var condition: SurfaceCondition = catalog[available[pick]]
+		available.remove_at(pick)
+		decals.append(
+			{
+				"id": "%s_%d" % [condition.id, i],
+				"type": condition.id,
+				"color": condition.color,
+				"required_tool": condition.cleaning_tool,
+			}
+		)
+	inst.spawned_decals = decals
+
+
 func _make_uid(day: int) -> String:
 	if _game_state.loop_index != _last_loop_index or _game_state.run_seed != _last_run_seed:
 		_uid_counter = 0
@@ -175,6 +202,9 @@ func _inject_carriers(instances: Array[ObjectInstance], day: int, used_uids: Dic
 				counts_by_anchor.get(inst.assigned_anchor_id, 0) + 1
 			)
 
+	# Carriers get random conditions too, so a promoted carrier is indistinguishable
+	# from an ordinary instance of the same template (carrier-identity hiding).
+	var cond_rng := _game_state.make_rng(DELIVERY_STREAM + "_carrier_cond_%d" % day)
 	var director := SpawnDirector.new(_repo, _game_state)
 	for fragment_id in placements.keys():
 		var plan: Dictionary = placements[fragment_id]
@@ -192,6 +222,7 @@ func _inject_carriers(instances: Array[ObjectInstance], day: int, used_uids: Dic
 		inst.fragment_id = fragment_id
 		inst.contents = ModelEnums.OpenResult.FRAGMENT
 		inst.assigned_anchor_id = container_id
+		_assign_random_conditions(inst, cond_rng)
 		plan["carrier_instance_id"] = inst.uid
 		while used_uids.has(inst.uid):
 			inst.uid = _make_uid(day)

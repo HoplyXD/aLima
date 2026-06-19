@@ -18,6 +18,7 @@ var assigned_anchor_id: String = ""  ## Container/placement anchor for this inst
 var value: int = 0  ## Current assessed market value, initialized from the template.
 var recorded_damage: int = 0  ## Accumulated damage from wrong tools; persists with the instance.
 var removed_decals: Array[String] = []  ## Decal ids cleared so far (decal-based templates).
+var spawned_decals: Array = []  ## Random per-instance conditions; empty => use template decals.
 var is_joined: bool = false  ## True once a join-step object has been reassembled.
 var dirt_mask: PackedByteArray = PackedByteArray()  ## PNG of the exact cleaned grime mask (condition-based objects); empty => rebuild from condition.
 
@@ -42,6 +43,10 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	inst.value = ModelUtils.as_int(data.get("value"))
 	inst.recorded_damage = ModelUtils.as_int(data.get("recorded_damage"))
 	inst.removed_decals = ModelUtils.as_string_array(data.get("removed_decals"))
+	if data.get("spawned_decals") is Array:
+		for raw_decal in data["spawned_decals"]:
+			if raw_decal is Dictionary:
+				inst.spawned_decals.append(raw_decal.duplicate())
 	inst.is_joined = ModelUtils.as_bool(data.get("is_joined"))
 	var raw_mask: Variant = data.get("dirt_mask", "")
 	if raw_mask is String and not (raw_mask as String).is_empty():
@@ -65,9 +70,20 @@ func to_dictionary() -> Dictionary:
 		"value": value,
 		"recorded_damage": recorded_damage,
 		"removed_decals": removed_decals.duplicate(),
+		"spawned_decals": spawned_decals.duplicate(true),
 		"is_joined": is_joined,
 		"dirt_mask": Marshalls.raw_to_base64(dirt_mask) if not dirt_mask.is_empty() else "",
 	}
+
+
+## Per-instance random conditions parsed into SurfaceDecal models (empty when this
+## instance uses its template's authored decals instead).
+func get_spawned_decals() -> Array[SurfaceDecal]:
+	var out: Array[SurfaceDecal] = []
+	for raw_decal in spawned_decals:
+		if raw_decal is Dictionary:
+			out.append(SurfaceDecal.from_dictionary(raw_decal))
+	return out
 
 
 func validate(

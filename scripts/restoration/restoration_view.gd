@@ -145,7 +145,7 @@ func close() -> void:
 ## Snapshots the loaded condition-based artifact's exact dirt mask into the in-memory
 ## cache and persists it onto the instance (survives save/reload).
 func _cache_current_dirt() -> void:
-	if _selected_uid.is_empty() or _object.is_photo_mode():
+	if _selected_uid.is_empty() or _object.is_decal_mode():
 		return
 	var png := _object.snapshot_dirt_png()
 	if not png.is_empty():
@@ -209,9 +209,27 @@ func _on_phone_pressed() -> void:
 func _on_storage_pressed() -> void:
 	storage_requested.emit()
 	if _storage_screen != null:
+		# Rebuild the bench tools when Storage closes: the loadout may have changed,
+		# so a newly-equipped tool appears and an unequipped one leaves the table.
+		if not _storage_screen.closed.is_connected(_on_storage_closed_from_bench):
+			_storage_screen.closed.connect(_on_storage_closed_from_bench, CONNECT_ONE_SHOT)
 		_storage_screen.open()
 	else:
 		_feedback_label.text = "Storage — not available."
+
+
+func _on_storage_closed_from_bench() -> void:
+	_rebuild_tool_palette()
+	var tools := _service.get_workbench_tools()
+	_tool_tray.build_tools(tools)
+	# If the tool the player was holding is no longer equipped, put it down.
+	var still_equipped := false
+	for tool in tools:
+		if tool.id == _selected_tool_id:
+			still_equipped = true
+			break
+	if not _selected_tool_id.is_empty() and not still_equipped:
+		_set_mode(Mode.ROTATE)
 
 
 func _on_scanner_closed() -> void:
@@ -257,8 +275,14 @@ func load_instance(uid: String) -> void:
 		return
 	_object.visible = true
 	_object.configure(template, inst)
-	if _is_decal_based(template):
-		_object.enter_photo_mode(template.decals, inst.removed_decals, _blemish_colors(template))
+	# Effective decals are the instance's random conditions when present, else the
+	# template's authored decals. Random conditions render on the 3D object (so an
+	# openable still opens after CLEAN); authored photos use the flat photo plane.
+	var decals := _service.effective_decals(inst, template)
+	if not inst.spawned_decals.is_empty():
+		_object.enter_conditions_mode(decals, inst.removed_decals, _condition_colors(decals))
+	elif not decals.is_empty():
+		_object.enter_photo_mode(decals, inst.removed_decals, _condition_colors(decals))
 	elif _dirt_cache.has(uid):
 		# Restore the exact cleaned spots from this session, overriding the
 		# condition-based reconstruction.
@@ -335,18 +359,12 @@ func _tool_display_name(tool_id: String) -> String:
 # --- Blemish cleaning (decal-based photos/frames/paper) ----------------------
 
 
-## True when the loaded template cleans by removing discrete blemishes rather than
-## by working a shader dirt mask.
-func _is_decal_based(template: ScrapObjectTemplate) -> bool:
-	return template != null and not template.decals.is_empty()
-
-
 ## Builds a {condition_type: Color} map from the journal surface-condition catalog
-## so the photo hotspots match the colours shown in the Condition Guide.
-func _blemish_colors(template: ScrapObjectTemplate) -> Dictionary:
+## so the hotspots match the colours shown in the Condition Guide.
+func _condition_colors(decals: Array) -> Dictionary:
 	var colors := {}
 	var repo := _service.get_repository()
-	for decal in template.decals:
+	for decal in decals:
 		var condition := repo.get_surface_condition(decal.type)
 		colors[decal.type] = condition.to_color() if condition != null else decal.to_color()
 	return colors
@@ -550,7 +568,12 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_refresh_photo(inst, template)
 		return
 
-	_surface_bar.value = _object.coverage() * 100.0
+	if _object.is_condition_mode():
+		var total := _service.effective_decals(inst, template).size()
+		var cleaned := total - _remaining_blemishes(inst, template)
+		_surface_bar.value = (float(cleaned) / float(total) * 100.0) if total > 0 else 0.0
+	else:
+		_surface_bar.value = _object.coverage() * 100.0
 	var is_clean := inst.state == ModelEnums.ObjState.CLEAN
 	var is_open := inst.state == ModelEnums.ObjState.OPEN
 	_object.set_clasp_revealed(is_clean)
@@ -567,7 +590,7 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 ## Refresh for decal-based photos/frames: blemish-progress bar plus join/scan
 ## prompts (no clasp).
 func _refresh_photo(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
-	var total := template.decals.size() if template != null else 0
+	var total := _service.effective_decals(inst, template).size()
 	var cleaned := total - _remaining_blemishes(inst, template)
 	_surface_bar.value = (float(cleaned) / float(total) * 100.0) if total > 0 else 0.0
 
@@ -584,10 +607,8 @@ func _refresh_photo(inst: ObjectInstance, template: ScrapObjectTemplate) -> void
 
 
 func _remaining_blemishes(inst: ObjectInstance, template: ScrapObjectTemplate) -> int:
-	if template == null:
-		return 0
 	var remaining := 0
-	for decal in template.decals:
+	for decal in _service.effective_decals(inst, template):
 		if not inst.removed_decals.has(decal.id):
 			remaining += 1
 	return remaining
@@ -625,6 +646,19 @@ func _toggle_mode() -> void:
 func _set_mode(mode: int) -> void:
 	_mode = mode
 	_mode_button.text = "Mode: Clean" if _mode == Mode.CLEAN else "Mode: Rotate"
+	# Rotate is for inspecting, not cleaning — put the held tool down so it is no
+	# longer "in hand" until the player picks one up again.
+	if _mode == Mode.ROTATE:
+		_deselect_tool()
+
+
+## Clears the held tool and returns the tray prop + fallback buttons to rest.
+func _deselect_tool() -> void:
+	_selected_tool_id = ""
+	_tool_tray.set_selected("")
+	for child in _tool_container.get_children():
+		if child is Button:
+			(child as Button).button_pressed = false
 
 
 func get_mode() -> int:
@@ -752,9 +786,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 				return
 			_last_pointer = pos
 			_left_down = true
-			if _object.is_photo_mode():
-				# A photo cleans by clicking discrete blemishes (or joining once clean),
-				# not by stroking a dirt mask.
+			if _object.is_decal_mode():
+				# Decal-based artifacts (photos or random conditions) clean by clicking
+				# discrete marks, not by stroking a dirt mask.
 				if _mode == Mode.CLEAN and _try_photo_action_at_pointer(pos):
 					_left_down = false
 				return
@@ -789,7 +823,7 @@ func _controller_clean() -> void:
 	if _selected_tool_id.is_empty():
 		_caption_label.text = "Select a tool first."
 		return
-	if _object.is_photo_mode():
+	if _object.is_decal_mode():
 		var blemish_id := _object.auto_target_blemish_id()
 		if blemish_id.is_empty():
 			_open_or_join()

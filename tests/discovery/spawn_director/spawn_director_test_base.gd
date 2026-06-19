@@ -14,6 +14,10 @@ func before_each() -> void:
 	# data, isolating the suite from cross-test singleton pollution.
 	_repo = DataRepository.singleton()
 	_repo.load_from_filesystem()
+	# Control the starting kit for winnability tests: the production kit now ships
+	# every cleaning tool, but these tests must verify that an un-obtainable required
+	# tool excludes a carrier candidate. Pin a minimal kit and restore it on teardown.
+	_repo.starting_kit["tool_ids"] = ["soft_cloth"] as Array
 	GameState.initialize("phase5-test-player")
 	GameState.set_debug_seed_override(4242)
 	GameState.new_run()
@@ -21,6 +25,8 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	# Restore the authored starting kit so the override never leaks into other suites.
+	_repo.load_from_filesystem()
 	SaveService.delete_save_files()
 	SaveService.set_save_paths(SaveService.DEFAULT_SAVE_PATH, SaveService.DEFAULT_TEMP_PATH)
 

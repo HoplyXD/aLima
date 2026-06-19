@@ -71,6 +71,10 @@ const BLEMISH_RADIUS: float = 0.13  ## Pick radius for a blemish hotspot.
 const PHOTO_COLOR := Color(0.90, 0.87, 0.79)
 
 var _photo_mode: bool = false
+## Conditions mode keeps the 3D object (and clasp) visible and scatters condition
+## hotspots over its surface — used by delivered artifacts carrying random
+## conditions, so they present identically to a carrier and still open after CLEAN.
+var _conditions_mode: bool = false
 var _photo: MeshInstance3D
 var _blemishes: Dictionary = {}  ## blemish_id -> {node: MeshInstance3D, center: Vector3}
 
@@ -346,7 +350,54 @@ func enter_photo_mode(decals: Array, removed_ids: Array, colors: Dictionary) -> 
 	reset_orientation()
 
 
+## Scatters condition hotspots over the visible 3D object surface. Unlike photo
+## mode this keeps the medallion + clasp, so the clean->open flow still works once
+## every condition is removed. The medallion itself reads clean — the hotspots are
+## the only dirt — so progress is communicated entirely by the discrete spots.
+func enter_conditions_mode(decals: Array, removed_ids: Array, colors: Dictionary) -> void:
+	if not _built:
+		_build()
+	_set_photo_mode(false)
+	_conditions_mode = true
+	set_fully_clean()
+	_clear_blemishes()
+	var count := decals.size()
+	var index := 0
+	for decal in decals:
+		var center := _condition_layout(index, count)
+		var node := _make_blemish_node(center, colors.get(decal.type, Color(0.5, 0.5, 0.5)))
+		add_child(node)
+		_blemishes[decal.id] = {"node": node, "center": center}
+		node.visible = not removed_ids.has(decal.id)
+		index += 1
+	reset_orientation()
+
+
+## True when discrete condition/blemish hotspots drive cleaning (photo OR conditions
+## mode), so the view routes clicks to hotspot cleaning rather than a dirt stroke.
+func is_decal_mode() -> bool:
+	return _photo_mode or _conditions_mode
+
+
+func is_condition_mode() -> bool:
+	return _conditions_mode
+
+
+## Scatters hotspot `index` of `count` across the front of the sphere surface, a
+## little proud of it, so they are visible and clickable without rotating.
+func _condition_layout(index: int, count: int) -> Vector3:
+	var golden := PI * (3.0 - sqrt(5.0))
+	var t := (float(index) + 0.5) / float(maxi(count, 1))
+	var y := lerpf(0.6, -0.6, t)
+	var ring := sqrt(maxf(0.0, 1.0 - y * y))
+	var theta := golden * float(index)
+	var x := cos(theta) * ring
+	var z := absf(sin(theta) * ring) + 0.2
+	return Vector3(x, y, z).normalized() * (_radius + BLEMISH_RADIUS * 0.4)
+
+
 func _set_photo_mode(enabled: bool) -> void:
+	_conditions_mode = false
 	_photo_mode = enabled
 	if _medallion != null:
 		_medallion.visible = not enabled

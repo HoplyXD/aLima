@@ -373,6 +373,42 @@ func test_ordinary_and_carrier_share_presentation_path_and_hide_identity() -> vo
 	assert_false(_hud_text_reveals_carrier(_view), "No HUD text reveals carrier identity")
 
 
+# --- Tool loadout / mode --------------------------------------------------------
+
+
+func test_switching_to_rotate_puts_the_held_tool_down() -> void:
+	_add_pendant("p_a")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("p_a")
+	_view.select_tool("soft_cloth")
+	assert_eq(_view.get_selected_tool_id(), "soft_cloth", "a tool is held in clean mode")
+
+	_view._toggle_mode()  # CLEAN -> ROTATE
+	assert_eq(_view.get_mode(), RestorationView.Mode.ROTATE)
+	assert_eq(_view.get_selected_tool_id(), "", "rotate puts the held tool down")
+
+
+func test_unequipping_in_storage_drops_the_tool_from_the_bench() -> void:
+	var tools := ToolService.new(GameState, DataRepository.singleton())
+	var inst := tools.grant_tool("rust_brush")  # auto-equipped into the loadout
+	_add_pendant("p_a")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("p_a")
+	_view.select_tool("rust_brush")
+	assert_true(_view.get_tool_tray().get_tool_ids().has("rust_brush"), "tool is on the table")
+
+	# Unequip it in Storage, then simulate Storage closing back to the bench.
+	tools.remove_from_workbench(inst.uid)
+	_view._on_storage_closed_from_bench()
+
+	assert_eq(_view.get_selected_tool_id(), "", "the held, now-unequipped tool is put down")
+	assert_false(
+		_view.get_tool_tray().get_tool_ids().has("rust_brush"), "and it leaves the table"
+	)
+
+
 func _presentation_signature(view: RestorationView) -> Dictionary:
 	var obj := view.get_restoration_object()
 	var title: Label = view.get_node("HUD/TopBar/Margin/Bar/Title")

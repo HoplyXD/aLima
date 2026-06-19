@@ -293,9 +293,10 @@ func _can_restore_instance(inst: ObjectInstance) -> bool:
 	var template := _repo.get_template(inst.template_id)
 	if template == null:
 		return false
-	# Openable objects clean toward a clasp; decal-based objects (photos/frames)
-	# clean by removing blemishes. Anything else is not a bench object.
-	if not template.is_openable and template.decals.is_empty():
+	# Openable objects clean toward a clasp; decal-based objects (photos/frames, or
+	# any instance carrying random conditions) clean by removing marks. Anything else
+	# is not a bench object.
+	if not template.is_openable and effective_decals(inst, template).is_empty():
 		return false
 	if inst.state == ModelEnums.ObjState.OPEN:
 		return false
@@ -368,9 +369,24 @@ func is_decal_based(template: ScrapObjectTemplate) -> bool:
 	return template != null and not template.decals.is_empty()
 
 
-## Returns the authored decal with the given id on the template, or null.
-func _find_decal(template: ScrapObjectTemplate, decal_id: String) -> SurfaceDecal:
-	for decal in template.decals:
+## The decals to clean for an instance: its randomly spawned conditions when it has
+## them, otherwise the template's authored decals. This is what lets ordinary
+## delivered artifacts carry random surface conditions while quest photos keep their
+## authored ones.
+func effective_decals(inst: ObjectInstance, template: ScrapObjectTemplate) -> Array[SurfaceDecal]:
+	if inst != null and not inst.spawned_decals.is_empty():
+		return inst.get_spawned_decals()
+	return template.decals if template != null else ([] as Array[SurfaceDecal])
+
+
+## True when this instance cleans by removing discrete decals (spawned or authored).
+func instance_is_decal_based(inst: ObjectInstance, template: ScrapObjectTemplate) -> bool:
+	return not effective_decals(inst, template).is_empty()
+
+
+## Returns the decal with the given id among `decals`, or null.
+func _find_decal_in(decals: Array, decal_id: String) -> SurfaceDecal:
+	for decal in decals:
 		if decal.id == decal_id:
 			return decal
 	return null
@@ -389,7 +405,8 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 		return result
 
 	var template := _repo.get_template(inst.template_id)
-	if template == null or not is_decal_based(template):
+	var decals := effective_decals(inst, template)
+	if template == null or decals.is_empty():
 		result.feedback = "This object is not cleaned with decals."
 		return result
 	if not is_tool_owned(tool_id):
@@ -399,7 +416,7 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 		result.feedback = "Already finished."
 		return result
 
-	var decal := _find_decal(template, decal_id)
+	var decal := _find_decal_in(decals, decal_id)
 	if decal == null:
 		result.feedback = "No such mark."
 		return result
@@ -416,7 +433,7 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 	var tool_name := tool.display_name if tool != null else tool_id
 	if result.compatible:
 		inst.removed_decals.append(decal_id)
-		var total := template.decals.size()
+		var total := decals.size()
 		inst.condition = minf(float(inst.removed_decals.size()) / float(total) * 100.0, 100.0)
 		inst.value = clampi(
 			inst.value + template.clean_value_bonus,
@@ -454,7 +471,7 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 
 func _remaining_decals(template: ScrapObjectTemplate, inst: ObjectInstance) -> int:
 	var remaining := 0
-	for decal in template.decals:
+	for decal in effective_decals(inst, template):
 		if not inst.removed_decals.has(decal.id):
 			remaining += 1
 	return remaining

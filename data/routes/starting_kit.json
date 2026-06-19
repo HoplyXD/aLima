@@ -1,5 +1,16 @@
 {
   "schema_version": 1,
-  "tool_ids": ["soft_cloth"],
+  "tool_ids": [
+    "soft_cloth",
+    "soft_brush",
+    "damp_cloth",
+    "solvent",
+    "rust_brush",
+    "polishing_cloth",
+    "stain_lifter",
+    "photo_kit",
+    "consolidant",
+    "archival_tape"
+  ],
   "technique_ids": ["pendant_cleaning"]
 }

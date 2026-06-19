@@ -58,6 +58,22 @@ func test_object_instance_round_trip() -> void:
 	assert_eq(ObjectInstance.from_dictionary(inst.to_dictionary()).uid, "inst_001")
 
 
+func test_object_instance_spawned_decals_round_trip() -> void:
+	var inst := ObjectInstance.new()
+	inst.template_id = "tarnished_pendant"
+	inst.uid = "inst_cond"
+	inst.spawned_decals = [
+		{"id": "dust_0", "type": "dust", "color": "#C9C2B0", "required_tool": "soft_brush"},
+		{"id": "rust_1", "type": "rust", "color": "#B5511E", "required_tool": "rust_brush"},
+	]
+	var round := ObjectInstance.from_dictionary(inst.to_dictionary())
+	assert_eq(round.spawned_decals.size(), 2, "spawned conditions survive serialization")
+	var parsed := round.get_spawned_decals()
+	assert_eq(parsed.size(), 2)
+	assert_eq(parsed[0].type, "dust")
+	assert_eq(parsed[1].required_tool, "rust_brush")
+
+
 func test_carrier_instance_requires_fragment() -> void:
 	var data := {
 		"template_id": "tarnished_pendant",

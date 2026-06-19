@@ -36,6 +36,19 @@ func test_batch_size_within_configured_bounds() -> void:
 		assert_between(delivery.size(), cfg.batch_min, cfg.batch_max)
 
 
+func test_delivered_instances_carry_random_conditions() -> void:
+	GameState.set_debug_seed_override(2024)
+	GameState.new_run()
+	var delivery := _make_generator().generate_day_delivery(1)
+	assert_gt(delivery.size(), 0, "a delivery was generated")
+	for inst in delivery:
+		assert_gt(inst.spawned_decals.size(), 0, "every delivered artifact has random conditions")
+		# Each spawned condition names a real cleaning tool from the catalog.
+		for decal in inst.get_spawned_decals():
+			assert_false(decal.required_tool.is_empty(), "the condition names a treating tool")
+			assert_not_null(_repo.get_tool(decal.required_tool), "the tool exists")
+
+
 func test_fixed_seed_produces_repeatable_delivery() -> void:
 	GameState.set_debug_seed_override(12345)
 	GameState.new_run()

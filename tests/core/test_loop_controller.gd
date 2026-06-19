@@ -134,8 +134,9 @@ func test_every_loop_scoped_field_resets() -> void:
 	var fresh := GameState.save_state.loop
 	assert_eq(fresh.money, 0)
 	assert_eq(fresh.inventory.size(), 0)
-	# The starting kit grants the legacy soft_cloth tool at the start of every loop.
-	assert_eq(fresh.tool_items.size(), 1)
+	# The starting kit re-grants its tools at the start of every loop.
+	var kit_tools: Array = DataRepository.singleton().starting_kit.get("tool_ids", [])
+	assert_eq(fresh.tool_items.size(), kit_tools.size())
 	assert_true(fresh.tool_items.has("soft_cloth"))
 	assert_eq(fresh.temp_upgrades.size(), 0)
 	assert_eq(fresh.marketplace_listings.size(), 0)
