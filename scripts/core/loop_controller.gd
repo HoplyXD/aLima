@@ -107,6 +107,7 @@ func _grant_starting_kit() -> void:
 	for technique_id in repo.starting_kit.get("technique_ids", []):
 		if not GameState.save_state.persistent.techniques_learned.has(technique_id):
 			GameState.save_state.persistent.techniques_learned.append(technique_id)
+	var tools := ToolService.new(GameState, repo)
 	for tool_id in repo.starting_kit.get("tool_ids", []):
 		var tool := repo.get_tool(tool_id)
 		if tool == null:
@@ -116,3 +117,15 @@ func _grant_starting_kit() -> void:
 				GameState.save_state.persistent.legacy_items.append(tool_id)
 		if not GameState.save_state.loop.tool_items.has(tool_id):
 			GameState.save_state.loop.tool_items.append(tool_id)
+		# Also grant a durability-tracked instance so the tool is visible in Storage
+		# and can be dragged onto the bench. Idempotent within a loop.
+		if not _owns_tool_instance(tool_id):
+			tools.grant_tool(tool_id)
+
+
+## True if a durability-tracked instance of the tool already exists this loop.
+func _owns_tool_instance(tool_id: String) -> bool:
+	for raw in GameState.save_state.loop.owned_tools:
+		if raw is Dictionary and raw.get("tool_id") == tool_id:
+			return true
+	return false

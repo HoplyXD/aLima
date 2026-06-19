@@ -34,10 +34,15 @@ static func make_instance(tool_id: String, repo: DataRepository) -> ToolInstance
 	return inst
 
 
-## Grants a new tool instance into the player's owned tools and returns it.
+## Grants a new tool instance into the player's owned tools and returns it. The
+## instance auto-equips onto the bench while there is a free slot, so the first ten
+## owned tools are always loaded; the player can drag extras off in Storage.
 func grant_tool(tool_id: String) -> ToolInstance:
 	var inst := make_instance(tool_id, _repo)
 	_game_state.save_state.loop.owned_tools.append(inst.to_dictionary())
+	var wb: Array = _game_state.save_state.loop.workbench_tools
+	if wb.size() < MAX_WORKBENCH_TOOLS and not wb.has(inst.uid):
+		wb.append(inst.uid)
 	return inst
 
 

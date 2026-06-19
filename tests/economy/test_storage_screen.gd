@@ -77,26 +77,22 @@ func test_select_artifact_sets_restore_target() -> void:
 
 
 func test_toggle_tool_loads_and_unloads_bench() -> void:
-	var inst := _tools.grant_tool("solvent")
+	var inst := _tools.grant_tool("solvent")  # auto-equips onto the bench
 	var screen := await _open_screen()
+	assert_true(GameState.save_state.loop.workbench_tools.has(inst.uid), "a granted tool auto-equips")
 
 	screen.toggle_tool(inst.uid)
-	assert_true(GameState.save_state.loop.workbench_tools.has(inst.uid), "tool loads into bench")
+	assert_false(GameState.save_state.loop.workbench_tools.has(inst.uid), "toggling unloads it")
 
 	screen.toggle_tool(inst.uid)
-	assert_false(GameState.save_state.loop.workbench_tools.has(inst.uid), "second toggle unloads it")
+	assert_true(GameState.save_state.loop.workbench_tools.has(inst.uid), "toggling again reloads it")
 
 
-func test_bench_load_respects_max_ten() -> void:
-	var uids: Array[String] = []
+func test_auto_equip_never_loads_more_than_ten() -> void:
 	for i in range(11):
-		uids.append(_tools.grant_tool("solvent").uid)
-	var screen := await _open_screen()
-
-	for uid in uids:
-		screen.toggle_tool(uid)
-
-	assert_eq(GameState.save_state.loop.workbench_tools.size(), 10, "never more than ten on the bench")
+		_tools.grant_tool("solvent")
+	await _open_screen()
+	assert_eq(GameState.save_state.loop.workbench_tools.size(), 10, "auto-equip caps the bench at ten")
 
 
 func test_open_renders_all_three_tabs_without_error() -> void:
@@ -145,8 +141,9 @@ func test_request_restore_sets_target_and_emits_signal() -> void:
 
 
 func test_drag_equip_then_unequip_via_drop_handlers() -> void:
-	var inst := _tools.grant_tool("solvent")
+	var inst := _tools.grant_tool("solvent")  # auto-equipped
 	var screen := await _open_screen()
+	_tools.remove_from_workbench(inst.uid)  # start unequipped to exercise the equip drop
 
 	screen._on_equip_drop({"kind": "storage_tool", "uid": inst.uid, "from_equipped": false})
 	assert_true(GameState.save_state.loop.workbench_tools.has(inst.uid), "dropping equips the tool")

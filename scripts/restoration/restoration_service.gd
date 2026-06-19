@@ -108,12 +108,17 @@ func get_available_tools() -> Array[ToolDefinition]:
 	return out
 
 
-## The tools loaded into the bench (max 10), as definitions. Falls back to all
-## available tools when no loadout has been set, so existing flows are unchanged.
+## The tools loaded into the bench (max 10), as definitions. Owned tools auto-equip
+## on grant, so the loadout is the source of truth: an empty loadout means the
+## player deliberately removed everything (bench shows nothing). The only fallback
+## to "all available" is the id-set-only path (no durability instances at all),
+## which is the legacy/seed case used in tests.
 func get_workbench_tools() -> Array[ToolDefinition]:
 	var loadout: Array = _game_state.save_state.loop.workbench_tools
 	if loadout.is_empty():
-		return get_available_tools()
+		if _game_state.save_state.loop.owned_tools.is_empty():
+			return get_available_tools()
+		return []
 	var out: Array[ToolDefinition] = []
 	var seen := {}
 	for raw in _game_state.save_state.loop.owned_tools:

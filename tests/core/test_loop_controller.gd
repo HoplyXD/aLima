@@ -66,6 +66,26 @@ func test_loop_reset_emitted_exactly_once() -> void:
 	assert_eq(DayClock.get_day(), 1)
 
 
+# --- Starting kit -------------------------------------------------------------
+
+
+func test_starting_tool_is_a_visible_owned_instance() -> void:
+	LoopController.begin_session()
+	var tools := ToolService.new(GameState, DataRepository.singleton())
+	var ids: Array = []
+	for inst in tools.get_owned_tools():
+		ids.append(inst.tool_id)
+	assert_true(ids.has("soft_cloth"), "the starting cloth is an owned instance shown in Storage")
+
+	# A second pass must not duplicate the instance within the same loop.
+	LoopController.begin_session()
+	var count := 0
+	for inst in tools.get_owned_tools():
+		if inst.tool_id == "soft_cloth":
+			count += 1
+	assert_eq(count, 1, "the starting tool instance is granted once, not duplicated")
+
+
 # --- Persistence split (SAVE-R1/R2/R3) ---------------------------------------
 
 

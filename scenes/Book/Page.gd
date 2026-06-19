@@ -10,9 +10,14 @@ extends Control
 ## SeatingService.
 
 const CASE_PAGE_NUMBER: int = 4  ## First paper page: the Fragment Case (?/5 found).
-const CONDITION_PAGE_NUMBER: int = 5  ## Condition Guide: each surface condition and its tool.
-const INDEX_PAGE_NUMBER: int = 6  ## Object Archive entry list.
-const FIRST_ENTRY_PAGE_NUMBER: int = 7
+## The Condition Guide spans a full spread: page 5 (left) holds the first
+## categories, page 6 (right) the rest, so the catalog never overflows one page.
+const CONDITION_PAGE_NUMBER: int = 5
+const CONDITION_PAGE_2_NUMBER: int = 6
+const INDEX_PAGE_NUMBER: int = 7  ## Object Archive entry list.
+const FIRST_ENTRY_PAGE_NUMBER: int = 8
+## Categories from index 3 onward render on the second guide page; 0..2 on the first.
+const CONDITION_SECOND_PAGE_FROM: int = 3
 
 ## Placeholder colors for the five fragment slots. These are development stand-ins
 ## for the final fragment art/geometry; see docs/phase-task.md P9.4.
@@ -46,7 +51,9 @@ func set_number(value: int) -> void:
 	if value == CASE_PAGE_NUMBER:
 		_render_case_page()
 	elif value == CONDITION_PAGE_NUMBER:
-		_render_condition_page()
+		_render_condition_page(false)
+	elif value == CONDITION_PAGE_2_NUMBER:
+		_render_condition_page(true)
 	elif value == INDEX_PAGE_NUMBER:
 		_render_index_page()
 	elif value >= FIRST_ENTRY_PAGE_NUMBER:
@@ -178,7 +185,7 @@ func _render_case_page() -> void:
 # --- Condition Guide (page 2) ------------------------------------------------
 
 
-func _render_condition_page() -> void:
+func _render_condition_page(second_half: bool) -> void:
 	_text.visible = false
 	_text.text = ""
 
@@ -193,26 +200,33 @@ func _render_condition_page() -> void:
 	_slot_container = container
 
 	var title := Label.new()
-	title.text = "Condition Guide"
+	title.text = "Condition Guide" if not second_half else "Condition Guide (cont.)"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color(0.1, 0.05, 0.02))
 	container.add_child(title)
 
-	var subtitle := Label.new()
-	subtitle.text = "Surface conditions, grouped by kind — and the tool that treats each."
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	subtitle.add_theme_font_size_override("font_size", 13)
-	subtitle.add_theme_color_override("font_color", Color(0.2, 0.15, 0.1))
-	container.add_child(subtitle)
+	if not second_half:
+		var subtitle := Label.new()
+		subtitle.text = "Surface conditions, grouped by kind — and the tool that treats each."
+		subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		subtitle.add_theme_font_size_override("font_size", 13)
+		subtitle.add_theme_color_override("font_color", Color(0.2, 0.15, 0.1))
+		container.add_child(subtitle)
 
-	# Group the catalog by category, rendered in conservator-triage order.
+	# Group the catalog by category, rendered in conservator-triage order. The first
+	# page shows the earliest categories; the second the remainder, so neither spills.
 	var by_category := {}
 	for condition in DataRepository.singleton().get_surface_conditions_sorted():
 		var typed := condition as SurfaceCondition
 		by_category.get_or_add(typed.category, []).append(typed)
-	for category in SurfaceCondition.CATEGORY_ORDER:
+	var order := SurfaceCondition.CATEGORY_ORDER
+	for i in range(order.size()):
+		var on_second := i >= CONDITION_SECOND_PAGE_FROM
+		if on_second != second_half:
+			continue
+		var category: String = order[i]
 		if not by_category.has(category):
 			continue
 		container.add_child(_make_category_header(SurfaceCondition.CATEGORY_LABELS[category]))
@@ -262,7 +276,7 @@ func _make_condition_note(condition: SurfaceCondition) -> Control:
 	return row
 
 
-# --- Entry index (page 6) ----------------------------------------------------
+# --- Entry index (page 7) ----------------------------------------------------
 
 
 func _render_index_page() -> void:
@@ -284,7 +298,7 @@ func _render_index_page() -> void:
 	_text.scroll_to_line(0)
 
 
-# --- Individual entry pages (page 7+) ----------------------------------------
+# --- Individual entry pages (page 8+) ----------------------------------------
 
 
 func _render_entry_page(entry_index: int) -> void:

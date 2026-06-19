@@ -154,8 +154,9 @@ func refresh() -> void:
 
 
 func _build_artifacts_tab() -> void:
-	var panes := _make_master_detail(_tab("Artifacts"), 3)
-	var grid: GridContainer = panes["grid"]
+	var panes := _make_master_detail(_tab("Artifacts"))
+	var grid := _make_grid(3)
+	(panes["content"] as VBoxContainer).add_child(grid)
 	var detail_host: VBoxContainer = panes["detail"]
 	var repo := DataRepository.singleton()
 	var target := _tools.get_restore_target()
@@ -241,9 +242,9 @@ func _render_artifact_detail(host: VBoxContainer, uid: String) -> void:
 
 
 func _build_tools_tab() -> void:
-	var panes := _make_master_detail(_tab("Tools"), 1)
+	var panes := _make_master_detail(_tab("Tools"))
 	var detail_host: VBoxContainer = panes["detail"]
-	var right: VBoxContainer = panes["right"]
+	var right: VBoxContainer = panes["content"]
 
 	var loaded: int = GameState.save_state.loop.workbench_tools.size()
 	var bench_label := "Workbench  —  %d / %d equipped" % [loaded, ToolService.MAX_WORKBENCH_TOOLS]
@@ -283,20 +284,28 @@ func _make_owned_area() -> Control:
 	var zone := ToolDropZone.new()
 	zone.on_drop = _on_unequip_drop
 	_style_zone(zone, Color(0.10, 0.11, 0.13, 0.6))
-	var grid := GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
-	zone.add_child(grid)
+	# A VBox so an empty-state note spans the full width instead of being squeezed
+	# into one narrow grid cell (which wraps the text one letter per line).
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	zone.add_child(vbox)
+	var grid := _make_grid(5)
+	vbox.add_child(grid)
 
-	var any := false
-	for inst in _tools.get_owned_tools():
+	var owned := _tools.get_owned_tools()
+	var shown := 0
+	for inst in owned:
 		if GameState.save_state.loop.workbench_tools.has(inst.uid):
 			continue  # shown in the equip area instead.
-		any = true
+		shown += 1
 		grid.add_child(_make_tool_chip(inst, false))
-	if not any:
-		grid.add_child(_make_note("All owned tools are on the bench."))
+	if shown == 0:
+		var msg := (
+			"No tools owned yet. Buy some from the phone Marketplace."
+			if owned.is_empty()
+			else "All owned tools are on the bench."
+		)
+		vbox.add_child(_make_note(msg))
 	return zone
 
 
@@ -394,8 +403,9 @@ func _on_unequip_drop(data: Dictionary) -> void:
 
 
 func _build_key_items_tab() -> void:
-	var panes := _make_master_detail(_tab("Key Items"), 3)
-	var grid: GridContainer = panes["grid"]
+	var panes := _make_master_detail(_tab("Key Items"))
+	var grid := _make_grid(3)
+	(panes["content"] as VBoxContainer).add_child(grid)
 	var detail_host: VBoxContainer = panes["detail"]
 	var repo := DataRepository.singleton()
 
@@ -434,9 +444,20 @@ func _make_fragment_box(fragment: Fragment) -> Button:
 # --- Shared layout helpers ---------------------------------------------------
 
 
-## Builds the master/detail layout into `tab`: a fixed-width detail panel on the
-## left and a scrolling area on the right. Returns {detail, grid, right}.
-func _make_master_detail(tab: HBoxContainer, grid_columns: int) -> Dictionary:
+## Builds the master/detail layout into `tab`: a scrolling boxes/content area on
+## the left and a fixed-width detail panel on the right (HSR places detail on the
+## right). Returns {detail, content} — `content` is the left VBox to fill.
+func _make_master_detail(tab: HBoxContainer) -> Dictionary:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 8)
+	scroll.add_child(content)
+	tab.add_child(scroll)
+
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(DETAIL_WIDTH, 0)
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -450,24 +471,16 @@ func _make_master_detail(tab: HBoxContainer, grid_columns: int) -> Dictionary:
 	detail_margin.add_child(detail)
 	tab.add_child(panel)
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_theme_constant_override("separation", 8)
-	scroll.add_child(right)
-	tab.add_child(scroll)
+	return {"detail": detail, "content": content}
 
+
+func _make_grid(columns: int) -> GridContainer:
 	var grid := GridContainer.new()
-	grid.columns = grid_columns
+	grid.columns = columns
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 10)
-	right.add_child(grid)
-
-	return {"detail": detail, "grid": grid, "right": right}
+	return grid
 
 
 func _make_condition_bar(condition: float) -> Control:
