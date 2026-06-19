@@ -59,9 +59,8 @@ func test_using_a_tool_consumes_one_durability() -> void:
 
 func test_tool_breaks_and_is_removed_at_zero() -> void:
 	_add_photo("photo_1")
-	var inst := _tools.grant_tool("stain_lifter")
+	var inst := _tools.grant_tool("stain_lifter")  # auto-equipped onto the bench
 	_set_durability(inst.uid, 1)
-	GameState.save_state.loop.workbench_tools.append(inst.uid)
 	watch_signals(EventBus)
 
 	_service.clean_decal("photo_1", "water_blotch", "stain_lifter")

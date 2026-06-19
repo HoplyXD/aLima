@@ -66,6 +66,23 @@ func _make_tin(uid: String, contents: int = ModelEnums.OpenResult.EMPTY) -> Obje
 	return inst
 
 
+func test_bench_follows_loadout_once_instances_exist() -> void:
+	# Id-set-only tools (no durability instances) still show via the legacy fallback.
+	assert_gt(_service.get_workbench_tools().size(), 0, "id-set tools show via fallback")
+
+	# Granting a durability instance auto-equips it; the bench now follows the loadout.
+	var tools := ToolService.new(GameState, _repo)
+	var inst := tools.grant_tool("rust_brush")
+	var ids: Array = []
+	for tool in _service.get_workbench_tools():
+		ids.append(tool.id)
+	assert_true(ids.has("rust_brush"), "an auto-equipped instance shows on the bench")
+
+	# Removing it from the bench keeps it gone — no fallback re-adds it.
+	tools.remove_from_workbench(inst.uid)
+	assert_eq(_service.get_workbench_tools().size(), 0, "an emptied loadout shows no tools")
+
+
 func _reload_state() -> void:
 	SaveService.save_game()
 	GameState.initialize("other-player")
