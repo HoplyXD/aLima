@@ -1,7 +1,31 @@
 [gd_scene format=3 uid="uid://duypha7bbdp6v"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_artifact"]
+[ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_ssc28"]
+[ext_resource type="Shader" path="res://scenes/restoration/compat_decal.gdshader" id="3_serwt"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="4_tltlh"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_decal"]
+render_priority = 0
+shader = ExtResource("3_serwt")
+shader_parameter/albedo = ExtResource("4_tltlh")
+shader_parameter/modulate = Color(0.71, 0.32, 0.12, 0.9)
+shader_parameter/albedo_mix = 1.0
+shader_parameter/cube_half_size = 0.2
+shader_parameter/uv_scale = Vector2(1, 1)
+shader_parameter/enable_y_fade = false
+shader_parameter/fade_start = 0.3
+shader_parameter/fade_end = 0.7
+shader_parameter/fade_power = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_decal"]
+size = Vector3(0.4, 0.4, 0.4)
 
 [node name="RestorationArtifact" type="Node3D" unique_id=409650631]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_artifact")
+
+[node name="ArtifactConditionDecal" parent="." unique_id=1865775593 instance=ExtResource("2_ssc28")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.10856582, 0.5966154)
+material_override = SubResource("ShaderMaterial_decal")
+mesh = SubResource("BoxMesh_decal")

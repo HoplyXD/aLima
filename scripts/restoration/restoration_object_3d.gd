@@ -77,7 +77,7 @@ const PHOTO_COLOR := Color(0.90, 0.87, 0.79)
 const DECAL_OPACITY: float = 0.9  ## Decal opacity — high so the grime reads clearly on the artifact.
 const BLEMISH_FADE_TIME: float = 0.25  ## Seconds a cleaned decal takes to fade out.
 
-## Placeholder albedo for grime decals — the per-decal `modulate` tints it to the
+## Placeholder albedo for grime decals — the per-decal tint colours it to the
 ## condition's journal colour. Swapped for authored grime textures later (Phase 13/20).
 const DECAL_TEXTURE := preload("res://icon.svg")
 
@@ -87,8 +87,8 @@ var _photo_mode: bool = false
 ## conditions, so they present identically to a carrier and still open after CLEAN.
 var _conditions_mode: bool = false
 var _photo: MeshInstance3D
-## blemish_id -> {node: Decal, center: Vector3, removed: bool}. `removed` is the
-## logical "cleaned" flag; the Decal node fades out separately for presentation.
+## blemish_id -> {node: Decal|MeshInstance3D, center: Vector3, removed: bool}. `removed`
+## is the logical "cleaned" flag; the decal node fades out separately for presentation.
 var _blemishes: Dictionary = {}
 ## Author-placed ArtifactConditionDecal children discovered at runtime, keyed by node
 ## name -> {node, required_tool, type_id, removed}. Distinct from `_blemishes` (which
@@ -473,11 +473,26 @@ func remove_blemish(blemish_id: String) -> void:
 	# Logic already treats the decal as gone (removed flag); the fade is cosmetic, so
 	# the decal lifts off the surface by lowering its opacity before it hides.
 	if is_inside_tree():
-		var tween := create_tween()
-		tween.tween_property(node, "modulate:a", 0.0, BLEMISH_FADE_TIME)
-		tween.tween_callback(_hide_decal.bind(node))
+		_fade_decal_out(node)
 	else:
 		node.visible = false
+
+
+## Fades a decal out by lerping its alpha to 0, then hides it — works for both a
+## projected Decal (modulate) and a sticker MeshInstance3D (material albedo_color).
+func _fade_decal_out(node: Node3D) -> void:
+	var tween := create_tween()
+	if node is Decal:
+		tween.tween_property(node, "modulate:a", 0.0, BLEMISH_FADE_TIME)
+		tween.tween_callback(_hide_decal.bind(node))
+		return
+	var mesh_node := node as MeshInstance3D
+	var mat := mesh_node.material_override as StandardMaterial3D if mesh_node != null else null
+	if mat == null:
+		node.visible = false
+		return
+	tween.tween_property(mat, "albedo_color:a", 0.0, BLEMISH_FADE_TIME)
+	tween.tween_callback(_hide_decal.bind(node))
 
 
 func _hide_decal(node: Node3D) -> void:
@@ -553,7 +568,7 @@ func register_authored_conditions(repo: DataRepository) -> void:
 		decal.tint(color)
 		var local_pos: Vector3 = decal.position
 		if decal.align_to_surface and not local_pos.is_zero_approx():
-			_orient_decal(decal, local_pos.normalized())
+			_orient_sticker(decal, local_pos.normalized())
 		_authored[decal.name] = {
 			"node": decal,
 			"required_tool": required_tool,
@@ -570,11 +585,13 @@ func ray_test_authored(origin: Vector3, direction: Vector3) -> Dictionary:
 		var entry: Dictionary = _authored[condition_id]
 		if entry["removed"]:
 			continue
-		var decal: Decal = entry["node"]
+		# Duck-typed (ArtifactConditionDecal) so this @tool script needs no class ref.
+		var decal: Variant = entry["node"]
 		if decal == null:
 			continue
-		var radius := maxf(0.12, maxf(decal.size.x, decal.size.z) * 0.5)
-		var hit := _ray_sphere(origin, direction, decal.global_position, radius)
+		var radius: float = decal.pick_radius()
+		var center: Vector3 = decal.global_position
+		var hit := _ray_sphere(origin, direction, center, radius)
 		if hit.get("hit", false) and hit["t"] < best_t:
 			best_t = hit["t"]
 			best = {"hit": true, "condition_id": condition_id}
@@ -623,11 +640,11 @@ func get_authored_global_center(condition_id: String) -> Vector3:
 
 
 func _find_authored_decals(root: Node) -> Array:
-	# Identified by behaviour (a Decal exposing condition_slug) rather than the
+	# Identified by behaviour (a Node3D exposing condition_slug) rather than the
 	# ArtifactConditionDecal class, so this @tool script carries no class dependency.
 	var found: Array = []
 	for child in root.get_children():
-		if child is Decal and child.has_method("condition_slug"):
+		if child is Node3D and child.has_method("condition_slug"):
 			found.append(child)
 		found.append_array(_find_authored_decals(child))
 	return found
@@ -662,33 +679,72 @@ func _blemish_layout(index: int, count: int) -> Vector3:
 	return Vector3(x, y, 0.04)
 
 
-## Builds one projected Decal for a grime mark, pasted onto the artifact surface
-## (engine decal projector — works on the mobile renderer). `normal` is the outward
-## surface normal it projects onto. Translucent so the artifact reads through; an
-## authored decal texture replaces the soft dot later (Phase 13/20).
-func _make_decal(center: Vector3, color: Color, normal: Vector3) -> Decal:
+## True when the renderer can draw engine Decal nodes (Forward+/Mobile have a
+## RenderingDevice; gl_compatibility / OpenGL does not). Drives the decal vs sticker
+## choice so PC players get projected decals and Compatibility users get a fallback.
+static func decals_supported() -> bool:
+	return RenderingServer.get_rendering_device() != null
+
+
+## Builds one grime decal for the current renderer: a projected engine Decal where
+## supported, else a flat textured quad "sticker" that draws in gl_compatibility.
+## `normal` is the outward surface normal. Translucent so the artifact reads through;
+## an authored decal texture replaces the soft dot later (Phase 13/20).
+func _make_decal(center: Vector3, color: Color, normal: Vector3) -> Node3D:
+	if decals_supported():
+		return _make_decal_projector(center, color, normal)
+	return _make_decal_sticker(center, color, normal)
+
+
+## A real projected Decal (Forward+/Mobile). Aligns +Y to the normal so it projects
+## (down -Y) into the surface.
+func _make_decal_projector(center: Vector3, color: Color, normal: Vector3) -> Decal:
 	var decal := Decal.new()
 	decal.name = "GrimeDecal"
 	decal.texture_albedo = DECAL_TEXTURE
 	var footprint := BLEMISH_RADIUS * 3.0
-	# size.y is the projection depth; it straddles the surface so the decal lands.
 	decal.size = Vector3(footprint, BLEMISH_RADIUS * 2.4, footprint)
-	# Tint the placeholder texture to the condition's journal colour (alpha lowered so
-	# the artifact reads through the grime).
 	decal.modulate = Color(color.r, color.g, color.b, DECAL_OPACITY)
 	decal.albedo_mix = 1.0
-	# No vertical fade across the projection box, so the decal reads at full strength
-	# instead of washing out over the curved surface.
 	decal.upper_fade = 0.0
 	decal.lower_fade = 0.0
 	decal.position = center
-	_orient_decal(decal, normal)
+	_orient_projector(decal, normal)
 	return decal
 
 
-## Orients a Decal so it projects (down its local -Y) into the surface whose outward
-## normal is `normal` — i.e. aligns the decal's +Y axis to the normal.
-func _orient_decal(node: Node3D, normal: Vector3) -> void:
+## A flat textured quad "sticker" (Compatibility fallback). Its face (+Z) points along
+## the normal so it lies flush on the surface.
+func _make_decal_sticker(center: Vector3, color: Color, normal: Vector3) -> MeshInstance3D:
+	var size := BLEMISH_RADIUS * 2.6
+	var quad := QuadMesh.new()
+	quad.size = Vector2(size, size)
+	var node := MeshInstance3D.new()
+	node.name = "GrimeDecal"
+	node.mesh = quad
+	node.material_override = make_decal_material(DECAL_TEXTURE, color, DECAL_OPACITY)
+	node.position = center
+	_orient_sticker(node, normal)
+	return node
+
+
+## Builds a flat-sticker material: an alpha-blended, double-sided StandardMaterial3D
+## showing `texture` tinted to `color` at `opacity`. Works in any renderer.
+static func make_decal_material(
+	texture: Texture2D, color: Color, opacity: float
+) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = texture
+	mat.albedo_color = Color(color.r, color.g, color.b, opacity)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED  # readable from both sides
+	mat.roughness = 1.0
+	mat.metallic = 0.0
+	return mat
+
+
+## Aligns a projector Decal's +Y axis to the surface normal (Decal projects down -Y).
+func _orient_projector(node: Node3D, normal: Vector3) -> void:
 	var n := normal.normalized()
 	if n.is_zero_approx():
 		return
@@ -696,6 +752,18 @@ func _orient_decal(node: Node3D, normal: Vector3) -> void:
 	var x_axis := reference.cross(n).normalized()
 	var z_axis := x_axis.cross(n).normalized()
 	node.basis = Basis(x_axis, n, z_axis)
+
+
+## Aligns a flat decal quad's face (+Z, the QuadMesh normal) to the surface normal so
+## the sticker lies flush against the surface at that point.
+func _orient_sticker(node: Node3D, normal: Vector3) -> void:
+	var n := normal.normalized()
+	if n.is_zero_approx():
+		return
+	var reference := Vector3.RIGHT if absf(n.dot(Vector3.UP)) > 0.99 else Vector3.UP
+	var x_axis := reference.cross(n).normalized()
+	var y_axis := n.cross(x_axis).normalized()
+	node.basis = Basis(x_axis, y_axis, n)
 
 
 func _build_photo() -> void:

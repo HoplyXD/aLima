@@ -64,9 +64,13 @@ func _open_with_object() -> RestorationObject3D:
 ## Drops a Rust condition decal onto the artifact and registers it, the way a dev
 ## authors one into an event-artifact scene.
 func _attach_rust_decal(obj: RestorationObject3D) -> void:
+	# Drop any decal the shared scene ships so the test owns exactly one.
+	for child in obj.get_children():
+		if child.has_method("condition_slug"):
+			child.free()
 	var decal := ArtifactConditionDecal.new()
 	decal.name = "ConditionRust"
-	decal.texture_albedo = load("res://assets/artifact_conditions/Rust.png")
+	decal.texture = load("res://assets/artifact_conditions/Rust.png")
 	decal.position = Vector3(0.0, 0.0, 0.58)
 	obj.add_child(decal)
 	obj.register_authored_conditions(DataRepository.singleton())
@@ -78,9 +82,9 @@ func _attach_rust_decal(obj: RestorationObject3D) -> void:
 func test_condition_slug_derives_type_from_albedo_filename() -> void:
 	var decal := ArtifactConditionDecal.new()
 	add_child_autofree(decal)
-	decal.texture_albedo = load("res://assets/artifact_conditions/Water Stain.png")
+	decal.texture = load("res://assets/artifact_conditions/Water Stain.png")
 	assert_eq(decal.condition_slug(), "water_stain")
-	decal.texture_albedo = load("res://assets/artifact_conditions/Rust.png")
+	decal.texture = load("res://assets/artifact_conditions/Rust.png")
 	assert_eq(decal.condition_slug(), "rust")
 
 
