@@ -27,6 +27,9 @@ signal tool_broke(tool_id: String, uid: String)
 signal tool_purchased(tool_id: String, arrival_index: int)
 signal tool_arrived(tool_id: String, uid: String)
 
+# --- Marketplace / disposition events ---
+signal sale_completed(instance_id: String, buyer_id: String, price: int)
+
 # --- Scanner events ---
 signal scanner_response_received(instance_id: String, status: String)
 signal scanner_verdict_committed(instance_id: String, verdict: String)

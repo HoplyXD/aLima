@@ -76,6 +76,7 @@ class PersistentState:
 	var neglect_history: Dictionary = {}  ## container_id -> int; recycled/ignored counts.
 	var safe_code_known: bool = false
 	var drawer_unlocked: bool = false
+	var best_sale: Dictionary = {}  ## Best sale ever: {price, template_id, buyer_id, condition, day}.
 
 	static func from_dictionary(data: Dictionary) -> PersistentState:
 		var p := PersistentState.new()
@@ -93,6 +94,7 @@ class PersistentState:
 		p.neglect_history = data.get("neglect_history", {}) as Dictionary
 		p.safe_code_known = ModelUtils.as_bool(data.get("safe_code_known"))
 		p.drawer_unlocked = ModelUtils.as_bool(data.get("drawer_unlocked"))
+		p.best_sale = ModelUtils.as_dictionary(data.get("best_sale"))
 		return p
 
 	func to_dictionary() -> Dictionary:
@@ -111,6 +113,7 @@ class PersistentState:
 			"neglect_history": neglect_history.duplicate(),
 			"safe_code_known": safe_code_known,
 			"drawer_unlocked": drawer_unlocked,
+			"best_sale": best_sale.duplicate(true),
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:

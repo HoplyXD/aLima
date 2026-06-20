@@ -1,8 +1,9 @@
 extends GutTest
-## Author-placed condition decals: a dev drops an ArtifactConditionDecal into the
-## artifact scene, its type comes from the albedo file name (Rust.png -> rust), and
-## it cleans in-game only with the tool that condition needs — emitting particles.
-## The restoration_artifact scene ships one example (ConditionRust) on the medallion.
+## Author-placed condition decals: a dev drops an ArtifactConditionDecal onto an
+## artifact, its type comes from the albedo file name (Rust.png -> rust), and it
+## cleans in-game only with the tool that condition needs — emitting particles.
+## (The tests attach their own decal so they don't depend on the shared scene
+## shipping one.)
 
 const VIEW_SCENE := preload("res://scenes/restoration/restoration_view.tscn")
 const TEST_SAVE := "user://test_authored_view_save.json"
@@ -55,7 +56,20 @@ func _open_with_object() -> RestorationObject3D:
 	_view = await _make_view()
 	_view.open()
 	_view.load_instance("obj_1")
-	return _view.get_restoration_object()
+	var obj := _view.get_restoration_object()
+	_attach_rust_decal(obj)
+	return obj
+
+
+## Drops a Rust condition decal onto the artifact and registers it, the way a dev
+## authors one into an event-artifact scene.
+func _attach_rust_decal(obj: RestorationObject3D) -> void:
+	var decal := ArtifactConditionDecal.new()
+	decal.name = "ConditionRust"
+	decal.texture_albedo = load("res://assets/artifact_conditions/Rust.png")
+	decal.position = Vector3(0.0, 0.0, 0.58)
+	obj.add_child(decal)
+	obj.register_authored_conditions(DataRepository.singleton())
 
 
 # --- The node ----------------------------------------------------------------
@@ -75,7 +89,7 @@ func test_condition_slug_derives_type_from_albedo_filename() -> void:
 
 func test_artifact_registers_its_authored_rust_decal() -> void:
 	var obj := await _open_with_object()
-	assert_true(obj.has_authored_conditions(), "scene ships an authored decal")
+	assert_true(obj.has_authored_conditions(), "the attached decal is registered")
 	var ids := obj.uncleaned_authored_ids()
 	assert_eq(ids.size(), 1)
 	# Rust.png -> rust -> the journal says rust is treated by the wire/rust brush.

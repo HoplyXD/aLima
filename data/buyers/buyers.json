@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "buyer_persona",
+      "id": "collector",
+      "display_name": "Doña Esperanza",
+      "motive": "Completes a private collection of fine heirlooms.",
+      "budget_range": [120, 900],
+      "preferred_categories": ["jewelry", "ceramic"],
+      "negotiation_style": "appraising",
+      "route_id": "",
+      "fallback_response_set": "collector_lines",
+      "open_factor": 0.62,
+      "concession_rate": 0.4,
+      "patience": 4,
+      "category_bonus": 0.2,
+      "condition_weight": 0.45,
+      "lines": {
+        "open": ["A fine piece. I could give you ₱{offer} for it.", "Provenance matters to me. ₱{offer}, to start."],
+        "counter": ["Hm. I can come up to ₱{offer}.", "For the right piece, ₱{offer}."],
+        "accept": ["Sold. It will be well cared for.", "A pleasure doing business."],
+        "walk": ["Then we have no deal. Good day.", "Too rich for me. I'll pass."]
+      }
+    },
+    {
+      "record_type": "buyer_persona",
+      "id": "reseller",
+      "display_name": "Boy Tindahan",
+      "motive": "Flips junk for a quick margin.",
+      "budget_range": [40, 360],
+      "preferred_categories": ["metal", "ceramic"],
+      "negotiation_style": "aggressive",
+      "route_id": "",
+      "fallback_response_set": "reseller_lines",
+      "open_factor": 0.45,
+      "concession_rate": 0.22,
+      "patience": 2,
+      "category_bonus": 0.08,
+      "condition_weight": 0.2,
+      "lines": {
+        "open": ["I'll take it off your hands for ₱{offer}, final-ish.", "Eh, ₱{offer}. It's basically scrap."],
+        "counter": ["Fine, fine — ₱{offer}, and that's me being generous.", "₱{offer}. Don't push it."],
+        "accept": ["Deal. Pleasure squeezing you.", "Sold. I'll double it by Friday."],
+        "walk": ["Nah, keep it then.", "You're dreaming. I'm out."]
+      }
+    },
+    {
+      "record_type": "buyer_persona",
+      "id": "student",
+      "display_name": "Maya the Student",
+      "motive": "Hunts cheap decor for a tiny apartment.",
+      "budget_range": [20, 160],
+      "preferred_categories": ["paper", "photo"],
+      "negotiation_style": "earnest",
+      "route_id": "",
+      "fallback_response_set": "student_lines",
+      "open_factor": 0.55,
+      "concession_rate": 0.3,
+      "patience": 3,
+      "category_bonus": 0.12,
+      "condition_weight": 0.3,
+      "lines": {
+        "open": ["This is so cute! Could you do ₱{offer}?", "I'm on a budget... ₱{offer}?"],
+        "counter": ["Okay, I can stretch to ₱{offer}.", "Maybe ₱{offer}? That's most of my allowance."],
+        "accept": ["Yay! Thank you so much!", "Deal! It'll look perfect on my shelf."],
+        "walk": ["Aw, that's too much for me. Sorry!", "I can't afford that. Maybe next time."]
+      }
+    },
+    {
+      "record_type": "buyer_persona",
+      "id": "gift",
+      "display_name": "Tito Ramon",
+      "motive": "Wants a sentimental, beautifully restored gift.",
+      "budget_range": [80, 520],
+      "preferred_categories": ["photo", "jewelry"],
+      "negotiation_style": "sentimental",
+      "route_id": "",
+      "fallback_response_set": "gift_lines",
+      "open_factor": 0.6,
+      "concession_rate": 0.42,
+      "patience": 4,
+      "category_bonus": 0.25,
+      "condition_weight": 0.55,
+      "lines": {
+        "open": ["It's for my wife's birthday. ₱{offer}?", "If it's truly restored well — ₱{offer}."],
+        "counter": ["For her, I can manage ₱{offer}.", "₱{offer}, if you promise it's spotless."],
+        "accept": ["She'll love it. Thank you.", "Sold — wrap it gently, please."],
+        "walk": ["I'll find something else for her, sorry.", "That's beyond the occasion. No thank you."]
+      }
+    },
+    {
+      "record_type": "buyer_persona",
+      "id": "hobbyist",
+      "display_name": "Engineer Lito",
+      "motive": "Collects only pristine, well-conserved pieces.",
+      "budget_range": [60, 600],
+      "preferred_categories": ["metal", "ceramic"],
+      "negotiation_style": "exacting",
+      "route_id": "",
+      "fallback_response_set": "hobbyist_lines",
+      "open_factor": 0.5,
+      "concession_rate": 0.36,
+      "patience": 3,
+      "category_bonus": 0.1,
+      "condition_weight": 0.7,
+      "lines": {
+        "open": ["Condition is everything. ₱{offer} as it stands.", "I inspected it closely — ₱{offer}."],
+        "counter": ["The work is decent. ₱{offer}.", "I'll allow ₱{offer} for that finish."],
+        "accept": ["Acceptable. A clean piece. Done.", "Sold — proper conservation pays."],
+        "walk": ["The flaws aren't worth that. No.", "I only pay for quality. Pass."]
+      }
+    },
+    {
+      "record_type": "buyer_persona",
+      "id": "suspicious",
+      "display_name": "Mr. Maverick",
+      "motive": "Quietly seeks pieces bearing a certain old symbol.",
+      "budget_range": [150, 1000],
+      "preferred_categories": ["jewelry", "metal"],
+      "negotiation_style": "guarded",
+      "route_id": "buyer",
+      "fallback_response_set": "suspicious_lines",
+      "open_factor": 0.58,
+      "concession_rate": 0.45,
+      "patience": 5,
+      "category_bonus": 0.3,
+      "condition_weight": 0.35,
+      "lines": {
+        "open": ["Interesting marking... ₱{offer}, if you don't ask why.", "I'll offer ₱{offer}. Tell no one."],
+        "counter": ["Discretion has a price. ₱{offer}.", "Very well — ₱{offer}, and we never spoke."],
+        "accept": ["Good. You'll see me again.", "Done. Keep this between us."],
+        "walk": ["Then I was never here.", "A pity. Perhaps another piece, another day."]
+      }
+    }
+  ]
+}

@@ -68,3 +68,40 @@ func test_close_releases_pause() -> void:
 	phone.close()
 	assert_false(phone.owns_pause())
 	assert_false(DayClock.is_paused())
+
+
+func _add_clean_item(uid: String, value: int = 200) -> void:
+	var inst := ObjectInstance.new()
+	inst.template_id = "tarnished_pendant"
+	inst.uid = uid
+	inst.condition = 85
+	inst.state = ModelEnums.ObjState.CLEAN
+	inst.value = value
+	inst.storage_cost = 1
+	GameState.save_state.loop.inventory.append(inst.to_dictionary())
+
+
+func test_marketplace_sell_flow_accepts_an_offer() -> void:
+	_add_clean_item("c1", 200)
+	var phone := await _open_phone()
+	phone.open_app("marketplace")
+	phone.open_buyers("c1")
+	phone.begin_haggle("collector")
+	var before := GameState.save_state.loop.money
+
+	phone.accept_offer()
+
+	assert_gt(GameState.save_state.loop.money, before, "accepting pays out")
+	assert_eq(MarketplaceService.get_sellable().size(), 0, "the item was sold")
+
+
+func test_marketplace_walk_keeps_the_item() -> void:
+	_add_clean_item("c1", 200)
+	var phone := await _open_phone()
+	phone.open_app("marketplace")
+	phone.open_buyers("c1")
+	phone.begin_haggle("reseller")
+
+	phone.haggle_walk()
+
+	assert_eq(MarketplaceService.get_sellable().size(), 1, "walking away keeps the item")

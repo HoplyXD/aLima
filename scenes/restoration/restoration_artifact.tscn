@@ -1,11 +1,7 @@
 [gd_scene format=3 uid="uid://duypha7bbdp6v"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_artifact"]
-[ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_cond"]
 
 [node name="RestorationArtifact" type="Node3D" unique_id=409650631]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_artifact")
-
-[node name="ConditionRust" parent="." unique_id=33052384 instance=ExtResource("2_cond")]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.20286053, 7.450581e-09, 0.5799999)

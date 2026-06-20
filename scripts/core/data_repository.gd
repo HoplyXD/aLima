@@ -23,6 +23,7 @@ var character_routes: Dictionary = {}  ## id -> CharacterRoute
 var placement_containers: Dictionary = {}  ## id -> PlacementContainer
 var scanner_cache_entries: Dictionary = {}  ## id -> ScannerCacheEntry
 var surface_conditions: Dictionary = {}  ## id -> SurfaceCondition
+var buyer_personas: Dictionary = {}  ## id -> BuyerPersona
 var delivery_config: DeliveryConfig = DeliveryConfig.new()
 var spawn_config: SpawnConfig = SpawnConfig.new()
 var starting_kit: Dictionary = {"tool_ids": [], "technique_ids": []}
@@ -58,6 +59,7 @@ func load_from_filesystem() -> ValidationResult:
 	_load_directory("scanner-cache", _parse_scanner_cache_file)
 	_load_directory("delivery", _parse_delivery_file)
 	_load_directory("journal", _parse_journal_file)
+	_load_directory("buyers", _parse_buyer_file)
 
 	if not _validation.is_valid():
 		_clear_state()
@@ -121,6 +123,20 @@ func get_surface_condition(id: String) -> SurfaceCondition:
 	return surface_conditions.get(id) as SurfaceCondition
 
 
+func get_buyer(id: String) -> BuyerPersona:
+	return buyer_personas.get(id) as BuyerPersona
+
+
+## Buyer personas sorted by id for a stable marketplace order.
+func get_buyers_sorted() -> Array:
+	var ids := buyer_personas.keys()
+	ids.sort()
+	var out: Array = []
+	for id in ids:
+		out.append(buyer_personas[id])
+	return out
+
+
 ## Returns the surface-condition catalog sorted by id for a stable Condition Guide
 ## order.
 func get_surface_conditions_sorted() -> Array:
@@ -153,6 +169,7 @@ func _clear_state() -> void:
 	placement_containers.clear()
 	scanner_cache_entries.clear()
 	surface_conditions.clear()
+	buyer_personas.clear()
 	delivery_config = DeliveryConfig.new()
 	spawn_config = SpawnConfig.new()
 	starting_kit = {"tool_ids": [], "technique_ids": []}
@@ -348,6 +365,25 @@ func _parse_journal_file(file_path: String) -> void:
 				)
 
 
+func _parse_buyer_file(file_path: String) -> void:
+	var doc: Variant = _read_json_file(file_path)
+	if doc == null:
+		return
+	var items := _get_items(doc, file_path)
+	for item in items:
+		if not item is Dictionary:
+			continue
+		var record_type := ModelUtils.as_string(item.get("record_type"))
+		if record_type != "buyer_persona":
+			_validation.add_field_error(
+				file_path, "", "record_type", "unknown record_type '%s'" % record_type
+			)
+			continue
+		var persona := BuyerPersona.from_dictionary(item)
+		_add_record(buyer_personas, persona.id, persona, file_path, "buyer_persona")
+		persona.validate(_validation, file_path)
+
+
 func _get_items(doc: Dictionary, file_path: String) -> Array:
 	if not doc.has("items"):
 		return [doc]
@@ -508,6 +544,16 @@ func _validate_cross_references() -> void:
 				condition_id,
 				"cleaning_tool",
 				"unknown tool reference '%s'" % condition.cleaning_tool
+			)
+
+	for buyer_id in buyer_personas.keys():
+		var persona: BuyerPersona = buyer_personas[buyer_id]
+		if not persona.route_id.is_empty() and not character_routes.has(persona.route_id):
+			_validation.add_field_error(
+				"data/buyers",
+				buyer_id,
+				"route_id",
+				"unknown route reference '%s'" % persona.route_id
 			)
 
 	for tool_id in starting_kit.tool_ids:
