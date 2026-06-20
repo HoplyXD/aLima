@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cni0vxqyoif6s"
-path.s3tc="res://.godot/imported/Character Placeholder.png-4b571b83b39d563c6fed9a16719b5162.s3tc.ctex"
+uid="uid://ce6dtxlv1pqe7"
+path.s3tc="res://.godot/imported/Cracking.png-73511d4fc43d40aa924b3f89ae7c72c3.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/Character Placeholder.png"
-dest_files=["res://.godot/imported/Character Placeholder.png-4b571b83b39d563c6fed9a16719b5162.s3tc.ctex"]
+source_file="res://assets/artifact_conditions/Cracking.png"
+dest_files=["res://.godot/imported/Cracking.png-73511d4fc43d40aa924b3f89ae7c72c3.s3tc.ctex"]
 
 [params]
 

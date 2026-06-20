@@ -726,11 +726,18 @@ class ToolChip:
 		return {"kind": StorageScreen.DRAG_KIND, "uid": tool_uid, "from_equipped": from_equipped}
 
 	func _notification(what: int) -> void:
-		# Only the chip being dragged reacts. An equipped chip dropped without a zone
-		# accepting it (empty space or the owned shelf) unequips itself — "drag it out
-		# of the bench". A successful drop (equip/replace/swap onto a slot) does nothing.
+		# While a drag is in progress, every chip ignores the mouse so the Button's own
+		# hover highlight can't fight the slot's swap highlight — only the slot the tool
+		# is hovering lights up. Restored when the drag ends.
+		if what == NOTIFICATION_DRAG_BEGIN:
+			mouse_filter = Control.MOUSE_FILTER_IGNORE
+			return
+		# Only the chip being dragged reacts on drag-end. An equipped chip dropped
+		# without a zone accepting it (empty space or the owned shelf) unequips itself —
+		# "drag it out of the bench". A successful equip/replace/swap does nothing.
 		if what != NOTIFICATION_DRAG_END:
 			return
+		mouse_filter = Control.MOUSE_FILTER_STOP
 		if not _is_dragging:
 			return
 		_is_dragging = false

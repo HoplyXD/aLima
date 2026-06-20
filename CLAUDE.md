@@ -47,7 +47,7 @@ alima/
 │   ├── phase-task.md          ← canonical implementation checklist/status
 │   ├── PROMPT_CONTEXT.md      ← verified context and prompt contract for agents
 │   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
-├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration view: restoration_view.tscn + restoration_dirt.gdshader; the old 2D placeholder scenes/ui/restoration_screen.* was retired in P4.7)
+├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration view: restoration_view.tscn + restoration_dirt.gdshader; the manipulable artifact model lives in its own reusable restoration_artifact.tscn — an @tool RestorationObject3D devs can open standalone to view/iterate models — instanced under restoration_view's World; the old 2D placeholder scenes/ui/restoration_screen.* was retired in P4.7)
 ├── scripts/                   ← shop, core, models, delivery, discovery, restoration, scanner, journal, portal
 │   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController
 │   ├── models/                ← typed data contracts + enums + validation
