@@ -65,9 +65,10 @@ func _release_pause_if_owned() -> void:
 	_owns_pause = false
 
 
-# Esc backs out of an app to the home screen, or closes the phone from home.
+# Backspace backs out of an app to the home screen, or closes the phone from home
+# (Esc is reserved for the pause menu).
 func _input(event: InputEvent) -> void:
-	if not visible or not event.is_action_pressed("ui_cancel"):
+	if not visible or not event.is_action_pressed("back"):
 		return
 	if _current_app.is_empty():
 		close()
