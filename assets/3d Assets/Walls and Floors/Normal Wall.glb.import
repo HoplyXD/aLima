@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bfqbkodx08ut5"
-path="res://.godot/imported/Door.glb-4776f49c47f987481f74636164996c98.scn"
+uid="uid://c3duosgeua5r"
+path="res://.godot/imported/Normal Wall.glb-901382e59e51828946b69be0b5598310.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Door.glb"
-dest_files=["res://.godot/imported/Door.glb-4776f49c47f987481f74636164996c98.scn"]
+source_file="res://assets/3d Assets/Walls and Floors/Normal Wall.glb"
+dest_files=["res://.godot/imported/Normal Wall.glb-901382e59e51828946b69be0b5598310.scn"]
 
 [params]
 
@@ -34,7 +34,7 @@ animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
 import_script/path=""
-materials/extract=0
+materials/extract=1
 materials/extract_format=0
 materials/extract_path=""
 _subresources={}

@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cg1vhgd66d0he"
-path="res://.godot/imported/Wood Floor.glb-2cd8673b308bfe7df34de599478b960c.scn"
+uid="uid://d1dmg2afcdw7p"
+path="res://.godot/imported/brown book.glb-c5b26bfa832ab6673766d3fd86e60ab0.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Wood Floor.glb"
-dest_files=["res://.godot/imported/Wood Floor.glb-2cd8673b308bfe7df34de599478b960c.scn"]
+source_file="res://assets/3d Assets/Bookcase/brown book.glb"
+dest_files=["res://.godot/imported/brown book.glb-c5b26bfa832ab6673766d3fd86e60ab0.scn"]
 
 [params]
 

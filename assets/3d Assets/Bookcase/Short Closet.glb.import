@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cmcnkgn7wpu1u"
-path="res://.godot/imported/Short Closet.glb-15db6c318b7f17a5cd221293c1143744.scn"
+path="res://.godot/imported/Short Closet.glb-8088337474d46588c62ec057b1d6eefe.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Short Closet.glb"
-dest_files=["res://.godot/imported/Short Closet.glb-15db6c318b7f17a5cd221293c1143744.scn"]
+source_file="res://assets/3d Assets/Bookcase/Short Closet.glb"
+dest_files=["res://.godot/imported/Short Closet.glb-8088337474d46588c62ec057b1d6eefe.scn"]
 
 [params]
 
