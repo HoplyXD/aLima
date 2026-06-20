@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cbo5lw1wu1gr8"]
+
+[resource]
+resource_name = "trn_Candle"
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.8209799, 0.8209799, 0.8209799, 1)
+emission_enabled = true
+emission = Color(0.9063318, 0.9063318, 0.9063318, 1)
+emission_energy_multiplier = 0.0
