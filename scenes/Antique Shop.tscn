@@ -3,10 +3,19 @@
 [ext_resource type="Script" uid="uid://cmnncy5e8fmri" path="res://scripts/shop/interactable_3d.gd" id="1_gqv0n"]
 [ext_resource type="PackedScene" uid="uid://bfqbkodx08ut5" path="res://assets/3d Assets/Door.glb" id="2_v0v2t"]
 [ext_resource type="PackedScene" uid="uid://ccw18fb4d26lu" path="res://assets/3d Assets/Table.glb" id="3_y2jnb"]
+[ext_resource type="PackedScene" uid="uid://b1rhanfh2lxe0" path="res://assets/3d Assets/Magic book.glb" id="4_gadlq"]
 [ext_resource type="PackedScene" uid="uid://c3duosgeua5r" path="res://assets/3d Assets/Normal Wall.glb" id="4_kif5t"]
 [ext_resource type="PackedScene" uid="uid://cg1vhgd66d0he" path="res://assets/3d Assets/Wood Floor.glb" id="5_dcu3k"]
-[ext_resource type="PackedScene" uid="uid://cmcnkgn7wpu1u" path="res://assets/3d Assets/Short Closet.glb" id="6_ykcv1"]
+[ext_resource type="PackedScene" uid="uid://dre33nw45m7tr" path="res://assets/3d Assets/Book.glb" id="5_ggowf"]
 [ext_resource type="PackedScene" uid="uid://b2kfaoxbcjkdk" path="res://assets/3d Assets/Bookcase with Books.glb" id="7_cet3k"]
+[ext_resource type="PackedScene" uid="uid://t1re3go1cyg0" path="res://assets/3d Assets/Candelabra/trn_Candelabra.fbx" id="9_207k4"]
+[ext_resource type="PackedScene" uid="uid://bwnp3s8rrwdcc" path="res://assets/3d Assets/Candles/trn_Candle.fbx" id="10_3j7l6"]
+[ext_resource type="PackedScene" uid="uid://bx37wgssfeq8e" path="res://assets/3d Assets/Candles/trn_Candle_full.fbx" id="11_16mbf"]
+[ext_resource type="PackedScene" uid="uid://cqhhs0yectt5r" path="res://assets/3d Assets/Candles/trn_Candle_half.fbx" id="12_xhn4e"]
+[ext_resource type="PackedScene" uid="uid://crsj05vrurj8y" path="res://assets/3d Assets/Candles/trn_CandleFlame.fbx" id="13_idnp1"]
+[ext_resource type="Material" uid="uid://bsw4qlo6eig1s" path="res://assets/3d Assets/Ceiling.tres" id="14_xto8d"]
+[ext_resource type="PackedScene" uid="uid://c2grr1ds06ewm" path="res://assets/3d Assets/Fireplace/trn_Fireplace.fbx" id="15_2y6xu"]
+[ext_resource type="PackedScene" uid="uid://b4mxplnagjpw0" path="res://assets/3d Assets/Fireplace/trn_Fireplace_Tube.fbx" id="16_1har4"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8dvp"]
 size = Vector3(1.5947266, 2.9886718, 0.15)
@@ -14,16 +23,8 @@ size = Vector3(1.5947266, 2.9886718, 0.15)
 [sub_resource type="BoxShape3D" id="BoxShape3D_v0v2t"]
 size = Vector3(1.6, 0.5, 0.8)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y2jnb"]
-albedo_color = Color(0.5, 0.17, 0.16, 1)
-emission = Color(0.9, 0.55, 0.4, 1)
-emission_energy_multiplier = 0.5
-
-[sub_resource type="BoxMesh" id="BoxMesh_kif5t"]
-size = Vector3(0.5, 0.12, 0.66)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_dcu3k"]
-size = Vector3(0.5, 0.12, 0.66)
+size = Vector3(0.5, 0.15753418, 0.5788184)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ykcv1"]
 albedo_color = Color(0.12, 0.13, 0.16, 1)
@@ -50,10 +51,10 @@ size = Vector3(1, 0.7, 0.8)
 [node name="Antique Shop" type="Node3D" unique_id=894395]
 
 [node name="Interactables" type="Node3D" parent="." unique_id=85964445]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1951499, -1.6482215, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1951499, -1.6482215, -0.96410084)
 
 [node name="DoorInteractable" type="Area3D" parent="Interactables" unique_id=1698234685]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.1997547, 2.8291411, -7.558079)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.1997547, 2.8291411, -6.607295)
 script = ExtResource("1_gqv0n")
 prompt_text = "Answer the door"
 
@@ -75,21 +76,26 @@ shape = SubResource("BoxShape3D_v0v2t")
 [node name="Table" parent="Interactables/WorkbenchInteractable" unique_id=2120825407 instance=ExtResource("3_y2jnb")]
 transform = Transform3D(-6.556708e-08, 0, 1.5, 0, 1.5, 0, -1.5, 0, -6.556708e-08, -0.03249967, -0.53056693, 0.9282489)
 
+[node name="Miscellanous Books" parent="Interactables/WorkbenchInteractable" unique_id=437643225 instance=ExtResource("4_gadlq")]
+transform = Transform3D(0.1815555, 0, -0.08389042, 0, 0.2, 0, 0.08389042, 0, 0.1815555, 1.3968838, 0.6647072, 0.79540914)
+
+[node name="Book" parent="Interactables/WorkbenchInteractable/Miscellanous Books" unique_id=1309942819 instance=ExtResource("4_gadlq")]
+transform = Transform3D(0.79547346, 0, 0.60598844, 0, 1, 0, -0.60598844, 0, 0.79547346, 0.16263008, 1.6400156, 0.08480239)
+
 [node name="JournalInteractable" type="Area3D" parent="Interactables" unique_id=1322107692]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -0.95000005, 3.0787203, 0.8369968)
+transform = Transform3D(-1.4473891, 0.0986731, -1.3767092, 0.13603058, 1.9953686, 0, 1.3735212, -0.09363728, -1.4507487, -0.95000005, 3.0787203, 0.8369968)
 script = ExtResource("1_gqv0n")
 prompt_text = "Open the journal"
 
-[node name="Mesh" type="MeshInstance3D" parent="Interactables/JournalInteractable" unique_id=1373834246]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.10998201, 0)
-material_override = SubResource("StandardMaterial3D_y2jnb")
-mesh = SubResource("BoxMesh_kif5t")
-
 [node name="Collision" type="CollisionShape3D" parent="Interactables/JournalInteractable" unique_id=1237959659]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.036783457, 0.055381596, -0.00014138222)
 shape = SubResource("BoxShape3D_dcu3k")
 
+[node name="Book" parent="Interactables/JournalInteractable" unique_id=1431567541 instance=ExtResource("5_ggowf")]
+transform = Transform3D(1.2737905e-15, 2.9140926e-08, 0.6666667, 0.6666667, -2.9140926e-08, 0, 2.9140926e-08, 0.6666667, -2.9140926e-08, 0.017254591, 0.03370732, -0.0018706322)
+
 [node name="PhoneInteractable" type="Area3D" parent="Interactables" unique_id=2100961380]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0.95, 2.9985766, 0.7625952)
+transform = Transform3D(1.4182779, 0, -0.4883522, 0, 1.5, 0, 0.4883522, 0, 1.4182779, 0.95, 2.9985766, 0.7625952)
 script = ExtResource("1_gqv0n")
 prompt_text = "Check the phone marketplace"
 
@@ -107,7 +113,7 @@ script = ExtResource("1_gqv0n")
 prompt_text = "Open the morning delivery"
 
 [node name="Mesh" type="MeshInstance3D" parent="Interactables/DeliveryInteractable" unique_id=2091495356]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.646161, -0.32950425, -2.0838275)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1299253, 0.8465991, 1.8236806)
 material_override = SubResource("StandardMaterial3D_f52vm")
 mesh = SubResource("BoxMesh_f03ip")
 
@@ -117,37 +123,37 @@ shape = SubResource("BoxShape3D_gadlq")
 [node name="Walls" parent="." unique_id=839500781 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2399235, 0, -5.7632227)
 
-[node name="Root Scene" parent="Walls" unique_id=2096707349 instance=ExtResource("4_kif5t")]
+[node name="Wall2" parent="Walls" unique_id=2096707349 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9704103, 0, 0.004501343)
 
-[node name="Root Scene2" parent="Walls" unique_id=1368573939 instance=ExtResource("4_kif5t")]
+[node name="Wall3" parent="Walls" unique_id=1368573939 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.9372044, 0, 0.0010604858)
 
-[node name="Root Scene3" parent="Walls" unique_id=285956991 instance=ExtResource("4_kif5t")]
+[node name="Wall4" parent="Walls" unique_id=285956991 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9917793, 2.3841858e-07, 0.009002686)
 
-[node name="Root Scene4" parent="Walls" unique_id=130533778 instance=ExtResource("4_kif5t")]
+[node name="Wall" parent="Walls" unique_id=130533778 instance=ExtResource("4_kif5t")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -3.5274162, 0, 7.6460366)
 
-[node name="Root Scene" parent="Walls/Root Scene4" unique_id=16646650 instance=ExtResource("4_kif5t")]
+[node name="Wall" parent="Walls/Wall" unique_id=16646650 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9704103, 0, 0.004501343)
 
-[node name="Root Scene2" parent="Walls/Root Scene4" unique_id=1849037189 instance=ExtResource("4_kif5t")]
+[node name="Wall2" parent="Walls/Wall" unique_id=1849037189 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.9372044, 0, 0.0010604858)
 
-[node name="Root Scene3" parent="Walls/Root Scene4" unique_id=647130480 instance=ExtResource("4_kif5t")]
+[node name="Wall3" parent="Walls/Wall" unique_id=647130480 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0005045, 0.008375168, 0.009054661)
 
-[node name="Root Scene4" parent="Walls/Root Scene4" unique_id=1922546672 instance=ExtResource("4_kif5t")]
+[node name="Wall4" parent="Walls/Wall" unique_id=1922546672 instance=ExtResource("4_kif5t")]
 transform = Transform3D(-1, 0, -8.742277e-08, 0, 1, 0, 8.742277e-08, 0, -1, 3.8869314, 0, 11.01429)
 
-[node name="Root Scene" parent="Walls/Root Scene4/Root Scene4" unique_id=702608759 instance=ExtResource("4_kif5t")]
+[node name="Wall" parent="Walls/Wall/Wall4" unique_id=702608759 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9704103, 0, 0.004501343)
 
-[node name="Root Scene2" parent="Walls/Root Scene4/Root Scene4" unique_id=1277628667 instance=ExtResource("4_kif5t")]
+[node name="Wall2" parent="Walls/Wall/Wall4" unique_id=1277628667 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.9372044, 0, 0.0010604858)
 
-[node name="Root Scene3" parent="Walls/Root Scene4/Root Scene4" unique_id=1611887291 instance=ExtResource("4_kif5t")]
+[node name="Wall3" parent="Walls/Wall/Wall4" unique_id=1611887291 instance=ExtResource("4_kif5t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9917793, 2.3841858e-07, 0.009002686)
 
 [node name="Floor" parent="." unique_id=930502247 instance=ExtResource("5_dcu3k")]
@@ -198,8 +204,47 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0055418015, 0.0049431324, 
 [node name="Floor" parent="Floor/Floor3/Floor2/Floor/Floor" unique_id=1527456586 instance=ExtResource("5_dcu3k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0055418015, 0.0049431324, -3.9919057)
 
-[node name="Root Scene" parent="." unique_id=1926780698 instance=ExtResource("6_ykcv1")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -7.097166, 0.086502075, -6.72411)
+[node name="Bookcase2" parent="." unique_id=72161348 instance=ExtResource("7_cet3k")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -7.0222726, 0.20925331, -6.86525)
 
-[node name="Root Scene2" parent="." unique_id=72161348 instance=ExtResource("7_cet3k")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -4.2788115, 0, -6.482963)
+[node name="Bookcase" parent="." unique_id=1628741937 instance=ExtResource("7_cet3k")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -4.3539805, 0.21895194, -6.862382)
+
+[node name="trn_Candelabra" parent="." unique_id=1835092964 instance=ExtResource("9_207k4")]
+transform = Transform3D(1.3616662, 0, -0.62917817, 0, 1.5, 0, 0.62917817, 0, 1.3616662, 2.2370744, 1.2684827, -1.9366014)
+
+[node name="trn_Candle" parent="trn_Candelabra" unique_id=467392542 instance=ExtResource("10_3j7l6")]
+transform = Transform3D(0.605185, 0, 0.27963477, 0, 0.6666667, 0, -0.27963477, 0, 0.605185, 0.32167274, 0.5899131, 0.008988023)
+
+[node name="trn_Candle_full" parent="trn_Candelabra" unique_id=741412471 instance=ExtResource("11_16mbf")]
+transform = Transform3D(0.605185, 0, 0.27963474, 0, 0.6666667, 0, -0.27963474, 0, 0.605185, -0.32650054, 0.59247595, -0.00026154518)
+
+[node name="trn_Candle_half" parent="trn_Candelabra" unique_id=61532128 instance=ExtResource("12_xhn4e")]
+transform = Transform3D(-0.41773593, 0, 0.5195586, 0, 0.6666667, 0, -0.5195586, 0, -0.41773593, -0.0021876097, 0.6742818, 0.0006211996)
+
+[node name="trn_CandleFlame2" parent="trn_Candelabra" unique_id=509967817 instance=ExtResource("13_idnp1")]
+transform = Transform3D(0.010438081, 0, 0.012225036, 0, 0.016, 0, -0.012225036, 0, 0.010370553, 0.32130224, 0.7597304, 0.014812827)
+
+[node name="trn_CandleFlame3" parent="trn_Candelabra" unique_id=699404851 instance=ExtResource("13_idnp1")]
+transform = Transform3D(0.010438081, 0, 0.012225036, 0, 0.016, 0, -0.012225036, 0, 0.010370553, -0.3254192, 0.80043715, -0.013606906)
+
+[node name="trn_CandleFlame" parent="trn_Candelabra" unique_id=1412866424 instance=ExtResource("13_idnp1")]
+transform = Transform3D(0.014603272, 0, 0.0067193354, 0, 0.016, 0, -0.00674766, 0, 0.0145419715, -0.005493641, 0.7922775, -0.00022137165)
+
+[node name="Ceiling" type="CSGBox3D" parent="." unique_id=1284448389]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2823787, 5.275242, -1.9094129)
+size = Vector3(15.918457, 0.17272949, 12.956543)
+material = ExtResource("14_xto8d")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=550347164]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0848688, 2.7500036, 2.400869)
+fov = 71.5
+
+[node name="trn_Fireplace" parent="." unique_id=1384579053 instance=ExtResource("15_2y6xu")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -1.0830443, 0.24112129, -6.562172)
+
+[node name="trn_Fireplace_Tube" parent="." unique_id=953296117 instance=ExtResource("16_1har4")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -1.1029317, 3.2389612, -6.586598)
+
+[node name="trn_Fireplace_Tube2" parent="trn_Fireplace_Tube" unique_id=1248568516 instance=ExtResource("16_1har4")]
+transform = Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, -0.005886376, 1.648076, 0.023694992)

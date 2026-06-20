@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://e81ljsffwcuh"
-path="res://.godot/imported/Sofa.glb-05aed864c152b99f3a8a8648120db250.scn"
+uid="uid://by2nidw1p7qwf"
+path="res://.godot/imported/Floating Shelf.glb-a40b8e2fc68acb2ae5db8e8b10861ca2.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Sofa.glb"
-dest_files=["res://.godot/imported/Sofa.glb-05aed864c152b99f3a8a8648120db250.scn"]
+source_file="res://assets/3d Assets/Floating Shelf.glb"
+dest_files=["res://.godot/imported/Floating Shelf.glb-a40b8e2fc68acb2ae5db8e8b10861ca2.scn"]
 
 [params]
 

@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dekpocr34ceoa"]
+
+[resource]
+resource_name = "Legs"
+albedo_color = Color(0.26239777, 0.23116976, 0.21731952, 1)
+metallic = 0.4
+roughness = 0.4150871
+metadata/extras = {
+"fromFBX": {
+"isTruePBR": false,
+"shadingModel": "Phong"
+}
+}
