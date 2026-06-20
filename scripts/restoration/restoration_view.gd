@@ -799,7 +799,7 @@ func _handle_action_event(event: InputEvent) -> bool:
 		"restoration_reset_view": reset_view,
 		"restoration_toggle_mode": _toggle_mode,
 		"restoration_cycle_tool": func() -> void: cycle_tool(1),
-		"ui_cancel": close,
+		"back": close,  # Backspace closes the bench; Esc is the pause menu.
 	}
 	for action in handlers:
 		if event.is_action_pressed(action):
@@ -1040,6 +1040,8 @@ func _ensure_input_actions() -> void:
 	_add_action("restoration_reset_view", [_key(KEY_R)], [_joy_button(JOY_BUTTON_Y)])
 	_add_action("restoration_toggle_mode", [_key(KEY_TAB)], [_joy_button(JOY_BUTTON_LEFT_SHOULDER)])
 	_add_action("restoration_cycle_tool", [_key(KEY_Q)], [_joy_button(JOY_BUTTON_RIGHT_SHOULDER)])
+	# Backspace closes the bench; Esc is reserved for the pause menu.
+	_add_action("back", [_key(KEY_BACKSPACE)], [])
 
 
 func _add_action(action: String, keys: Array, pads: Array) -> void:

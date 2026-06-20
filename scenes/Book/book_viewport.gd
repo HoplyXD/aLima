@@ -85,10 +85,10 @@ func _reset_camera() -> void:
 	_camera.transform = _base_cam_xform
 
 
-# Uses _input (not _unhandled_input) so Esc closes the journal before the host
-# scene (e.g. the restoration bench) can act on it.
+# Uses _input (not _unhandled_input) so Backspace closes the journal before the host
+# scene (e.g. the restoration bench) can act on it. Esc is reserved for the pause menu.
 func _input(event: InputEvent) -> void:
-	if visible and event.is_action_pressed("ui_cancel"):
+	if visible and event.is_action_pressed("back"):
 		close()
 		get_viewport().set_input_as_handled()
 
