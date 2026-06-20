@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cecqwj18gv8d5"]
+
+[resource]
+resource_name = "mat0"
+albedo_color = Color(0.735357, 0.4100209, 0.785777, 1)
+emission_enabled = true

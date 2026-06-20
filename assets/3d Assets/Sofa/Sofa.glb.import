@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://e81ljsffwcuh"
-path="res://.godot/imported/Sofa.glb-05aed864c152b99f3a8a8648120db250.scn"
+path="res://.godot/imported/Sofa.glb-4db1b45a9d1d56455dc094ddf901bcef.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Sofa.glb"
-dest_files=["res://.godot/imported/Sofa.glb-05aed864c152b99f3a8a8648120db250.scn"]
+source_file="res://assets/3d Assets/Sofa/Sofa.glb"
+dest_files=["res://.godot/imported/Sofa.glb-4db1b45a9d1d56455dc094ddf901bcef.scn"]
 
 [params]
 
@@ -36,7 +36,7 @@ animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
 import_script/path=""
-materials/extract=0
+materials/extract=1
 materials/extract_format=0
 materials/extract_path=""
 _subresources={}
