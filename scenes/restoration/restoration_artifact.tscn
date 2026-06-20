@@ -7,5 +7,5 @@
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_artifact")
 
-[node name="ConditionRust" parent="." instance=ExtResource("2_cond")]
-transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0.58)
+[node name="ConditionRust" parent="." unique_id=33052384 instance=ExtResource("2_cond")]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.20286053, 7.450581e-09, 0.5799999)
