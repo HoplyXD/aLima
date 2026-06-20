@@ -275,6 +275,9 @@ func load_instance(uid: String) -> void:
 		return
 	_object.visible = true
 	_object.configure(template, inst)
+	# Author-placed condition decals (event artifacts) clean with their own tool and
+	# spawn particles; resolve their type/colour/tool against the journal catalog.
+	_object.register_authored_conditions(_service.get_repository())
 	# Effective decals are the instance's random conditions when present, else the
 	# template's authored decals. Random conditions render on the 3D object (so an
 	# openable still opens after CLEAN); authored photos use the flat photo plane.
@@ -398,6 +401,51 @@ func clean_blemish(blemish_id: String) -> RestorationService.DecalResult:
 	if inst != null:
 		_refresh(inst, template)
 	return result
+
+
+# --- Author-placed condition decals (event artifacts) ------------------------
+
+
+## Cleans an author-placed condition decal, but only with the tool its type requires
+## (rust -> wire brush, etc.). The decal plays its particle burst and fades on a
+## correct tool; a wrong tool is rejected with feedback. Returns true on a clean.
+func clean_authored_condition(condition_id: String) -> bool:
+	if _selected_tool_id.is_empty():
+		_caption_label.text = "Pick up a tool from the bench first."
+		return false
+	var required := _object.authored_required_tool(condition_id)
+	var label := _object.authored_type_id(condition_id).replace("_", " ")
+	if not required.is_empty() and _selected_tool_id != required:
+		var needs := _tool_display_name(required)
+		_feedback_label.text = "Wrong tool — the %s needs the %s." % [label, needs]
+		_caption_label.text = "Wrong tool — the %s needs the %s." % [label, needs]
+		return false
+	_object.clean_authored(condition_id)
+	_feedback_label.text = "Worked off the %s." % label
+	_caption_label.text = "Cleaned the %s." % label
+	return true
+
+
+## Ray-tests the author-placed condition decals and cleans the one hit. Returns true
+## when one was targeted, so a miss falls through to the normal clean/rotate gesture.
+func _try_authored_condition_at_pointer(pos: Vector2) -> bool:
+	if not _object.has_authored_conditions():
+		return false
+	var origin := _camera.project_ray_origin(_to_viewport(pos))
+	var dir := _camera.project_ray_normal(_to_viewport(pos))
+	var hit := _object.ray_test_authored(origin, dir)
+	if not hit.get("hit", false):
+		return false
+	clean_authored_condition(hit["condition_id"])
+	return true
+
+
+## Test seam mirroring attempt_clean_with_ray(): cleans the authored decal a ray hits.
+func attempt_clean_authored_with_ray(origin: Vector3, direction: Vector3) -> bool:
+	var hit := _object.ray_test_authored(origin, direction)
+	if not hit.get("hit", false):
+		return false
+	return clean_authored_condition(hit["condition_id"])
 
 
 ## Ray-tests the photo's blemishes and cleans the one hit. Returns true when a
@@ -783,6 +831,10 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			# Picking up a bench tool prop selects it (off to the side of the object,
 			# so it never competes with a cleaning stroke or a rotate drag).
 			if _try_tool_pick_at_pointer(pos):
+				return
+			# Author-placed condition decals (event artifacts) clean on a direct click
+			# with the right tool, before a surface stroke begins.
+			if _mode == Mode.CLEAN and _try_authored_condition_at_pointer(pos):
 				return
 			_last_pointer = pos
 			_left_down = true

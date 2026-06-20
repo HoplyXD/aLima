@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://b3drest0rview3d"]
 
 [ext_resource type="Script" path="res://scripts/restoration/restoration_view.gd" id="1_view"]
-[ext_resource type="Script" path="res://scripts/restoration/restoration_object_3d.gd" id="2_object"]
+[ext_resource type="PackedScene" path="res://scenes/restoration/restoration_artifact.tscn" id="2_object"]
 [ext_resource type="Script" path="res://scripts/restoration/restoration_tool_tray.gd" id="3_tray"]
 
 [sub_resource type="Environment" id="Environment_rest"]
@@ -67,8 +67,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.85, 0)
 mesh = SubResource("BoxMesh_bench")
 material_override = SubResource("Material_bench")
 
-[node name="ObjectPivot" type="Node3D" parent="ViewportContainer/SubViewport/World"]
-script = ExtResource("2_object")
+[node name="ObjectPivot" parent="ViewportContainer/SubViewport/World" instance=ExtResource("2_object")]
 
 [node name="ToolTray" type="Node3D" parent="ViewportContainer/SubViewport/World"]
 script = ExtResource("3_tray")
