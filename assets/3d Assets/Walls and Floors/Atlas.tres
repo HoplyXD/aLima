@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b3sglwixashx0"]
+
+[ext_resource type="Texture2D" uid="uid://jipil0boo2dx" path="res://assets/3d Assets/Walls and Floors/Normal Wall_Sushi_Atlas.png" id="1_6nj34"]
+
+[resource]
+resource_name = "Atlas"
+albedo_texture = ExtResource("1_6nj34")
+metallic = 0.4
+metadata/extras = {
+"fromFBX": {
+"isTruePBR": false,
+"shadingModel": "Phong"
+}
+}

@@ -3,21 +3,19 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dre33nw45m7tr"
-path="res://.godot/imported/Book.glb-46334a807095cea34be20d0d90d5edc6.scn"
+uid="uid://by2nidw1p7qwf"
+path="res://.godot/imported/Floating Shelf.glb-3962b75c7f3d6980dc0760a1fd8186b4.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Book.glb"
-dest_files=["res://.godot/imported/Book.glb-46334a807095cea34be20d0d90d5edc6.scn"]
+source_file="res://assets/3d Assets/Walls and Floors/Floating Shelf.glb"
+dest_files=["res://.godot/imported/Floating Shelf.glb-3962b75c7f3d6980dc0760a1fd8186b4.scn"]
 
 [params]
 
 nodes/root_type=""
 nodes/root_name=""
 nodes/root_script=null
-mesh_library/use_node_names_as_mesh_names=false
-array_mesh/deduplicate_surfaces=true
 nodes/apply_root_scale=true
 nodes/root_scale=1.0
 nodes/import_as_skeleton_bones=false
@@ -42,4 +40,3 @@ materials/extract_path=""
 _subresources={}
 gltf/naming_version=2
 gltf/embedded_image_handling=1
-gltf/texture_map_mode=0

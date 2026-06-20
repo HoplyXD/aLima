@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b2kfaoxbcjkdk"
-path="res://.godot/imported/Bookcase with Books.glb-690841b863bd8197c91c4313f9fb6103.scn"
+uid="uid://dre33nw45m7tr"
+path="res://.godot/imported/Book.glb-e69085cb2c527ec99a2ed3f1edf2d425.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Bookcase with Books.glb"
-dest_files=["res://.godot/imported/Bookcase with Books.glb-690841b863bd8197c91c4313f9fb6103.scn"]
+source_file="res://assets/3d Assets/Bookcase/Book.glb"
+dest_files=["res://.godot/imported/Book.glb-e69085cb2c527ec99a2ed3f1edf2d425.scn"]
 
 [params]
 

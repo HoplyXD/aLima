@@ -51,6 +51,5 @@ portal/backend_url="http://localhost:3000"
 
 [rendering]
 
-rendering_device/driver.windows="vulkan"
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="gl_compatibility"

@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://e81ljsffwcuh"
-path="res://.godot/imported/Sofa.glb-4db1b45a9d1d56455dc094ddf901bcef.scn"
+uid="uid://cqwobrt71dltu"
+path="res://.godot/imported/Book Stack.glb-3af032ed63a1b34ac08fdf088b23c8f7.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Sofa/Sofa.glb"
-dest_files=["res://.godot/imported/Sofa.glb-4db1b45a9d1d56455dc094ddf901bcef.scn"]
+source_file="res://assets/3d Assets/Bookcase/Book Stack.glb"
+dest_files=["res://.godot/imported/Book Stack.glb-3af032ed63a1b34ac08fdf088b23c8f7.scn"]
 
 [params]
 
@@ -34,7 +34,7 @@ animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
 import_script/path=""
-materials/extract=1
+materials/extract=0
 materials/extract_format=0
 materials/extract_path=""
 _subresources={}

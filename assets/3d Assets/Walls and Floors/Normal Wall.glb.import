@@ -3,21 +3,19 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cg1vhgd66d0he"
-path="res://.godot/imported/Wood Floor.glb-2cd8673b308bfe7df34de599478b960c.scn"
+uid="uid://c3duosgeua5r"
+path="res://.godot/imported/Normal Wall.glb-901382e59e51828946b69be0b5598310.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Wood Floor.glb"
-dest_files=["res://.godot/imported/Wood Floor.glb-2cd8673b308bfe7df34de599478b960c.scn"]
+source_file="res://assets/3d Assets/Walls and Floors/Normal Wall.glb"
+dest_files=["res://.godot/imported/Normal Wall.glb-901382e59e51828946b69be0b5598310.scn"]
 
 [params]
 
 nodes/root_type=""
 nodes/root_name=""
 nodes/root_script=null
-mesh_library/use_node_names_as_mesh_names=false
-array_mesh/deduplicate_surfaces=true
 nodes/apply_root_scale=true
 nodes/root_scale=1.0
 nodes/import_as_skeleton_bones=false
@@ -36,10 +34,9 @@ animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
 import_script/path=""
-materials/extract=0
+materials/extract=1
 materials/extract_format=0
 materials/extract_path=""
 _subresources={}
 gltf/naming_version=2
 gltf/embedded_image_handling=1
-gltf/texture_map_mode=0

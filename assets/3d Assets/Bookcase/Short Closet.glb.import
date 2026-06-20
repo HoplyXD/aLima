@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bfqbkodx08ut5"
-path="res://.godot/imported/Door.glb-4776f49c47f987481f74636164996c98.scn"
+uid="uid://cmcnkgn7wpu1u"
+path="res://.godot/imported/Short Closet.glb-8088337474d46588c62ec057b1d6eefe.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Door.glb"
-dest_files=["res://.godot/imported/Door.glb-4776f49c47f987481f74636164996c98.scn"]
+source_file="res://assets/3d Assets/Bookcase/Short Closet.glb"
+dest_files=["res://.godot/imported/Short Closet.glb-8088337474d46588c62ec057b1d6eefe.scn"]
 
 [params]
 

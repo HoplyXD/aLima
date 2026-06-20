@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b1rhanfh2lxe0"
-path="res://.godot/imported/Magic book.glb-ec252e8ca552a6c1b4813e9ed1a71017.scn"
+uid="uid://bfqbkodx08ut5"
+path="res://.godot/imported/Door.glb-9d0fbd0d9a54fe63fa7656eda3584bbe.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Magic book.glb"
-dest_files=["res://.godot/imported/Magic book.glb-ec252e8ca552a6c1b4813e9ed1a71017.scn"]
+source_file="res://assets/3d Assets/Walls and Floors/Door.glb"
+dest_files=["res://.godot/imported/Door.glb-9d0fbd0d9a54fe63fa7656eda3584bbe.scn"]
 
 [params]
 
