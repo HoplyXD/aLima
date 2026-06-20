@@ -273,19 +273,26 @@ func load_instance(uid: String) -> void:
 	if inst == null or template == null:
 		_show_invalid_state()
 		return
+	# Per-instance seed so a shared placed decal scatters/cleans independently per
+	# artifact, and the same template's conditions land in different spots.
+	var instance_seed := uid.hash()
 	_object.visible = true
 	_object.configure(template, inst)
 	# Author-placed condition decals (event artifacts) clean with their own tool and
 	# spawn particles; resolve their type/colour/tool against the journal catalog.
-	_object.register_authored_conditions(_service.get_repository())
+	_object.register_authored_conditions(_service.get_repository(), instance_seed)
 	# Effective decals are the instance's random conditions when present, else the
 	# template's authored decals. Random conditions render on the 3D object (so an
 	# openable still opens after CLEAN); authored photos use the flat photo plane.
 	var decals := _service.effective_decals(inst, template)
 	if not inst.spawned_decals.is_empty():
-		_object.enter_conditions_mode(decals, inst.removed_decals, _condition_colors(decals))
+		_object.enter_conditions_mode(
+			decals, inst.removed_decals, _condition_colors(decals), _condition_textures(decals), instance_seed
+		)
 	elif not decals.is_empty():
-		_object.enter_photo_mode(decals, inst.removed_decals, _condition_colors(decals))
+		_object.enter_photo_mode(
+			decals, inst.removed_decals, _condition_colors(decals), _condition_textures(decals), instance_seed
+		)
 	elif _dirt_cache.has(uid):
 		# Restore the exact cleaned spots from this session, overriding the
 		# condition-based reconstruction.
@@ -373,6 +380,24 @@ func _condition_colors(decals: Array) -> Dictionary:
 	return colors
 
 
+## Builds a {condition_type: Texture2D} map from the placeholder condition art
+## (assets/artifact_conditions/<Display Name>.png), so each condition decal shows its
+## proper image instead of a generic placeholder.
+func _condition_textures(decals: Array) -> Dictionary:
+	var textures := {}
+	var repo := _service.get_repository()
+	for decal in decals:
+		if textures.has(decal.type):
+			continue
+		var condition := repo.get_surface_condition(decal.type)
+		if condition == null:
+			continue
+		var path := "res://assets/artifact_conditions/%s.png" % condition.display_name
+		if ResourceLoader.exists(path):
+			textures[decal.type] = load(path)
+	return textures
+
+
 ## Cleans one blemish by id with the selected tool (delegates the rule to the
 ## service). Removes the hotspot on success and surfaces join/scan prompts when the
 ## photo becomes fully clean. Returns the service result, or null when no tool is
@@ -385,6 +410,9 @@ func clean_blemish(blemish_id: String) -> RestorationService.DecalResult:
 	if not result.ok:
 		_feedback_label.text = result.feedback
 		return result
+	# A grime puff plays on every stroke (right tool or wrong); a successful clean adds
+	# the sparkle via remove_blemish.
+	_object.blemish_working_burst(blemish_id)
 	if result.removed:
 		_object.remove_blemish(blemish_id)
 	_feedback_label.text = result.feedback
@@ -406,24 +434,35 @@ func clean_blemish(blemish_id: String) -> RestorationService.DecalResult:
 # --- Author-placed condition decals (event artifacts) ------------------------
 
 
-## Cleans an author-placed condition decal, but only with the tool its type requires
-## (rust -> wire brush, etc.). The decal plays its particle burst and fades on a
-## correct tool; a wrong tool is rejected with feedback. Returns true on a clean.
+## Works a tool against an author-placed condition. A grime puff plays on EVERY use.
+## The right tool (one with cleaning power for this condition) fades the decal a step
+## per stroke and, once fully scrubbed away, triggers the success sparkle; a powerless
+## (wrong) tool only puffs and is rejected. Returns true only when the condition is
+## fully cleaned this stroke.
 func clean_authored_condition(condition_id: String) -> bool:
 	if _selected_tool_id.is_empty():
 		_caption_label.text = "Pick up a tool from the bench first."
 		return false
-	var required := _object.authored_required_tool(condition_id)
+	# A tool always kicks up a puff where it's worked, right tool or wrong.
+	_object.authored_working_burst(condition_id)
 	var label := _object.authored_type_id(condition_id).replace("_", " ")
-	if not required.is_empty() and _selected_tool_id != required:
-		var needs := _tool_display_name(required)
-		_feedback_label.text = "Wrong tool — the %s needs the %s." % [label, needs]
-		_caption_label.text = "Wrong tool — the %s needs the %s." % [label, needs]
+	var strength := CleaningPower.power(
+		_service.get_repository(), _selected_tool_id, _object.authored_type_id(condition_id)
+	)
+	if strength <= 0:
+		var required := _object.authored_required_tool(condition_id)
+		var needs := _tool_display_name(required) if not required.is_empty() else "the right tool"
+		_feedback_label.text = "Wrong tool — the %s needs %s." % [label, needs]
+		_caption_label.text = "Wrong tool — the %s needs %s." % [label, needs]
 		return false
-	_object.clean_authored(condition_id)
-	_feedback_label.text = "Worked off the %s." % label
-	_caption_label.text = "Cleaned the %s." % label
-	return true
+	var cleaned := _object.apply_authored_clean(condition_id, strength)
+	if cleaned:
+		_feedback_label.text = "The %s lifts away — spotless!" % label
+		_caption_label.text = "Cleaned the %s." % label
+	else:
+		_feedback_label.text = "Working off the %s..." % label
+		_caption_label.text = "Keep scrubbing the %s." % label
+	return cleaned
 
 
 ## Ray-tests the author-placed condition decals and cleans the one hit. Returns true

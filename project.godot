@@ -29,6 +29,7 @@ JournalService="*res://scripts/journal/journal_service.gd"
 RouteService="*res://scripts/core/route_service.gd"
 MarketplaceService="*res://scripts/economy/marketplace_service.gd"
 SettingsService="*res://scripts/core/settings_service.gd"
+NegotiationClient="*res://scripts/economy/negotiation_client.gd"
 PauseMenu="*res://scenes/ui/pause_menu.tscn"
 
 [display]
@@ -51,5 +52,5 @@ portal/backend_url="http://localhost:3000"
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
+renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="gl_compatibility"

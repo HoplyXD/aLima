@@ -89,7 +89,44 @@ function validatePortalRequest(body) {
   return body;
 }
 
+function validateNegotiateRequest(body) {
+  if (!body || typeof body !== 'object') {
+    const err = new Error('Request body must be a JSON object');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (!body.persona || typeof body.persona !== 'object') {
+    const err = new Error("'persona' object is required");
+    err.statusCode = 400;
+    err.details = { field: 'persona' };
+    throw err;
+  }
+  assertString(body.persona.display_name, 'persona.display_name');
+
+  if ('listing_price' in body) {
+    assertNumberInRange(body.listing_price, 'listing_price', 0, 100000000);
+  } else {
+    body.listing_price = 0;
+  }
+  if ('player_message' in body && typeof body.player_message !== 'string') {
+    const err = new Error("'player_message' must be a string");
+    err.statusCode = 400;
+    err.details = { field: 'player_message' };
+    throw err;
+  }
+  if ('history' in body && !Array.isArray(body.history)) {
+    const err = new Error("'history' must be an array");
+    err.statusCode = 400;
+    err.details = { field: 'history' };
+    throw err;
+  }
+
+  return body;
+}
+
 module.exports = {
   validateScanRequest,
   validatePortalRequest,
+  validateNegotiateRequest,
 };

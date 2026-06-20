@@ -30,7 +30,23 @@ function createPortalRateLimiter() {
   });
 }
 
+function createNegotiateRateLimiter() {
+  return rateLimit({
+    windowMs: 60 * 1000,
+    max: () => parseInt(process.env.RATE_LIMIT_NEGOTIATE || '20', 10),
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        ok: false,
+        error: 'Too many negotiation requests, please try again later.',
+      });
+    },
+  });
+}
+
 module.exports = {
   createScanRateLimiter,
   createPortalRateLimiter,
+  createNegotiateRateLimiter,
 };

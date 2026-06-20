@@ -18,7 +18,7 @@ extends Node3D
 ## Resting position tuning (object space, on the bench top in front of the object).
 const BENCH_Y: float = -0.7
 const FRONT_Z: float = 0.55
-const SLOT_SPACING: float = 1.0
+const SLOT_SPACING: float = 0.55  ## Tools sit close together so they stay on the bench.
 
 ## Selection pose: the chosen tool lifts off the bench and leans toward the object.
 const SELECT_LIFT: float = 0.12
@@ -26,7 +26,7 @@ const SELECT_FORWARD: float = 0.08
 const SELECT_TILT_DEG: float = -22.0
 
 ## Analytic pick radius around each prop (matches the simple development geometry).
-const PICK_RADIUS: float = 0.32
+const PICK_RADIUS: float = 0.26
 const PICK_CENTER_OFFSET: Vector3 = Vector3(0.0, 0.06, 0.0)
 
 ## Narrowly-scoped presentation adapter keyed by tool id, with a `_default` so any

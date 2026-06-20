@@ -52,9 +52,9 @@ func test_open_and_back_to_home() -> void:
 	assert_eq(phone.get_current_app(), "", "Home returns to the app grid")
 
 
-func test_buying_in_marketplace_app_deducts_and_ships() -> void:
+func test_buying_in_tools_shop_app_deducts_and_ships() -> void:
 	var phone := await _open_phone()
-	phone.open_app("marketplace")
+	phone.open_app("tools_shop")
 
 	phone.buy("stain_lifter")  # cost 60, ship_hours 2
 

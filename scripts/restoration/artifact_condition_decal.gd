@@ -20,9 +20,12 @@ extends Node3D
 ## Authoring/presentation only: it holds no save state and no cleaning rule of its
 ## own — the type->tool mapping lives in data, so this stays artifact-agnostic.
 
-const DEFAULT_OPACITY: float = 0.9
-const FADE_TIME: float = 0.25
-const PARTICLES_NAME := "CleanParticles"
+## Dirt level (0..255). Starts near-opaque and drops by the tool's power each correct
+## stroke; once it reaches MIN_DIRT the condition is cleaned (removed + sparkle).
+const START_DIRT: float = 230.0
+const MIN_DIRT: float = 55.0
+const PARTICLES_NAME := "CleanParticles"  ## The grime puff shown on every clean.
+const SPARKLE_PARTICLES_NAME := "SparkleParticles"  ## The success sparkle.
 
 ## The condition texture. Its file name decides the type. (@tool: live-rebuilds the
 ## visual in the editor so you can see it on the artifact while authoring.)
@@ -41,9 +44,11 @@ const PARTICLES_NAME := "CleanParticles"
 @export var align_to_surface: bool = true
 
 var _removed: bool = false
+var _dirt: float = START_DIRT
 var _tint_color: Color = Color.WHITE
 var _visual: Node3D  ## A Decal (Forward+/Mobile) or a sticker MeshInstance3D (compat).
-var _particles: GPUParticles3D
+var _particles: GPUParticles3D  ## Grime puff (every clean).
+var _sparkle: GPUParticles3D  ## Success sparkle (when fully cleaned).
 
 
 func _ready() -> void:
@@ -118,14 +123,23 @@ func tint(color: Color) -> void:
 
 
 func _apply_tint() -> void:
-	var rgba := Color(_tint_color.r, _tint_color.g, _tint_color.b, DEFAULT_OPACITY)
 	if _visual is Decal:
 		(_visual as Decal).texture_albedo = texture
-		(_visual as Decal).modulate = rgba
 	elif _visual is MeshInstance3D:
 		var mat := (_visual as MeshInstance3D).material_override as StandardMaterial3D
 		if mat != null:
 			mat.albedo_texture = texture
+	_set_visual_alpha(clampf(_dirt / 255.0, 0.0, 1.0))
+
+
+## Sets the decal's opacity, keeping its tint colour.
+func _set_visual_alpha(alpha: float) -> void:
+	var rgba := Color(_tint_color.r, _tint_color.g, _tint_color.b, alpha)
+	if _visual is Decal:
+		(_visual as Decal).modulate = rgba
+	elif _visual is MeshInstance3D:
+		var mat := (_visual as MeshInstance3D).material_override as StandardMaterial3D
+		if mat != null:
 			mat.albedo_color = rgba
 
 
@@ -138,27 +152,50 @@ func is_cleaned() -> bool:
 	return _removed
 
 
-## Plays the cleaning burst and fades the decal out. Logic elsewhere already treats
-## the condition as gone; this is purely the visual.
-func play_clean() -> void:
-	_removed = true
-	var particles := _ensure_particles()
-	particles.restart()
-	particles.emitting = true
-	if not (is_inside_tree() and _visual != null and is_instance_valid(_visual)):
-		if _visual != null:
-			_visual.visible = false
-		return
-	var tween := create_tween()
-	if _visual is Decal:
-		tween.tween_property(_visual, "modulate:a", 0.0, FADE_TIME)
-	else:
-		var mat := (_visual as MeshInstance3D).material_override as StandardMaterial3D
-		if mat == null:
-			_visual.visible = false
-			return
-		tween.tween_property(mat, "albedo_color:a", 0.0, FADE_TIME)
-	tween.tween_callback(_hide_visual)
+## Restores the decal to fully dirty and visible. Used when a shared decal node is
+## reused for a different artifact, so each artifact is cleaned independently.
+func reset() -> void:
+	_removed = false
+	_dirt = START_DIRT
+	if _visual != null and is_instance_valid(_visual):
+		_visual.visible = true
+	_set_visual_alpha(clampf(_dirt / 255.0, 0.0, 1.0))
+
+
+## Current dirt level (255 = full, MIN_DIRT = clean threshold). Test/UI seam.
+func dirt() -> float:
+	return _dirt
+
+
+## The grime puff shown on EVERY tool stroke against this condition — right tool or
+## wrong. Purely cosmetic feedback that the tool is doing something here.
+func working_burst() -> void:
+	var dust := _ensure_particles()
+	dust.restart()
+	dust.emitting = true
+
+
+## Removes `power` from the dirt level and fades the decal accordingly. Returns true
+## once the condition is fully cleaned (dirt hit MIN_DIRT) — at which point it plays
+## the success sparkle and hides. Call working_burst() separately for the per-stroke
+## puff; this is the "correct tool" progress step.
+func apply_clean(power: int) -> bool:
+	if _removed:
+		return true
+	_dirt -= float(maxi(1, power))
+	_set_visual_alpha(clampf(_dirt / 255.0, 0.0, 1.0))
+	if _dirt <= MIN_DIRT:
+		_removed = true
+		_play_sparkle()
+		_hide_visual()
+		return true
+	return false
+
+
+func _play_sparkle() -> void:
+	var sparkle := _ensure_sparkle()
+	sparkle.restart()
+	sparkle.emitting = true
 
 
 func _hide_visual() -> void:
@@ -206,3 +243,39 @@ func _default_particle_mesh() -> Mesh:
 	fleck.radial_segments = 6
 	fleck.rings = 3
 	return fleck
+
+
+## The bright "sparkling clean!" burst played once the condition is fully removed.
+func _ensure_sparkle() -> GPUParticles3D:
+	if _sparkle != null and is_instance_valid(_sparkle):
+		return _sparkle
+	if has_node(SPARKLE_PARTICLES_NAME):
+		_sparkle = get_node(SPARKLE_PARTICLES_NAME) as GPUParticles3D
+		return _sparkle
+	_sparkle = GPUParticles3D.new()
+	_sparkle.name = SPARKLE_PARTICLES_NAME
+	_sparkle.emitting = false
+	_sparkle.one_shot = true
+	_sparkle.amount = 32
+	_sparkle.lifetime = 0.8
+	_sparkle.explosiveness = 1.0
+	var mat := ParticleProcessMaterial.new()
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	mat.emission_sphere_radius = maxf(0.05, box_size * 0.5)
+	mat.direction = Vector3(0.0, 1.0, 0.0)
+	mat.spread = 50.0
+	mat.initial_velocity_min = 0.5
+	mat.initial_velocity_max = 1.3
+	mat.gravity = Vector3(0.0, 0.25, 0.0)  # drift upward — celebratory, not falling
+	mat.scale_min = 0.5
+	mat.scale_max = 1.2
+	mat.color = Color(1.0, 0.97, 0.8, 1.0)  # warm white sparkle
+	_sparkle.process_material = mat
+	var star := SphereMesh.new()
+	star.radius = 0.012
+	star.height = 0.024
+	star.radial_segments = 6
+	star.rings = 3
+	_sparkle.draw_pass_1 = star
+	add_child(_sparkle)
+	return _sparkle

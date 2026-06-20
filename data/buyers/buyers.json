@@ -20,7 +20,9 @@
         "open": ["A fine piece. I could give you ₱{offer} for it.", "Provenance matters to me. ₱{offer}, to start."],
         "counter": ["Hm. I can come up to ₱{offer}.", "For the right piece, ₱{offer}."],
         "accept": ["Sold. It will be well cared for.", "A pleasure doing business."],
-        "walk": ["Then we have no deal. Good day.", "Too rich for me. I'll pass."]
+        "walk": ["Then we have no deal. Good day.", "Too rich for me. I'll pass."],
+        "banter_warm": ["Ah, provenance — now you have my attention.", "A piece with a story is worth more."],
+        "banter_cool": ["Flattery won't change an appraisal.", "I value the object, not the patter."]
       }
     },
     {
@@ -42,7 +44,9 @@
         "open": ["I'll take it off your hands for ₱{offer}, final-ish.", "Eh, ₱{offer}. It's basically scrap."],
         "counter": ["Fine, fine — ₱{offer}, and that's me being generous.", "₱{offer}. Don't push it."],
         "accept": ["Deal. Pleasure squeezing you.", "Sold. I'll double it by Friday."],
-        "walk": ["Nah, keep it then.", "You're dreaming. I'm out."]
+        "walk": ["Nah, keep it then.", "You're dreaming. I'm out."],
+        "banter_warm": ["Heh, you drive a hard bargain.", "Alright, you've got some hustle."],
+        "banter_cool": ["Save the sales pitch.", "History? I sell to tourists, pal."]
       }
     },
     {
@@ -64,7 +68,9 @@
         "open": ["This is so cute! Could you do ₱{offer}?", "I'm on a budget... ₱{offer}?"],
         "counter": ["Okay, I can stretch to ₱{offer}.", "Maybe ₱{offer}? That's most of my allowance."],
         "accept": ["Yay! Thank you so much!", "Deal! It'll look perfect on my shelf."],
-        "walk": ["Aw, that's too much for me. Sorry!", "I can't afford that. Maybe next time."]
+        "walk": ["Aw, that's too much for me. Sorry!", "I can't afford that. Maybe next time."],
+        "banter_warm": ["Aw, that's actually really sweet!", "Okay okay, you're convincing me!"],
+        "banter_cool": ["Um, that's a lot of pressure...", "I— I don't know about that."]
       }
     },
     {
@@ -86,7 +92,9 @@
         "open": ["It's for my wife's birthday. ₱{offer}?", "If it's truly restored well — ₱{offer}."],
         "counter": ["For her, I can manage ₱{offer}.", "₱{offer}, if you promise it's spotless."],
         "accept": ["She'll love it. Thank you.", "Sold — wrap it gently, please."],
-        "walk": ["I'll find something else for her, sorry.", "That's beyond the occasion. No thank you."]
+        "walk": ["I'll find something else for her, sorry.", "That's beyond the occasion. No thank you."],
+        "banter_warm": ["Oh, she would adore that story.", "You understand — it has to be special."],
+        "banter_cool": ["Please don't push, this is personal.", "That's not how I want to choose a gift."]
       }
     },
     {
@@ -108,7 +116,9 @@
         "open": ["Condition is everything. ₱{offer} as it stands.", "I inspected it closely — ₱{offer}."],
         "counter": ["The work is decent. ₱{offer}.", "I'll allow ₱{offer} for that finish."],
         "accept": ["Acceptable. A clean piece. Done.", "Sold — proper conservation pays."],
-        "walk": ["The flaws aren't worth that. No.", "I only pay for quality. Pass."]
+        "walk": ["The flaws aren't worth that. No.", "I only pay for quality. Pass."],
+        "banter_warm": ["Honesty about flaws — I respect that.", "Good. A careful seller, then."],
+        "banter_cool": ["Charm doesn't improve the finish.", "Spare me; I judge by the piece."]
       }
     },
     {
@@ -130,7 +140,9 @@
         "open": ["Interesting marking... ₱{offer}, if you don't ask why.", "I'll offer ₱{offer}. Tell no one."],
         "counter": ["Discretion has a price. ₱{offer}.", "Very well — ₱{offer}, and we never spoke."],
         "accept": ["Good. You'll see me again.", "Done. Keep this between us."],
-        "walk": ["Then I was never here.", "A pity. Perhaps another piece, another day."]
+        "walk": ["Then I was never here.", "A pity. Perhaps another piece, another day."],
+        "banter_warm": ["...You know your history. Interesting.", "Quiet and informed. I like that."],
+        "banter_cool": ["Lower your voice.", "I don't respond well to pressure."]
       }
     }
   ]

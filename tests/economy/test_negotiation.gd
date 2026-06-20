@@ -76,3 +76,44 @@ func test_preferred_category_raises_the_ceiling() -> void:
 func test_budget_clamps_the_ceiling() -> void:
 	var n := Negotiation.open(_persona({"budget_range": [10, 50]}), 1000, 100, "jewelry")
 	assert_eq(n.ceiling, 50, "a buyer never pays past its budget")
+
+
+# --- Conversational banter ---------------------------------------------------
+
+
+func test_favorable_banter_raises_the_ceiling() -> void:
+	var n := Negotiation.open(_persona({"negotiation_style": "appraising"}), 200, 100, "metal")
+	var before := n.ceiling
+	n.banter("history")  # an appraiser warms to provenance
+	assert_gt(n.ceiling, before)
+
+
+func test_offputting_banter_lowers_the_ceiling() -> void:
+	var n := Negotiation.open(_persona({"negotiation_style": "sentimental"}), 200, 100, "metal")
+	var before := n.ceiling
+	n.banter("press")  # a sentimental buyer is put off by pressure
+	assert_lt(n.ceiling, before)
+
+
+func test_a_banter_move_is_usable_once() -> void:
+	var n := Negotiation.open(_persona({"negotiation_style": "appraising"}), 200, 100, "metal")
+	n.banter("history")
+	var mood_after := n.mood
+	n.banter("history")  # second time is a no-op
+	assert_eq(n.mood, mood_after)
+	assert_false(n.available_moves().has("history"))
+
+
+func test_honest_banter_recovers_a_misrepresentation_penalty() -> void:
+	var n := Negotiation.open(_persona({"negotiation_style": "exacting"}), 200, 100, "metal", false)
+	var before := n.ceiling
+	n.banter("honest")
+	assert_true(n.honest, "coming clean sets the deal honest")
+	assert_gt(n.ceiling, before)
+
+
+func test_banter_records_the_exchange() -> void:
+	var n := Negotiation.open(_persona(), 200, 100, "metal")
+	var before := n.history.size()
+	n.banter("history")
+	assert_eq(n.history.size(), before + 2, "the player's line and the buyer's reply")

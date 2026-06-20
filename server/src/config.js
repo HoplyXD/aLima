@@ -24,6 +24,11 @@ const config = {
   ),
   rateLimitScan: asInt(process.env.RATE_LIMIT_SCAN, 30),
   rateLimitPortal: asInt(process.env.RATE_LIMIT_PORTAL, 10),
+  rateLimitNegotiate: asInt(process.env.RATE_LIMIT_NEGOTIATE, 20),
+  // LLM buyer banter (MKT-R3). When the key is absent the endpoint returns a
+  // deterministic fallback so the exhibit never depends on a live model.
+  anthropicApiKey: asString(process.env.ANTHROPIC_API_KEY, ''),
+  anthropicModel: asString(process.env.ANTHROPIC_MODEL, 'claude-opus-4-8'),
   nodeEnv: asString(process.env.NODE_ENV, 'development'),
 };
 

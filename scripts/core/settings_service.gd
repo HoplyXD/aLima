@@ -21,6 +21,10 @@ const RESOLUTIONS: Array[Vector2i] = [
 var resolution: Vector2i = Vector2i(1920, 1080)
 var fullscreen: bool = false
 var renderer: String = DEFAULT_RENDERER
+## Use live online services (LLM buyer banter, live scanner) when reachable. Default
+## on; the marketplace falls back to the offline deterministic banter when this is off
+## or a request fails (no connection).
+var online_services: bool = true
 
 var _config_path: String = CONFIG_PATH
 
@@ -48,6 +52,20 @@ func set_fullscreen(value: bool) -> void:
 	fullscreen = value
 	_save()
 	apply_display()
+
+
+# --- Online services ---------------------------------------------------------
+
+
+func set_online_services(value: bool) -> void:
+	online_services = value
+	_save()
+
+
+## Whether the live online path (LLM banter) should be attempted. The marketplace
+## still falls back to the offline engine if an actual request fails.
+func online_enabled() -> bool:
+	return online_services
 
 
 ## Applies the window size / mode. No-op when there is no real window (headless tests).
@@ -123,6 +141,7 @@ func _load() -> void:
 	)
 	fullscreen = bool(cfg.get_value("display", "fullscreen", fullscreen))
 	renderer = str(cfg.get_value("rendering", "renderer", DEFAULT_RENDERER))
+	online_services = bool(cfg.get_value("services", "online", online_services))
 
 
 func _save() -> void:
@@ -131,6 +150,7 @@ func _save() -> void:
 	cfg.set_value("display", "height", resolution.y)
 	cfg.set_value("display", "fullscreen", fullscreen)
 	cfg.set_value("rendering", "renderer", renderer)
+	cfg.set_value("services", "online", online_services)
 	cfg.save(_config_path)
 
 

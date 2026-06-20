@@ -1,7 +1,7 @@
 {
   "name": "alima-server",
   "version": "0.1.0",
-  "description": "aLima backend: scanner cache and Portal proxy",
+  "description": "aLima backend: scanner cache, Portal proxy, and LLM buyer banter",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -11,6 +11,7 @@
   "keywords": ["alima", "godot", "portal", "scanner"],
   "license": "UNLICENSED",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.69.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0"

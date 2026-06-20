@@ -74,12 +74,10 @@ const PHOTO_HALF_W: float = 0.78
 const PHOTO_HALF_H: float = 0.56
 const BLEMISH_RADIUS: float = 0.13  ## Pick radius for a blemish hotspot.
 const PHOTO_COLOR := Color(0.90, 0.87, 0.79)
-const DECAL_OPACITY: float = 0.9  ## Decal opacity — high so the grime reads clearly on the artifact.
-const BLEMISH_FADE_TIME: float = 0.25  ## Seconds a cleaned decal takes to fade out.
 
-## Placeholder albedo for grime decals — the per-decal tint colours it to the
-## condition's journal colour. Swapped for authored grime textures later (Phase 13/20).
-const DECAL_TEXTURE := preload("res://icon.svg")
+## Data-driven conditions/blemishes are built from the same scene devs place by hand,
+## so they share its texture/particles/fade behaviour.
+const CONDITION_DECAL_SCENE := preload("res://scenes/restoration/artifact_condition_decal.tscn")
 
 var _photo_mode: bool = false
 ## Conditions mode keeps the 3D object (and clasp) visible and scatters condition
@@ -94,6 +92,9 @@ var _blemishes: Dictionary = {}
 ## name -> {node, required_tool, type_id, removed}. Distinct from `_blemishes` (which
 ## is data-driven) so authored event-artifact conditions clean with their own tool.
 var _authored: Dictionary = {}
+## Per-instance layout randomisation phase so the same template's conditions land in
+## different spots on different artifacts (seeded by the instance, set on enter_*_mode).
+var _layout_phase: float = 0.0
 
 
 func _ready() -> void:
@@ -350,13 +351,16 @@ func _ray_sphere(origin: Vector3, direction: Vector3, center: Vector3, radius: f
 ## builds one projected Decal per authored blemish. `colors` maps a blemish type to
 ## its placeholder tint; `removed_ids` hides already-cleaned blemishes so a reopened
 ## photo reconstructs saved progress.
-func enter_photo_mode(decals: Array, removed_ids: Array, colors: Dictionary) -> void:
+func enter_photo_mode(
+	decals: Array, removed_ids: Array, colors: Dictionary, textures: Dictionary = {}, seed_value: int = 0
+) -> void:
 	if not _built:
 		_build()
 	_set_photo_mode(true)
 	_clear_blemishes()
+	_seed_layout(seed_value)
 	# The photo plane faces +Z, so every decal projects straight onto its front face.
-	_spawn_decals(decals, removed_ids, colors, Vector3.BACK, _blemish_layout)
+	_spawn_decals(decals, removed_ids, colors, textures, Vector3.BACK, _blemish_layout)
 	reset_orientation()
 
 
@@ -364,31 +368,49 @@ func enter_photo_mode(decals: Array, removed_ids: Array, colors: Dictionary) -> 
 ## this keeps the medallion + clasp, so the clean->open flow still works once every
 ## condition is removed. The medallion itself reads clean — the decals are the only
 ## dirt — so progress is communicated entirely by the discrete spots.
-func enter_conditions_mode(decals: Array, removed_ids: Array, colors: Dictionary) -> void:
+func enter_conditions_mode(
+	decals: Array, removed_ids: Array, colors: Dictionary, textures: Dictionary = {}, seed_value: int = 0
+) -> void:
 	if not _built:
 		_build()
 	_set_photo_mode(false)
 	_conditions_mode = true
 	set_fully_clean()
 	_clear_blemishes()
+	_seed_layout(seed_value)
 	# Conditions wrap the sphere, so each decal projects along its own outward normal.
-	_spawn_decals(decals, removed_ids, colors, Vector3.ZERO, _condition_layout)
+	_spawn_decals(decals, removed_ids, colors, textures, Vector3.ZERO, _condition_layout)
 	reset_orientation()
 
 
-## Builds one projected Decal per grime mark. `fixed_normal` is the projection normal
-## for flat templates (the photo plane); pass Vector3.ZERO to project each decal along
-## its own outward surface normal (conditions on the sphere). `layout` returns a local
-## centre for decal `index` of `count`.
+## Sets the per-instance layout phase from a seed (e.g. the instance uid) so the same
+## template's conditions scatter to different spots on different artifacts.
+func _seed_layout(seed_value: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	_layout_phase = rng.randf() * TAU
+
+
+## Builds one grime decal per mark. `fixed_normal` is the projection normal for flat
+## templates (the photo plane); pass Vector3.ZERO to face each decal along its own
+## outward surface normal (conditions on the sphere). `textures` maps a condition type
+## to its authored PNG; `layout` returns a local centre for decal `index` of `count`.
 func _spawn_decals(
-	decals: Array, removed_ids: Array, colors: Dictionary, fixed_normal: Vector3, layout: Callable
+	decals: Array,
+	removed_ids: Array,
+	colors: Dictionary,
+	textures: Dictionary,
+	fixed_normal: Vector3,
+	layout: Callable
 ) -> void:
 	var count := decals.size()
 	var index := 0
 	for decal in decals:
 		var center: Vector3 = layout.call(index, count)
 		var normal := fixed_normal if fixed_normal != Vector3.ZERO else center.normalized()
-		var node := _make_decal(center, colors.get(decal.type, Color(0.5, 0.5, 0.5)), normal)
+		var node := _make_decal(
+			center, colors.get(decal.type, Color(0.5, 0.5, 0.5)), normal, textures.get(decal.type)
+		)
 		add_child(node)
 		var removed: bool = removed_ids.has(decal.id)
 		node.visible = not removed
@@ -411,9 +433,11 @@ func is_condition_mode() -> bool:
 func _condition_layout(index: int, count: int) -> Vector3:
 	var golden := PI * (3.0 - sqrt(5.0))
 	var t := (float(index) + 0.5) / float(maxi(count, 1))
-	var y := lerpf(0.6, -0.6, t)
+	# _layout_phase (seeded per instance) rotates the spiral and jitters height so the
+	# same template's conditions land in different spots on different artifacts.
+	var y := clampf(lerpf(0.6, -0.6, t) + sin(_layout_phase * 3.0 + float(index)) * 0.08, -0.82, 0.82)
 	var ring := sqrt(maxf(0.0, 1.0 - y * y))
-	var theta := golden * float(index)
+	var theta := golden * float(index) + _layout_phase
 	var x := cos(theta) * ring
 	var z := absf(sin(theta) * ring) + 0.2
 	return Vector3(x, y, z).normalized() * (_radius + BLEMISH_RADIUS * 0.4)
@@ -460,43 +484,30 @@ func ray_test_blemish(origin: Vector3, direction: Vector3) -> Dictionary:
 	return best
 
 
-## Marks a cleaned blemish removed and fades its decal out. Presentation only; the
-## view calls this after RestorationService confirms the matching tool removed it.
+## The per-stroke grime puff for a blemish (every tool use, right tool or wrong).
+func blemish_working_burst(blemish_id: String) -> void:
+	if not _blemishes.has(blemish_id):
+		return
+	var node: Variant = _blemishes[blemish_id]["node"]
+	if node != null and node.has_method("working_burst"):
+		node.working_burst()
+
+
+## Marks a cleaned blemish removed and plays its success sparkle + fade. Presentation
+## only; the view calls this after RestorationService confirms the tool removed it.
 func remove_blemish(blemish_id: String) -> void:
 	if not _blemishes.has(blemish_id):
 		return
 	var entry: Dictionary = _blemishes[blemish_id]
 	entry["removed"] = true
-	var node: Node3D = entry["node"]
+	var node: Variant = entry["node"]
 	if node == null:
 		return
-	# Logic already treats the decal as gone (removed flag); the fade is cosmetic, so
-	# the decal lifts off the surface by lowering its opacity before it hides.
-	if is_inside_tree():
-		_fade_decal_out(node)
+	# A big "power" fully clears the dirt in one go (the service is single-stroke),
+	# which triggers the sparkle and hides the decal.
+	if node.has_method("apply_clean"):
+		node.apply_clean(99999)
 	else:
-		node.visible = false
-
-
-## Fades a decal out by lerping its alpha to 0, then hides it — works for both a
-## projected Decal (modulate) and a sticker MeshInstance3D (material albedo_color).
-func _fade_decal_out(node: Node3D) -> void:
-	var tween := create_tween()
-	if node is Decal:
-		tween.tween_property(node, "modulate:a", 0.0, BLEMISH_FADE_TIME)
-		tween.tween_callback(_hide_decal.bind(node))
-		return
-	var mesh_node := node as MeshInstance3D
-	var mat := mesh_node.material_override as StandardMaterial3D if mesh_node != null else null
-	if mat == null:
-		node.visible = false
-		return
-	tween.tween_property(mat, "albedo_color:a", 0.0, BLEMISH_FADE_TIME)
-	tween.tween_callback(_hide_decal.bind(node))
-
-
-func _hide_decal(node: Node3D) -> void:
-	if is_instance_valid(node):
 		node.visible = false
 
 
@@ -550,12 +561,19 @@ func _clear_blemishes() -> void:
 ## condition (tint + required tool), aims it at the surface, and registers it as a
 ## cleanable hotspot. Idempotent: safe to call again on reload (cleaned ones stay
 ## cleaned because the node keeps its own removed flag).
-func register_authored_conditions(repo: DataRepository) -> void:
+## `seed_value` (e.g. the instance uid hash) makes a shared placed decal land in a
+## different spot per artifact and resets it to fully dirty, so each artifact is
+## cleaned independently — cleaning one no longer cleans them all.
+func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> void:
 	_authored.clear()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
 	for raw in _find_authored_decals(self):
 		# Duck-typed (no static ArtifactConditionDecal reference) so this @tool script
 		# always compiles in the editor and the artifact geometry still builds there.
 		var decal: Variant = raw
+		if decal.has_method("reset"):
+			decal.reset()  # fresh dirt for this artifact
 		var slug: String = decal.condition_slug()
 		var condition := _match_condition(repo, slug)
 		var color := Color(0.6, 0.6, 0.6)
@@ -566,15 +584,27 @@ func register_authored_conditions(repo: DataRepository) -> void:
 			required_tool = condition.cleaning_tool
 			type_id = condition.id
 		decal.tint(color)
-		var local_pos: Vector3 = decal.position
-		if decal.align_to_surface and not local_pos.is_zero_approx():
-			_orient_sticker(decal, local_pos.normalized())
+		if decal.align_to_surface:
+			# Scatter the placed decal to a random front-surface spot for this instance.
+			var pos := _random_surface_point(rng, decal.box_size)
+			decal.position = pos
+			_orient_sticker(decal, pos.normalized())
 		_authored[decal.name] = {
 			"node": decal,
 			"required_tool": required_tool,
 			"type_id": type_id,
 			"removed": decal.is_cleaned(),
 		}
+
+
+## A random point on the front hemisphere of the medallion surface (seeded for
+## per-instance stability).
+func _random_surface_point(rng: RandomNumberGenerator, decal_size: float) -> Vector3:
+	var ang := rng.randf() * TAU
+	var y := rng.randf_range(-0.55, 0.6)
+	var ring := sqrt(maxf(0.0, 1.0 - y * y))
+	var dir := Vector3(cos(ang) * ring, y, absf(sin(ang) * ring) + 0.2).normalized()
+	return dir * (_radius + decal_size * 0.2)
 
 
 ## Ray-tests the uncleaned authored decals. Returns {hit, condition_id}.
@@ -608,15 +638,28 @@ func authored_type_id(condition_id: String) -> String:
 	return str(_authored.get(condition_id, {}).get("type_id", ""))
 
 
-## Marks an authored condition cleaned and plays its particle burst + fade.
-func clean_authored(condition_id: String) -> void:
+## Plays the per-stroke grime puff on an authored condition (every tool use).
+func authored_working_burst(condition_id: String) -> void:
 	if not _authored.has(condition_id):
 		return
+	var decal: Variant = _authored[condition_id]["node"]
+	if decal != null and decal.has_method("working_burst"):
+		decal.working_burst()
+
+
+## Applies one correct-tool stroke of `power` to an authored condition: fades it a
+## step and, once fully cleaned, plays the success sparkle. Returns true when cleaned.
+func apply_authored_clean(condition_id: String, power: int) -> bool:
+	if not _authored.has(condition_id):
+		return false
 	var entry: Dictionary = _authored[condition_id]
-	entry["removed"] = true
 	var decal: Variant = entry["node"]
-	if decal != null and decal.has_method("play_clean"):
-		decal.play_clean()
+	if decal == null or not decal.has_method("apply_clean"):
+		return false
+	var cleaned: bool = decal.apply_clean(power)
+	if cleaned:
+		entry["removed"] = true
+	return cleaned
 
 
 func has_authored_conditions() -> bool:
@@ -642,9 +685,15 @@ func get_authored_global_center(condition_id: String) -> Vector3:
 func _find_authored_decals(root: Node) -> Array:
 	# Identified by behaviour (a Node3D exposing condition_slug) rather than the
 	# ArtifactConditionDecal class, so this @tool script carries no class dependency.
+	# Skip the data-driven blemish decals (named "GrimeDecal*") — those are the same
+	# scene but managed via `_blemishes`, not as author-placed conditions.
 	var found: Array = []
 	for child in root.get_children():
-		if child is Node3D and child.has_method("condition_slug"):
+		if (
+			child is Node3D
+			and child.has_method("condition_slug")
+			and not String(child.name).begins_with("GrimeDecal")
+		):
 			found.append(child)
 		found.append_array(_find_authored_decals(child))
 	return found
@@ -674,84 +723,33 @@ func _blemish_layout(index: int, count: int) -> Vector3:
 	var row := index / cols
 	var fx := (float(col) + 0.5) / float(cols)
 	var fy := (float(row) + 0.5) / float(rows)
-	var x := lerpf(-PHOTO_HALF_W * 0.7, PHOTO_HALF_W * 0.7, fx)
-	var y := lerpf(PHOTO_HALF_H * 0.7, -PHOTO_HALF_H * 0.7, fy)
+	var x := lerpf(-PHOTO_HALF_W * 0.7, PHOTO_HALF_W * 0.7, fx) + sin(_layout_phase + index) * 0.05
+	var y := lerpf(PHOTO_HALF_H * 0.7, -PHOTO_HALF_H * 0.7, fy) + cos(_layout_phase * 1.3 + index) * 0.04
 	return Vector3(x, y, 0.04)
 
 
 ## True when the renderer can draw engine Decal nodes (Forward+/Mobile have a
-## RenderingDevice; gl_compatibility / OpenGL does not). Drives the decal vs sticker
-## choice so PC players get projected decals and Compatibility users get a fallback.
+## RenderingDevice; gl_compatibility / OpenGL does not). The condition decal scene
+## picks the right visual internally; kept for callers/tests that ask.
 static func decals_supported() -> bool:
 	return RenderingServer.get_rendering_device() != null
 
 
-## Builds one grime decal for the current renderer: a projected engine Decal where
-## supported, else a flat textured quad "sticker" that draws in gl_compatibility.
-## `normal` is the outward surface normal. Translucent so the artifact reads through;
-## an authored decal texture replaces the soft dot later (Phase 13/20).
-func _make_decal(center: Vector3, color: Color, normal: Vector3) -> Node3D:
-	if decals_supported():
-		return _make_decal_projector(center, color, normal)
-	return _make_decal_sticker(center, color, normal)
-
-
-## A real projected Decal (Forward+/Mobile). Aligns +Y to the normal so it projects
-## (down -Y) into the surface.
-func _make_decal_projector(center: Vector3, color: Color, normal: Vector3) -> Decal:
-	var decal := Decal.new()
-	decal.name = "GrimeDecal"
-	decal.texture_albedo = DECAL_TEXTURE
-	var footprint := BLEMISH_RADIUS * 3.0
-	decal.size = Vector3(footprint, BLEMISH_RADIUS * 2.4, footprint)
-	decal.modulate = Color(color.r, color.g, color.b, DECAL_OPACITY)
-	decal.albedo_mix = 1.0
-	decal.upper_fade = 0.0
-	decal.lower_fade = 0.0
-	decal.position = center
-	_orient_projector(decal, normal)
-	return decal
-
-
-## A flat textured quad "sticker" (Compatibility fallback). Its face (+Z) points along
-## the normal so it lies flush on the surface.
-func _make_decal_sticker(center: Vector3, color: Color, normal: Vector3) -> MeshInstance3D:
-	var size := BLEMISH_RADIUS * 2.6
-	var quad := QuadMesh.new()
-	quad.size = Vector2(size, size)
-	var node := MeshInstance3D.new()
+## Builds one data-driven condition as an ArtifactConditionDecal instance — the same
+## scene devs place by hand — so it carries the correct condition texture, the grime
+## puff / sparkle particles, and the dirt fade. `normal` is the outward surface normal
+## it faces. Tinted to the condition's journal colour. Returns the instanced node.
+func _make_decal(center: Vector3, color: Color, normal: Vector3, texture: Texture2D) -> Node3D:
+	var node: Variant = CONDITION_DECAL_SCENE.instantiate()
 	node.name = "GrimeDecal"
-	node.mesh = quad
-	node.material_override = make_decal_material(DECAL_TEXTURE, color, DECAL_OPACITY)
+	node.align_to_surface = false  # we orient it explicitly below
+	node.box_size = BLEMISH_RADIUS * 2.6
+	if texture != null:
+		node.texture = texture
+	node.tint(color)
 	node.position = center
 	_orient_sticker(node, normal)
 	return node
-
-
-## Builds a flat-sticker material: an alpha-blended, double-sided StandardMaterial3D
-## showing `texture` tinted to `color` at `opacity`. Works in any renderer.
-static func make_decal_material(
-	texture: Texture2D, color: Color, opacity: float
-) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = texture
-	mat.albedo_color = Color(color.r, color.g, color.b, opacity)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED  # readable from both sides
-	mat.roughness = 1.0
-	mat.metallic = 0.0
-	return mat
-
-
-## Aligns a projector Decal's +Y axis to the surface normal (Decal projects down -Y).
-func _orient_projector(node: Node3D, normal: Vector3) -> void:
-	var n := normal.normalized()
-	if n.is_zero_approx():
-		return
-	var reference := Vector3.RIGHT if absf(n.dot(Vector3.UP)) > 0.99 else Vector3.UP
-	var x_axis := reference.cross(n).normalized()
-	var z_axis := x_axis.cross(n).normalized()
-	node.basis = Basis(x_axis, n, z_axis)
 
 
 ## Aligns a flat decal quad's face (+Z, the QuadMesh normal) to the surface normal so
