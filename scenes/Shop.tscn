@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dgc2dadcifuf2"]
 
-[ext_resource type="Texture2D" uid="uid://prbhmdosvbwi" path="res://assets/Characters/Artisan.png" id="2_eo1la"]
+[ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="2_eo1la"]
 [ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="4_yltc6"]
 [ext_resource type="Script" uid="uid://dv20ba7olxrka" path="res://scripts/shop/shop_controller.gd" id="5_ctrl"]
@@ -91,6 +91,12 @@ mesh = SubResource("QuadMesh_ohui2")
 [node name="Visitor" type="Sprite3D" parent="." unique_id=1414777339]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.0851084, 0, 2.8192577, -3.2)
 pixel_size = 0.0015
+billboard = 1
+texture = ExtResource("2_eo1la")
+
+[node name="Visitor2" type="Sprite3D" parent="." unique_id=588765827]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.0072434396, 2.4741929, 3.7559237, -3.145275)
+pixel_size = 0.001
 billboard = 1
 texture = ExtResource("2_eo1la")
 
