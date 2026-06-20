@@ -44,12 +44,20 @@ func _ray_to(tool_id: String) -> Dictionary:
 
 
 func _first_material(tool_id: String) -> StandardMaterial3D:
-	var prop := _tray.get_prop(tool_id)
-	for child in prop.get_children():
+	return _find_mesh_material(_tray.get_prop(tool_id))
+
+
+## The prop's geometry now lives under a child node, so search recursively for the
+## first MeshInstance3D's StandardMaterial3D (the one the highlight toggles).
+func _find_mesh_material(node: Node) -> StandardMaterial3D:
+	for child in node.get_children():
 		if child is MeshInstance3D:
 			var mat := (child as MeshInstance3D).material_override
 			if mat is StandardMaterial3D:
 				return mat as StandardMaterial3D
+		var nested := _find_mesh_material(child)
+		if nested != null:
+			return nested
 	return null
 
 

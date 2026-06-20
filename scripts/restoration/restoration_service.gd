@@ -137,6 +137,28 @@ func get_workbench_tools() -> Array[ToolDefinition]:
 	return out
 
 
+## Durability of each bench tool: tool_id -> {current: int, max: int}. An infinite
+## tool reports max <= 0. For the tool-tray durability bars. Empty in the legacy/seed
+## id-set case (no durability instances).
+func get_workbench_durability() -> Dictionary:
+	var out := {}
+	var loadout: Array = _game_state.save_state.loop.workbench_tools
+	for raw in _game_state.save_state.loop.owned_tools:
+		if not (raw is Dictionary):
+			continue
+		var uid := ModelUtils.as_string(raw.get("uid"))
+		if not loadout.has(uid):
+			continue
+		var tool_id := ModelUtils.as_string(raw.get("tool_id"))
+		if out.has(tool_id):
+			continue
+		out[tool_id] = {
+			"current": ModelUtils.as_int(raw.get("durability")),
+			"max": ModelUtils.as_int(raw.get("max_durability")),
+		}
+	return out
+
+
 ## True if the player currently owns the named tool (id-set ownership or a usable
 ## durability-tracked instance).
 func is_tool_owned(tool_id: String) -> bool:

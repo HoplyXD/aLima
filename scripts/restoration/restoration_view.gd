@@ -221,7 +221,7 @@ func _on_storage_pressed() -> void:
 func _on_storage_closed_from_bench() -> void:
 	_rebuild_tool_palette()
 	var tools := _service.get_workbench_tools()
-	_tool_tray.build_tools(tools)
+	_tool_tray.build_tools(tools, _service.get_workbench_durability())
 	# If the tool the player was holding is no longer equipped, put it down.
 	var still_equipped := false
 	for tool in tools:
@@ -303,7 +303,7 @@ func load_instance(uid: String) -> void:
 	_title.text = template.display_name
 	_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()
-	_tool_tray.build_tools(_service.get_workbench_tools())
+	_tool_tray.build_tools(_service.get_workbench_tools(), _service.get_workbench_durability())
 	reset_view()
 	_refresh(inst, template)
 	_caption_label.text = "Rotate to inspect, then pick up a tool from the bench and work the surface."
@@ -711,9 +711,10 @@ func _show_empty_state() -> void:
 	_value_label.text = ""
 	_damage_label.text = ""
 	_clasp_prompt.visible = false
-	for child in _tool_container.get_children():
-		child.queue_free()
-	_tool_tray.build_tools([] as Array[ToolDefinition])
+	# The bench tools (and their durability/condition panels) still show even with no
+	# artifact on the bench, so the player can inspect their kit.
+	_rebuild_tool_palette()
+	_tool_tray.build_tools(_service.get_workbench_tools(), _service.get_workbench_durability())
 
 
 func _show_invalid_state() -> void:
