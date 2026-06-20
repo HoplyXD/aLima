@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://73tkixdmy3y6"]
+
+[ext_resource type="Script" uid="uid://c5ck73v2hpwt0" path="res://texture_rect.gd" id="1_06t4h"]
+
+[node name="Main Menu" type="Control" unique_id=1017043152]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=883461176]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -133.0
+offset_right = 167.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_06t4h")
