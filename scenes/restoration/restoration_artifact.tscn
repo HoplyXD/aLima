@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://duypha7bbdp6v"]
+[gd_scene format=3 uid="uid://duypha7bbdp6v"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_artifact"]
 [ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_cond"]
