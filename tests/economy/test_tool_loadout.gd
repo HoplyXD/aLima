@@ -75,12 +75,12 @@ func _set_bench(uids: Array) -> void:
 	GameState.save_state.loop.workbench_tools = typed
 
 
-func test_equip_to_empty_slot_appends() -> void:
+func test_equip_to_empty_slot_pins_to_that_slot() -> void:
 	var uids := _grant(2)
 	_set_bench([])
 	assert_true(_tools.equip_to_slot(uids[0], 0))
-	assert_true(_tools.equip_to_slot(uids[1], 3))  # trailing empty slot → first free
-	assert_eq(GameState.save_state.loop.workbench_tools, [uids[0], uids[1]])
+	assert_true(_tools.equip_to_slot(uids[1], 3))  # pinned to slot 3, slots 1-2 stay empty
+	assert_eq(GameState.save_state.loop.workbench_tools, [uids[0], "", "", uids[1]])
 
 
 func test_equip_to_occupied_slot_replaces_only_that_tool() -> void:
@@ -123,7 +123,8 @@ func test_remove_and_restore_target() -> void:
 	_tools.add_to_workbench(uids[0])
 	_tools.add_to_workbench(uids[1])
 	_tools.remove_from_workbench(uids[0])
-	assert_eq(GameState.save_state.loop.workbench_tools.size(), 1)
+	# Slot 0 is now empty but slot 1 keeps its tool (fixed slots, no shift-left).
+	assert_eq(GameState.save_state.loop.workbench_tools, ["", uids[1]])
 
 	_tools.set_restore_target("obj_42")
 	assert_eq(_tools.get_restore_target(), "obj_42")

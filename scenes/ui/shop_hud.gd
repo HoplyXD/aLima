@@ -27,6 +27,10 @@ const RARITY := [
 	{"name": "Gd", "color": "e6b422"},
 ]
 
+## The diegetic 3D shop props are the primary controls now, so the 2D fallback
+## buttons stay hidden. Flip to true to expose them as an accessibility fallback.
+const FALLBACK_BUTTONS_VISIBLE := false
+
 @onready var _door_button: Button = $DoorButton
 @onready var _workbench_button: Button = $WorkbenchButton
 @onready var _journal_button: Button = $JournalButton
@@ -73,6 +77,7 @@ func _build_storage_button() -> void:
 	_storage_button.focus_mode = Control.FOCUS_ALL
 	_storage_button.add_theme_font_size_override("font_size", 18)
 	_storage_button.pressed.connect(func() -> void: storage_pressed.emit())
+	_storage_button.visible = FALLBACK_BUTTONS_VISIBLE
 	add_child(_storage_button)
 
 
@@ -107,24 +112,27 @@ func set_time(hour: int, minute: int = 0) -> void:
 
 ## Show or hide the four action buttons (e.g. hidden while a dialogue plays).
 func set_actions_visible(value: bool) -> void:
-	_door_button.visible = value
-	_workbench_button.visible = value
-	_journal_button.visible = value
-	_phone_button.visible = value
-	_morning_button.visible = value
+	var v := value and FALLBACK_BUTTONS_VISIBLE
+	_door_button.visible = v
+	_workbench_button.visible = v
+	_journal_button.visible = v
+	_phone_button.visible = v
+	_morning_button.visible = v
 	if _storage_button != null:
-		_storage_button.visible = value
+		_storage_button.visible = v
 
 
 ## Reflects the journal book being presented (centered for reading). While open,
 ## the shop's other action buttons are hidden so they don't overlap or block clicks
 ## on the book; the Journal button stays as the way to put it away.
 func set_journal_open(open: bool) -> void:
-	_door_button.visible = not open
-	_workbench_button.visible = not open
-	_morning_button.visible = not open
+	var v := (not open) and FALLBACK_BUTTONS_VISIBLE
+	_door_button.visible = v
+	_workbench_button.visible = v
+	_morning_button.visible = v
+	_journal_button.visible = v
 	if _storage_button != null:
-		_storage_button.visible = not open
+		_storage_button.visible = v
 	_journal_button.text = "Close Journal" if open else "Journal"
 
 

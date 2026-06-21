@@ -141,10 +141,10 @@ func test_deselect_returns_props_to_rest() -> void:
 	assert_false(_first_material("soft_cloth").emission_enabled, "Deselect clears the highlight")
 
 
-## Recomputes a prop's resting layout position (mirrors RestorationToolTray layout).
+## Recomputes a prop's resting layout position (mirrors RestorationToolTray's fixed
+## slots: build_tools packs tools into slots 0..n-1, each at a fixed slot centre).
 func _tray_rest_for(tool_id: String) -> Vector3:
-	var ids := _tray.get_tool_ids()
-	var i := ids.find(tool_id)
-	var n := ids.size()
-	var x := (float(i) - float(n - 1) / 2.0) * RestorationToolTray.SLOT_SPACING
+	var i := _tray.get_tool_ids().find(tool_id)
+	var centre := float(RestorationToolTray.SLOT_COUNT - 1) / 2.0
+	var x := (float(i) - centre) * RestorationToolTray.SLOT_SPACING
 	return Vector3(x, RestorationToolTray.BENCH_Y, RestorationToolTray.FRONT_Z)

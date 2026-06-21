@@ -140,12 +140,22 @@ func test_five_diegetic_interactables_exist() -> void:
 		assert_is(prop, Interactable3D, "%s should be an Interactable3D" % node_name)
 
 
-func test_workbench_prop_opens_restoration_like_its_button() -> void:
+func test_workbench_prop_opens_restoration() -> void:
 	var prop: Interactable3D = _shop.get_node("Interactables/WorkbenchInteractable")
 	prop.activate()
 	await wait_physics_frames(1)
 	var view: RestorationView = _shop.get_node("RestorationView")
 	assert_true(view.visible, "Clicking the workbench prop opens the restoration view")
+
+
+func test_delivery_box_prop_opens_storage() -> void:
+	# The morning-delivery box is now Storage; the player picks an artifact there and
+	# presses Restore to move into the restoration scene.
+	var prop: Interactable3D = _shop.get_node("Interactables/DeliveryInteractable")
+	prop.activate()
+	await wait_physics_frames(1)
+	var storage: StorageScreen = _shop.get_node("StorageScreen")
+	assert_true(storage.visible, "Clicking the delivery box prop opens storage")
 
 
 func test_door_prop_opens_dialogue_like_its_button() -> void:

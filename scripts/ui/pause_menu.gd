@@ -13,6 +13,7 @@ var _resume_button: Button
 var _res_option: OptionButton
 var _fullscreen_check: CheckButton
 var _online_check: CheckButton
+var _previews_check: CheckButton
 var _renderer_option: OptionButton
 var _apply_renderer_button: Button
 var _status_label: Label
@@ -21,28 +22,45 @@ var _status_label: Label
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS  # keep working while the tree is paused
 	layer = 128  # above every other CanvasLayer
-	_ensure_back_action()
+	_ensure_actions()
 	_build_ui()
 	visible = false
 
 
-## Registers the global "back" action (Backspace) used by overlays to close/back out,
-## so Esc stays reserved for pause/unpause. Idempotent; runs before the main scene.
-func _ensure_back_action() -> void:
-	if InputMap.has_action("back"):
-		return
-	InputMap.add_action("back")
+## Registers the global input scheme: "back" (Esc) closes/returns out of overlays, and
+## "pause" (Space) toggles the pause menu. Idempotent; runs before the main scene.
+func _ensure_actions() -> void:
+	if not InputMap.has_action("back"):
+		InputMap.add_action("back")
+		_bind_key("back", KEY_ESCAPE)
+	if not InputMap.has_action("pause"):
+		InputMap.add_action("pause")
+		_bind_key("pause", KEY_SPACE)
+		_bind_joy("pause", JOY_BUTTON_START)
+
+
+func _bind_key(action: String, keycode: Key) -> void:
 	var event := InputEventKey.new()
-	event.physical_keycode = KEY_BACKSPACE
-	InputMap.action_add_event("back", event)
+	event.physical_keycode = keycode
+	InputMap.action_add_event(action, event)
+
+
+func _bind_joy(action: String, button: JoyButton) -> void:
+	var event := InputEventJoypadButton.new()
+	event.button_index = button
+	InputMap.action_add_event(action, event)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Esc is the dedicated pause toggle. Headless test runs never pause.
+	# Space toggles pause; Esc/Backspace closes the pause menu when it is open (and is
+	# otherwise consumed by whatever overlay is up). Headless test runs never pause.
 	if DisplayServer.get_name() == "headless":
 		return
-	if event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("pause"):
 		toggle()
+		get_viewport().set_input_as_handled()
+	elif _open and event.is_action_pressed("back"):
+		close()
 		get_viewport().set_input_as_handled()
 
 
@@ -125,6 +143,13 @@ func _build_ui() -> void:
 	vbox.add_child(_row("Live buyer banter", _online_check))
 
 	vbox.add_child(HSeparator.new())
+	vbox.add_child(_section("Performance"))
+
+	_previews_check = CheckButton.new()
+	_previews_check.toggled.connect(_on_previews_toggled)
+	vbox.add_child(_row("Artifact 3D previews", _previews_check))
+
+	vbox.add_child(HSeparator.new())
 	vbox.add_child(_section("Renderer"))
 
 	_renderer_option = OptionButton.new()
@@ -153,6 +178,7 @@ func _refresh() -> void:
 	_res_option.select(SettingsService.resolution_index())
 	_fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
 	_online_check.set_pressed_no_signal(SettingsService.online_services)
+	_previews_check.set_pressed_no_signal(SettingsService.artifact_previews)
 
 	var mobile_ok: bool = SettingsService.mobile_supported()
 	_renderer_option.set_item_disabled(0, not mobile_ok)
@@ -177,6 +203,10 @@ func _on_fullscreen_toggled(pressed: bool) -> void:
 
 func _on_online_toggled(pressed: bool) -> void:
 	SettingsService.set_online_services(pressed)
+
+
+func _on_previews_toggled(pressed: bool) -> void:
+	SettingsService.set_artifact_previews(pressed)
 
 
 func _on_apply_renderer() -> void:

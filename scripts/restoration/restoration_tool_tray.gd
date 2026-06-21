@@ -19,7 +19,7 @@ const TOOL_SCENE := preload("res://scenes/restoration/restoration_tool.tscn")
 const BENCH_Y: float = -0.7
 const FRONT_Z: float = 0.55
 const SLOT_COUNT: int = 5  ## The bench has five fixed tool slots.
-const SLOT_SPACING: float = 0.42  ## Spacing between the five fixed slot centres.
+const SLOT_SPACING: float = 0.62  ## Spacing between the five fixed slot centres.
 
 ## Selection pose: the chosen tool lifts off the bench and leans toward the object.
 const SELECT_LIFT: float = 0.12
@@ -75,6 +75,20 @@ func build_slots(slots: Array, durability: Dictionary = {}) -> void:
 ## World-space x of a fixed bench slot (slot 0 leftmost, SLOT_COUNT-1 rightmost).
 func _slot_x(slot: int) -> float:
 	return (float(slot) - float(SLOT_COUNT - 1) / 2.0) * SLOT_SPACING
+
+
+## Pointer-hover feedback: grows the hovered prop (pass "" to clear).
+func set_hovered(tool_id: String) -> void:
+	for id in _props.keys():
+		(_props[id] as RestorationTool).set_hovered(id == tool_id and not tool_id.is_empty())
+
+
+## Updates the durability bars in place (no rebuild) from {tool_id: {current, max}}.
+func update_durability(durability: Dictionary) -> void:
+	for tool_id in _props.keys():
+		var prop: RestorationTool = _props[tool_id]
+		var entry: Dictionary = durability.get(tool_id, {})
+		prop.update_durability(int(entry.get("current", 0)), int(entry.get("max", 0)))
 
 
 ## Highlights/poses the selected prop and rests the rest. Pass "" to deselect all.

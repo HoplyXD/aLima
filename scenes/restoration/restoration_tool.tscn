@@ -1,40 +1,59 @@
-[gd_scene load_steps=5 format=3 uid="uid://bsaqyty17nhpv"]
+[gd_scene format=3 uid="uid://bsaqyty17nhpv"]
 
-[ext_resource type="Script" path="res://scripts/restoration/restoration_tool.gd" id="1_tool"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
-bg_color = Color(0.06, 0.06, 0.08, 0.82)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
+[ext_resource type="Script" uid="uid://c6u4elr76p12a" path="res://scripts/restoration/restoration_tool.gd" id="1_tool"]
+[ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="2_8u2b2"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_body"]
 size = Vector3(0.26, 0.1, 0.22)
 
 [sub_resource type="QuadMesh" id="QuadMesh_info"]
-size = Vector2(0.52, 0.26)
+size = Vector2(0.34, 0.22)
 
-[node name="RestorationTool" type="Node3D"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.06, 0.06, 0.08, 0.82)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
+bg_color = Color(0.12, 0.13, 0.15, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_fill"]
+bg_color = Color(0.36, 0.78, 0.55, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="RestorationTool" type="Node3D" unique_id=1764947723]
 script = ExtResource("1_tool")
 
-[node name="Geometry" type="Node3D" parent="."]
+[node name="Geometry" type="Node3D" parent="." unique_id=190613376]
 
-[node name="Body" type="MeshInstance3D" parent="Geometry"]
+[node name="Body" type="MeshInstance3D" parent="Geometry" unique_id=1705356585]
 mesh = SubResource("BoxMesh_body")
 
-[node name="InfoViewport" type="SubViewport" parent="."]
+[node name="InfoPanel" type="MeshInstance3D" parent="." unique_id=1806335153]
+transform = Transform3D(1.3018137, 0, 0, 0, 1.8811226, 0, 0, 0, 1, 0, -0.28382063, 0.05)
+mesh = SubResource("QuadMesh_info")
+
+[node name="InfoViewport" type="SubViewport" parent="InfoPanel" unique_id=1994467936]
 disable_3d = true
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(360, 180)
+size = Vector2i(320, 206)
 render_target_update_mode = 4
 
-[node name="Panel" type="PanelContainer" parent="InfoViewport"]
+[node name="Panel" type="PanelContainer" parent="InfoPanel/InfoViewport" unique_id=1520647306]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -42,27 +61,44 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_info")
 
-[node name="VBox" type="VBoxContainer" parent="InfoViewport/Panel"]
+[node name="VBox" type="VBoxContainer" parent="InfoPanel/InfoViewport/Panel" unique_id=779719939]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 5
 
-[node name="DurabilityLabel" type="Label" parent="InfoViewport/Panel/VBox"]
+[node name="ToolNameLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=1845070701]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24
+text = "Tool"
+horizontal_alignment = 1
+
+[node name="DurabilityLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=1935114501]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
 text = "Durability"
 
-[node name="DurabilityBar" type="ProgressBar" parent="InfoViewport/Panel/VBox"]
+[node name="DurabilityBar" type="ProgressBar" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=184498754]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 14)
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_bar_fill")
 show_percentage = false
 
-[node name="ConditionsRow" type="HBoxContainer" parent="InfoViewport/Panel/VBox"]
+[node name="Conditions" type="GridContainer" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=732314105]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 6
+columns = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 2
 
-[node name="InfoPanel" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.05)
-mesh = SubResource("QuadMesh_info")
+[node name="ConditionImage" type="TextureRect" parent="InfoPanel/InfoViewport/Panel/VBox/Conditions" unique_id=2097863972]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_8u2b2")
+expand_mode = 1
+stretch_mode = 5

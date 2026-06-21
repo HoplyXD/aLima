@@ -159,6 +159,41 @@ func get_workbench_durability() -> Dictionary:
 	return out
 
 
+## The bench as fixed slots: an Array of length WORKBENCH_SLOTS where each entry is a
+## tool_id, or "" for an empty (or broken) slot. A tool stays pinned to the slot it
+## was equipped into, so a single tool in slot 4 leaves slots 0-3 empty. The legacy
+## id-set case (no durability instances) packs the available tools from slot 0.
+const WORKBENCH_SLOTS: int = 5
+
+
+func get_workbench_slots() -> Array:
+	var slots: Array = []
+	var loadout: Array = _game_state.save_state.loop.workbench_tools
+	if loadout.is_empty() and _game_state.save_state.loop.owned_tools.is_empty():
+		for tool in get_available_tools():
+			slots.append(tool.id)
+	else:
+		for raw_uid in loadout:
+			var uid := ModelUtils.as_string(raw_uid)
+			slots.append(_usable_tool_id_for_uid(uid))
+	while slots.size() < WORKBENCH_SLOTS:
+		slots.append("")
+	return slots
+
+
+## The tool_id of a usable owned instance for `uid`, or "" (unknown/broken/empty slot).
+func _usable_tool_id_for_uid(uid: String) -> String:
+	if uid.is_empty():
+		return ""
+	for raw in _game_state.save_state.loop.owned_tools:
+		if not (raw is Dictionary) or ModelUtils.as_string(raw.get("uid")) != uid:
+			continue
+		if not _instance_usable(raw):
+			return ""
+		return ModelUtils.as_string(raw.get("tool_id"))
+	return ""
+
+
 ## True if the player currently owns the named tool (id-set ownership or a usable
 ## durability-tracked instance).
 func is_tool_owned(tool_id: String) -> bool:
