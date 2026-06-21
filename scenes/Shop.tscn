@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dgc2dadcifuf2"]
 
-[ext_resource type="Texture2D" uid="uid://prbhmdosvbwi" path="res://assets/Characters/Artisan.png" id="2_eo1la"]
+[ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="2_eo1la"]
 [ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="4_yltc6"]
 [ext_resource type="Script" uid="uid://dv20ba7olxrka" path="res://scripts/shop/shop_controller.gd" id="5_ctrl"]
@@ -94,6 +94,12 @@ pixel_size = 0.0015
 billboard = 1
 texture = ExtResource("2_eo1la")
 
+[node name="Visitor2" type="Sprite3D" parent="." unique_id=588765827]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.0072434396, 2.4741929, 3.7559237, -3.145275)
+pixel_size = 0.001
+billboard = 1
+texture = ExtResource("2_eo1la")
+
 [node name="pile_left" type="Marker3D" parent="." unique_id=1001]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -1.5)
 
@@ -157,7 +163,7 @@ shape = SubResource("BoxShape_phone")
 [node name="DeliveryInteractable" type="Area3D" parent="Interactables" unique_id=2048950292]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.45, -3.3887572)
 script = ExtResource("10_inter")
-prompt_text = "Open the morning delivery"
+prompt_text = "Open storage (pick an artifact to restore)"
 
 [node name="Mesh" type="MeshInstance3D" parent="Interactables/DeliveryInteractable" unique_id=330678558]
 material_override = SubResource("Mat_delivery")
@@ -271,6 +277,7 @@ text = "7:00 AM"
 horizontal_alignment = 2
 
 [node name="MorningDeliveryButton" type="Button" parent="HUD" unique_id=528432249]
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -283,9 +290,10 @@ offset_bottom = -190.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 22
-text = "Morning Delivery"
+text = "Alya (Morning Delivery)"
 
 [node name="DoorButton" type="Button" parent="HUD" unique_id=528432250]
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -303,6 +311,7 @@ text = "Door
 (Answer Visitor)"
 
 [node name="WorkbenchButton" type="Button" parent="HUD" unique_id=258395927]
+visible = false
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -318,6 +327,7 @@ theme_override_font_sizes/font_size = 18
 text = "Workbench"
 
 [node name="JournalButton" type="Button" parent="HUD" unique_id=1761002404]
+visible = false
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
@@ -330,6 +340,7 @@ theme_override_font_sizes/font_size = 18
 text = "Journal"
 
 [node name="PhoneButton" type="Button" parent="HUD" unique_id=1964981723]
+visible = false
 anchors_preset = 6
 anchor_left = 1.0
 anchor_top = 0.5
@@ -372,7 +383,7 @@ offset_bottom = 132.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.74, 1)
 theme_override_font_sizes/font_size = 13
-text = "Tip: click the objects in the shop. The buttons are accessibility/fallback controls."
+text = "Tip: click the objects in the shop — the door, workbench, storage box, journal, and phone."
 horizontal_alignment = 1
 
 [node name="DialogueBox" parent="HUD" unique_id=900789323 instance=ExtResource("3_dlgbox")]

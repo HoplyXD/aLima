@@ -108,29 +108,56 @@ func _aim_at(obj: RestorationObject3D, condition_id: String) -> Dictionary:
 	return {"origin": center + Vector3(0.0, 0.0, 3.0), "dir": Vector3(0.0, 0.0, -1.0)}
 
 
-func test_wrong_tool_does_not_clean_authored_decal() -> void:
+func test_wrong_tool_does_not_clean_but_still_puffs() -> void:
 	var obj := await _open_with_object()
 	var condition_id := obj.uncleaned_authored_ids()[0]
+	var decal := obj.get_node(condition_id) as ArtifactConditionDecal
 	_view.select_tool("soft_brush")  # wrong for rust
 	var aim := _aim_at(obj, condition_id)
 
 	var cleaned := _view.attempt_clean_authored_with_ray(aim["origin"], aim["dir"])
 
-	assert_false(cleaned, "wrong tool is rejected")
+	assert_false(cleaned, "wrong tool can't clean it")
 	assert_eq(obj.uncleaned_authored_ids().size(), 1, "decal stays")
+	assert_true(
+		(decal.get_node("CleanParticles") as GPUParticles3D).emitting, "even a wrong tool puffs"
+	)
 
 
-func test_correct_tool_cleans_authored_decal_and_emits_particles() -> void:
+func test_one_correct_stroke_reduces_dirt_without_finishing() -> void:
+	var obj := await _open_with_object()
+	var condition_id := obj.uncleaned_authored_ids()[0]
+	var decal := obj.get_node(condition_id) as ArtifactConditionDecal
+	var before := decal.dirt()
+	_view.select_tool("rust_brush")
+	var aim := _aim_at(obj, condition_id)
+
+	var cleaned := _view.attempt_clean_authored_with_ray(aim["origin"], aim["dir"])
+
+	assert_false(cleaned, "one stroke is not enough")
+	assert_lt(decal.dirt(), before, "but the dirt level dropped")
+	assert_eq(obj.uncleaned_authored_ids().size(), 1, "still present")
+
+
+func test_repeated_correct_strokes_clean_and_sparkle() -> void:
 	var obj := await _open_with_object()
 	var condition_id := obj.uncleaned_authored_ids()[0]
 	var decal := obj.get_node(condition_id) as ArtifactConditionDecal
 	_view.select_tool("rust_brush")
 	var aim := _aim_at(obj, condition_id)
 
-	var cleaned := _view.attempt_clean_authored_with_ray(aim["origin"], aim["dir"])
+	var cleaned := false
+	for _i in range(12):
+		cleaned = _view.attempt_clean_authored_with_ray(aim["origin"], aim["dir"])
+		if cleaned:
+			break
 
-	assert_true(cleaned, "correct tool cleans it")
+	assert_true(cleaned, "repeated correct-tool strokes fully clean it")
 	assert_true(decal.is_cleaned())
 	assert_eq(obj.uncleaned_authored_ids().size(), 0)
-	var particles := decal.get_node("CleanParticles") as GPUParticles3D
-	assert_true(particles.emitting, "cleaning spawns the particle burst")
+	assert_true(
+		(decal.get_node("CleanParticles") as GPUParticles3D).emitting, "grime puff played"
+	)
+	assert_true(
+		(decal.get_node("SparkleParticles") as GPUParticles3D).emitting, "success sparkle played"
+	)

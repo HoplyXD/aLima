@@ -66,52 +66,81 @@ func owns_uid(uid: String) -> bool:
 # --- Bench loadout (max 5) ---------------------------------------------------
 
 
-## Adds an owned tool to the bench loadout. Returns false if the bench is full,
-## the tool is not owned, or it is already loaded.
+## Adds an owned tool to the first free bench slot. Returns false if the bench is
+## full, the tool is not owned, or it is already loaded. The bench is slot-based:
+## entries may be "" for an empty slot, so this fills the first empty slot before
+## appending.
 func add_to_workbench(uid: String) -> bool:
 	var wb: Array = _game_state.save_state.loop.workbench_tools
 	if wb.has(uid):
 		return true
-	if wb.size() >= MAX_WORKBENCH_TOOLS or not owns_uid(uid):
+	if _occupied_slots(wb) >= MAX_WORKBENCH_TOOLS or not owns_uid(uid):
 		return false
-	wb.append(uid)
+	var empty := wb.find("")
+	if empty != -1:
+		wb[empty] = uid
+	else:
+		wb.append(uid)
 	return true
 
 
+## Unequips a tool but KEEPS its slot empty (""), so the other tools stay pinned to
+## their slots instead of shifting left. Trailing empties are trimmed.
 func remove_from_workbench(uid: String) -> void:
-	_game_state.save_state.loop.workbench_tools.erase(uid)
+	var wb: Array = _game_state.save_state.loop.workbench_tools
+	var i := wb.find(uid)
+	if i == -1:
+		return
+	wb[i] = ""
+	_trim_trailing_empty(wb)
 
 
-## Places owned `uid` into bench `slot_index` (0-based). This is what a drag-and-drop
+## Number of tools actually on the bench (excludes empty slots).
+func equipped_count() -> int:
+	return _occupied_slots(_game_state.save_state.loop.workbench_tools)
+
+
+## Number of occupied (non-empty) bench slots.
+func _occupied_slots(wb: Array) -> int:
+	var count := 0
+	for entry in wb:
+		if not ModelUtils.as_string(entry).is_empty():
+			count += 1
+	return count
+
+
+## Drops trailing empty slots so the array doesn't grow without bound; interior gaps
+## (which pin later tools to their slots) are preserved.
+func _trim_trailing_empty(wb: Array) -> void:
+	while not wb.is_empty() and ModelUtils.as_string(wb[wb.size() - 1]).is_empty():
+		wb.remove_at(wb.size() - 1)
+
+
+## Pins owned `uid` to bench `slot_index` (0-based). This is what a drag-and-drop
 ## onto a specific slot does:
-##   * empty slot            → equip the tool there;
+##   * empty slot            → equip the tool there (earlier slots stay empty);
 ##   * slot held by another  → replace it (the displaced tool is unequipped);
-##   * `uid` already equipped → swap the two positions so nothing else is disturbed.
-## Only the one targeted slot changes — equipping a replacement never clears the rest
-## of the bench. Slot indices are clamped to real slots, so a drop on a full bench
-## always lands on (and replaces) an occupied slot. Returns false only if the tool
-## isn't owned.
+##   * `uid` already equipped → swap the two slots so nothing else is disturbed.
+## The tool stays in the exact slot dropped on, so a single tool dropped on slot 4
+## renders at the far right with slots 0-3 empty. Only the targeted slot (and, on a
+## swap, the tool's old slot) changes. Returns false only if the tool isn't owned.
 func equip_to_slot(uid: String, slot_index: int) -> bool:
 	if not owns_uid(uid):
 		return false
 	var wb: Array = _game_state.save_state.loop.workbench_tools
 	slot_index = clampi(slot_index, 0, MAX_WORKBENCH_TOOLS - 1)
+	# Grow the bench with empty slots so we can address the target slot directly.
+	while wb.size() <= slot_index:
+		wb.append("")
 	var from_index := wb.find(uid)
-	if from_index == -1:
-		# Equipping an owned tool that isn't on the bench yet.
-		if slot_index < wb.size():
-			wb[slot_index] = uid  # replace this slot's occupant (it drops off the bench)
-		else:
-			wb.append(uid)  # equip into the first free slot
+	if from_index == slot_index:
 		return true
-	# Already equipped: reorder or swap within the bench (a trailing empty target
-	# clamps to the last occupied slot, which just moves the tool there).
-	var target := mini(slot_index, wb.size() - 1)
-	if target == from_index:
-		return true
-	var displaced: Variant = wb[target]
-	wb[target] = uid
-	wb[from_index] = displaced
+	var displaced: Variant = wb[slot_index]
+	wb[slot_index] = uid
+	if from_index != -1:
+		wb[from_index] = displaced  # swap: the slot's old occupant moves to uid's old slot
+	# (if uid wasn't on the bench, the displaced occupant simply drops off)
+	_trim_trailing_empty(wb)
 	return true
 
 

@@ -29,6 +29,36 @@ var walked: bool = false
 var final_price: int = 0
 var history: Array = []  ## [{role: "buyer"|"player", text: String, offer: int}]
 
+## Conversational banter (MKT-R2): chat moves that shift the buyer's mood, which
+## scales the ceiling up or down before the numeric haggle. `mood` is a multiplier
+## delta; each move is usable once. Reactions are persona-specific (a reseller warms
+## to "press hard"; a sentimental buyer is put off by it). This is the OFFLINE banter;
+## the later LLM proxy generates richer replies behind the same banter() surface.
+var mood: float = 0.0
+var used_moves: Array[String] = []
+
+## move id -> {label (player button), say (player utterance)}.
+const BANTER_MOVES := {
+	"history": {"label": "Talk up its history", "say": "This piece has real history behind it."},
+	"honest": {"label": "Be honest about flaws", "say": "I'll be straight with you about its condition."},
+	"charm": {"label": "Charm them", "say": "For someone with your eye, it's perfect."},
+	"press": {"label": "Press hard", "say": "Come on — it's worth far more than that."},
+}
+
+## negotiation_style -> per-move mood delta. Favourable moves warm the buyer (raise the
+## ceiling); off-putting ones cool them. Unknown styles use DEFAULT_BIAS.
+const BANTER_BIAS := {
+	"appraising": {"history": 0.10, "honest": 0.06, "charm": 0.05, "press": -0.07},
+	"aggressive": {"history": -0.05, "honest": 0.05, "charm": -0.05, "press": 0.10},
+	"earnest": {"history": 0.03, "honest": 0.07, "charm": 0.08, "press": -0.06},
+	"sentimental": {"history": 0.08, "honest": 0.06, "charm": 0.12, "press": -0.10},
+	"exacting": {"history": 0.07, "honest": 0.08, "charm": -0.04, "press": 0.0},
+	"guarded": {"history": 0.08, "honest": 0.02, "charm": 0.02, "press": -0.06},
+}
+const DEFAULT_BIAS := {"history": 0.03, "honest": 0.05, "charm": 0.03, "press": -0.02}
+const MOOD_MIN := -0.25
+const MOOD_MAX := 0.3
+
 
 ## Opens a fresh session and computes the buyer's opening offer + line.
 static func open(
@@ -41,22 +71,68 @@ static func open(
 	n.category = item_category
 	n.honest = is_honest
 	n.patience_left = buyer.patience
-	n.ceiling = n._compute_ceiling()
+	n._recompute_ceiling()
 	n.current_offer = clampi(int(round(n.ceiling * buyer.open_factor)), 1, maxi(1, n.ceiling))
 	n._say_buyer("open", n.current_offer)
 	return n
 
 
-## The buyer's private maximum, from value, restoration condition, category fit, and
-## honesty, clamped to its budget. Public so the service/UI can show a fair hint.
-func _compute_ceiling() -> int:
+## The buyer's private maximum before mood, from value, restoration condition,
+## category fit, and honesty (no budget clamp).
+func _raw_ceiling() -> float:
 	var c := float(condition) / 100.0
 	# Condition swings the price around the base value by ±condition_weight.
 	var condition_mult := lerpf(1.0 - persona.condition_weight, 1.0 + persona.condition_weight * 0.25, c)
 	var category_mult := 1.0 + persona.category_bonus if persona.likes_category(category) else 1.0
 	var honesty_mult := 1.0 if honest else 0.75
-	var raw := float(base_value) * condition_mult * category_mult * honesty_mult
-	return clampi(int(round(raw)), 1, maxi(1, persona.budget_range.y))
+	return float(base_value) * condition_mult * category_mult * honesty_mult
+
+
+## Applies mood to the raw ceiling and clamps to the persona's budget.
+func _recompute_ceiling() -> void:
+	ceiling = clampi(int(round(_raw_ceiling() * (1.0 + mood))), 1, maxi(1, persona.budget_range.y))
+
+
+# --- Conversational banter ---------------------------------------------------
+
+
+## Banter moves the player hasn't used yet (for the haggle UI).
+func available_moves() -> Array[String]:
+	var out: Array[String] = []
+	for move_id in BANTER_MOVES.keys():
+		if not used_moves.has(move_id):
+			out.append(move_id)
+	return out
+
+
+## Plays one banter move: shifts the buyer's mood (persona-specific), re-derives the
+## ceiling/standing offer, and records the exchange. Each move is usable once and does
+## not close the deal. Returns the standard result dict (with the buyer's reply).
+func banter(move_id: String) -> Dictionary:
+	if closed or not BANTER_MOVES.has(move_id) or used_moves.has(move_id):
+		return _result()
+	used_moves.append(move_id)
+	if move_id == "honest":
+		honest = true  # coming clean removes any misrepresentation penalty
+	history.append(
+		{"role": "player", "text": str(BANTER_MOVES[move_id]["say"]), "offer": current_offer}
+	)
+	var delta := _banter_delta(move_id)
+	mood = clampf(mood + delta, MOOD_MIN, MOOD_MAX)
+	_recompute_ceiling()
+	# A warmer mood can lift the standing offer; a colder one caps it to the ceiling.
+	var warmed := int(round(ceiling * persona.open_factor))
+	current_offer = clampi(maxi(current_offer, warmed), 1, maxi(1, ceiling))
+	var phase := "banter_warm" if delta >= 0.0 else "banter_cool"
+	history.append(
+		{"role": "buyer", "text": persona.line(phase, current_offer, used_moves.size()), "offer": current_offer}
+	)
+	return _result()
+
+
+func _banter_delta(move_id: String) -> float:
+	var bias: Dictionary = BANTER_BIAS.get(persona.negotiation_style, DEFAULT_BIAS)
+	return float(bias.get(move_id, 0.0))
 
 
 ## Player accepts the buyer's standing offer. Returns the agreed price.
@@ -130,6 +206,7 @@ func _result() -> Dictionary:
 		"walked": walked,
 		"offer": current_offer,
 		"price": final_price,
+		"mood": mood,
 		"message": history.back()["text"] if not history.is_empty() else "",
 	}
 

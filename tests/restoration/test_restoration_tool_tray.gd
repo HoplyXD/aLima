@@ -44,12 +44,20 @@ func _ray_to(tool_id: String) -> Dictionary:
 
 
 func _first_material(tool_id: String) -> StandardMaterial3D:
-	var prop := _tray.get_prop(tool_id)
-	for child in prop.get_children():
+	return _find_mesh_material(_tray.get_prop(tool_id))
+
+
+## The prop's geometry now lives under a child node, so search recursively for the
+## first MeshInstance3D's StandardMaterial3D (the one the highlight toggles).
+func _find_mesh_material(node: Node) -> StandardMaterial3D:
+	for child in node.get_children():
 		if child is MeshInstance3D:
 			var mat := (child as MeshInstance3D).material_override
 			if mat is StandardMaterial3D:
 				return mat as StandardMaterial3D
+		var nested := _find_mesh_material(child)
+		if nested != null:
+			return nested
 	return null
 
 
@@ -133,10 +141,10 @@ func test_deselect_returns_props_to_rest() -> void:
 	assert_false(_first_material("soft_cloth").emission_enabled, "Deselect clears the highlight")
 
 
-## Recomputes a prop's resting layout position (mirrors RestorationToolTray layout).
+## Recomputes a prop's resting layout position (mirrors RestorationToolTray's fixed
+## slots: build_tools packs tools into slots 0..n-1, each at a fixed slot centre).
 func _tray_rest_for(tool_id: String) -> Vector3:
-	var ids := _tray.get_tool_ids()
-	var i := ids.find(tool_id)
-	var n := ids.size()
-	var x := (float(i) - float(n - 1) / 2.0) * RestorationToolTray.SLOT_SPACING
+	var i := _tray.get_tool_ids().find(tool_id)
+	var centre := float(RestorationToolTray.SLOT_COUNT - 1) / 2.0
+	var x := (float(i) - centre) * RestorationToolTray.SLOT_SPACING
 	return Vector3(x, RestorationToolTray.BENCH_Y, RestorationToolTray.FRONT_Z)

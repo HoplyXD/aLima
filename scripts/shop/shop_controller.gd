@@ -37,9 +37,17 @@ var _quest_artifacts := 1
 ## Route id of the character currently at the door, or "" for a non-visitor line.
 ## Marked "met" when their dialogue closes so the next visit plays the return set.
 var _active_visitor_route_id := ""
+## True while Alya is waiting at the door with the morning delivery (answer the door).
+var _alya_waiting := false
+## True while Alya's morning-delivery dialogue is up; triage opens when it ends.
+var _alya_delivering := false
+
+## Alya (the morning-delivery courier) portrait, shown when she knocks.
+const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
 
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
+@onready var _visitor2: Sprite3D = $Visitor2  ## Alya (scavenger) waiting at the door.
 @onready var _triage_screen: TriageController = $TriageScreen
 @onready var _book_viewport: BookViewport = $BookViewport
 @onready var _restoration_view: RestorationView = _create_restoration_view()
@@ -72,6 +80,7 @@ func _ready() -> void:
 	_connect_interactables()
 
 	_visitor.visible = false
+	_visitor2.visible = false
 
 	DayClock.seconds_per_hour = seconds_per_hour
 	LoopController.begin_session()
@@ -88,6 +97,12 @@ func _ready() -> void:
 	_book_viewport.closed.connect(_on_journal_closed)
 
 	_refresh_ui()
+
+	# Alya brings the morning delivery automatically each day; the player must triage it
+	# (the triage screen can't be exited until every item is decided). day_changed covers
+	# later days; the deferred call covers the day the session opens on.
+	DayClock.day_changed.connect(func(_day: int) -> void: _auto_morning_delivery())
+	call_deferred("_auto_morning_delivery")
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
 
 
@@ -130,6 +145,21 @@ func _update_clock_display() -> void:
 
 
 func _on_door_pressed() -> void:
+	# Alya's morning delivery takes priority: if she's waiting, answering the door
+	# greets her and hands the delivery to triage when her line ends.
+	if _alya_waiting:
+		_alya_waiting = false
+		_visitor2.visible = false
+		_alya_delivering = true
+		_visitor.texture = ALYA_PORTRAIT
+		_open_dialogue(
+			[
+				"Alya: Morning! Dragged in today's haul for you.",
+				"Let's sort through what's worth keeping.",
+			],
+			true
+		)
+		return
 	# Authored dialogue + portraits live in data/routes/routes.json. The door shows
 	# whichever character RouteService schedules for the current in-game day/hour,
 	# branching their lines on whether the player has met them before.
@@ -219,7 +249,9 @@ func _generate_and_show_triage() -> void:
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(GameState.save_state.loop.current_day)
-	GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
+	# The day is only marked "delivered" once triage is actually applied (see
+	# TriageService.apply_triage), so exiting triage without confirming lets the player
+	# reopen the morning delivery instead of silently losing the whole batch.
 	var cfg := repo.get_delivery_config()
 	_triage_screen.open(delivery, cfg.storage_cap)
 
@@ -229,6 +261,22 @@ func _on_morning_delivery_pressed() -> void:
 		_open_dialogue(["The morning delivery has already arrived."], false)
 		return
 	_generate_and_show_triage()
+
+
+## Alya's automatic morning delivery: opens triage when this day's delivery has not
+## been handled yet (the screen can't be exited until every item is decided).
+func _auto_morning_delivery() -> void:
+	# Headless test runs drive the shop directly and don't want this auto-firing.
+	if not is_inside_tree() or DisplayServer.get_name() == "headless":
+		return
+	if GameState.save_state.loop.current_day == GameState.save_state.loop.last_delivery_day:
+		return
+	if _alya_waiting or _alya_delivering or _triage_screen.visible:
+		return
+	# Alya knocks: she waits at the door (Visitor2) until the player answers it.
+	_alya_waiting = true
+	_visitor2.texture = ALYA_PORTRAIT
+	_visitor2.visible = true
 
 
 func _on_triage_closed() -> void:
@@ -263,12 +311,15 @@ func _create_storage_screen() -> StorageScreen:
 
 
 func _connect_interactables() -> void:
-	# Each physical prop reuses the existing HUD-button handler unchanged.
+	# Each physical prop reuses the existing HUD-button handler. The workbench opens the
+	# restoration bench; the morning-delivery box is now Storage (pick an artifact +
+	# Restore there to enter the bench with it loaded); Alya's delivery comes via the
+	# door each morning.
 	_door_interactable.activated.connect(_on_door_pressed)
 	_workbench_interactable.activated.connect(_on_workbench_pressed)
 	_journal_interactable.activated.connect(_on_journal_pressed)
 	_phone_interactable.activated.connect(_on_phone_pressed)
-	_delivery_interactable.activated.connect(_on_morning_delivery_pressed)
+	_delivery_interactable.activated.connect(_on_storage_pressed)
 	for entry in _interactables():
 		entry.hover_changed.connect(_on_interactable_hover.bind(entry))
 
@@ -343,3 +394,7 @@ func _on_dialogue_finished() -> void:
 	else:
 		_set_interactables_enabled(true)
 	DayClock.release_pause(DayClock.PAUSE_DIALOGUE)
+	# Alya's knock is over — now hand the delivery to triage.
+	if _alya_delivering:
+		_alya_delivering = false
+		_generate_and_show_triage()

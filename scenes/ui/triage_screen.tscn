@@ -36,7 +36,7 @@ theme_override_constants/separation = 12
 [node name="Title" type="Label" parent="Panel/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
-text = "Morning Delivery"
+text = "Alya's Delivery"
 horizontal_alignment = 1
 
 [node name="StorageLabel" type="Label" parent="Panel/Margin/VBox"]

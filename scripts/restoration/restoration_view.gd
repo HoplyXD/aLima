@@ -60,11 +60,14 @@ var _storage_screen: StorageScreen
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
 @onready var _object: RestorationObject3D = $ViewportContainer/SubViewport/World/ObjectPivot
 @onready var _tool_tray: RestorationToolTray = $ViewportContainer/SubViewport/World/ToolTray
+@onready var _phone_prop: Node3D = $ViewportContainer/SubViewport/World/Phone
+@onready var _journal_prop: Node3D = $ViewportContainer/SubViewport/World/Journal
+@onready var _storage_prop: Node3D = $ViewportContainer/SubViewport/World/StorageBox
 @onready var _viewport_container: SubViewportContainer = $ViewportContainer
 @onready var _input_catcher: Control = $InputCatcher
 
 @onready var _instance_selector: OptionButton = %InstanceSelector
-@onready var _mode_button: Button = %ModeButton
+@onready var _clock_label: Label = %ClockLabel
 @onready var _title: Label = %Title
 @onready var _state_label: Label = %StateLabel
 @onready var _condition_bar: ProgressBar = %ConditionBar
@@ -82,6 +85,7 @@ var _storage_screen: StorageScreen
 @onready var _journal_button: Button = %JournalButton
 @onready var _phone_button: Button = %PhoneButton
 @onready var _storage_button: Button = %StorageButton
+@onready var _artifact_cards: HBoxContainer = %ArtifactCards
 
 
 func _ready() -> void:
@@ -96,14 +100,26 @@ func _ready() -> void:
 	# through to the Shop HUD buttons sitting behind this view.
 	_input_catcher.gui_input.connect(_on_catcher_gui_input)
 	_instance_selector.item_selected.connect(_on_instance_selected)
-	_mode_button.pressed.connect(_toggle_mode)
 	_reset_button.pressed.connect(reset_view)
 	_scan_button.pressed.connect(_on_scan_pressed)
 	_close_button.pressed.connect(close)
 	_journal_button.pressed.connect(_on_journal_pressed)
 	_phone_button.pressed.connect(_on_phone_pressed)
 	_storage_button.pressed.connect(_on_storage_pressed)
+	# A worn-out tool vanishes from the bench mid-session.
+	EventBus.tool_broke.connect(_on_tool_broke)
+	# Keep the day/time readout current (the clock is paused at the bench, so this only
+	# needs to refresh on open and on the rare hour/day tick).
+	DayClock.hour_changed.connect(func(_d: int, _h: int) -> void: _update_clock())
+	DayClock.day_changed.connect(func(_d: int) -> void: _update_clock())
 	set_process(false)
+
+
+## Refreshes the top-right Day/time readout from the global clock.
+func _update_clock() -> void:
+	_clock_label.text = (
+		"Day %d · %02d:%02d" % [DayClock.get_day(), DayClock.get_hour(), DayClock.get_minute()]
+	)
 
 
 ## Opens the view, pauses the shop clock, lists restorable objects, and focuses the
@@ -115,6 +131,7 @@ func open() -> void:
 		DayClock.request_pause(DayClock.PAUSE_RESTORATION)
 		_owns_pause = true
 	set_process(true)
+	_update_clock()
 	_populate_instances()
 	_log("open(): %d restorable instance(s): %s" % [_instance_uids.size(), str(_instance_uids)])
 	if _instance_uids.is_empty():
@@ -218,10 +235,20 @@ func _on_storage_pressed() -> void:
 		_feedback_label.text = "Storage — not available."
 
 
+## A bench tool wore out: rebuild the tray so its prop disappears, and if it was the
+## tool in hand, put it down.
+func _on_tool_broke(_tool_id: String, _uid: String) -> void:
+	if not _selected_tool_id.is_empty() and not _service.is_tool_owned(_selected_tool_id):
+		_set_mode(Mode.ROTATE)
+	_rebuild_tool_palette()
+	_tool_tray.build_slots(_service.get_workbench_slots(), _service.get_workbench_durability())
+	_tool_tray.set_selected(_selected_tool_id)
+
+
 func _on_storage_closed_from_bench() -> void:
 	_rebuild_tool_palette()
 	var tools := _service.get_workbench_tools()
-	_tool_tray.build_tools(tools)
+	_tool_tray.build_slots(_service.get_workbench_slots(), _service.get_workbench_durability())
 	# If the tool the player was holding is no longer equipped, put it down.
 	var still_equipped := false
 	for tool in tools:
@@ -257,6 +284,84 @@ func _populate_instances() -> void:
 		_instance_selector.add_item("%s (%s)" % [display_name, state_name])
 		_instance_uids.append(inst.uid)
 	_instance_selector.disabled = _instance_uids.is_empty()
+	_rebuild_artifact_bar()
+
+
+# --- Artifact card bar (diegetic replacement for the Object dropdown) ------------
+
+const ARTIFACT_CARD_SCENE := preload("res://scenes/restoration/artifact_card.tscn")
+const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
+
+
+## Builds the horizontal, scrollable strip of artifact cards (one square per
+## restorable artifact), each rotating-3D-preview or text-only per the settings, with
+## its name coloured by rarity. Clicking a card loads that artifact onto the bench.
+func _rebuild_artifact_bar() -> void:
+	for child in _artifact_cards.get_children():
+		child.queue_free()
+	var previews_on := SettingsService.previews_enabled()
+	for uid in _instance_uids:
+		var inst := _service.find_instance_by_id(uid)
+		if inst == null:
+			continue
+		var template := _service.get_repository().get_template(inst.template_id)
+		var display := template.display_name if template != null else inst.template_id
+		var card: ArtifactCard = ARTIFACT_CARD_SCENE.instantiate()
+		_artifact_cards.add_child(card)
+		card.configure(uid, display, _rarity_color(_instance_rarity(uid)), previews_on)
+		card.selected.connect(_pick_artifact)
+		if previews_on and template != null:
+			# Embed the real artifact (model + its condition decals) so the rotating
+			# preview shows the player exactly what they'll need to restore.
+			var preview: RestorationObject3D = ARTIFACT_OBJECT_SCENE.instantiate()
+			card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
+			_present_object(preview, inst, template, uid.hash())
+
+
+## Builds an artifact's visible presentation (model + condition decals) onto `obj`.
+## Shared by the bench's main object and the rotating previews in the card bar.
+## Returns true when condition decals were applied (so callers can skip the dirt-mask
+## fallback). `obj` must already be in the tree so its geometry builds in the right
+## world.
+func _present_object(
+	obj: RestorationObject3D, inst: ObjectInstance, template: ScrapObjectTemplate, seed_value: int
+) -> bool:
+	obj.configure(template, inst)
+	obj.register_authored_conditions(_service.get_repository(), seed_value)
+	# Effective decals are the instance's random conditions when present, else the
+	# template's authored decals. Random conditions render on the 3D object (so an
+	# openable still opens after CLEAN); authored photos use the flat photo plane.
+	var decals := _service.effective_decals(inst, template)
+	if not inst.spawned_decals.is_empty():
+		obj.enter_conditions_mode(
+			decals, inst.removed_decals, _condition_colors(decals), _condition_textures(decals), seed_value
+		)
+		return true
+	if not decals.is_empty():
+		obj.enter_photo_mode(
+			decals, inst.removed_decals, _condition_colors(decals), _condition_textures(decals), seed_value
+		)
+		return true
+	return false
+
+
+func _pick_artifact(uid: String) -> void:
+	var idx := _instance_uids.find(uid)
+	if idx >= 0:
+		_instance_selector.select(idx)
+	load_instance(uid)
+
+
+func _instance_rarity(uid: String) -> int:
+	var inst := _service.find_instance_by_id(uid)
+	if inst == null:
+		return ModelEnums.Rarity.WHITE
+	var template := _service.get_repository().get_template(inst.template_id)
+	return template.base_rarity if template != null else ModelEnums.Rarity.WHITE
+
+
+func _rarity_color(rarity: int) -> Color:
+	return GlowMapper.get_instance_glow_color(rarity, false, false)
 
 
 ## Loads a specific instance into the 3D view. Public so the Shop/tests can drive
@@ -273,30 +378,20 @@ func load_instance(uid: String) -> void:
 	if inst == null or template == null:
 		_show_invalid_state()
 		return
+	# Per-instance seed so a shared placed decal scatters/cleans independently per
+	# artifact, and the same template's conditions land in different spots.
+	var instance_seed := uid.hash()
 	_object.visible = true
-	_object.configure(template, inst)
-	# Author-placed condition decals (event artifacts) clean with their own tool and
-	# spawn particles; resolve their type/colour/tool against the journal catalog.
-	_object.register_authored_conditions(_service.get_repository())
-	# Effective decals are the instance's random conditions when present, else the
-	# template's authored decals. Random conditions render on the 3D object (so an
-	# openable still opens after CLEAN); authored photos use the flat photo plane.
-	var decals := _service.effective_decals(inst, template)
-	if not inst.spawned_decals.is_empty():
-		_object.enter_conditions_mode(decals, inst.removed_decals, _condition_colors(decals))
-	elif not decals.is_empty():
-		_object.enter_photo_mode(decals, inst.removed_decals, _condition_colors(decals))
-	elif _dirt_cache.has(uid):
-		# Restore the exact cleaned spots from this session, overriding the
-		# condition-based reconstruction.
-		_object.restore_dirt_png(_dirt_cache[uid])
-	elif not inst.dirt_mask.is_empty():
-		# Reloaded from a save: restore the persisted cleaned spots.
-		_object.restore_dirt_png(inst.dirt_mask)
+	if not _present_object(_object, inst, template, instance_seed):
+		# No condition decals: restore the cleaned spots from this session or the save.
+		if _dirt_cache.has(uid):
+			_object.restore_dirt_png(_dirt_cache[uid])
+		elif not inst.dirt_mask.is_empty():
+			_object.restore_dirt_png(inst.dirt_mask)
 	_title.text = template.display_name
 	_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()
-	_tool_tray.build_tools(_service.get_workbench_tools())
+	_tool_tray.build_slots(_service.get_workbench_slots(), _service.get_workbench_durability())
 	reset_view()
 	_refresh(inst, template)
 	_caption_label.text = "Rotate to inspect, then pick up a tool from the bench and work the surface."
@@ -330,7 +425,7 @@ func _rebuild_tool_palette() -> void:
 		button.focus_mode = Control.FOCUS_ALL
 		button.button_pressed = tool.id == _selected_tool_id
 		var tool_id := tool.id
-		button.pressed.connect(func() -> void: select_tool(tool_id))
+		button.pressed.connect(func() -> void: toggle_tool(tool_id))
 		_tool_container.add_child(button)
 
 
@@ -373,6 +468,24 @@ func _condition_colors(decals: Array) -> Dictionary:
 	return colors
 
 
+## Builds a {condition_type: Texture2D} map from the placeholder condition art
+## (assets/artifact_conditions/<Display Name>.png), so each condition decal shows its
+## proper image instead of a generic placeholder.
+func _condition_textures(decals: Array) -> Dictionary:
+	var textures := {}
+	var repo := _service.get_repository()
+	for decal in decals:
+		if textures.has(decal.type):
+			continue
+		var condition := repo.get_surface_condition(decal.type)
+		if condition == null:
+			continue
+		var path := "res://assets/artifact_conditions/%s.png" % condition.display_name
+		if ResourceLoader.exists(path):
+			textures[decal.type] = load(path)
+	return textures
+
+
 ## Cleans one blemish by id with the selected tool (delegates the rule to the
 ## service). Removes the hotspot on success and surfaces join/scan prompts when the
 ## photo becomes fully clean. Returns the service result, or null when no tool is
@@ -385,6 +498,9 @@ func clean_blemish(blemish_id: String) -> RestorationService.DecalResult:
 	if not result.ok:
 		_feedback_label.text = result.feedback
 		return result
+	# A grime puff plays on every stroke (right tool or wrong); a successful clean adds
+	# the sparkle via remove_blemish.
+	_object.blemish_working_burst(blemish_id)
 	if result.removed:
 		_object.remove_blemish(blemish_id)
 	_feedback_label.text = result.feedback
@@ -406,24 +522,35 @@ func clean_blemish(blemish_id: String) -> RestorationService.DecalResult:
 # --- Author-placed condition decals (event artifacts) ------------------------
 
 
-## Cleans an author-placed condition decal, but only with the tool its type requires
-## (rust -> wire brush, etc.). The decal plays its particle burst and fades on a
-## correct tool; a wrong tool is rejected with feedback. Returns true on a clean.
+## Works a tool against an author-placed condition. A grime puff plays on EVERY use.
+## The right tool (one with cleaning power for this condition) fades the decal a step
+## per stroke and, once fully scrubbed away, triggers the success sparkle; a powerless
+## (wrong) tool only puffs and is rejected. Returns true only when the condition is
+## fully cleaned this stroke.
 func clean_authored_condition(condition_id: String) -> bool:
 	if _selected_tool_id.is_empty():
 		_caption_label.text = "Pick up a tool from the bench first."
 		return false
-	var required := _object.authored_required_tool(condition_id)
+	# A tool always kicks up a puff where it's worked, right tool or wrong.
+	_object.authored_working_burst(condition_id)
 	var label := _object.authored_type_id(condition_id).replace("_", " ")
-	if not required.is_empty() and _selected_tool_id != required:
-		var needs := _tool_display_name(required)
-		_feedback_label.text = "Wrong tool — the %s needs the %s." % [label, needs]
-		_caption_label.text = "Wrong tool — the %s needs the %s." % [label, needs]
+	var strength := CleaningPower.power(
+		_service.get_repository(), _selected_tool_id, _object.authored_type_id(condition_id)
+	)
+	if strength <= 0:
+		var required := _object.authored_required_tool(condition_id)
+		var needs := _tool_display_name(required) if not required.is_empty() else "the right tool"
+		_feedback_label.text = "Wrong tool — the %s needs %s." % [label, needs]
+		_caption_label.text = "Wrong tool — the %s needs %s." % [label, needs]
 		return false
-	_object.clean_authored(condition_id)
-	_feedback_label.text = "Worked off the %s." % label
-	_caption_label.text = "Cleaned the %s." % label
-	return true
+	var cleaned := _object.apply_authored_clean(condition_id, strength)
+	if cleaned:
+		_feedback_label.text = "The %s lifts away — spotless!" % label
+		_caption_label.text = "Cleaned the %s." % label
+	else:
+		_feedback_label.text = "Working off the %s..." % label
+		_caption_label.text = "Keep scrubbing the %s." % label
+	return cleaned
 
 
 ## Ray-tests the author-placed condition decals and cleans the one hit. Returns true
@@ -604,6 +731,8 @@ func _apply_action_feedback(result: RestorationService.ToolResult) -> void:
 
 
 func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
+	# Keep the bench durability bars current after any action that may have worn a tool.
+	_tool_tray.update_durability(_service.get_workbench_durability())
 	var threshold := template.clean_completion_threshold if template != null else 100
 	_state_label.text = "State: %s" % ModelEnums.obj_state_name(inst.state).capitalize()
 	_condition_bar.max_value = threshold
@@ -672,9 +801,10 @@ func _show_empty_state() -> void:
 	_value_label.text = ""
 	_damage_label.text = ""
 	_clasp_prompt.visible = false
-	for child in _tool_container.get_children():
-		child.queue_free()
-	_tool_tray.build_tools([] as Array[ToolDefinition])
+	# The bench tools (and their durability/condition panels) still show even with no
+	# artifact on the bench, so the player can inspect their kit.
+	_rebuild_tool_palette()
+	_tool_tray.build_slots(_service.get_workbench_slots(), _service.get_workbench_durability())
 
 
 func _show_invalid_state() -> void:
@@ -693,7 +823,6 @@ func _toggle_mode() -> void:
 
 func _set_mode(mode: int) -> void:
 	_mode = mode
-	_mode_button.text = "Mode: Clean" if _mode == Mode.CLEAN else "Mode: Rotate"
 	# Rotate is for inspecting, not cleaning — put the held tool down so it is no
 	# longer "in hand" until the player picks one up again.
 	if _mode == Mode.ROTATE:
@@ -799,7 +928,7 @@ func _handle_action_event(event: InputEvent) -> bool:
 		"restoration_reset_view": reset_view,
 		"restoration_toggle_mode": _toggle_mode,
 		"restoration_cycle_tool": func() -> void: cycle_tool(1),
-		"back": close,  # Backspace closes the bench; Esc is the pause menu.
+		"back": close,  # Esc closes the bench; Space is the pause menu.
 	}
 	for action in handlers:
 		if event.is_action_pressed(action):
@@ -831,6 +960,10 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			# Picking up a bench tool prop selects it (off to the side of the object,
 			# so it never competes with a cleaning stroke or a rotate drag).
 			if _try_tool_pick_at_pointer(pos):
+				return
+			# The diegetic phone / journal / storage props open their overlays (the old
+			# HUD buttons are now hidden accessibility fallbacks).
+			if _try_bench_object_at_pointer(pos):
 				return
 			# Author-placed condition decals (event artifacts) clean on a direct click
 			# with the right tool, before a surface stroke begins.
@@ -869,6 +1002,32 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 			-event.relative.x * MOUSE_ROTATE_SENSITIVITY,
 			-event.relative.y * MOUSE_ROTATE_SENSITIVITY
 		)
+	else:
+		_update_hover(pos)
+
+
+## Highlights the tool or bench object under the idle pointer (shop-style hover).
+func _update_hover(pos: Vector2) -> void:
+	if not _pointer_over_viewport(pos):
+		_tool_tray.set_hovered("")
+		_set_bench_hover("")
+		return
+	var origin := _camera.project_ray_origin(_to_viewport(pos))
+	var dir := _camera.project_ray_normal(_to_viewport(pos))
+	var tool_id := _tool_tray.ray_pick(origin, dir)
+	if not tool_id.is_empty():
+		_tool_tray.set_hovered(tool_id)
+		_set_bench_hover("")
+		return
+	_tool_tray.set_hovered("")
+	_set_bench_hover(_bench_object_pick(origin, dir))
+
+
+## Grows the hovered bench prop (phone/journal/storage), clearing the others.
+func _set_bench_hover(id: String) -> void:
+	_phone_prop.scale = Vector3.ONE * (1.1 if id == "phone" else 1.0)
+	_journal_prop.scale = Vector3.ONE * (1.1 if id == "journal" else 1.0)
+	_storage_prop.scale = Vector3.ONE * (1.1 if id == "storage" else 1.0)
 
 
 func _controller_clean() -> void:
@@ -972,8 +1131,59 @@ func _try_tool_pick_at_pointer(pos: Vector2) -> bool:
 	var tool_id := _tool_tray.ray_pick(origin, dir)
 	if tool_id.is_empty():
 		return false
-	select_tool(tool_id)
+	toggle_tool(tool_id)  # clicking the held tool again puts it down (back to Rotate)
 	return true
+
+
+## Ray-tests the diegetic bench objects (phone, journal, storage box) and opens the
+## matching overlay. These are the 3D replacements for the old HUD buttons.
+func _try_bench_object_at_pointer(pos: Vector2) -> bool:
+	var origin := _camera.project_ray_origin(_to_viewport(pos))
+	var dir := _camera.project_ray_normal(_to_viewport(pos))
+	match _bench_object_pick(origin, dir):
+		"phone":
+			_on_phone_pressed()
+		"journal":
+			_on_journal_pressed()
+		"storage":
+			_on_storage_pressed()
+		_:
+			return false
+	return true
+
+
+## Nearest bench object hit by the ray ("phone"/"journal"/"storage"), or "".
+func _bench_object_pick(origin: Vector3, direction: Vector3) -> String:
+	var candidates := [
+		{"id": "phone", "node": _phone_prop, "radius": 0.32},
+		{"id": "journal", "node": _journal_prop, "radius": 0.32},
+		{"id": "storage", "node": _storage_prop, "radius": 0.42},
+	]
+	var best := ""
+	var best_t := INF
+	for entry in candidates:
+		var node: Node3D = entry["node"]
+		var hit := _ray_sphere(origin, direction, node.global_position, float(entry["radius"]))
+		if hit.get("hit", false) and float(hit["t"]) < best_t:
+			best_t = float(hit["t"])
+			best = String(entry["id"])
+	return best
+
+
+func _ray_sphere(origin: Vector3, direction: Vector3, center: Vector3, radius: float) -> Dictionary:
+	var dir := direction.normalized()
+	var oc := origin - center
+	var b := oc.dot(dir)
+	var c := oc.dot(oc) - radius * radius
+	var disc := b * b - c
+	if disc < 0.0:
+		return {"hit": false}
+	var t := -b - sqrt(disc)
+	if t < 0.0:
+		t = -b + sqrt(disc)
+		if t < 0.0:
+			return {"hit": false}
+	return {"hit": true, "t": t}
 
 
 ## Ray-tests the bench tool props and selects the hit tool. Returns the selected
@@ -982,8 +1192,18 @@ func _try_tool_pick_at_pointer(pos: Vector2) -> bool:
 func attempt_select_tool_with_ray(origin: Vector3, direction: Vector3) -> String:
 	var tool_id := _tool_tray.ray_pick(origin, direction)
 	if not tool_id.is_empty():
-		select_tool(tool_id)
+		toggle_tool(tool_id)
 	return tool_id
+
+
+## Picks up a tool, or — if it's the one already in hand — puts it down and returns to
+## Rotate. This is how the player switches between cleaning and inspecting now that the
+## explicit mode button is gone.
+func toggle_tool(tool_id: String) -> void:
+	if tool_id == _selected_tool_id:
+		_set_mode(Mode.ROTATE)
+	else:
+		select_tool(tool_id)
 
 
 ## Cycles selection to the next owned tool prop. Gives controller/keyboard players
@@ -1035,13 +1255,14 @@ func _ensure_input_actions() -> void:
 	_add_action("restoration_rotate_right", [_key(KEY_D)], [_joy_axis(JOY_AXIS_LEFT_X, 1.0)])
 	_add_action("restoration_rotate_up", [_key(KEY_W)], [_joy_axis(JOY_AXIS_LEFT_Y, -1.0)])
 	_add_action("restoration_rotate_down", [_key(KEY_S)], [_joy_axis(JOY_AXIS_LEFT_Y, 1.0)])
-	_add_action("restoration_clean", [_key(KEY_SPACE)], [_joy_button(JOY_BUTTON_A)])
+	# Cleaning is mouse/controller only now; Space is the global pause key.
+	_add_action("restoration_clean", [], [_joy_button(JOY_BUTTON_A)])
 	_add_action("restoration_open", [_key(KEY_E)], [_joy_button(JOY_BUTTON_X)])
 	_add_action("restoration_reset_view", [_key(KEY_R)], [_joy_button(JOY_BUTTON_Y)])
 	_add_action("restoration_toggle_mode", [_key(KEY_TAB)], [_joy_button(JOY_BUTTON_LEFT_SHOULDER)])
 	_add_action("restoration_cycle_tool", [_key(KEY_Q)], [_joy_button(JOY_BUTTON_RIGHT_SHOULDER)])
-	# Backspace closes the bench; Esc is reserved for the pause menu.
-	_add_action("back", [_key(KEY_BACKSPACE)], [])
+	# Esc closes the bench; Space is the pause menu (both registered by PauseMenu).
+	_add_action("back", [_key(KEY_ESCAPE)], [])
 
 
 func _add_action(action: String, keys: Array, pads: Array) -> void:

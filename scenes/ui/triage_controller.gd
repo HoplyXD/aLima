@@ -26,6 +26,18 @@ func _ready() -> void:
 	visible = false
 
 
+## Alya's delivery must be triaged before leaving: Esc/Backspace confirms once every
+## item is decided, and otherwise just nudges the player to decide (there is no exit).
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible or not event.is_action_pressed("back"):
+		return
+	get_viewport().set_input_as_handled()
+	if _state != null and _state.can_complete():
+		_on_confirm()
+	else:
+		_validation_label.text = "Decide every item (keep or recycle) before leaving."
+
+
 ## Opens the triage interface for the given delivery. Requests clock pause.
 func open(delivery: Array[ObjectInstance], storage_cap: int) -> void:
 	_state = TriageState.new(delivery, storage_cap)

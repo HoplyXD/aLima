@@ -54,6 +54,13 @@ func _ready() -> void:
 	_build_verdict_buttons()
 
 
+## Backspace backs out of the scanner (Esc stays the global pause toggle).
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed("back"):
+		get_viewport().set_input_as_handled()
+		_on_back()
+
+
 ## Opens the scanner for the given cleaned instance. Requests clock pause.
 func open(instance: ObjectInstance) -> void:
 	_instance = instance

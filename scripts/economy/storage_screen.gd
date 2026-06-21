@@ -143,7 +143,7 @@ func refresh() -> void:
 	_build_artifacts_tab()
 	_build_tools_tab()
 	_build_key_items_tab()
-	var loaded: int = GameState.save_state.loop.workbench_tools.size()
+	var loaded: int = _tools.equipped_count()
 	var target := _tools.get_restore_target()
 	var target_name := _instance_display_name(target) if not target.is_empty() else "nothing"
 	if _status_label.text == "":
@@ -249,7 +249,7 @@ func _build_tools_tab() -> void:
 	var detail_host: VBoxContainer = panes["detail"]
 	var right: VBoxContainer = panes["content"]
 
-	var loaded: int = GameState.save_state.loop.workbench_tools.size()
+	var loaded: int = _tools.equipped_count()
 	var bench_label := "Workbench  —  %d / %d equipped" % [loaded, ToolService.MAX_WORKBENCH_TOOLS]
 	right.add_child(_make_sub(bench_label))
 	right.add_child(_make_equip_area())

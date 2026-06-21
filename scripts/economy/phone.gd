@@ -19,6 +19,7 @@ var _market_view: String = "home"
 var _sell_uid: String = ""
 var _buyer_id: String = ""
 var _negotiation: Negotiation = null
+var _said_label: Label = null  ## The buyer's spoken-line label, upgraded with live banter.
 
 @onready var _close_button: Button = %CloseButton
 @onready var _home_button: Button = %HomeButton
@@ -92,13 +93,16 @@ func show_home() -> void:
 	_home_button.visible = false
 
 
-## Opens an app by id. Only "marketplace" exists for now.
+## Opens an app by id: "tools_shop" (buy tools) or "marketplace" (sell artifacts).
 func open_app(app_id: String) -> void:
 	_current_app = app_id
 	_home.visible = false
 	_app_view.visible = true
 	_home_button.visible = true
 	match app_id:
+		"tools_shop":
+			_app_title.text = "Local PH Tools Shop"
+			_render_tools_shop()
 		"marketplace":
 			_app_title.text = "Marketplace"
 			_market_view = "home"
@@ -121,6 +125,7 @@ func owns_pause() -> bool:
 func _build_app_grid() -> void:
 	for child in _app_grid.get_children():
 		child.queue_free()
+	_app_grid.add_child(_make_app_icon("Local PH\nTools Shop", "tools_shop", false))
 	_app_grid.add_child(_make_app_icon("Marketplace", "marketplace", false))
 	# Room for more apps later; shown disabled so the home screen reads as a phone.
 	_app_grid.add_child(_make_app_icon("Soon", "", true))
@@ -137,7 +142,31 @@ func _make_app_icon(label: String, app_id: String, disabled: bool) -> Button:
 	return button
 
 
-# --- Marketplace app ---------------------------------------------------------
+# --- Local PH Tools Shop app (buy tools) -------------------------------------
+
+
+func _render_tools_shop() -> void:
+	for child in _app_content.get_children():
+		child.queue_free()
+
+	var money := Label.new()
+	money.text = "Money: ₱%d" % GameState.save_state.loop.money
+	money.add_theme_font_size_override("font_size", 18)
+	_app_content.add_child(money)
+
+	_app_content.add_child(_make_section_label("Restoration tools"))
+	for def in MarketplaceService.get_catalog():
+		_app_content.add_child(_make_buy_row(def as ToolDefinition))
+
+	var pending: int = GameState.save_state.loop.tool_shipments.size()
+	var ship := Label.new()
+	ship.text = "On the way: %d tool(s)" % pending if pending > 0 else "No incoming shipments."
+	ship.add_theme_font_size_override("font_size", 13)
+	ship.add_theme_color_override("font_color", Color(0.7, 0.85, 0.7))
+	_app_content.add_child(ship)
+
+
+# --- Marketplace app (sell artifacts + banter) -------------------------------
 
 
 func _render_marketplace() -> void:
@@ -157,17 +186,6 @@ func _render_market_home() -> void:
 	money.text = "Money: ₱%d" % GameState.save_state.loop.money
 	money.add_theme_font_size_override("font_size", 18)
 	_app_content.add_child(money)
-
-	_app_content.add_child(_make_section_label("Buy tools"))
-	for def in MarketplaceService.get_catalog():
-		_app_content.add_child(_make_buy_row(def as ToolDefinition))
-
-	var pending: int = GameState.save_state.loop.tool_shipments.size()
-	var ship := Label.new()
-	ship.text = "On the way: %d tool(s)" % pending if pending > 0 else "No incoming shipments."
-	ship.add_theme_font_size_override("font_size", 13)
-	ship.add_theme_color_override("font_color", Color(0.7, 0.85, 0.7))
-	_app_content.add_child(ship)
 
 	_app_content.add_child(_make_section_label("Sell your work"))
 	var sellable := MarketplaceService.get_sellable()
@@ -273,12 +291,12 @@ func _render_haggle() -> void:
 	who.add_theme_font_size_override("font_size", 16)
 	_app_content.add_child(who)
 
-	var said := Label.new()
-	said.text = "\"%s\"" % _negotiation.history.back()["text"]
-	said.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	said.add_theme_font_size_override("font_size", 14)
-	said.add_theme_color_override("font_color", Color(0.92, 0.9, 0.7))
-	_app_content.add_child(said)
+	_said_label = Label.new()
+	_said_label.text = "\"%s\"" % _negotiation.history.back()["text"]
+	_said_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_said_label.add_theme_font_size_override("font_size", 14)
+	_said_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.7))
+	_app_content.add_child(_said_label)
 
 	if _negotiation.is_closed():
 		var outcome := Label.new()
@@ -309,6 +327,17 @@ func _render_haggle() -> void:
 	buttons.add_child(_make_action("Walk away", haggle_walk))
 	_app_content.add_child(buttons)
 
+	# Conversational banter moves (each usable once) to warm the buyer up first.
+	var moves := _negotiation.available_moves()
+	if not moves.is_empty():
+		_app_content.add_child(_make_section_label("Chat"))
+		var banter_row := HBoxContainer.new()
+		banter_row.add_theme_constant_override("separation", 8)
+		for move_id in moves:
+			var label: String = Negotiation.BANTER_MOVES[move_id]["label"]
+			banter_row.add_child(_make_action(label, func() -> void: haggle_banter(move_id)))
+		_app_content.add_child(banter_row)
+
 
 ## Player accepts the buyer's standing offer and completes the sale. Test seam.
 func accept_offer() -> void:
@@ -325,10 +354,34 @@ func haggle_ask(price: int) -> void:
 	var result := _negotiation.counter(price)
 	if result["accepted"]:
 		_settle(_negotiation.final_price)
-	elif result["walked"]:
-		_render_marketplace()
-	else:
-		_render_marketplace()
+		return
+	_render_marketplace()
+	await _upgrade_buyer_line("How about ₱%d?" % price)
+
+
+## Replaces the buyer's canned line with a live LLM banter line when online services
+## are on and the backend is reachable; otherwise leaves the offline line in place.
+func _upgrade_buyer_line(player_text: String) -> void:
+	if _negotiation == null or _negotiation.is_closed():
+		return
+	var persona := DataRepository.singleton().get_buyer(_buyer_id)
+	var line: String = await NegotiationClient.fetch_banter(
+		persona, _negotiation.current_offer, player_text, _negotiation.history
+	)
+	if line.is_empty():
+		return
+	if _current_app == "marketplace" and _market_view == "haggle" and is_instance_valid(_said_label):
+		_said_label.text = "\"%s\"" % line
+
+
+## Player plays a banter move (chat) to shift the buyer's mood, then re-renders.
+## Test seam.
+func haggle_banter(move_id: String) -> void:
+	if _negotiation == null:
+		return
+	_negotiation.banter(move_id)
+	_render_marketplace()
+	await _upgrade_buyer_line(str(Negotiation.BANTER_MOVES[move_id]["say"]))
 
 
 ## Player walks away from the deal. Test seam.
@@ -425,5 +478,5 @@ func buy(tool_id: String) -> void:
 		_feedback_label.text = "Ordered %s — shipping to the shop." % name
 	else:
 		_feedback_label.text = result.error
-	if _current_app == "marketplace":
-		_render_marketplace()
+	if _current_app == "tools_shop":
+		_render_tools_shop()
