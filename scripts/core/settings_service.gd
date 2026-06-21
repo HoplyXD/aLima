@@ -64,9 +64,13 @@ func set_fullscreen(value: bool) -> void:
 # --- Online services ---------------------------------------------------------
 
 
+signal online_changed(enabled: bool)  ## Fired when the live-services toggle changes.
+
+
 func set_online_services(value: bool) -> void:
 	online_services = value
 	_save()
+	online_changed.emit(value)
 
 
 ## Whether the live online path (LLM banter) should be attempted. The marketplace

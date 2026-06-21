@@ -1,6 +1,7 @@
 const request = require('supertest');
 const createApp = require('../src/app');
-const { resetClient, parseReply } = require('../src/services/negotiate_service');
+const { resetClient, parseReply, generateBanter } = require('../src/services/negotiate_service');
+const config = require('../src/config');
 
 // These tests run with no ANTHROPIC_API_KEY, so the endpoint takes the deterministic
 // fallback path (no live model, no @anthropic-ai/sdk dependency required).
@@ -76,5 +77,42 @@ describe('negotiate parseReply', () => {
     const out = parseReply('A fine piece indeed.');
     expect(out.buyer_message).toBe('A fine piece indeed.');
     expect(out.offended).toBe(false);
+  });
+});
+
+describe('local LLM provider', () => {
+  const savedProvider = config.llmProvider;
+  const body = {
+    persona: { id: 'collector', display_name: 'Doña Esperanza', negotiation_style: 'appraising' },
+    listing_price: 200,
+    player_message: 'This has real history.',
+    history: [],
+  };
+
+  afterEach(() => {
+    config.llmProvider = savedProvider;
+    delete global.fetch;
+  });
+
+  it('uses the local endpoint and parses its JSON reply', async () => {
+    config.llmProvider = 'local';
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: '{"buyer_message":"Aba, maganda ito!","offended":false}' } }],
+      }),
+    });
+    const res = await generateBanter(body);
+    expect(global.fetch).toHaveBeenCalled();
+    expect(res.fallback).toBe(false);
+    expect(res.buyer_message).toBe('Aba, maganda ito!');
+    expect(res.offended).toBe(false);
+  });
+
+  it('falls back when the local server is unreachable', async () => {
+    config.llmProvider = 'local';
+    global.fetch = jest.fn().mockRejectedValue(new Error('ECONNREFUSED'));
+    const res = await generateBanter(body);
+    expect(res.fallback).toBe(true);
   });
 });

@@ -101,8 +101,60 @@ function buildUserText(body) {
  * keeps its own deterministic line. The price is never decided here — it is echoed
  * from listing_price purely to satisfy the response contract.
  */
+// Calls a local OpenAI-compatible chat endpoint (Ollama, oobabooga, KoboldCpp, LM
+// Studio, …). Free + offline; no Anthropic key needed. Same JSON reply contract; on
+// any failure (server not running, bad response) returns fallback:true so the client
+// keeps its offline banter.
+async function generateLocal(body) {
+  const base = { ok: true, offer: Math.round(body.listing_price || 0), walked_away: false };
+  try {
+    const res = await fetch(config.localLlmUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.localLlmApiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.localLlmModel,
+        messages: [
+          { role: 'system', content: buildSystemPrompt(body.persona) },
+          { role: 'user', content: buildUserText(body) },
+        ],
+        max_tokens: 200,
+        temperature: 0.8,
+        stream: false,
+      }),
+    });
+    if (!res.ok) {
+      return { ...base, buyer_message: '', offended: false, fallback: true };
+    }
+    const data = await res.json();
+    const text = ((data.choices && data.choices[0] && data.choices[0].message
+      ? data.choices[0].message.content
+      : '') || '').trim();
+    if (!text) {
+      return { ...base, buyer_message: '', offended: false, fallback: true };
+    }
+    const parsed = parseReply(text);
+    return { ...base, buyer_message: parsed.buyer_message, offended: parsed.offended, fallback: false };
+  } catch (err) {
+    return { ...base, buyer_message: '', offended: false, fallback: true, error: err.message };
+  }
+}
+
+// Picks the provider: explicit 'local', explicit 'anthropic', or 'auto' (local when no
+// Anthropic key is configured, else Anthropic).
+function useLocal() {
+  if (config.llmProvider === 'local') return true;
+  if (config.llmProvider === 'anthropic') return false;
+  return !config.anthropicApiKey; // 'auto'
+}
+
 async function generateBanter(body) {
   const base = { ok: true, offer: Math.round(body.listing_price || 0), walked_away: false };
+  if (useLocal()) {
+    return generateLocal(body);
+  }
   const client = getClient();
   if (client === null) {
     return { ...base, buyer_message: '', offended: false, fallback: true };

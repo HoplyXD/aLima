@@ -30,6 +30,7 @@ RouteService="*res://scripts/core/route_service.gd"
 MarketplaceService="*res://scripts/economy/marketplace_service.gd"
 SettingsService="*res://scripts/core/settings_service.gd"
 NegotiationClient="*res://scripts/economy/negotiation_client.gd"
+BackendLauncher="*res://scripts/core/backend_launcher.gd"
 PauseMenu="*res://scenes/ui/pause_menu.tscn"
 
 [display]
