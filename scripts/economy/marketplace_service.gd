@@ -17,10 +17,70 @@ extends Node
 ## needs to advance monotonically with the clock so "arrive in N hours" works.
 const HOURS_PER_DAY: int = 24
 
+## Mr. Maverick: the one buyer who ALWAYS shows up to message you — but always lowballs.
+const MAVERICK_ID: String = "suspicious"
+
+## Buyer ghosting comes in three scopes:
+##   * DAY (limited)    — a failed banter: the buyer skips you for the rest of the day.
+##   * LOOP (permanent) — an offensive/NSFW message: the buyer skips you all loop.
+##   * ARTIFACT         — Mr. Maverick only: he skips just the artifact you failed on.
+## All are session state (the marketplace is loop-temporary): day ghosts clear on a new
+## day; loop + artifact ghosts clear on loop reset.
+var _day_ghosts: Dictionary = {}  ## buyer_id -> day they were ghosted on.
+var _loop_ghosts: Array[String] = []  ## buyer_ids skipped for the whole loop.
+var _artifact_ghosts: Dictionary = {}  ## item uid -> [buyer_ids] (Maverick only).
+
+## Per-item buyer arrival times: uid -> {buyer_id: in-game minute index they show up}.
+var _buyer_schedule: Dictionary = {}
+
 
 func _ready() -> void:
 	EventBus.hour_changed.connect(_on_hour_changed)
 	EventBus.day_changed.connect(_on_day_changed)
+	EventBus.loop_reset.connect(_on_loop_reset)
+
+
+## A failed banter (the buyer walked, or you ghosted them). Normal buyers skip you for
+## the day; Mr. Maverick only skips the one artifact (he always comes back for others).
+func ghost_failed_banter(uid: String, buyer_id: String) -> void:
+	if buyer_id == MAVERICK_ID:
+		_ghost_artifact(uid, buyer_id)
+	else:
+		_day_ghosts[buyer_id] = GameState.save_state.loop.current_day
+
+
+## An offensive/NSFW message. Normal buyers skip you for the whole loop; Mr. Maverick
+## still only artifact-ghosts (he tolerates you, he just won't buy that piece).
+func ghost_offensive(uid: String, buyer_id: String) -> void:
+	if buyer_id == MAVERICK_ID:
+		_ghost_artifact(uid, buyer_id)
+	elif not _loop_ghosts.has(buyer_id):
+		_loop_ghosts.append(buyer_id)
+
+
+func _ghost_artifact(uid: String, buyer_id: String) -> void:
+	var list: Array = _artifact_ghosts.get(uid, [])
+	if not list.has(buyer_id):
+		list.append(buyer_id)
+	_artifact_ghosts[uid] = list
+
+
+## True when `buyer_id` is currently hidden from `uid` under any ghost scope.
+func is_ghosted(uid: String, buyer_id: String) -> bool:
+	if (_artifact_ghosts.get(uid, []) as Array).has(buyer_id):
+		return true
+	if buyer_id == MAVERICK_ID:
+		return false  # Maverick is never day/loop ghosted
+	if _loop_ghosts.has(buyer_id):
+		return true
+	return _day_ghosts.get(buyer_id, -1) == GameState.save_state.loop.current_day
+
+
+func _on_loop_reset(_loop_index: int) -> void:
+	_day_ghosts.clear()
+	_loop_ghosts.clear()
+	_artifact_ghosts.clear()
+	_buyer_schedule.clear()
 
 
 ## Tools currently listed for purchase (authored `buyable`).
@@ -95,14 +155,62 @@ func assessed_value(uid: String) -> int:
 func interested_buyers(uid: String) -> Array[BuyerPersona]:
 	var value := assessed_value(uid)
 	var out: Array[BuyerPersona] = []
+	# Mr Maverick always shows up first (he can't be ghosted).
+	var maverick := DataRepository.singleton().get_buyer(MAVERICK_ID)
+	if maverick != null:
+		out.append(maverick)
 	for raw in DataRepository.singleton().get_buyers_sorted():
 		var persona := raw as BuyerPersona
-		if persona != null and persona.budget_range.y >= int(round(value * 0.35)):
+		if persona == null or persona.id == MAVERICK_ID:
+			continue
+		if is_ghosted(uid, persona.id):
+			continue  # a buyer you failed/ghosted won't return for this item
+		if persona.budget_range.y >= int(round(value * 0.35)):
 			out.append(persona)
-	if out.is_empty():
-		for raw in DataRepository.singleton().get_buyers_sorted():
-			out.append(raw as BuyerPersona)
+	if out.is_empty() and maverick != null:
+		out.append(maverick)
 	return out
+
+
+## Buyers who have ACTUALLY shown up for `uid` so far. Mr. Maverick is here at once;
+## the rest arrive over in-game time (1-20 in-game minutes apart). Because arrival is
+## time-based — not a UI timer — the set persists across opening/closing the phone, and
+## new buyers keep arriving while the phone is closed (the clock keeps running). Once a
+## buyer has arrived they stay (until ghosted). This is what the phone shows.
+func arrived_buyers(uid: String) -> Array[BuyerPersona]:
+	var eligible := interested_buyers(uid)
+	_ensure_schedule(uid, eligible)
+	var now := _minute_index()
+	var schedule: Dictionary = _buyer_schedule[uid]
+	var out: Array[BuyerPersona] = []
+	for persona in eligible:
+		if int(schedule.get(persona.id, 0)) <= now:
+			out.append(persona)
+	return out
+
+
+## Assigns an arrival time (in-game minute index) to any newly-eligible buyer for `uid`
+## that doesn't have one yet: Maverick is instant; each other buyer arrives 1-20 in-game
+## minutes after the latest arrival scheduled so far. Stable once set (per loop).
+func _ensure_schedule(uid: String, eligible: Array[BuyerPersona]) -> void:
+	var schedule: Dictionary = _buyer_schedule.get(uid, {})
+	var now := _minute_index()
+	for persona in eligible:
+		if schedule.has(persona.id):
+			continue
+		if persona.id == MAVERICK_ID:
+			schedule[persona.id] = now
+		else:
+			var latest := now
+			for at in schedule.values():
+				latest = maxi(latest, int(at))
+			schedule[persona.id] = latest + randi_range(1, 20)
+	_buyer_schedule[uid] = schedule
+
+
+## Monotonic in-game minute index from the global clock (pauses when the clock pauses).
+func _minute_index() -> int:
+	return (DayClock.get_day() * 24 + DayClock.get_hour()) * 60 + DayClock.get_minute()
 
 
 ## Opens a haggle session for an item with one buyer, or null if it can't be sold.
@@ -208,6 +316,7 @@ func _on_hour_changed(day: int, hour: int) -> void:
 
 
 func _on_day_changed(day: int) -> void:
+	_day_ghosts.clear()  # a new day forgives the day-scoped (failed-banter) ghosts
 	deliver_due(day, GameState.save_state.loop.current_hour)
 
 

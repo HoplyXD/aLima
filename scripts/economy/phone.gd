@@ -20,6 +20,7 @@ var _sell_uid: String = ""
 var _buyer_id: String = ""
 var _negotiation: Negotiation = null
 var _said_label: Label = null  ## The buyer's spoken-line label, upgraded with live banter.
+var _ai_label: Label = null  ## "AI: live / offline" indicator in the haggle view.
 
 @onready var _close_button: Button = %CloseButton
 @onready var _home_button: Button = %HomeButton
@@ -40,11 +41,10 @@ func _ready() -> void:
 
 ## Opens the phone on its home screen and pauses shop time.
 func open() -> void:
+	# The phone does NOT pause the in-game clock (only dialogue and the pause menu do),
+	# so time keeps flowing while you browse — which lets new buyers arrive over time.
 	if not visible:
 		visible = true
-		if not _owns_pause:
-			DayClock.request_pause(DayClock.PAUSE_PHONE)
-			_owns_pause = true
 	show_home()
 	_close_button.grab_focus()
 
@@ -226,11 +226,21 @@ func _make_sell_row(inst: ObjectInstance) -> Control:
 	return row
 
 
-## Lists an item and shows the interested buyers. Test seam.
+## Tracks how many buyers were on screen last paint, so the picker only re-renders when
+## a new buyer actually arrives (arrivals are time-based in MarketplaceService).
+var _last_arrived_count: int = -1
+var _picker_repaint: Timer = null
+
+
+## Lists an item and shows the buyers who have arrived so far. Arrivals are time-based
+## in the service, so they persist across opening/closing the phone and keep coming
+## even while the phone is closed. Test seam.
 func open_buyers(uid: String) -> void:
 	_sell_uid = uid
 	_market_view = "buyers"
+	_last_arrived_count = -1
 	_render_marketplace()
+	_start_picker_repaint()
 
 
 func _render_buyer_picker() -> void:
@@ -242,8 +252,31 @@ func _render_buyer_picker() -> void:
 	_app_content.add_child(title)
 	if template != null:
 		_app_content.add_child(_make_section_label(template.display_name))
-	for persona in MarketplaceService.interested_buyers(_sell_uid):
+	var arrived := MarketplaceService.arrived_buyers(_sell_uid)
+	_last_arrived_count = arrived.size()
+	for persona in arrived:
 		_app_content.add_child(_make_buyer_row(persona as BuyerPersona))
+	if arrived.size() < MarketplaceService.interested_buyers(_sell_uid).size():
+		_app_content.add_child(_make_section_label("More buyers are still on their way…"))
+
+
+## A light 1s poll that re-renders the picker only when a new buyer has arrived, so the
+## list updates live without constantly rebuilding the view.
+func _start_picker_repaint() -> void:
+	if _picker_repaint == null:
+		_picker_repaint = Timer.new()
+		_picker_repaint.wait_time = 1.0
+		add_child(_picker_repaint)
+		_picker_repaint.timeout.connect(_on_picker_repaint)
+	_picker_repaint.start()
+
+
+func _on_picker_repaint() -> void:
+	if not (visible and _current_app == "marketplace" and _market_view == "buyers"):
+		_picker_repaint.stop()
+		return
+	if MarketplaceService.arrived_buyers(_sell_uid).size() != _last_arrived_count:
+		_render_marketplace()
 
 
 func _make_buyer_row(persona: BuyerPersona) -> Control:
@@ -291,6 +324,12 @@ func _render_haggle() -> void:
 	who.add_theme_font_size_override("font_size", 16)
 	_app_content.add_child(who)
 
+	# Shows whether banter is using the live AI or the offline fallback.
+	_ai_label = Label.new()
+	_ai_label.add_theme_font_size_override("font_size", 11)
+	_refresh_ai_label()
+	_app_content.add_child(_ai_label)
+
 	_said_label = Label.new()
 	_said_label.text = "\"%s\"" % _negotiation.history.back()["text"]
 	_said_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -313,30 +352,46 @@ func _render_haggle() -> void:
 	offer.add_theme_font_size_override("font_size", 18)
 	_app_content.add_child(offer)
 
-	var buttons := HBoxContainer.new()
-	buttons.add_theme_constant_override("separation", 8)
-	buttons.add_child(_make_action("Accept ₱%d" % _negotiation.current_offer, accept_offer))
-	var nudge := _round5(int(round(_negotiation.current_offer * 1.15)))
-	var push := _round5(int(round(_negotiation.current_offer * 1.35)))
-	if nudge <= _negotiation.current_offer:
-		nudge = _negotiation.current_offer + 5
-	if push <= nudge:
-		push = nudge + 5
-	buttons.add_child(_make_action("Ask ₱%d" % nudge, func() -> void: haggle_ask(nudge)))
-	buttons.add_child(_make_action("Ask ₱%d" % push, func() -> void: haggle_ask(push)))
-	buttons.add_child(_make_action("Walk away", haggle_walk))
-	_app_content.add_child(buttons)
+	# Accept the standing offer, or type how much to ask for.
+	_app_content.add_child(_make_action("Accept ₱%d" % _negotiation.current_offer, accept_offer))
+	var ask_row := HBoxContainer.new()
+	ask_row.add_theme_constant_override("separation", 8)
+	var ask_input := LineEdit.new()
+	ask_input.placeholder_text = "Ask for ₱…"
+	ask_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ask_input.focus_mode = Control.FOCUS_ALL
+	ask_input.text_submitted.connect(func(t: String) -> void: _submit_ask(t))
+	ask_row.add_child(ask_input)
+	ask_row.add_child(_make_action("Ask", func() -> void: _submit_ask(ask_input.text)))
+	_app_content.add_child(ask_row)
 
-	# Conversational banter moves (each usable once) to warm the buyer up first.
+	# Conversational banter moves (each usable once) — one full-width row each so the
+	# longer labels stay easy to read.
 	var moves := _negotiation.available_moves()
 	if not moves.is_empty():
-		_app_content.add_child(_make_section_label("Chat"))
-		var banter_row := HBoxContainer.new()
-		banter_row.add_theme_constant_override("separation", 8)
+		_app_content.add_child(_make_section_label("Quick banter"))
+		var banter_box := VBoxContainer.new()
+		banter_box.add_theme_constant_override("separation", 6)
 		for move_id in moves:
 			var label: String = Negotiation.BANTER_MOVES[move_id]["label"]
-			banter_row.add_child(_make_action(label, func() -> void: haggle_banter(move_id)))
-		_app_content.add_child(banter_row)
+			var b := _make_action(label, func() -> void: haggle_banter(move_id))
+			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			banter_box.add_child(b)
+		_app_content.add_child(banter_box)
+
+	# Free-text chat: type anything to banter. Keep it civil — offensive/NSFW messages
+	# disgust the buyer, end the deal, and ghost them.
+	_app_content.add_child(_make_section_label("Say something"))
+	var chat_row := HBoxContainer.new()
+	chat_row.add_theme_constant_override("separation", 8)
+	var chat_input := LineEdit.new()
+	chat_input.placeholder_text = "Type a message…"
+	chat_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chat_input.focus_mode = Control.FOCUS_ALL
+	chat_input.text_submitted.connect(func(text: String) -> void: haggle_chat(text))
+	chat_row.add_child(chat_input)
+	chat_row.add_child(_make_action("Send", func() -> void: haggle_chat(chat_input.text)))
+	_app_content.add_child(chat_row)
 
 
 ## Player accepts the buyer's standing offer and completes the sale. Test seam.
@@ -346,14 +401,35 @@ func accept_offer() -> void:
 	_settle(_negotiation.accept())
 
 
-## Player counters with an asking price. Closes the sale if the buyer accepts, ends
-## if they walk, otherwise re-renders with the new offer. Test seam.
+## Parses a typed asking amount (digits only) and counters with it. Test seam.
+func _submit_ask(text: String) -> void:
+	var price := _parse_price(text)
+	if price > 0:
+		haggle_ask(price)
+
+
+static func _parse_price(text: String) -> int:
+	var digits := ""
+	for ch in text:
+		if ch >= "0" and ch <= "9":
+			digits += ch
+	return int(digits) if not digits.is_empty() else 0
+
+
+## Player counters with an asking price. Closes the sale if the buyer accepts; if the
+## buyer runs out of patience and walks, that's a failed banter (day ghost). Otherwise
+## re-renders with the new offer. Test seam.
 func haggle_ask(price: int) -> void:
 	if _negotiation == null:
 		return
 	var result := _negotiation.counter(price)
 	if result["accepted"]:
 		_settle(_negotiation.final_price)
+		return
+	if result.get("walked", false):
+		MarketplaceService.ghost_failed_banter(_sell_uid, _buyer_id)
+		_feedback_label.text = "%s walked away." % _buyer_display()
+		_back_to_market_home()
 		return
 	_render_marketplace()
 	await _upgrade_buyer_line("How about ₱%d?" % price)
@@ -368,6 +444,7 @@ func _upgrade_buyer_line(player_text: String) -> void:
 	var line: String = await NegotiationClient.fetch_banter(
 		persona, _negotiation.current_offer, player_text, _negotiation.history
 	)
+	_refresh_ai_label()
 	if line.is_empty():
 		return
 	if _current_app == "marketplace" and _market_view == "haggle" and is_instance_valid(_said_label):
@@ -384,12 +461,87 @@ func haggle_banter(move_id: String) -> void:
 	await _upgrade_buyer_line(str(Negotiation.BANTER_MOVES[move_id]["say"]))
 
 
-## Player walks away from the deal. Test seam.
+## Player sends a free-text banter message. Offensive/NSFW input offends the buyer:
+## the deal ends and they are ghosted (won't show up again for this item). Civil chat
+## warms the mood; online, the buyer's reply is upgraded by the LLM. Test seam.
+func haggle_chat(text: String) -> void:
+	if _negotiation == null or text.strip_edges().is_empty():
+		return
+	# Respond INSTANTLY with the deterministic reply + keyword moderation (no network
+	# wait, so sending never lags). The LLM then upgrades the reply / catches contextual
+	# offenses in the background.
+	if _negotiation.chat(text).get("offended", false):
+		_ghost_offended()
+		return
+	_render_marketplace()
+	await _upgrade_chat_line(text)
+
+
+## Replaces the offline reply with a live LLM line and applies the LLM's contextual
+## moderation verdict (which catches creepy/inappropriate lines the keyword filter
+## misses, e.g. being hit on). Runs after the instant offline response, so there is no
+## perceptible delay when sending. No-op offline / when the deal has since closed.
+func _upgrade_chat_line(player_text: String) -> void:
+	if not SettingsService.online_enabled() or DisplayServer.get_name() == "headless":
+		return
+	if _negotiation == null or _negotiation.is_closed():
+		return
+	var persona := DataRepository.singleton().get_buyer(_buyer_id)
+	var reply := await NegotiationClient.fetch_chat(
+		persona, _negotiation.current_offer, player_text, _negotiation.history
+	)
+	_refresh_ai_label()
+	if _negotiation == null or _negotiation.is_closed() or not reply.get("ok", false):
+		return
+	if bool(reply.get("offended", false)):
+		_negotiation.force_offended()
+		_ghost_offended()
+		return
+	var line := str(reply.get("reply", ""))
+	if line.is_empty():
+		return
+	if _current_app == "marketplace" and _market_view == "haggle" and is_instance_valid(_said_label):
+		_said_label.text = "\"%s\"" % line
+
+
+## Updates the AI/offline indicator from the live setting + the last backend result.
+func _refresh_ai_label() -> void:
+	if not is_instance_valid(_ai_label):
+		return
+	if not SettingsService.online_enabled():
+		_ai_label.text = "AI banter: OFF — offline replies"
+		_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
+	elif NegotiationClient.last_live:
+		_ai_label.text = "AI banter: LIVE"
+		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.5))
+	else:
+		_ai_label.text = "AI banter: offline — start the backend for live AI"
+		_ai_label.add_theme_color_override("font_color", Color(0.88, 0.6, 0.4))
+
+
+func _ghost_offended() -> void:
+	# Offensive/NSFW: a permanent (whole-loop) block — Maverick only artifact-ghosts.
+	if _buyer_id == MarketplaceService.MAVERICK_ID:
+		_feedback_label.text = "%s ghosted you for this artifact." % _buyer_display()
+	else:
+		_feedback_label.text = "You have been blocked by %s." % _buyer_display()
+	MarketplaceService.ghost_offensive(_sell_uid, _buyer_id)
+	_back_to_market_home()
+
+
+## Player ghosts the customer (a failed banter) — no sale, and they skip you for the
+## rest of the day (Mr. Maverick only skips this one artifact). Test seam.
 func haggle_walk() -> void:
 	if _negotiation != null:
 		_negotiation.decline()
-	_feedback_label.text = "You kept the piece."
+		MarketplaceService.ghost_failed_banter(_sell_uid, _buyer_id)
+	_feedback_label.text = "You ghosted %s." % _buyer_display()
 	_back_to_market_home()
+
+
+func _buyer_display() -> String:
+	var persona := DataRepository.singleton().get_buyer(_buyer_id)
+	return persona.display_name if persona != null else "the customer"
 
 
 func _settle(price: int) -> void:

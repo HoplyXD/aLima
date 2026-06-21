@@ -441,6 +441,52 @@ func instance_is_decal_based(inst: ObjectInstance, template: ScrapObjectTemplate
 	return not effective_decals(inst, template).is_empty()
 
 
+## Builds an artifact's visible 3D presentation (model + condition decals) onto `obj`,
+## which must already be in the tree. Returns true when condition decals were applied.
+## Shared by the restoration bench, the artifact cards, and the Storage previews.
+func present_object(
+	obj: RestorationObject3D, inst: ObjectInstance, template: ScrapObjectTemplate, seed_value: int
+) -> bool:
+	obj.configure(template, inst)
+	obj.register_authored_conditions(_repo, seed_value)
+	var decals := effective_decals(inst, template)
+	if inst != null and not inst.spawned_decals.is_empty():
+		obj.enter_conditions_mode(
+			decals, inst.removed_decals, _decal_colors(decals), _decal_textures(decals), seed_value
+		)
+		return true
+	if not decals.is_empty():
+		obj.enter_photo_mode(
+			decals, inst.removed_decals, _decal_colors(decals), _decal_textures(decals), seed_value
+		)
+		return true
+	return false
+
+
+## {condition_type: Color} from the journal catalog, for tinting condition decals.
+func _decal_colors(decals: Array) -> Dictionary:
+	var colors := {}
+	for decal in decals:
+		var condition := _repo.get_surface_condition(decal.type)
+		colors[decal.type] = condition.to_color() if condition != null else decal.to_color()
+	return colors
+
+
+## {condition_type: Texture2D} from assets/artifact_conditions/<Display Name>.png.
+func _decal_textures(decals: Array) -> Dictionary:
+	var textures := {}
+	for decal in decals:
+		if textures.has(decal.type):
+			continue
+		var condition := _repo.get_surface_condition(decal.type)
+		if condition == null:
+			continue
+		var path := "res://assets/artifact_conditions/%s.png" % condition.display_name
+		if ResourceLoader.exists(path):
+			textures[decal.type] = load(path)
+	return textures
+
+
 ## Returns the decal with the given id among `decals`, or null.
 func _find_decal_in(decals: Array, decal_id: String) -> SurfaceDecal:
 	for decal in decals:

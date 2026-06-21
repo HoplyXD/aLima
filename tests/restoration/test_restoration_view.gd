@@ -164,20 +164,20 @@ func test_workbench_opens_focused_3d_restoration_scene() -> void:
 		view.get_node_or_null("ViewportContainer/SubViewport"), "View is a focused 3D scene"
 	)
 	assert_not_null(view.get_restoration_object(), "View has a manipulable 3D object")
-	assert_true(DayClock.is_paused(), "Restoration view pauses the clock")
+	assert_false(DayClock.is_paused(), "the bench no longer pauses the clock — time keeps moving")
 	DayClock.reset()
 
 
-func test_open_and_close_acquire_and_release_only_their_pause() -> void:
+func test_open_and_close_do_not_pause_the_clock() -> void:
 	_view = await _make_view()
-	DayClock.request_pause(DayClock.PAUSE_DIALOGUE)
 	_view.open()
-	assert_true(_view.owns_pause(), "Opening acquires restoration pause")
-	assert_true(DayClock.is_paused())
+	assert_false(_view.owns_pause(), "the bench no longer owns a clock pause")
+	assert_false(DayClock.is_paused(), "time keeps running at the bench")
 
+	# A dialogue pause from elsewhere is untouched by the bench opening/closing.
+	DayClock.request_pause(DayClock.PAUSE_DIALOGUE)
 	_view.close()
-	assert_false(_view.owns_pause(), "Closing releases restoration pause")
-	assert_true(DayClock.is_paused(), "Closing must not resume a dialogue-held clock")
+	assert_true(DayClock.is_paused(), "the bench never resumes a dialogue-held clock")
 	DayClock.release_pause(DayClock.PAUSE_DIALOGUE)
 	assert_false(DayClock.is_paused())
 

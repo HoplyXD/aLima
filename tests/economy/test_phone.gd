@@ -24,6 +24,7 @@ func before_each() -> void:
 
 func after_each() -> void:
 	DayClock.reset()
+	MarketplaceService._on_loop_reset(0)  # clear any buyer ghosts so tests don't pollute
 	SaveService.delete_save_files()
 	SaveService.set_save_paths(SaveService.DEFAULT_SAVE_PATH, SaveService.DEFAULT_TEMP_PATH)
 
@@ -36,11 +37,13 @@ func _open_phone() -> Phone:
 	return phone
 
 
-func test_opens_on_home_and_pauses() -> void:
+func test_opens_on_home_without_pausing() -> void:
+	# The phone no longer pauses the clock (only dialogue + the pause menu do), so time
+	# keeps running while you browse and new buyers can arrive.
 	assert_false(DayClock.is_paused())
 	var phone := await _open_phone()
-	assert_true(phone.owns_pause())
-	assert_true(DayClock.is_paused())
+	assert_false(phone.owns_pause(), "the phone does not own a clock pause")
+	assert_false(DayClock.is_paused(), "time keeps running while the phone is open")
 	assert_eq(phone.get_current_app(), "", "phone opens on the home screen")
 
 
@@ -63,11 +66,11 @@ func test_buying_in_tools_shop_app_deducts_and_ships() -> void:
 	assert_eq(_tools.get_owned_tools().size(), 0, "not delivered yet")
 
 
-func test_close_releases_pause() -> void:
+func test_close_leaves_clock_running() -> void:
 	var phone := await _open_phone()
 	phone.close()
 	assert_false(phone.owns_pause())
-	assert_false(DayClock.is_paused())
+	assert_false(DayClock.is_paused(), "the phone never paused the clock")
 
 
 func _add_clean_item(uid: String, value: int = 200) -> void:

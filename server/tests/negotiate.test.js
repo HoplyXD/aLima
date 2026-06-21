@@ -1,6 +1,6 @@
 const request = require('supertest');
 const createApp = require('../src/app');
-const { resetClient } = require('../src/services/negotiate_service');
+const { resetClient, parseReply } = require('../src/services/negotiate_service');
 
 // These tests run with no ANTHROPIC_API_KEY, so the endpoint takes the deterministic
 // fallback path (no live model, no @anthropic-ai/sdk dependency required).
@@ -46,10 +46,35 @@ describe('POST /api/negotiate', () => {
     expect(res.status).toBe(400);
   });
 
+  it('returns offended:false on the fallback path', async () => {
+    const res = await request(app).post('/api/negotiate').send(validBody);
+    expect(res.body.offended).toBe(false);
+  });
+
   it('rejects a non-array history', async () => {
     const res = await request(app)
       .post('/api/negotiate')
       .send({ ...validBody, history: 'nope' });
     expect(res.status).toBe(400);
+  });
+});
+
+describe('negotiate parseReply', () => {
+  it('parses a JSON reply with an offended verdict', () => {
+    const out = parseReply('{"buyer_message": "Yuck, you\'re weird!", "offended": true}');
+    expect(out.buyer_message).toBe("Yuck, you're weird!");
+    expect(out.offended).toBe(true);
+  });
+
+  it('tolerates a code fence around the JSON', () => {
+    const out = parseReply('```json\n{"buyer_message": "Fine. ₱200.", "offended": false}\n```');
+    expect(out.buyer_message).toBe('Fine. ₱200.');
+    expect(out.offended).toBe(false);
+  });
+
+  it('falls back to plain text (not offended) when the reply is not JSON', () => {
+    const out = parseReply('A fine piece indeed.');
+    expect(out.buyer_message).toBe('A fine piece indeed.');
+    expect(out.offended).toBe(false);
   });
 });

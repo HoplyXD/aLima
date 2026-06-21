@@ -125,24 +125,24 @@
       "record_type": "buyer_persona",
       "id": "suspicious",
       "display_name": "Mr. Maverick",
-      "motive": "Quietly seeks pieces bearing a certain old symbol.",
-      "budget_range": [150, 1000],
+      "motive": "Always lurking the market — and he'll always lowball you.",
+      "budget_range": [10, 2000],
       "preferred_categories": ["jewelry", "metal"],
-      "negotiation_style": "guarded",
+      "negotiation_style": "aggressive",
       "route_id": "buyer",
       "fallback_response_set": "suspicious_lines",
-      "open_factor": 0.58,
-      "concession_rate": 0.45,
-      "patience": 5,
-      "category_bonus": 0.3,
-      "condition_weight": 0.35,
+      "open_factor": 0.32,
+      "concession_rate": 0.15,
+      "patience": 3,
+      "category_bonus": 0.1,
+      "condition_weight": 0.2,
       "lines": {
-        "open": ["Interesting marking... ₱{offer}, if you don't ask why.", "I'll offer ₱{offer}. Tell no one."],
-        "counter": ["Discretion has a price. ₱{offer}.", "Very well — ₱{offer}, and we never spoke."],
-        "accept": ["Good. You'll see me again.", "Done. Keep this between us."],
-        "walk": ["Then I was never here.", "A pity. Perhaps another piece, another day."],
-        "banter_warm": ["...You know your history. Interesting.", "Quiet and informed. I like that."],
-        "banter_cool": ["Lower your voice.", "I don't respond well to pressure."]
+        "open": ["Junk like this? ₱{offer}, and I'm being kind.", "Eh. ₱{offer}, take it or leave it, kid."],
+        "counter": ["Fine, fine — ₱{offer}. That's me being generous.", "Ugh. ₱{offer}. Don't push your luck."],
+        "accept": ["Pleasure robbing — er, doing business with you.", "Sold! You drive a soft bargain."],
+        "walk": ["Suit yourself. I'm always around anyway.", "Your loss. I'll be here tomorrow, kid."],
+        "banter_warm": ["Heh, charming. Still ₱{offer} though.", "Nice story. Barely moves my price."],
+        "banter_cool": ["Save the speech. ₱{offer}.", "Heard it all before. ₱{offer}, kid."]
       }
     }
   ]

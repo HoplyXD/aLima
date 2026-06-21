@@ -36,6 +36,29 @@ var history: Array = []  ## [{role: "buyer"|"player", text: String, offer: int}]
 ## the later LLM proxy generates richer replies behind the same banter() surface.
 var mood: float = 0.0
 var used_moves: Array[String] = []
+## Set when the player's free-text message was offensive/NSFW: the buyer is disgusted,
+## walks, and should be ghosted (never offered this item again).
+var offended: bool = false
+
+## Friendly words that warm a buyer a touch on free-text banter.
+const _FRIENDLY_WORDS := [
+	"please",
+	"thank",
+	"thanks",
+	"sorry",
+	"nice",
+	"beautiful",
+	"lovely",
+	"story",
+	"history",
+	"heritage",
+	"family",
+	"appreciate",
+	"care",
+	"deal",
+	"fair",
+]
+const _OFFENDED_LINE := "Excuse me? That's vile — we're done here. Don't message me again."
 
 ## move id -> {label (player button), say (player utterance)}.
 const BANTER_MOVES := {
@@ -135,6 +158,56 @@ func _banter_delta(move_id: String) -> float:
 	return float(bias.get(move_id, 0.0))
 
 
+## Free-text banter: the player types anything. Offensive/NSFW input disgusts the
+## buyer — they get angry, the deal closes (walked), and `offended` is set so the
+## caller can ghost them. Friendly, on-topic chat warms the mood a little; anything
+## else nudges it slightly. Returns the standard result dict.
+func chat(text: String) -> Dictionary:
+	if closed:
+		return _result()
+	history.append({"role": "player", "text": text, "offer": current_offer})
+	if ContentModeration.is_inappropriate(text):
+		offended = true
+		walked = true
+		closed = true
+		mood = MOOD_MIN
+		_recompute_ceiling()
+		history.append({"role": "buyer", "text": _OFFENDED_LINE, "offer": 0})
+		return _result()
+	var delta := 0.16 if _sounds_friendly(text) else 0.04
+	mood = clampf(mood + delta, MOOD_MIN, MOOD_MAX)
+	_recompute_ceiling()
+	var warmed := int(round(ceiling * persona.open_factor))
+	current_offer = clampi(maxi(current_offer, warmed), 1, maxi(1, ceiling))
+	# A varied, topic-aware offline reply (the LLM upgrades it online) so the buyer
+	# doesn't just repeat two canned lines.
+	history.append(
+		{"role": "buyer", "text": BanterBot.reply(text), "offer": current_offer}
+	)
+	return _result()
+
+
+func _sounds_friendly(text: String) -> bool:
+	var lower := text.to_lower()
+	for word in _FRIENDLY_WORDS:
+		if lower.contains(word):
+			return true
+	return false
+
+
+## Closes the deal as offended/walked after the fact — used when the LLM's contextual
+## moderation (online) flags a message the offline keyword filter let through (e.g.
+## being hit on). The buyer's reaction line is appended by the caller.
+func force_offended() -> void:
+	if closed:
+		return
+	offended = true
+	walked = true
+	closed = true
+	mood = MOOD_MIN
+	_recompute_ceiling()
+
+
 ## Player accepts the buyer's standing offer. Returns the agreed price.
 func accept() -> int:
 	if closed:
@@ -204,6 +277,7 @@ func _result() -> Dictionary:
 	return {
 		"accepted": closed and not walked,
 		"walked": walked,
+		"offended": offended,
 		"offer": current_offer,
 		"price": final_price,
 		"mood": mood,

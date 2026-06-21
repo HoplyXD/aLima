@@ -127,9 +127,8 @@ func _update_clock() -> void:
 func open() -> void:
 	visible = true
 	_is_open = true
-	if not _owns_pause:
-		DayClock.request_pause(DayClock.PAUSE_RESTORATION)
-		_owns_pause = true
+	# The bench no longer pauses the in-game clock (like the phone) — time keeps moving
+	# while you restore. Only dialogue and the pause menu freeze time.
 	set_process(true)
 	_update_clock()
 	_populate_instances()
@@ -326,23 +325,7 @@ func _rebuild_artifact_bar() -> void:
 func _present_object(
 	obj: RestorationObject3D, inst: ObjectInstance, template: ScrapObjectTemplate, seed_value: int
 ) -> bool:
-	obj.configure(template, inst)
-	obj.register_authored_conditions(_service.get_repository(), seed_value)
-	# Effective decals are the instance's random conditions when present, else the
-	# template's authored decals. Random conditions render on the 3D object (so an
-	# openable still opens after CLEAN); authored photos use the flat photo plane.
-	var decals := _service.effective_decals(inst, template)
-	if not inst.spawned_decals.is_empty():
-		obj.enter_conditions_mode(
-			decals, inst.removed_decals, _condition_colors(decals), _condition_textures(decals), seed_value
-		)
-		return true
-	if not decals.is_empty():
-		obj.enter_photo_mode(
-			decals, inst.removed_decals, _condition_colors(decals), _condition_textures(decals), seed_value
-		)
-		return true
-	return false
+	return _service.present_object(obj, inst, template, seed_value)
 
 
 func _pick_artifact(uid: String) -> void:
@@ -885,6 +868,8 @@ func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
 func _process(delta: float) -> void:
 	if not _is_open:
 		return
+	# Time keeps moving at the bench now, so keep the Day/time readout live.
+	_update_clock()
 	var rx := (
 		Input.get_action_strength("restoration_rotate_right")
 		- Input.get_action_strength("restoration_rotate_left")

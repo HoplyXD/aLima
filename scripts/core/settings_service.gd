@@ -34,6 +34,10 @@ var _config_path: String = CONFIG_PATH
 
 func _ready() -> void:
 	_load()
+	# Live online banter is ON automatically at every launch — the player never has to
+	# enable it. Each request still falls back to the offline path on its own if the
+	# backend or connection isn't available, so this is safe with no internet.
+	online_services = true
 	apply_display()
 
 

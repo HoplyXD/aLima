@@ -97,6 +97,7 @@ text = "Marketplace"
 
 [node name="AppScroll" type="ScrollContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/AppView"]
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
 [node name="AppContent" type="VBoxContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/AppView/AppScroll"]
 unique_name_in_owner = true

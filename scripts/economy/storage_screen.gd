@@ -24,12 +24,18 @@ signal closed
 signal restore_requested(uid: String)
 
 const DETAIL_WIDTH: float = 360.0
-const BOX_MIN: Vector2 = Vector2(150, 60)
-const SLOT_MIN: Vector2 = Vector2(150, 52)
+const BOX_MIN: Vector2 = Vector2(164, 196)
+const SLOT_MIN: Vector2 = Vector2(164, 196)
 const DRAG_KIND: String = "storage_tool"
+
+## Rotating 3D preview card + the artifact model, shared with the restoration bench.
+const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
+const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
+const PREVIEW_SCALE: float = 0.46
 
 var _owns_pause: bool = false
 var _tools: ToolService
+var _restoration: RestorationService
 var _selected_artifact_uid: String = ""  ## Shared by the Artifacts + Key Items detail.
 var _selected_tool_uid: String = ""
 
@@ -41,6 +47,7 @@ var _selected_tool_uid: String = ""
 func _ready() -> void:
 	visible = false
 	_tools = ToolService.new()
+	_restoration = RestorationService.new()
 	_close_button.pressed.connect(close)
 
 
@@ -172,30 +179,25 @@ func _build_artifacts_tab() -> void:
 		if template == null or not template.deliverable:
 			continue  # quest-given items live under Key Items.
 		any = true
-		grid.add_child(_make_artifact_box(inst, template, target == inst.uid))
+		_add_artifact_card(grid, inst, template, target == inst.uid)
 	if not any:
 		grid.add_child(_make_note("No restorable artifacts in storage yet."))
 	_render_artifact_detail(detail_host, _selected_artifact_uid)
 
 
-func _make_artifact_box(
-	inst: ObjectInstance, template: ScrapObjectTemplate, is_target: bool
-) -> Button:
-	var box := Button.new()
-	box.custom_minimum_size = BOX_MIN
-	box.clip_text = true
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.toggle_mode = false
-	var marker := "  ◆" if is_target else ""
-	var selected := _selected_artifact_uid == inst.uid
-	var prefix := "▸ " if selected else ""
-	box.text = "%s%s\n%s%s" % [prefix, template.display_name, _state_word(inst), marker]
-	box.add_theme_color_override("font_color", _rarity_color(template.base_rarity))
-	if selected:
-		box.modulate = Color(1.2, 1.2, 1.2)
+## Adds a rotating 3D preview card for one artifact (model + its condition decals, so
+## the player can see what needs restoring). Clicking shows its detail.
+func _add_artifact_card(
+	grid: GridContainer, inst: ObjectInstance, template: ScrapObjectTemplate, is_target: bool
+) -> void:
+	var card: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
+	grid.add_child(card)  # in the tree first, so the preview builds in the card's world
+	var obj: RestorationObject3D = ARTIFACT_OBJECT_SCENE.instantiate()
+	var name_text := template.display_name + ("  ◆" if is_target else "")
+	card.set_preview(obj, name_text, _rarity_color(template.base_rarity), PREVIEW_SCALE)
+	_restoration.present_object(obj, inst, template, inst.uid.hash())
 	var uid := inst.uid
-	box.pressed.connect(func() -> void: _show_artifact(uid))
-	return box
+	card.clicked.connect(func() -> void: _show_artifact(uid))
 
 
 func _show_artifact(uid: String) -> void:
@@ -329,13 +331,28 @@ func _make_tool_chip(inst: ToolInstance, equipped: bool) -> ToolChip:
 	chip.custom_minimum_size = SLOT_MIN
 	chip.clip_text = true
 	var wear := "∞" if inst.is_infinite() else "%d/%d" % [inst.durability, inst.max_durability]
-	chip.text = "%s\n%s" % [def.display_name if def != null else inst.tool_id, wear]
+	var nm := def.display_name if def != null else inst.tool_id
+	chip.text = "%s\n%s" % [nm, wear]  # fallback shown when previews are off
 	if not inst.is_usable():
 		chip.add_theme_color_override("font_color", Color(0.7, 0.4, 0.4))
+	# A rotating 3D preview of the tool fills the chip (built in ToolChip._ready, once
+	# it is in the tree). Drag/click still go to the chip.
+	chip.preview_tool_id = inst.tool_id
+	chip.preview_label = "%s\n%s" % [nm, wear]
+	chip.preview_color = Color(0.7, 0.4, 0.4) if not inst.is_usable() else Color(0.92, 0.9, 0.84)
 	chip.on_drag_out = _on_chip_dragged_out
 	var uid := inst.uid
 	chip.pressed.connect(func() -> void: _show_tool(uid))
 	return chip
+
+
+## Recursively makes a control subtree transparent to the mouse, so an embedded
+## preview never steals clicks/drag from its host chip.
+static func ignore_mouse_recursive(node: Node) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in node.get_children():
+		ignore_mouse_recursive(child)
 
 
 ## An equipped chip dropped outside the workbench unequips.
@@ -451,7 +468,7 @@ func _build_key_items_tab() -> void:
 		var template := repo.get_template(inst.template_id)
 		if template == null or template.deliverable:
 			continue
-		grid.add_child(_make_artifact_box(inst, template, _tools.get_restore_target() == inst.uid))
+		_add_artifact_card(grid, inst, template, _tools.get_restore_target() == inst.uid)
 
 	var fragments: Dictionary = GameState.save_state.persistent.fragments
 	for fragment_id in fragments.keys():
@@ -717,13 +734,42 @@ class ToolChip:
 	## broadcast to every chip in the tree, so without this flag every equipped chip
 	## would unequip itself on one failed drop — the "unequips everything" bug.
 	var _is_dragging: bool = false
+	## Rotating 3D tool preview (built in _ready when in the tree). Empty = no preview.
+	var preview_tool_id: String = ""
+	var preview_label: String = ""
+	var preview_color: Color = Color.WHITE
+
+	func _ready() -> void:
+		if preview_tool_id.is_empty() or not SettingsService.previews_enabled():
+			return
+		var card: Preview3DCard = StorageScreen.PREVIEW_CARD_SCENE.instantiate()
+		add_child(card)  # in the tree now, so the preview viewport renders
+		card.set_anchors_preset(Control.PRESET_FULL_RECT)
+		# Tools are small meshes, so they need a bigger scale than artifacts to fill the
+		# card and read clearly.
+		card.set_preview(
+			RestorationTool.build_geometry(preview_tool_id), preview_label, preview_color, 1.6
+		)
+		StorageScreen.ignore_mouse_recursive(card)
+		text = ""  # the card shows the name now
 
 	func _get_drag_data(_at_position: Vector2) -> Variant:
-		var preview := Label.new()
-		preview.text = text
-		preview.add_theme_color_override("font_color", Color(1, 1, 1))
-		set_drag_preview(preview)
 		_is_dragging = true
+		# Drag the whole 3D box: a copy of the card follows the cursor (centred on it).
+		if not preview_tool_id.is_empty() and SettingsService.previews_enabled():
+			var holder := Control.new()
+			var card: Preview3DCard = StorageScreen.PREVIEW_CARD_SCENE.instantiate()
+			card.position = -0.5 * StorageScreen.SLOT_MIN  # centre the box on the cursor
+			holder.add_child(card)
+			set_drag_preview(holder)  # in the tree now → the card's viewport renders
+			card.set_preview(
+				RestorationTool.build_geometry(preview_tool_id), preview_label, preview_color, 1.6
+			)
+		else:
+			var preview := Label.new()
+			preview.text = preview_label if not preview_label.is_empty() else text
+			preview.add_theme_color_override("font_color", Color(1, 1, 1))
+			set_drag_preview(preview)
 		return {"kind": StorageScreen.DRAG_KIND, "uid": tool_uid, "from_equipped": from_equipped}
 
 	func _notification(what: int) -> void:

@@ -173,65 +173,72 @@ func _build_geometry(tool_id: String) -> void:
 	for child in _geometry.get_children():
 		child.queue_free()
 	_materials.clear()
+	var holder := build_geometry(tool_id, _materials)
+	_geometry.add_child(holder)
+
+
+## Builds a tool's distinct prop geometry under a fresh Node3D. Static so previews
+## elsewhere (e.g. Storage) can show the same 3D tool. Each mesh's material is appended
+## to `materials_out` so the caller (the bench prop) can toggle the selection emission.
+static func build_geometry(tool_id: String, materials_out: Array = []) -> Node3D:
+	var holder := Node3D.new()
 	var preset: Dictionary = PRESENTATION.get(tool_id, PRESENTATION["_default"])
 	match String(preset.get("shape", "block")):
 		"cloth":
-			_build_cloth(preset)
+			_static_cloth(holder, preset, materials_out)
 		"brush":
-			_build_brush(preset)
+			_static_brush(holder, preset, materials_out)
 		"bottle":
-			_build_bottle(preset)
+			_static_bottle(holder, preset, materials_out)
 		_:
-			_build_block(preset)
+			_static_block(holder, preset, materials_out)
+	return holder
 
 
-func _build_cloth(preset: Dictionary) -> void:
+static func _static_cloth(holder: Node3D, preset: Dictionary, mats: Array) -> void:
 	var color: Color = preset.get("color", Color(0.88, 0.84, 0.68))
-	var pad := _mesh(BoxMesh.new(), color, 0.95)
+	var pad := _static_mesh(holder, BoxMesh.new(), color, 0.95, mats)
 	(pad.mesh as BoxMesh).size = Vector3(0.32, 0.05, 0.24)
-	_geometry.add_child(pad)
-	var fold := _mesh(BoxMesh.new(), color.darkened(0.08), 0.95)
+	var fold := _static_mesh(holder, BoxMesh.new(), color.darkened(0.08), 0.95, mats)
 	(fold.mesh as BoxMesh).size = Vector3(0.22, 0.045, 0.16)
 	fold.position = Vector3(0.04, 0.045, -0.02)
 	fold.rotation = Vector3(0.0, deg_to_rad(12.0), 0.0)
-	_geometry.add_child(fold)
 
 
-func _build_brush(preset: Dictionary) -> void:
-	var handle := _mesh(BoxMesh.new(), preset.get("handle", Color(0.6, 0.45, 0.28)), 0.7)
+static func _static_brush(holder: Node3D, preset: Dictionary, mats: Array) -> void:
+	var handle := _static_mesh(holder, BoxMesh.new(), preset.get("handle", Color(0.6, 0.45, 0.28)), 0.7, mats)
 	(handle.mesh as BoxMesh).size = Vector3(0.08, 0.05, 0.3)
-	_geometry.add_child(handle)
-	var bristles := _mesh(BoxMesh.new(), preset.get("bristle", Color(0.2, 0.18, 0.14)), 0.85)
+	var bristles := _static_mesh(
+		holder, BoxMesh.new(), preset.get("bristle", Color(0.2, 0.18, 0.14)), 0.85, mats
+	)
 	(bristles.mesh as BoxMesh).size = Vector3(0.1, 0.08, 0.12)
 	bristles.position = Vector3(0.0, -0.02, -0.2)
-	_geometry.add_child(bristles)
 
 
-func _build_bottle(preset: Dictionary) -> void:
+static func _static_bottle(holder: Node3D, preset: Dictionary, mats: Array) -> void:
 	var color: Color = preset.get("color", Color(0.62, 0.78, 0.55))
-	var body := _mesh(CylinderMesh.new(), color, 0.4)
+	var body := _static_mesh(holder, CylinderMesh.new(), color, 0.4, mats)
 	var body_mesh := body.mesh as CylinderMesh
 	body_mesh.top_radius = 0.08
 	body_mesh.bottom_radius = 0.09
 	body_mesh.height = 0.22
-	_geometry.add_child(body)
-	var cap := _mesh(CylinderMesh.new(), color.darkened(0.35), 0.6)
+	var cap := _static_mesh(holder, CylinderMesh.new(), color.darkened(0.35), 0.6, mats)
 	var cap_mesh := cap.mesh as CylinderMesh
 	cap_mesh.top_radius = 0.04
 	cap_mesh.bottom_radius = 0.04
 	cap_mesh.height = 0.06
 	cap.position = Vector3(0.0, 0.14, 0.0)
-	_geometry.add_child(cap)
 
 
-func _build_block(preset: Dictionary) -> void:
-	var block := _mesh(BoxMesh.new(), preset.get("color", Color(0.72, 0.72, 0.74)), 0.7)
+static func _static_block(holder: Node3D, preset: Dictionary, mats: Array) -> void:
+	var block := _static_mesh(holder, BoxMesh.new(), preset.get("color", Color(0.72, 0.72, 0.74)), 0.7, mats)
 	(block.mesh as BoxMesh).size = Vector3(0.2, 0.1, 0.2)
-	_geometry.add_child(block)
 
 
-## A MeshInstance3D with a matte, tracked-for-highlight material.
-func _mesh(mesh: Mesh, color: Color, roughness: float) -> MeshInstance3D:
+## A MeshInstance3D child with a matte material (tracked in `mats` for the highlight).
+static func _static_mesh(
+	holder: Node3D, mesh: Mesh, color: Color, roughness: float, mats: Array
+) -> MeshInstance3D:
 	var node := MeshInstance3D.new()
 	node.mesh = mesh
 	var mat := StandardMaterial3D.new()
@@ -242,5 +249,6 @@ func _mesh(mesh: Mesh, color: Color, roughness: float) -> MeshInstance3D:
 	mat.emission_energy_multiplier = 0.6
 	mat.emission_enabled = false  # toggled on while selected
 	node.material_override = mat
-	_materials.append(mat)
+	mats.append(mat)
+	holder.add_child(node)
 	return node

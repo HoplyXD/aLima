@@ -9,8 +9,13 @@ extends CanvasLayer
 
 signal closed  ## Emitted after triage is confirmed and applied.
 
+## Rotating 3D artifact preview, shared with the bench/storage.
+const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
+const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
+
 var _state: TriageState
 var _service: TriageService
+var _restoration: RestorationService
 var _rows: Dictionary = {}  ## uid -> Control row.
 
 @onready var _panel: Panel = $Panel
@@ -69,11 +74,29 @@ func _build_rows() -> void:
 	for child in _items_container.get_children():
 		child.queue_free()
 	_rows.clear()
+	if _restoration == null:
+		_restoration = RestorationService.new()
 
 	for inst in _state.instances:
 		var row := _make_row(inst)
 		_items_container.add_child(row)
 		_rows[inst.uid] = row
+		_fill_row_preview(row, inst)
+
+
+## Builds the row's rotating artifact preview (model + condition decals) once the row
+## is in the tree, so the player sees what each delivered piece actually looks like.
+func _fill_row_preview(row: Control, inst: ObjectInstance) -> void:
+	if not row.has_meta("preview_card"):
+		return
+	var template := DataRepository.singleton().get_template(inst.template_id)
+	if template == null:
+		return
+	var card: Preview3DCard = row.get_meta("preview_card")
+	var obj: RestorationObject3D = ARTIFACT_OBJECT_SCENE.instantiate()
+	var color := GlowMapper.get_instance_glow_color(template.base_rarity, false, false)
+	card.set_preview(obj, template.display_name, color, 0.46)
+	_restoration.present_object(obj, inst, template, inst.uid.hash())
 
 
 func _make_row(inst: ObjectInstance) -> Control:
@@ -99,11 +122,20 @@ func _make_row(inst: ObjectInstance) -> Control:
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var icon := ColorRect.new()
-	icon.custom_minimum_size = Vector2(32, 32)
-	icon.color = glow_color
-	icon.tooltip_text = glow_name
-	row.add_child(icon)
+	# A rotating 3D preview of the delivered artifact (filled in after the row is in the
+	# tree). Falls back to the flat glow swatch when previews are off.
+	if SettingsService.previews_enabled():
+		var card: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
+		card.custom_minimum_size = Vector2(96, 108)
+		card.tooltip_text = glow_name
+		row.add_child(card)
+		row.set_meta("preview_card", card)
+	else:
+		var icon := ColorRect.new()
+		icon.custom_minimum_size = Vector2(40, 40)
+		icon.color = glow_color
+		icon.tooltip_text = glow_name
+		row.add_child(icon)
 
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL

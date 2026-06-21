@@ -93,14 +93,15 @@ func test_dialogue_advances_via_left_click() -> void:
 	assert_true(_shop.is_day_running(), "Clock resumes after the dialogue")
 
 
-func test_phone_opens_and_pauses() -> void:
+func test_phone_opens_without_pausing() -> void:
 	_hud.phone_pressed.emit()
 	await wait_physics_frames(1)
 
 	var phone: Phone = _shop.get_node("Phone")
 	assert_true(phone.visible, "Phone button opens the phone")
 	assert_eq(phone.get_current_app(), "", "phone opens on its home screen")
-	assert_false(_shop.is_day_running(), "Shop time pauses while the phone is open")
+	# The phone no longer pauses the clock (only dialogue + the pause menu do).
+	assert_true(_shop.is_day_running(), "time keeps running while the phone is open")
 	assert_false(_visitor.visible, "No visitor for the phone")
 
 	phone.open_app("marketplace")
@@ -108,7 +109,7 @@ func test_phone_opens_and_pauses() -> void:
 
 	phone.close()
 	await wait_physics_frames(1)
-	assert_true(_shop.is_day_running(), "Clock resumes after the phone closes")
+	assert_true(_shop.is_day_running(), "clock still running after the phone closes")
 
 
 func test_storage_button_opens_storage_and_pauses() -> void:
