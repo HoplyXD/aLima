@@ -314,6 +314,7 @@ func begin_haggle(persona_id: String) -> void:
 		return
 	_market_view = "haggle"
 	_render_marketplace()
+	_refresh_ai_status()  # probe the backend so the indicator is accurate on open
 
 
 func _render_haggle() -> void:
@@ -504,19 +505,36 @@ func _upgrade_chat_line(player_text: String) -> void:
 		_said_label.text = "\"%s\"" % line
 
 
-## Updates the AI/offline indicator from the live setting + the last backend result.
+## Probes the backend status when entering the haggle so the indicator is accurate
+## before the player sends anything.
+func _refresh_ai_status() -> void:
+	await NegotiationClient.refresh_status()
+	_refresh_ai_label()
+
+
+## Updates the AI/offline indicator from the live setting, the status probe, and the
+## last real reply.
 func _refresh_ai_label() -> void:
 	if not is_instance_valid(_ai_label):
 		return
+	var amber := Color(0.88, 0.6, 0.4)
+	var green := Color(0.45, 0.85, 0.5)
+	var gray := Color(0.62, 0.62, 0.66)
 	if not SettingsService.online_enabled():
 		_ai_label.text = "AI banter: OFF — offline replies"
-		_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
+		_ai_label.add_theme_color_override("font_color", gray)
 	elif NegotiationClient.last_live:
 		_ai_label.text = "AI banter: LIVE"
-		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.5))
+		_ai_label.add_theme_color_override("font_color", green)
+	elif NegotiationClient.status_reachable and NegotiationClient.status_live_capable:
+		_ai_label.text = "AI banter: ready — say something to go live"
+		_ai_label.add_theme_color_override("font_color", green)
+	elif NegotiationClient.status_reachable:
+		_ai_label.text = "AI banter: backend up, no model — set a key or LLM_PROVIDER=local"
+		_ai_label.add_theme_color_override("font_color", amber)
 	else:
-		_ai_label.text = "AI banter: offline — start the backend for live AI"
-		_ai_label.add_theme_color_override("font_color", Color(0.88, 0.6, 0.4))
+		_ai_label.text = "AI banter: offline — start the backend (npm start in server/)"
+		_ai_label.add_theme_color_override("font_color", amber)
 
 
 func _ghost_offended() -> void:

@@ -150,6 +150,19 @@ function useLocal() {
   return !config.anthropicApiKey; // 'auto'
 }
 
+// Whether a live model is configured (no network call). For local we can only confirm
+// the provider is set — whether the local server is actually up is proven by a real
+// reply (fallback:false). For Anthropic, a key must be present.
+function providerStatus() {
+  const usingLocal = useLocal();
+  return {
+    provider: config.llmProvider,
+    using_local: usingLocal,
+    live_capable: usingLocal ? true : Boolean(config.anthropicApiKey),
+    model: usingLocal ? config.localLlmModel : config.anthropicModel,
+  };
+}
+
 async function generateBanter(body) {
   const base = { ok: true, offer: Math.round(body.listing_price || 0), walked_away: false };
   if (useLocal()) {
@@ -183,6 +196,7 @@ async function generateBanter(body) {
 
 module.exports = {
   generateBanter,
+  providerStatus,
   getClient,
   resetClient,
   buildSystemPrompt,

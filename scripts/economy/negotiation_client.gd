@@ -13,6 +13,36 @@ const TIMEOUT_SECONDS: float = 6.0
 ## fell back to offline (false). Drives the phone's AI/offline indicator.
 var last_live: bool = false
 
+## Cached result of the last status probe (refresh_status): is the backend reachable,
+## and does it have a live model configured (key set, or local provider)?
+var status_reachable: bool = false
+var status_live_capable: bool = false
+
+
+## Probes GET /api/negotiate/status (no model call) so the indicator can show the real
+## state before any banter: backend up? model configured? Coroutine — await it.
+func refresh_status() -> void:
+	status_reachable = false
+	status_live_capable = false
+	if not SettingsService.online_enabled() or DisplayServer.get_name() == "headless":
+		return
+	var http := HTTPRequest.new()
+	http.timeout = 3.0
+	add_child(http)
+	var err := http.request(_endpoint() + "/status")
+	if err != OK:
+		http.queue_free()
+		return
+	var result: Array = await http.request_completed
+	http.queue_free()
+	if int(result[0]) != HTTPRequest.RESULT_SUCCESS or int(result[1]) != 200:
+		return
+	var data: Variant = JSON.parse_string((result[3] as PackedByteArray).get_string_from_utf8())
+	if not (data is Dictionary) or not bool(data.get("ok", false)):
+		return
+	status_reachable = true
+	status_live_capable = bool(data.get("live_capable", false))
+
 
 ## Backend /api/negotiate URL from the project's configured backend base.
 func _endpoint() -> String:
