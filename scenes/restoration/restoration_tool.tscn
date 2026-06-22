@@ -1,10 +1,7 @@
-[gd_scene format=3 uid="uid://bsaqyty17nhpv"]
+[gd_scene load_steps=25 format=3 uid="uid://bsaqyty17nhpv"]
 
 [ext_resource type="Script" uid="uid://c6u4elr76p12a" path="res://scripts/restoration/restoration_tool.gd" id="1_tool"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="2_8u2b2"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_body"]
-size = Vector3(0.26, 0.1, 0.22)
 
 [sub_resource type="QuadMesh" id="QuadMesh_info"]
 size = Vector2(0.34, 0.22)
@@ -34,26 +31,203 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="RestorationTool" type="Node3D" unique_id=1764947723]
+[sub_resource type="BoxMesh" id="Mesh_cloth_pad"]
+size = Vector3(0.32, 0.05, 0.24)
+
+[sub_resource type="BoxMesh" id="Mesh_brush_handle"]
+size = Vector3(0.08, 0.05, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_brush_bristles"]
+size = Vector3(0.1, 0.08, 0.12)
+
+[sub_resource type="CylinderMesh" id="Mesh_bottle_body"]
+top_radius = 0.08
+bottom_radius = 0.09
+height = 0.22
+
+[sub_resource type="CylinderMesh" id="Mesh_bottle_cap"]
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.06
+
+[sub_resource type="StandardMaterial3D" id="Mat_soft_cloth"]
+albedo_color = Color(0.88, 0.84, 0.68, 1)
+roughness = 0.95
+emission = Color(0.934, 0.912, 0.824, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_damp_cloth"]
+albedo_color = Color(0.55, 0.68, 0.82, 1)
+roughness = 0.95
+emission = Color(0.753, 0.824, 0.901, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_polish_cloth"]
+albedo_color = Color(0.8, 0.78, 0.6, 1)
+roughness = 0.95
+emission = Color(0.89, 0.879, 0.78, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_soft_handle"]
+albedo_color = Color(0.74, 0.6, 0.36, 1)
+metallic = 0.2
+roughness = 0.7
+emission = Color(0.857, 0.78, 0.648, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_soft_bristle"]
+albedo_color = Color(0.86, 0.78, 0.5, 1)
+metallic = 0.2
+roughness = 0.85
+emission = Color(0.923, 0.879, 0.725, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_rust_handle"]
+albedo_color = Color(0.5, 0.36, 0.24, 1)
+metallic = 0.2
+roughness = 0.7
+emission = Color(0.725, 0.648, 0.582, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_rust_bristle"]
+albedo_color = Color(0.22, 0.2, 0.16, 1)
+metallic = 0.2
+roughness = 0.85
+emission = Color(0.571, 0.56, 0.538, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_solvent_body"]
+albedo_color = Color(0.62, 0.78, 0.55, 1)
+metallic = 0.2
+roughness = 0.4
+emission = Color(0.791, 0.879, 0.753, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_solvent_cap"]
+albedo_color = Color(0.403, 0.507, 0.358, 1)
+metallic = 0.2
+roughness = 0.6
+emission = Color(0.671, 0.729, 0.646, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_stain_body"]
+albedo_color = Color(0.78, 0.7, 0.5, 1)
+metallic = 0.2
+roughness = 0.4
+emission = Color(0.879, 0.835, 0.725, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_stain_cap"]
+albedo_color = Color(0.507, 0.455, 0.325, 1)
+metallic = 0.2
+roughness = 0.6
+emission = Color(0.729, 0.7, 0.629, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_consol_body"]
+albedo_color = Color(0.7, 0.62, 0.82, 1)
+metallic = 0.2
+roughness = 0.4
+emission = Color(0.835, 0.791, 0.901, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_consol_cap"]
+albedo_color = Color(0.455, 0.403, 0.533, 1)
+metallic = 0.2
+roughness = 0.6
+emission = Color(0.7, 0.671, 0.743, 1)
+emission_energy_multiplier = 0.6
+
+[node name="RestorationTool" type="Node3D"]
 script = ExtResource("1_tool")
 
-[node name="Geometry" type="Node3D" parent="." unique_id=190613376]
+[node name="Geometry" type="Node3D" parent="."]
 
-[node name="Body" type="MeshInstance3D" parent="Geometry" unique_id=1705356585]
-mesh = SubResource("BoxMesh_body")
+[node name="soft_cloth" type="Node3D" parent="Geometry"]
 
-[node name="InfoPanel" type="MeshInstance3D" parent="." unique_id=1806335153]
+[node name="Cloth" type="MeshInstance3D" parent="Geometry/soft_cloth"]
+mesh = SubResource("Mesh_cloth_pad")
+surface_material_override/0 = SubResource("Mat_soft_cloth")
+
+[node name="damp_cloth" type="Node3D" parent="Geometry"]
+
+[node name="Cloth" type="MeshInstance3D" parent="Geometry/damp_cloth"]
+mesh = SubResource("Mesh_cloth_pad")
+surface_material_override/0 = SubResource("Mat_damp_cloth")
+
+[node name="polishing_cloth" type="Node3D" parent="Geometry"]
+
+[node name="Cloth" type="MeshInstance3D" parent="Geometry/polishing_cloth"]
+mesh = SubResource("Mesh_cloth_pad")
+surface_material_override/0 = SubResource("Mat_polish_cloth")
+
+[node name="soft_brush" type="Node3D" parent="Geometry"]
+
+[node name="Handle" type="MeshInstance3D" parent="Geometry/soft_brush"]
+mesh = SubResource("Mesh_brush_handle")
+surface_material_override/0 = SubResource("Mat_soft_handle")
+
+[node name="Bristles" type="MeshInstance3D" parent="Geometry/soft_brush"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.2)
+mesh = SubResource("Mesh_brush_bristles")
+surface_material_override/0 = SubResource("Mat_soft_bristle")
+
+[node name="rust_brush" type="Node3D" parent="Geometry"]
+
+[node name="Handle" type="MeshInstance3D" parent="Geometry/rust_brush"]
+mesh = SubResource("Mesh_brush_handle")
+surface_material_override/0 = SubResource("Mat_rust_handle")
+
+[node name="Bristles" type="MeshInstance3D" parent="Geometry/rust_brush"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.2)
+mesh = SubResource("Mesh_brush_bristles")
+surface_material_override/0 = SubResource("Mat_rust_bristle")
+
+[node name="solvent" type="Node3D" parent="Geometry"]
+
+[node name="Body" type="MeshInstance3D" parent="Geometry/solvent"]
+mesh = SubResource("Mesh_bottle_body")
+surface_material_override/0 = SubResource("Mat_solvent_body")
+
+[node name="Cap" type="MeshInstance3D" parent="Geometry/solvent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("Mesh_bottle_cap")
+surface_material_override/0 = SubResource("Mat_solvent_cap")
+
+[node name="stain_lifter" type="Node3D" parent="Geometry"]
+
+[node name="Body" type="MeshInstance3D" parent="Geometry/stain_lifter"]
+mesh = SubResource("Mesh_bottle_body")
+surface_material_override/0 = SubResource("Mat_stain_body")
+
+[node name="Cap" type="MeshInstance3D" parent="Geometry/stain_lifter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("Mesh_bottle_cap")
+surface_material_override/0 = SubResource("Mat_stain_cap")
+
+[node name="consolidant" type="Node3D" parent="Geometry"]
+
+[node name="Body" type="MeshInstance3D" parent="Geometry/consolidant"]
+mesh = SubResource("Mesh_bottle_body")
+surface_material_override/0 = SubResource("Mat_consol_body")
+
+[node name="Cap" type="MeshInstance3D" parent="Geometry/consolidant"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("Mesh_bottle_cap")
+surface_material_override/0 = SubResource("Mat_consol_cap")
+
+[node name="InfoPanel" type="MeshInstance3D" parent="."]
 transform = Transform3D(1.3018137, 0, 0, 0, 1.8811226, 0, 0, 0, 1, 0, -0.28382063, 0.05)
 mesh = SubResource("QuadMesh_info")
 
-[node name="InfoViewport" type="SubViewport" parent="InfoPanel" unique_id=1994467936]
+[node name="InfoViewport" type="SubViewport" parent="InfoPanel"]
 disable_3d = true
 transparent_bg = true
 handle_input_locally = false
 size = Vector2i(320, 206)
 render_target_update_mode = 4
 
-[node name="Panel" type="PanelContainer" parent="InfoPanel/InfoViewport" unique_id=1520647306]
+[node name="Panel" type="PanelContainer" parent="InfoPanel/InfoViewport"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -61,24 +235,24 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_info")
 
-[node name="VBox" type="VBoxContainer" parent="InfoPanel/InfoViewport/Panel" unique_id=779719939]
+[node name="VBox" type="VBoxContainer" parent="InfoPanel/InfoViewport/Panel"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="ToolNameLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=1845070701]
+[node name="ToolNameLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Tool"
 horizontal_alignment = 1
 
-[node name="DurabilityLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=1935114501]
+[node name="DurabilityLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Durability"
 
-[node name="DurabilityBar" type="ProgressBar" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=184498754]
+[node name="DurabilityBar" type="ProgressBar" parent="InfoPanel/InfoViewport/Panel/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
@@ -86,14 +260,14 @@ theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_bar_fill")
 show_percentage = false
 
-[node name="Conditions" type="GridContainer" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=732314105]
+[node name="Conditions" type="GridContainer" parent="InfoPanel/InfoViewport/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 columns = 2
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 2
 
-[node name="ConditionImage" type="TextureRect" parent="InfoPanel/InfoViewport/Panel/VBox/Conditions" unique_id=2097863972]
+[node name="ConditionImage" type="TextureRect" parent="InfoPanel/InfoViewport/Panel/VBox/Conditions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(54, 54)
 layout_mode = 2

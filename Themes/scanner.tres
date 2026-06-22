@@ -33,6 +33,8 @@ expand_margin_bottom = 20.0
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_upsnv"]
 texture = ExtResource("5_dmoks")
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pjpqu"]
+
 [resource]
 Button/colors/font_color = Color(0, 0, 0, 1)
 Button/font_sizes/font_size = 30
@@ -47,3 +49,4 @@ Panel/styles/panel = SubResource("StyleBoxTexture_uqc0h")
 VScrollBar/styles/grabber = SubResource("StyleBoxTexture_upsnv")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxTexture_upsnv")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxTexture_upsnv")
+VScrollBar/styles/scroll = SubResource("StyleBoxTexture_pjpqu")
