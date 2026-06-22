@@ -30,6 +30,9 @@ var fallback_lines: Dictionary = {}  ## phase ("open"/"counter"/"accept"/"walk")
 var starting_cash: int = 0
 var daily_allowance: int = 0
 var unlimited_cash: bool = false
+## A "robotic"/all-business buyer: banter and the seller's explanation never move their
+## price — they value only the object's condition + category. Their AI replies stay terse.
+var ignores_banter: bool = false
 
 
 func _init() -> void:
@@ -55,6 +58,7 @@ static func from_dictionary(data: Dictionary) -> BuyerPersona:
 	b.starting_cash = ModelUtils.as_int(data.get("starting_cash"), 0)
 	b.daily_allowance = ModelUtils.as_int(data.get("daily_allowance"), 0)
 	b.unlimited_cash = bool(data.get("unlimited_cash", false))
+	b.ignores_banter = bool(data.get("ignores_banter", false))
 	b.fallback_lines = ModelUtils.as_dictionary(data.get("lines"))
 	return b
 
@@ -78,6 +82,7 @@ func to_dictionary() -> Dictionary:
 		"starting_cash": starting_cash,
 		"daily_allowance": daily_allowance,
 		"unlimited_cash": unlimited_cash,
+		"ignores_banter": ignores_banter,
 		"lines": fallback_lines.duplicate(true),
 	}
 

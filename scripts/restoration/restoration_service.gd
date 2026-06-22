@@ -50,6 +50,14 @@ class JoinResult:
 	var joined: bool = false
 
 
+## Result of recording a correct-tool stroke against author-placed conditions.
+class AuthoredResult:
+	var ok: bool = false
+	var reached_clean: bool = false  ## True when this stroke removed the last condition.
+	var condition_after: float = 0.0
+	var value_after: int = 0
+
+
 var _game_state: GameState
 var _repo: DataRepository
 
@@ -449,6 +457,13 @@ func present_object(
 ) -> bool:
 	obj.configure(template, inst)
 	obj.register_authored_conditions(_repo, seed_value)
+	# Author-placed decals and data-driven decals are mutually exclusive: when a scene
+	# carries hand-placed conditions, THEY are the conditions — the medallion reads clean
+	# and the data-driven decals are skipped, so a stray placed decal can never linger
+	# behind a "100% clean" instance.
+	if obj.has_authored_conditions():
+		obj.set_fully_clean()
+		return true
 	var decals := effective_decals(inst, template)
 	if inst != null and not inst.spawned_decals.is_empty():
 		obj.enter_conditions_mode(
@@ -578,6 +593,50 @@ func _remaining_decals(template: ScrapObjectTemplate, inst: ObjectInstance) -> i
 		if not inst.removed_decals.has(decal.id):
 			remaining += 1
 	return remaining
+
+
+## Records the gameplay effect of ONE correct-tool stroke against the author-placed
+## conditions on the artifact scene (ArtifactConditionDecal). This is the fix that makes
+## scene-authored decals real conditions: it wears the tool, raises `condition`
+## proportionally to how many active conditions are now cleaned, awards the clean-value
+## bonus as each one is finished, and flips the instance to CLEAN once they're all gone.
+## The decal visuals/removal themselves are owned by RestorationObject3D; this owns the
+## save-state rule. `total_active` is how many conditions this artifact rolled this run;
+## `cleaned_active` is how many are now removed; `finished_one` is true on the stroke that
+## just removed a condition (so the value bonus is awarded once per condition).
+func register_authored_clean(
+	uid: String, tool_id: String, total_active: int, cleaned_active: int, finished_one: bool
+) -> AuthoredResult:
+	var result := AuthoredResult.new()
+	var inst := find_instance_by_id(uid)
+	if inst == null:
+		return result
+	var template := _repo.get_template(inst.template_id)
+	_consume_tool_durability(tool_id)
+	var threshold := template.clean_completion_threshold if template != null else 100
+	if total_active > 0:
+		var fraction := float(cleaned_active) / float(total_active)
+		inst.condition = clampf(fraction * float(threshold), 0.0, float(threshold))
+	if finished_one and template != null:
+		inst.value = clampi(
+			inst.value + template.clean_value_bonus,
+			int(template.base_value_range.x),
+			int(template.base_value_range.y)
+		)
+	if (
+		total_active > 0
+		and cleaned_active >= total_active
+		and inst.state == ModelEnums.ObjState.DIRTY
+	):
+		inst.state = ModelEnums.ObjState.CLEAN
+		result.reached_clean = true
+		EventBus.restoration_completed.emit(inst.uid, inst.condition, tool_id)
+	result.condition_after = inst.condition
+	result.value_after = inst.value
+	_write_instance_back(inst)
+	SaveService.save_game()
+	result.ok = true
+	return result
 
 
 ## Performs the join step on a reassemblable object (e.g. taping torn halves).

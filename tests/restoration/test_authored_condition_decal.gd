@@ -139,6 +139,50 @@ func test_one_correct_stroke_reduces_dirt_without_finishing() -> void:
 	assert_eq(obj.uncleaned_authored_ids().size(), 1, "still present")
 
 
+func _find_instance(uid: String) -> ObjectInstance:
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary and raw.get("uid") == uid:
+			return ObjectInstance.from_dictionary(raw)
+	return null
+
+
+## The bug fix: cleaning author-placed conditions must drive the real instance state —
+## condition rises and the object reaches CLEAN once the last one is removed.
+func test_cleaning_the_last_authored_condition_counts_as_clean() -> void:
+	var obj := await _open_with_object()
+	var condition_id := obj.uncleaned_authored_ids()[0]
+	_view.select_tool("rust_brush")
+	var aim := _aim_at(obj, condition_id)
+
+	for _i in range(12):
+		if _view.attempt_clean_authored_with_ray(aim["origin"], aim["dir"]):
+			break
+
+	var inst := _find_instance("obj_1")
+	assert_not_null(inst)
+	assert_eq(inst.state, ModelEnums.ObjState.CLEAN, "the last authored condition removed -> CLEAN")
+	assert_gt(inst.condition, 0.0, "condition rose as the authored condition was cleaned")
+
+
+func test_randomized_decal_count_limits_active_conditions() -> void:
+	var obj := RestorationObject3D.new()
+	add_child_autofree(obj)
+	await wait_physics_frames(1)
+	for child in obj.get_children():
+		if child.has_method("condition_slug"):
+			child.free()
+	for i in range(4):
+		var decal := ArtifactConditionDecal.new()
+		decal.name = "Condition%d" % i
+		decal.texture = load("res://assets/artifact_conditions/Rust.png")
+		obj.add_child(decal)
+	obj.randomized_decal_count = 2
+
+	obj.register_authored_conditions(DataRepository.singleton(), 123)
+
+	assert_eq(obj.authored_active_count(), 2, "only the randomized number of conditions go live")
+
+
 func test_repeated_correct_strokes_clean_and_sparkle() -> void:
 	var obj := await _open_with_object()
 	var condition_id := obj.uncleaned_authored_ids()[0]

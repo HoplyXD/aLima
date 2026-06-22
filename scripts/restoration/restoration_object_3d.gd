@@ -1,6 +1,13 @@
 @tool
 class_name RestorationObject3D
 extends Node3D
+
+## How many of the author-placed ArtifactConditionDecal children are active on any one
+## run. 0 (or a value >= the number placed) uses them ALL. Otherwise a random subset of
+## this size is chosen, seeded per save + loop, so the same relic shows a different mix of
+## conditions each loop / new save. Set this on each category artifact scene in the
+## inspector ("Randomized Decal Count").
+@export var randomized_decal_count: int = 0
 ## NOTE: @tool so the placeholder geometry builds in the editor — open
 ## scenes/restoration/restoration_artifact.tscn to view/iterate the model directly.
 ## Editor execution only ever runs _build()/reset_orientation() (pure geometry);
@@ -568,10 +575,19 @@ func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> 
 	_authored.clear()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	for raw in _find_authored_decals(self):
+	var all := _find_authored_decals(self)
+	# Randomly pick which placed conditions are live this run (seeded per save + loop).
+	var active := _choose_active_decals(all, rng)
+	for raw in all:
+		var decal: Variant = raw
+		# Inactive decals (this run rolled fewer than were placed) are hidden and not
+		# cleanable — they may be picked on a different loop.
+		if not active.has(decal):
+			decal.visible = false
+			continue
+		decal.visible = true
 		# Duck-typed (no static ArtifactConditionDecal reference) so this @tool script
 		# always compiles in the editor and the artifact geometry still builds there.
-		var decal: Variant = raw
 		if decal.has_method("reset"):
 			decal.reset()  # fresh dirt for this artifact
 		var slug: String = decal.condition_slug()
@@ -666,6 +682,26 @@ func has_authored_conditions() -> bool:
 	return not _authored.is_empty()
 
 
+## How many author-placed conditions are live on this run (after randomisation).
+func authored_active_count() -> int:
+	return _authored.size()
+
+
+## Chooses which placed decals are live this run. With randomized_decal_count <= 0 or
+## >= the number placed, every decal is used; otherwise a seeded shuffle picks that many,
+## so the same relic shows a different subset each loop / save.
+func _choose_active_decals(all: Array, rng: RandomNumberGenerator) -> Array:
+	if randomized_decal_count <= 0 or randomized_decal_count >= all.size():
+		return all
+	var pool := all.duplicate()
+	for i in range(pool.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp: Variant = pool[i]
+		pool[i] = pool[j]
+		pool[j] = tmp
+	return pool.slice(0, randomized_decal_count)
+
+
 ## Test/integration seam: ids of authored conditions not yet cleaned.
 func uncleaned_authored_ids() -> Array[String]:
 	var out: Array[String] = []
@@ -692,6 +728,8 @@ func _find_authored_decals(root: Node) -> Array:
 		if (
 			child is Node3D
 			and child.has_method("condition_slug")
+			and not child.has_meta("data_blemish")  # runtime data-driven blemish, not authored
+			and not child.is_queued_for_deletion()  # a blemish being cleared this frame
 			and not String(child.name).begins_with("GrimeDecal")
 		):
 			found.append(child)
@@ -742,6 +780,9 @@ static func decals_supported() -> bool:
 func _make_decal(center: Vector3, color: Color, normal: Vector3, texture: Texture2D) -> Node3D:
 	var node: Variant = CONDITION_DECAL_SCENE.instantiate()
 	node.name = "GrimeDecal"
+	# Tagged so register_authored_conditions never mistakes a runtime data-driven blemish
+	# for an author-placed condition (name-matching alone is fragile across reloads).
+	node.set_meta("data_blemish", true)
 	node.align_to_surface = false  # we orient it explicitly below
 	node.box_size = BLEMISH_RADIUS * 2.6
 	if texture != null:

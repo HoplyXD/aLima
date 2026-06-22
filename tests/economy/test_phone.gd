@@ -79,9 +79,29 @@ func _add_clean_item(uid: String, value: int = 200) -> void:
 	inst.uid = uid
 	inst.condition = 85
 	inst.state = ModelEnums.ObjState.CLEAN
+	inst.authenticity = ModelEnums.Verdict.AUTHENTIC  # scanned & judged, so it's sellable
 	inst.value = value
 	inst.storage_cost = 1
 	GameState.save_state.loop.inventory.append(inst.to_dictionary())
+
+
+func test_item_is_not_sellable_until_scanned_and_judged() -> void:
+	var inst := ObjectInstance.new()
+	inst.template_id = "tarnished_pendant"
+	inst.uid = "unscanned1"
+	inst.condition = 90
+	inst.state = ModelEnums.ObjState.CLEAN
+	inst.value = 200
+	inst.storage_cost = 1  # authenticity left UNKNOWN — not yet scanned/judged
+	var inv: Array = GameState.save_state.loop.inventory
+	inv.append(inst.to_dictionary())
+
+	assert_eq(MarketplaceService.get_sellable().size(), 0, "a clean but unscanned item can't be sold")
+
+	inst.authenticity = ModelEnums.Verdict.AUTHENTIC  # the player scans + commits a verdict
+	inv[inv.size() - 1] = inst.to_dictionary()
+
+	assert_eq(MarketplaceService.get_sellable().size(), 1, "scanning + judging unlocks selling")
 
 
 func test_marketplace_sell_flow_accepts_an_offer() -> void:

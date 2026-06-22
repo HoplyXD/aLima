@@ -98,6 +98,15 @@ func test_offer_never_exceeds_a_cash_capped_ceiling() -> void:
 	assert_true(n.current_offer <= 90, "an unaffordable ask is capped to what the buyer can pay")
 
 
+func test_robotic_buyer_is_unmoved_by_banter() -> void:
+	var n := Negotiation.open(_persona({"ignores_banter": true}), 200, 100, "metal")
+	var before := n.ceiling
+	n.banter_mood_only("This piece has a beautiful family history I think you'll love!")
+	assert_eq(n.ceiling, before, "free-text banter doesn't move a robotic buyer's ceiling")
+	n.banter("history")
+	assert_eq(n.ceiling, before, "a banter move doesn't move it either — only the object matters")
+
+
 func test_repeated_greedy_asks_make_the_buyer_walk() -> void:
 	var n := Negotiation.open(_persona({"patience": 2}), 200, 100, "metal")
 	var greedy := n.ceiling * 5

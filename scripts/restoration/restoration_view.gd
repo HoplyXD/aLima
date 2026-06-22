@@ -314,7 +314,7 @@ func _rebuild_artifact_bar() -> void:
 			# preview shows the player exactly what they'll need to restore.
 			var preview: RestorationObject3D = ARTIFACT_OBJECT_SCENE.instantiate()
 			card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
-			_present_object(preview, inst, template, uid.hash())
+			_present_object(preview, inst, template, _artifact_seed(uid))
 
 
 ## Builds an artifact's visible presentation (model + condition decals) onto `obj`.
@@ -326,6 +326,13 @@ func _present_object(
 	obj: RestorationObject3D, inst: ObjectInstance, template: ScrapObjectTemplate, seed_value: int
 ) -> bool:
 	return _service.present_object(obj, inst, template, seed_value)
+
+
+## Deterministic per-artifact seed for decal layout + which random conditions appear.
+## Folds in the loop index so a relic shows a different mix each loop (and each new save,
+## since instance uids differ).
+func _artifact_seed(uid: String) -> int:
+	return uid.hash() ^ (GameState.loop_index * 104729)
 
 
 func _pick_artifact(uid: String) -> void:
@@ -362,8 +369,8 @@ func load_instance(uid: String) -> void:
 		_show_invalid_state()
 		return
 	# Per-instance seed so a shared placed decal scatters/cleans independently per
-	# artifact, and the same template's conditions land in different spots.
-	var instance_seed := uid.hash()
+	# artifact; folding in the loop index re-rolls which random conditions appear each loop.
+	var instance_seed := _artifact_seed(uid)
 	_object.visible = true
 	if not _present_object(_object, inst, template, instance_seed):
 		# No condition decals: restore the cleaned spots from this session or the save.
@@ -527,12 +534,24 @@ func clean_authored_condition(condition_id: String) -> bool:
 		_caption_label.text = "Wrong tool — the %s needs %s." % [label, needs]
 		return false
 	var cleaned := _object.apply_authored_clean(condition_id, strength)
+	# Record the gameplay effect (wear the tool, raise condition/value, reach CLEAN) — this
+	# is what makes the author-placed decals real conditions, not just a visual.
+	var total := _object.authored_active_count()
+	var done := total - _object.uncleaned_authored_ids().size()
+	var res := _service.register_authored_clean(_selected_uid, _selected_tool_id, total, done, cleaned)
 	if cleaned:
 		_feedback_label.text = "The %s lifts away — spotless!" % label
-		_caption_label.text = "Cleaned the %s." % label
+		_caption_label.text = (
+			"The surface is clean. Open the clasp to see inside."
+			if res.reached_clean
+			else "Cleaned the %s." % label
+		)
 	else:
 		_feedback_label.text = "Working off the %s..." % label
 		_caption_label.text = "Keep scrubbing the %s." % label
+	var inst := _service.find_instance_by_id(_selected_uid)
+	if inst != null:
+		_refresh(inst, _service.get_repository().get_template(inst.template_id))
 	return cleaned
 
 
@@ -728,7 +747,11 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_refresh_photo(inst, template)
 		return
 
-	if _object.is_condition_mode():
+	if _object.has_authored_conditions():
+		var total := _object.authored_active_count()
+		var cleaned := total - _object.uncleaned_authored_ids().size()
+		_surface_bar.value = (float(cleaned) / float(total) * 100.0) if total > 0 else 0.0
+	elif _object.is_condition_mode():
 		var total := _service.effective_decals(inst, template).size()
 		var cleaned := total - _remaining_blemishes(inst, template)
 		_surface_bar.value = (float(cleaned) / float(total) * 100.0) if total > 0 else 0.0

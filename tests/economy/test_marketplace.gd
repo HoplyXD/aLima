@@ -95,6 +95,7 @@ func _add_item(uid: String, state: int, value: int = 0, condition: float = 80.0)
 	inst.uid = uid
 	inst.condition = condition
 	inst.state = state
+	inst.authenticity = ModelEnums.Verdict.AUTHENTIC  # scanned & judged, so it can be listed
 	inst.value = value
 	inst.storage_cost = 1
 	GameState.save_state.loop.inventory.append(inst.to_dictionary())

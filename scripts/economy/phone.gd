@@ -393,13 +393,20 @@ func accept_offer() -> void:
 	_settle(_negotiation.accept())
 
 
-## Pulls the first run of digits out of a typed message as a peso amount (0 = none).
+## The player's offered price = the LAST run of digits in the message, so
+## "it's worth 70 but I'll do 60" reads as ₱60, not ₱70 (and not "7060").
 static func _parse_price(text: String) -> int:
-	var digits := ""
+	var last := ""
+	var current := ""
 	for ch in text:
 		if ch >= "0" and ch <= "9":
-			digits += ch
-	return int(digits) if not digits.is_empty() else 0
+			current += ch
+		elif not current.is_empty():
+			last = current
+			current = ""
+	if not current.is_empty():
+		last = current
+	return int(last) if not last.is_empty() else 0
 
 
 ## Player plays a quick banter move (preset) to shift the buyer's mood. The buyer's reply

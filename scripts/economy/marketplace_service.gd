@@ -173,16 +173,23 @@ func get_pending_shipments() -> Array:
 # --- Selling (deterministic haggle) ------------------------------------------
 
 
-## Restorable inventory instances that are restored enough to sell (CLEAN or OPEN).
+## Inventory instances ready to sell: restored (CLEAN or OPEN) AND scanned & judged. The
+## player must Scan & Judge a piece (commit a verdict) before it can be listed — that's
+## why an item only appears in the Marketplace after scanning.
 func get_sellable() -> Array[ObjectInstance]:
 	var out: Array[ObjectInstance] = []
 	for raw in GameState.save_state.loop.inventory:
 		if not (raw is Dictionary):
 			continue
 		var inst := ObjectInstance.from_dictionary(raw)
-		if _is_restored(inst):
+		if _is_restored(inst) and _is_judged(inst):
 			out.append(inst)
 	return out
+
+
+## True once the player has committed a scan verdict on the instance.
+func _is_judged(inst: ObjectInstance) -> bool:
+	return inst.authenticity != ModelEnums.Verdict.UNKNOWN
 
 
 ## The assessed value of an instance: its recorded value if set, else the template's
@@ -241,22 +248,41 @@ func arrived_buyers(uid: String) -> Array[BuyerPersona]:
 
 
 ## Assigns an arrival time (in-game minute index) to any newly-eligible buyer for `uid`
-## that doesn't have one yet: Maverick is instant; each other buyer arrives 1-20 in-game
-## minutes after the latest arrival scheduled so far. Stable once set (per loop).
+## that doesn't have one yet. Mr. Maverick is always instant (he's always the first to
+## message); every OTHER buyer arrives in a RANDOMISED order, each 1-20 in-game minutes
+## after the previous — so who shows up second/third differs each run. Seeded per item +
+## loop so it's stable while the player shops (and re-rolls on a new loop). Stable once set.
 func _ensure_schedule(uid: String, eligible: Array[BuyerPersona]) -> void:
 	var schedule: Dictionary = _buyer_schedule.get(uid, {})
 	var now := _minute_index()
+	var others: Array = []
 	for persona in eligible:
 		if schedule.has(persona.id):
 			continue
 		if persona.id == MAVERICK_ID:
 			schedule[persona.id] = now
 		else:
-			var latest := now
-			for at in schedule.values():
-				latest = maxi(latest, int(at))
-			schedule[persona.id] = latest + randi_range(1, 20)
+			others.append(persona)
+	if not others.is_empty():
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(uid) ^ (GameState.loop_index * 2654435761)
+		_shuffle(others, rng)
+		var latest := now
+		for at in schedule.values():
+			latest = maxi(latest, int(at))
+		for persona in others:
+			latest += rng.randi_range(1, 20)
+			schedule[persona.id] = latest
 	_buyer_schedule[uid] = schedule
+
+
+## Seeded Fisher-Yates shuffle (so arrival order is reproducible per item + loop).
+func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(arr.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp: Variant = arr[i]
+		arr[i] = arr[j]
+		arr[j] = tmp
 
 
 ## Monotonic in-game minute index from the global clock (pauses when the clock pauses).
