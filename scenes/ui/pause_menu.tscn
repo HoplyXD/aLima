@@ -1,6 +1,245 @@
 [gd_scene format=3 uid="uid://bp5sxjtl6tvh1"]
 
-[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Script" uid="uid://ctsaxlfrbicto" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="2_8uki6"]
+[ext_resource type="Theme" uid="uid://ctwdpy3fslv3e" path="res://Themes/title_screen.tres" id="3_0bnpd"]
+[ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="3_4inpj"]
+[ext_resource type="Texture2D" uid="uid://dvon5n1qg4s5o" path="res://assets/UI assets/game/gui/namebox.png" id="4_4inpj"]
+[ext_resource type="Texture2D" uid="uid://fea2iartni8r" path="res://assets/UI assets/game/gui/separator.png" id="6_4inpj"]
 
-[node name="PauseMenu" type="CanvasLayer"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8fwbo"]
+texture = ExtResource("3_4inpj")
+expand_margin_left = 60.0
+expand_margin_right = 60.0
+
+[node name="PauseMenu" type="CanvasLayer" unique_id=122240877]
 script = ExtResource("1_pause")
+
+[node name="Root" type="Control" parent="." unique_id=1552738819]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root" unique_id=441712515]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.094, 0.063, 0.047, 0.6)
+
+[node name="Center" type="CenterContainer" parent="Root" unique_id=1372928506]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 2.0
+offset_right = -13.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_8uki6")
+
+[node name="Panel" type="PanelContainer" parent="Root/Center" unique_id=1328663820]
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_8fwbo")
+
+[node name="Margin" type="MarginContainer" parent="Root/Center/Panel" unique_id=498994826]
+layout_mode = 2
+theme = ExtResource("2_8uki6")
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 57
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 57
+
+[node name="VBox" type="VBoxContainer" parent="Root/Center/Panel/Margin" unique_id=1672411497]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="PausedLabel" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=22282528]
+layout_mode = 2
+theme = ExtResource("3_0bnpd")
+theme_override_font_sizes/font_size = 62
+text = "Game Paused"
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="Root/Center/Panel/Margin/VBox" unique_id=1754232883]
+layout_mode = 2
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_bottom = 12
+
+[node name="TextureRect" type="TextureRect" parent="Root/Center/Panel/Margin/VBox/MarginContainer" unique_id=336144183]
+layout_mode = 2
+texture = ExtResource("4_4inpj")
+
+[node name="DisplaySection" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=1931862920]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
+theme_override_constants/line_spacing = 73
+theme_override_font_sizes/font_size = 30
+text = "Display"
+
+[node name="ResolutionRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox" unique_id=639529966]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ResolutionRow" unique_id=1187879486]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "Resolution"
+
+[node name="ResolutionOption" type="OptionButton" parent="Root/Center/Panel/Margin/VBox/ResolutionRow" unique_id=129268524]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/arrow_margin = 8
+
+[node name="FullscreenRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox" unique_id=1537207299]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/FullscreenRow" unique_id=32543331]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "Fullscreen"
+
+[node name="FullscreenCheck" type="CheckButton" parent="Root/Center/Panel/Margin/VBox/FullscreenRow" unique_id=95492816]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Separator2" type="HSeparator" parent="Root/Center/Panel/Margin/VBox" unique_id=1753977736]
+layout_mode = 2
+size_flags_stretch_ratio = 2.2
+theme_override_constants/separation = 13
+
+[node name="OnlineSection" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=1921418985]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
+theme_override_font_sizes/font_size = 30
+text = "Online"
+
+[node name="OnlineRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox" unique_id=337912614]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/OnlineRow" unique_id=1727366135]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "Live buyer banter"
+
+[node name="OnlineCheck" type="CheckButton" parent="Root/Center/Panel/Margin/VBox/OnlineRow" unique_id=2004962502]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 11.255)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+icon_alignment = 1
+
+[node name="Separator3" type="HSeparator" parent="Root/Center/Panel/Margin/VBox" unique_id=1427061019]
+layout_mode = 2
+size_flags_stretch_ratio = 2.2
+theme_override_constants/separation = 13
+
+[node name="PerformanceSection" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=1815719782]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
+theme_override_font_sizes/font_size = 30
+text = "Performance"
+
+[node name="PreviewsRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox" unique_id=1393413826]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/PreviewsRow" unique_id=1207059435]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "Artifact 3D previews"
+
+[node name="PreviewsCheck" type="CheckButton" parent="Root/Center/Panel/Margin/VBox/PreviewsRow" unique_id=1999199477]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Separator4" type="HSeparator" parent="Root/Center/Panel/Margin/VBox" unique_id=2056843491]
+layout_mode = 2
+size_flags_stretch_ratio = 2.2
+theme_override_constants/separation = 13
+
+[node name="RendererSection" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=1863086424]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
+theme_override_font_sizes/font_size = 30
+text = "Renderer"
+
+[node name="RendererRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox" unique_id=1894913692]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/RendererRow" unique_id=277923103]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "Mode"
+
+[node name="RendererOption" type="OptionButton" parent="Root/Center/Panel/Margin/VBox/RendererRow" unique_id=438022432]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+theme_override_constants/arrow_margin = 8
+selected = 0
+item_count = 2
+popup/item_0/text = "Mobile (decals)"
+popup/item_0/id = 0
+popup/item_1/text = "Compatibility (lite)"
+popup/item_1/id = 1
+
+[node name="Separator5" type="HSeparator" parent="Root/Center/Panel/Margin/VBox" unique_id=370074760]
+layout_mode = 2
+size_flags_stretch_ratio = 2.2
+theme_override_constants/separation = 13
+
+[node name="ApplyRendererButton" type="Button" parent="Root/Center/Panel/Margin/VBox" unique_id=1256197753]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Apply renderer (restarts game)"
+
+[node name="StatusLabel" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=956113385]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.75, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+
+[node name="TextureRect2" type="TextureRect" parent="Root/Center/Panel/Margin/VBox" unique_id=1528629495]
+layout_mode = 2
+texture = ExtResource("6_4inpj")
+
+[node name="ResumeButton" type="Button" parent="Root/Center/Panel/Margin/VBox" unique_id=1266561066]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Resume"
+
+[node name="ExitButton" type="Button" parent="Root/Center/Panel/Margin/VBox" unique_id=1240083628]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Exit Game"
+
+[node name="ReturnToTitleButton" type="Button" parent="Root/Center/Panel/Margin/VBox" unique_id=740293962]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Return to Title"

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c67ei5vb0ixl6"]
 
-[ext_resource type="Theme" uid="uid://ctwdpy3fslv3e" path="res://title_screen.tres" id="1_aqpy5"]
+[ext_resource type="Theme" uid="uid://ctwdpy3fslv3e" path="res://Themes/title_screen.tres" id="1_aqpy5"]
 [ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="1_eb34j"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_aqpy5"]

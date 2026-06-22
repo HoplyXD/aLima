@@ -8,11 +8,15 @@
 
 config_version=5
 
+[alima]
+
+local_ai/model_path="res://models/model.gguf"
+
 [application]
 
 config/name="aLima"
 run/main_scene="uid://dgc2dadcifuf2"
-config/features=PackedStringArray("4.7", "Mobile")
+config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -30,6 +34,8 @@ RouteService="*res://scripts/core/route_service.gd"
 MarketplaceService="*res://scripts/economy/marketplace_service.gd"
 SettingsService="*res://scripts/core/settings_service.gd"
 PauseMenu="*res://scenes/ui/pause_menu.tscn"
+NegotiationClient="*res://scripts/economy/negotiation_client.gd"
+BackendLauncher="*res://scripts/core/backend_launcher.gd"
 LocalAI="*res://scripts/economy/local_ai.gd"
 
 [display]
@@ -41,10 +47,6 @@ window/size/mode=3
 [filesystem]
 
 import/blender/enabled=false
-
-[alima]
-
-local_ai/model_path="res://models/model.gguf"
 
 [network]
 

@@ -1,0 +1,42 @@
+[gd_resource type="Theme" format=3 uid="uid://cfql4ii8qlopa"]
+
+[ext_resource type="Texture2D" uid="uid://bhyrw3u726ol7" path="res://assets/UI assets/game/gui/button/slot_hover_background.png" id="1_0cl72"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="1_o5wbd"]
+[ext_resource type="Texture2D" uid="uid://bbphlmbx4du6k" path="res://assets/UI assets/game/gui/check button clicked.png" id="1_vs0b8"]
+[ext_resource type="Texture2D" uid="uid://ll0ti7n7ud2p" path="res://assets/UI assets/game/gui/button/slot_idle_background.png" id="2_dcvgo"]
+[ext_resource type="Texture2D" uid="uid://bsxi4y1i8ebpw" path="res://assets/UI assets/game/gui/check button normal.png" id="2_tvfy2"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_selkv"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hgc4m"]
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_uoy56"]
+color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tvfy2"]
+texture = ExtResource("1_0cl72")
+expand_margin_left = 6.0
+expand_margin_top = 4.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_selkv"]
+texture = ExtResource("2_dcvgo")
+expand_margin_left = 6.0
+expand_margin_top = 4.0
+expand_margin_bottom = 4.0
+
+[resource]
+default_font = ExtResource("1_o5wbd")
+Button/colors/font_hover_color = Color(0.95, 0.40280002, 0.03800002, 1)
+Button/font_sizes/font_size = 30
+Button/styles/hover = SubResource("StyleBoxEmpty_selkv")
+Button/styles/normal = SubResource("StyleBoxEmpty_hgc4m")
+CheckButton/icons/checked = ExtResource("1_vs0b8")
+CheckButton/icons/unchecked = ExtResource("2_tvfy2")
+HSeparator/constants/separation = 4
+HSeparator/styles/separator = SubResource("StyleBoxLine_uoy56")
+Label/font_sizes/font_size = 25
+OptionButton/font_sizes/font_size = 20
+OptionButton/icons/arrow = null
+OptionButton/styles/hover = SubResource("StyleBoxTexture_tvfy2")
+OptionButton/styles/normal = SubResource("StyleBoxTexture_selkv")
