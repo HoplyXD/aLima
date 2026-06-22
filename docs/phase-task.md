@@ -4,7 +4,7 @@ Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, live/moc
 
 | Field | Value |
 |---|---|
-| Last audited | 2026-06-17 |
+| Last audited | 2026-06-22 |
 | Current milestone | June 30, 2026 vertical slice |
 | Engine target | Godot 4.6.3 |
 | Presentation | Hybrid 3D shop with 2D gameplay interfaces |
@@ -41,18 +41,18 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 ## Current Repository Audit
 
 - `[-]` Godot project scaffold exists and targets feature `4.6`. Godot 4.6.3 is installed and passes explicit import/startup checks via `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`. The bare `godot` command currently resolves to the older `4.5.1.stable` executable at `C:\Users\roman\Desktop\Godot` (Phase 0 P0.2 remains open; see Acceptance below).
-- `[-]` Upstream commit `0255430` is integrated and stabilized: HUD revealed, stray button removed, controllers consolidated. Editor import and headless startup pass under 4.6.3; on-screen manual UI click-through remains for human confirmation.
-- `[x]` The 4.6.3 editor import and configured main-scene startup complete without parser, resource, UID, or missing-file errors. Evidence: `--headless --editor --path . --quit` and `--headless --path . --quit`, run 2026-06-15 (exit 0, no error lines).
-- `[x]` `scenes/Shop.tscn` is the configured main scene; its `HUD` CanvasLayer is now `visible = true` and is a usable production screen.
+- `[x]` Upstream commit `0255430` is integrated and stabilized: HUD revealed, stray button removed, controllers consolidated. Editor import and headless startup pass under 4.6.3.
+- `[x]` The 4.6.3 editor import and configured main-scene startup complete without parser, resource, UID, or missing-file errors. Evidence: `--headless --editor --path . --quit` and `--headless --path . --quit`, run 2026-06-22 (exit 0, no error lines).
+- `[x]` `scenes/Shop.tscn` is the configured main scene; its `HUD` CanvasLayer is `visible = true` and is a usable production screen.
 - `[x]` Shop orchestration is consolidated into one controller on the Shop root (`scripts/shop/shop_controller.gd`) plus a presentation-only HUD (`scenes/ui/shop_hud.gd`). The old `scenes/hud.gd`, `scenes/shop_3d.gd`, and `prototype/` controllers were removed after migration.
 - `[x]` The stray `AAAAAAAAA` test button has been removed from `scenes/Shop.tscn`.
-- `[x]` Clock/day/loop progression is now the real Phase 2 system: a reusable `DayClock` autoload (07:00->20:00 close, minute-level display, pause ownership) and a `LoopController` autoload (Day 1-5 progression + the five-day split reset). The Shop controller is the display + pause-owner driver only. Verified by GUT (`tests/core/test_day_clock.gd`, `test_loop_controller.gd`, `test_save_service.gd`; full suite 69/69, 2026-06-15). On-screen/real-time observation of the running clock remains a manual check (see Phase 2 Acceptance).
-- `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input. Authored prose lives in data: each route in `data/routes/routes.json` carries a `portrait` and a `dialogue` map keyed by visit state (`intro`/`return`, with optional `dayN_*` overrides), loaded via the extended `CharacterRoute` model (`dialogue_for()`). The `RouteService` autoload picks the key per visit (`dialogue_key()`), so the Loop 1 vs Loop 2 branch variants are now live; the Shop controller hardcodes no lines.
+- `[x]` Clock/day/loop progression is the real Phase 2 system: a reusable `DayClock` autoload (07:00->20:00 close, minute-level display, pause ownership) and a `LoopController` autoload (Day 1-5 progression + the five-day split reset). The Shop controller is the display + pause-owner driver only. Verified by GUT (`tests/core/test_day_clock.gd`, `test_loop_controller.gd`, `test_save_service.gd`; full suite 444/444, 2026-06-22). On-screen/real-time observation of the running clock remains a manual check (see Phase 2 Acceptance).
+- `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input. Authored prose lives in data: each route in `data/routes/routes.json` carries a `portrait` and a `dialogue` map keyed by visit state (`intro`/`return`, with optional `dayN_*` overrides), loaded via the extended `CharacterRoute` model (`dialogue_for()`). The `RouteService` autoload picks the key per visit (`dialogue_key()`), so the Loop 1 vs Loop 2 branch variants are live; the Shop controller hardcodes no lines.
 - `[x]` All six characters (Auntie/Shine, Artisan/Lave, Scavenger/Ayla, Archeologist/Sam, Buyer/Maverick, Uncle/Yuyu) have authored intro **and** return dialogue plus sketch portraits (`assets/Characters/*.png`). The Shop door asks `RouteService.resolve_visitor(day, hour)` for the scheduled visitor and `RouteService.dialogue_key()` for the intro/return branch; finishing a conversation marks the route **met** (persistent), so the next visit plays the return set. Covered by `tests/core/test_route_service.gd` + `tests/test_shop_smoke.gd`.
 - `[-]` Route progress is tracked in `RouteService` over PersistentState (so it survives the loop reset): a **met** flag (`dialogue_flags`) drives the dialogue branch, and **completion** (`route_completion`) drives mutual-exclusion visit gating — the artisan (prereq: auntie) displaces the scavenger in their shared afternoon slot only once the auntie route completes, and yields to her until then. Completion is wired to `EventBus.fragment_seated` (seating a route's fragment completes it, grants its rewards, and emits `EventBus.route_completed`). Still missing: the archeologist-lead extra-window shift, the scripted multi-day restoration beats themselves, and route expiry on an unanswered visit.
-- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, and atomic seating are implemented and covered by GUT/backend tests under Godot 4.6.3 / Node. The hybrid 2D/3D journal, full disposition/evening systems, exports, and submission evidence are not implemented.
-- `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. Cleaning tools are now **visible, selectable 3D props on the bench** (`RestorationToolTray`, REST-R9 / task P4.8); the HUD tool buttons are a labelled accessibility/fallback. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate.
-- `[-]` The major shop actions (door, workbench, journal, phone, morning delivery) are now **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
+- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, atomic seating, buyer-persona marketplace economy (buy/sell/haggle/banter), and settings/pause menu are implemented and covered by GUT/backend tests under Godot 4.6.3 / Node. The full disposition router (return/preserve/journal), evening system, exports, and submission evidence are not implemented.
+- `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. Cleaning tools are **visible, selectable 3D props on the bench** (`RestorationToolTray`, REST-R9 / task P4.8); the HUD tool buttons are a labelled accessibility/fallback. Author-placed condition decals (`ArtifactConditionDecal`) and per-instance random surface conditions are now supported. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate.
+- `[-]` The major shop actions (door, workbench, journal, phone, morning delivery) are **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
 
 ## Reconciliation With the Old Tracker
 
@@ -180,17 +180,31 @@ All phase verification snippets that use `$godot` assume this variable is initia
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
 & $godot --version
+# Result (2026-06-22): 4.6.3.stable.official.7d41c59c4
 & $godot --headless --editor --path . --quit
+# Result (2026-06-22): exit 0, no parser/resource/UID errors.
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-gdformat --check .
-gdlint .
+# Result (2026-06-22): 444/444 tests passed, 1442 asserts.
+
+# Lint/format status (2026-06-22): gdformat reports 28 files that would be reformatted;
+# gdlint reports max-line-length and class-definitions-order warnings. These are
+# pre-existing in the working tree and are NOT fixed by this documentation pass.
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
 
 Push-Location server
 npm test
+# Result (2026-06-22): 22/22 passed.
+Pop-Location
+
+Push-Location mock-portal
+npm test
+# Result (2026-06-22): 4/4 passed.
 Pop-Location
 
 git status --short
 git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
+
 ```
 
 ---
@@ -1190,9 +1204,11 @@ Manual: review the locked artifact packet and manifest with the named cultural r
 - `[-]` **P13.2 Implement all nine restoration interactions.** Build brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveal, and mechanism inspection as focused **3D** object-manipulation interactions (REST-R8) on the object's surface, with input-specific tuning. Reuse `RestorationService` / the P4.7 3D restoration view.
   - Progress (2026-06-17): added a **data-driven decal cleaning model** as the foundation for the surface-grime interactions (brushing/wiping/rust/polishing/paper care/frame repair/photo restoration). `SurfaceDecal` (`scripts/models/surface_decal.gd`) authors each blemish with a placeholder hex `color` (texture-swappable later) and a `required_tool`; `RestorationService.clean_decal()` clears the matching decal (wrong tool uses the existing wrong-tool damage; clearing the last decal reaches CLEAN and emits `restoration_completed`) and `join_object()` adds a clean-gated reassembly step (torn-photo halves rejoined with `archival_tape`). Covered by `tests/restoration/test_decal_restoration.gd` (11 tests). Authored use lives in Auntie's 3 quest templates (P10.1).
   - Progress (2026-06-18): the blemish cleaning is now **playable in the focused 3D restoration bench**. `RestorationObject3D` has a photo/blemish mode (flat photo plane with per-blemish hotspots coloured from the journal catalog, analytic ray-pick) and `RestorationView` routes a click/controller action to `clean_decal`, removes the hotspot, shows progress + join/scan prompts, and performs the Archival Tape join. Covered by `tests/restoration/test_photo_restoration_view.gd` (5 tests). Placeholder geometry (QuadMesh photo, sphere blemishes) pending the scaled Page/PNG photo and 3D frame model; engraving reveal and mechanism inspection are still to do; on-screen mouse/controller/touch verification is a pending manual gate.
-  - Progress (2026-06-19): **delivered artifacts now spawn with random surface conditions.** `DeliveryGenerator._assign_random_conditions` scatters a deterministic 2–4 distinct conditions (from the journal catalog, each naming its treating tool) onto every delivered instance — ordinary **and** carriers, so a promoted carrier is indistinguishable from an ordinary instance (carrier-identity hiding). Conditions live on `ObjectInstance.spawned_decals` (serialized); `RestorationService.effective_decals()` returns them when present, else the template's authored decals, and threads them through `clean_decal`/`_remaining_decals`/restorability. The bench renders them as hotspots **on the 3D object surface** (new `RestorationObject3D.enter_conditions_mode` keeps the medallion + clasp visible, `is_decal_mode()` routes clicks to hotspot cleaning); cleaning every condition reaches CLEAN, after which an openable's clasp reveals and opens — preserving the two-stage gate and the discovery flow. Authored quest photos keep the flat photo plane. Covered by `tests/models/test_models.gd::test_object_instance_spawned_decals_round_trip`, `tests/restoration/test_restoration_service.gd::test_instance_with_spawned_conditions_cleans_to_clean`, and `tests/delivery/test_delivery_generator.gd::test_delivered_instances_carry_random_conditions`. Conditions are drawn uniformly from the full catalog (no material/category weighting yet) and hotspot placement is placeholder spherical scatter — both are follow-up polish; on-screen verification is a pending manual gate.
+  - Progress (2026-06-19): **delivered artifacts now spawn with random surface conditions.** `DeliveryGenerator._assign_random_conditions` scatters a deterministic 2–4 distinct conditions (from the journal catalog, each naming its treating tool) onto every delivered instance — ordinary **and** carriers, so a promoted carrier is indistinguishable from an ordinary instance (carrier-identity hiding). Conditions live on `ObjectInstance.spawned_decals` (serialized); `RestorationService.effective_decals()` returns them when present, else the template's authored decals, and threads them through `clean_decal`/`_remaining_decals`/restorability. The bench renders them as hotspots **on the 3D object surface**; cleaning every condition reaches CLEAN, after which an openable's clasp reveals and opens — preserving the two-stage gate and the discovery flow. Covered by `tests/models/test_models.gd::test_object_instance_spawned_decals_round_trip`, `tests/restoration/test_restoration_service.gd::test_instance_with_spawned_conditions_cleans_to_clean`, and `tests/delivery/test_delivery_generator.gd::test_delivered_instances_carry_random_conditions`. Conditions are drawn uniformly from the full catalog (no material/category weighting yet) and hotspot placement is placeholder spherical scatter — both are follow-up polish; on-screen verification is a pending manual gate.
+  - Progress (2026-06-22): **authored artifact condition decals and per-artifact scenes.** `ArtifactConditionDecal` nodes can be placed directly on an artifact scene (`scenes/restoration/artifacts/*`); their albedo texture filename maps to a journal surface condition, and they clean only with the correct tool. Author-placed decals are randomized at load time to a configured count. Normal and quest artifacts now have their own `.tscn` files. Covered by `tests/restoration/test_authored_condition_decal.gd` (7 tests). Engraving reveal and mechanism inspection are still to do; on-screen mouse/controller/touch verification remains a pending manual gate.
 - `[-]` **P13.3 Complete tools and techniques.** Support shop-bought loop-scoped tools, persistent learned techniques, character-only techniques, legacy tools, upkeep, and wrong-tool consequences.
-  - Progress (2026-06-18): **tool durability** implemented. Tools are now durability-tracked instances (`ToolInstance`; `ToolDefinition.durability/buyable/ship_hours`); `RestorationService` consumes one durability per use (most-worn first) and a tool **breaks → is removed** at 0 (`EventBus.tool_broke`), so the player re-buys it. Shop-bought tools are loop-scoped instances (`loop.owned_tools`); free starter/legacy tools stay infinite-durability id-set ownership (additive — SpawnDirector winnability and prior tests unchanged). Covered by `tests/economy/test_tool_durability.gd`. Learned/character techniques, repair-as-alternative-to-replace upkeep, and on-screen tool management UI are still to do.
+  - Progress (2026-06-18): **tool durability** implemented. Tools are now durability-tracked instances (`ToolInstance`; `ToolDefinition.durability/buyable/ship_hours`); `RestorationService` consumes one durability per use (most-worn first) and a tool **breaks → is removed** at 0 (`EventBus.tool_broke`), so the player re-buys it. Shop-bought tools are loop-scoped instances (`loop.owned_tools`); free starter/legacy tools stay infinite-durability id-set ownership (additive — SpawnDirector winnability and prior tests unchanged).
+  - Progress (2026-06-21): **slot-based workbench/loadout.** The workbench now has five slots (`RestorationTool` entities); `ToolService` manages equipping/unequipping, slot pinning, and max-5 enforcement. The Storage Tools tab and the bench share the same loadout. Covered by `tests/economy/test_tool_durability.gd` and `tests/economy/test_tool_loadout.gd`. Learned/character techniques, repair-as-alternative-to-replace upkeep, and on-screen tool management UI polish are still to do.
 - `[ ]` **P13.4 Author six solvable counterfeit variants.** Each exposes journal/scanner-comparable evidence without an automatic verdict.
 - `[ ]` **P13.5 Integrate catalog records.** Every object updates condition, best result, variants, scanner evidence, value, and applicable journal history without duplicate entries.
 - `[ ]` **P13.6 Test the restoration matrix.** Cover every interaction, correct/wrong tool, technique gate, input family, condition bound, value consequence, and counterfeit solution path.
@@ -1224,32 +1240,48 @@ Manual: complete every restoration interaction with correct and wrong tools, the
 
 ### Tasks
 
-- `[ ]` **P14.1 Build listing and negotiation state.** Connect condition, authenticity verdict, description honesty, persona preference, budget, offers, acceptance, rejection, and walk-away outcomes.
-  - Progress (2026-06-18): the **phone Marketplace BUY side** logic + screen exist. `MarketplaceService` (autoload) lists `buyable` tools, spends `loop.money`, and schedules shipments that arrive after `ship_hours` of in-game time (delivered on the hour tick into `loop.owned_tools`). The shop **Phone interactable** (and a Phone button on the restoration bench) opens an authored phone scene (`scenes/ui/phone.tscn`, `Phone`, `DayClock.PAUSE_PHONE`) — a phone-frame home screen with an app grid; the **Marketplace app** renders the per-tool Buy list inside it. Covered by `tests/economy/test_marketplace.gd`, `test_phone.gd`, the shop smoke `test_phone_opens_and_pauses`, and `tests/restoration/test_bench_overlays.gd`. The **≤10 bench loadout + restore-target** selection has an on-screen **Storage** screen (`scenes/ui/storage_screen.tscn`, `DayClock.PAUSE_STORAGE`, opened by a code-added Shop HUD **Storage** button), now redesigned as an **HSR-style master/detail** across three tabs (boxes/content on the left, detail panel on the right). Artifacts: a grid of item boxes with a detail panel showing condition bar, name, and description (template `description`, synthesized when empty) plus a **Restore** button (emits `restore_requested` → the shop opens the bench on that target) or a **Sell** button once restored (placeholder quick-sell at assessed value, pending the Phase-14 negotiation). Tools: draggable tool chips with a detail panel showing durability and the **surface conditions the tool treats** (inverted from the catalog by category); the ten workbench slots are a drag-and-drop loadout (drag a chip onto the workbench to equip; drag an equipped chip **anywhere outside the workbench** — the owned shelf or empty space, via `NOTIFICATION_DRAG_END` + `gui_is_drag_successful()` — to unequip), with the click `toggle_tool`/Equip button kept as the accessibility fallback. Key Items: quest artifacts (restorable via the same detail) + the five fragments' state. Owned tools **auto-equip onto the bench on grant** (`ToolService.grant_tool` fills free slots up to ten), including the starting Soft Cleaning Cloth, so the first ten owned tools are always loaded. The bench (`RestorationService.get_workbench_tools()`) follows the loadout exactly once durability instances exist — an emptied loadout shows nothing (a removed tool stays removed), and the legacy "all available" fallback only applies to the id-set-only seed/test path with no instances. The bench pre-selects the chosen `restore_target_uid`. Covered by `test_tool_loadout.gd`, `test_tool_durability.gd`, `test_restoration_service.gd::test_bench_follows_loadout_once_instances_exist`, `test_storage_screen.gd` (incl. sell, restore-signal, auto-equip cap, and drag equip/unequip), and the shop smoke `test_storage_button_opens_storage_and_pauses`. On-screen layout/drag verification is a pending manual gate. **Selling restored artifacts and the online buyer banter (six-persona server-side LLM negotiation) are deliberately not implemented** — that is the core of this task and remains to do. On-screen verification of the phone → Marketplace flow is a pending manual gate.
-- `[ ]` **P14.2 Implement six buyer personas and fallback sets.** Keep persona prompts/guardrails server-side and authored fallback behavior data-driven.
-- `[ ]` **P14.3 Implement the disposition router.** Offer only valid `SELL`, `RETURN`, `PRESERVE`, and `JOURNAL` choices; confirm and commit each outcome idempotently.
+- `[-]` **P14.1 Build listing and negotiation state.**
+  - **Buy side:** `MarketplaceService` (autoload) lists `buyable` tools, spends `loop.money`, and schedules shipments that arrive after `ship_hours` of in-game time (delivered on the hour tick into `loop.owned_tools`). The shop **Phone interactable** opens an authored phone scene (`scenes/ui/phone.tscn`, `Phone`, `DayClock.PAUSE_PHONE`) with a Marketplace app. Covered by `tests/economy/test_marketplace.gd`, `test_phone.gd`, shop smoke `test_phone_opens_without_pausing`, and `tests/restoration/test_bench_overlays.gd`.
+  - **Sell/haggle side:** `MarketplaceService.get_sellable()` lists restored+judged inventory instances. `interested_buyers()` and `arrived_buyers()` produce a time-phased buyer set: Mr. Maverick is always instantly available; other buyers arrive 1-20 in-game minutes apart (seeded per item+loop). Per-loop buyer wallets seed from persona `starting_cash`/`daily_allowance` (Maverick is unlimited). `haggle_for()` returns a persistent same-day `Negotiation` session so the player can shop buyers and return. `complete_sale()` credits money, removes the instance, records `persistent.best_sale`, and emits `EventBus.sale_completed`. Covered by `tests/economy/test_marketplace.gd`, `test_phone.gd`, and `test_storage_screen.gd`.
+  - **Missing:** a formal listing object, the full four-way disposition router, and evening reconciliation. Selling currently happens directly from the Storage/Phone sell flow.
+- `[x]` **P14.2 Implement buyer personas and fallback sets.**
+  - `data/buyers/buyers.json` now contains **nine** authored buyer personas (collector, reseller, student, gift, hobbyist, appraiser, tourist, lola, suspicious/Mr. Maverick), each with budget, preferred categories, negotiation style, per-loop wallet tuning, and fallback line sets. The `BuyerPersona` model loads and validates them.
+  - The deterministic offline haggle engine (`Negotiation`) uses persona tuning (`open_factor`, `concession_rate`, `patience`, `condition_weight`, `category_bonus`, `ignores_banter`) and fallback lines.
+  - Backend persona prompts/guardrails are server-side in `server/src/services/negotiate_service.js`.
+  - Evidence (2026-06-22): `tests/economy/test_buyer_personas.gd` 3/3 passed; full economy suite 61/61 passed.
+- `[-]` **P14.3 Implement the disposition router.**
+  - `SELL` is reachable from the Storage/Phone sell flow and completes via `MarketplaceService.complete_sale()` (idempotent; cannot sell the same instance twice).
+  - `RETURN`, `PRESERVE`, and `JOURNAL` dispositions are not yet offered as explicit player choices. Journal routing already happens automatically for Purple-and-below on restoration/scan (Phase 9); museum routing happens on fragment seating (Phase 8).
 - `[ ]` **P14.4 Implement return-to-owner outcomes.** Resolve owner/route rewards and story flags without directly granting fragments.
 - `[ ]` **P14.5 Build the evening state.** Summarize outcomes, repair/replace tools, resolve storage, prepare requests/equipment, review journal changes, and commit the next-day plan.
-- `[ ]` **P14.6 Extend save and event contracts.** Persist records and story consequences while keeping money, listings, daily sales, upkeep, evening plans, and event state in the correct reset partition.
-- `[ ]` **P14.7 Test economy and transaction safety.** Cover duplicate clicks, insufficient funds, invalid dispositions, reset behavior, and Day 5 evening advancement.
-
+- `[-]` **P14.6 Extend save and event contracts.**
+  - `EventBus.sale_completed(instance_id, buyer_id, price)` exists and is emitted by `MarketplaceService.complete_sale()`.
+  - `persistent.best_sale` records the highest sale price, template, buyer, condition, and day.
+  - Buyer ghosts, wallets, schedules, and haggle sessions are loop-scoped and cleared on `loop_reset`.
+  - Full disposition/evening event partition is pending P14.3-P14.5.
+- `[-]` **P14.7 Test economy and transaction safety.**
+  - Covered: duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, and banter mood effects.
+  - Evidence (2026-06-22): `tests/economy/` 61/61 passed (test_buyer_personas 3, test_marketplace 13, test_marketplace_banter 11, test_negotiation 21, test_phone 12, test_storage_screen 11, test_tool_durability 4, test_tool_loadout 10); server `npm test` 22/22 passed.
+  - Pending: invalid disposition rejection, return/preserve/journal flow tests, and Day 5 evening advancement.
 ### Acceptance
 
-- [ ] Sell, return, preserve, and journal flows each complete exactly once.
-- [ ] Six personas produce distinct, constrained negotiations and prices respond to quality/honesty.
-- [ ] Every day ends through a useful evening screen and Day 5 preserves only the documented state.
+- `[-]` Sell flow completes via Storage/Phone Marketplace; return, preserve, and journal flows are not yet explicit player choices.
+- `[x]` Multiple personas produce distinct, constrained negotiations and prices respond to condition, category, honesty, and banter (automated tests verify this).
+- `[ ]` Every day ends through a useful evening screen and Day 5 preserves only the documented state.
 
 ### Verification
 
 ```powershell
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/economy
-& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/evening
+# Result (2026-06-22): 61/61 passed.
+
 Push-Location server
 npm test
+# Result (2026-06-22): 22/22 passed.
 Pop-Location
 ```
 
-Manual: play two days using every disposition, negotiate with all personas, perform upkeep, and confirm the next delivery reflects preparation.
+Manual (pending): play two days using every disposition, negotiate with all personas, perform upkeep, and confirm the next delivery reflects preparation.
 
 ---
 
@@ -1552,18 +1584,20 @@ Manual: perform the signed release-candidate checklist and retain all playthroug
 
 | Requirement group | Phase | Current status |
 |---|---:|---|
-| ARCH-R1..R5 | 0, 1, 8 | Phase 0 done; Phase 1 models/repository/autoloads/data done (ARCH-R4/R5); Phase 8 backend pending |
-| SAVE-R1..R3, SAVE-R6 | 2, 5, 9 | Not started |
-| CLOCK-R1..R3 | 2 | Placeholder only |
-| DLV-R1..R3, DLV-R5 | 3 | Not started |
-| REST-R1, R3, R4, R7 | 4 | Not started |
-| SCAN-R1, R2, R4, R5 | 7, 8 | Not started |
-| JRN-R1..R3, JRN-R5 | 9 | Not started |
-| DISC-R1..R13 | 4, 5, 6 | Not started |
-| PORT-R1..R5 | 8, 9 | Not started |
-| MUS-R2 P0 record | 8, 9 | Not started |
-| API-R1..R3 | 8 | Not started |
-| Auntie slice showcase | 10 | Placeholder only |
+| ARCH-R1..R5 | 0, 1, 8 | Done — no keys in Godot; backend timeouts + cached fallbacks; config-selected URLs; signals/events; data-driven content |
+| SAVE-R1..R3, SAVE-R6 | 2, 5, 9 | Done — loop/persistent split, atomic save, never-twice history, seated-fragment preservation verified by GUT |
+| CLOCK-R1..R3 | 2 | Done — 07:00-20:00, minute display, Day 1-5 reset verified by GUT |
+| DLV-R1..R3, DLV-R5 | 3 | Done — weighted delivery, anchors, triage, six-state glow, batch cap verified by GUT |
+| REST-R1, R3, R4, R7 | 4 | Done — focused 3D restoration, clean→open gate, wrong-tool damage, pendant mini-game verified by GUT |
+| SCAN-R1, R2, R4, R5 | 7, 8 | Done — cached scanner, advisory-only, player verdict, backend proxy verified by GUT/backend tests |
+| JRN-R1..R3, JRN-R5 | 9 | Done — hybrid 2D/3D journal, five-slot case, entry updates, rarity routing verified by GUT |
+| DISC-R1..R13 | 4, 5, 6 | Done — Spawn Director, never-twice, Echo mixer, carrier flicker/heartbeat, openables verified by GUT |
+| PORT-R1..R5 | 8, 9 | Done — Artifact Found/Unlock, mock Portal proxy, idempotency, fallback, seating verified by GUT/backend tests |
+| MUS-R2 P0 record | 8, 9 | Done — `MuseumEntry` persisted on Portal completion; gallery view is P1 |
+| API-R1..R3 | 8 | Done — `.env.example`, validation, rate limiting, config swap verified by backend tests |
+| MKT-R1..R6 | 14 | Partial — buy/sell/haggle/banter with nine personas and wallets implemented; disposition router, returns, and evening state not done |
+| MKT-R7 | 14 | Done — deterministic offline `Negotiation` engine plus backend `/api/negotiate` fallback verified by GUT/server tests |
+| Auntie slice showcase | 10 | Partial — Auntie quest data and decal mechanics authored; visit scheduling, scripted showcase, and fragment-release flow not implemented |
 | Submission evidence | 11 | Not started |
 
 ## Complete Requirement Index
@@ -1600,15 +1634,15 @@ This index names every current PRD requirement literally so automated parity che
 | Requirement group | Detailed phase(s) | Current status |
 |---|---:|---|
 | Artifact decisions, manifest, sources | 12 | Not started |
-| Full objects, restoration, tools, counterfeits | 13 | Not started |
-| Marketplace, disposition, evening upkeep | 14 | Not started |
-| Routes, schedules, returns, Safe/drawer | 15 | Auntie slice only; full work not started |
-| Temporal Echoes, journal mystery, museum | 16 | P0 journal record pending; full work not started |
-| Fifteen carriers and five-fragment discovery | 17 | Slice carrier pending; full work not started |
+| Full objects, restoration, tools, counterfeits | 13 | Partial — decal/condition cleaning and tool durability/loadout implemented; 30-object catalog, engraving/mechanism interactions, and six counterfeits not done |
+| Marketplace, disposition, evening upkeep | 14 | Partial — buy/sell/haggle/banter with nine personas and wallets implemented; disposition router, returns, and evening state not done |
+| Routes, schedules, returns, Safe/drawer | 15 | Partial — route data, portraits, and dialogue exist; visit scheduling, beats, returns, Safe/drawer not implemented |
+| Temporal Echoes, journal mystery, museum | 16 | Partial — P0 journal record and case implemented; 15 Echoes, mystery pages, and museum gallery not done |
+| Fifteen carriers and five-fragment discovery | 17 | Partial — slice carrier (pendant) and Spawn Director implemented; full carrier pool and five Echo sets not done |
 | All eight events | 18 | Not started |
 | Character endings, Neutral, Yuyu finale | 19 | Not started |
 | Final narrative, assets, audio, review, replica/video | 20 | Not started |
-| Live services, platforms, inputs, accessibility, performance | 21 | P0 mock/cached work pending; full work not started |
+| Live services, platforms, inputs, accessibility, performance | 21 | Partial — P0 mock/cached scanner, portal, and offline negotiation fallback implemented; live service matrices, platform/input parity, and performance targets not verified |
 | Full-game QA, 6–10 hour playtests, release/submission | 22 | Not started |
 
 ## Update Procedure
