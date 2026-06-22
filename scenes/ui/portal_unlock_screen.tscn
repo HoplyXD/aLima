@@ -1,8 +1,25 @@
-[gd_scene load_steps=2 format=3 uid="uid://c0pportalunlock01"]
+[gd_scene format=3 uid="uid://cge5utsulwk57"]
 
-[ext_resource type="Script" path="res://scripts/portal/portal_unlock_screen.gd" id="1_unlock"]
+[ext_resource type="Script" uid="uid://ej62il7w8jxu" path="res://scripts/portal/portal_unlock_screen.gd" id="1_unlock"]
+[ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_i5qhx"]
+[ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="3_pvpp0"]
+[ext_resource type="Texture2D" uid="uid://dvon5n1qg4s5o" path="res://assets/UI assets/game/gui/namebox.png" id="4_g0ere"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="5_05ey3"]
+[ext_resource type="Texture2D" uid="uid://dxr4jmbwn30dm" path="res://assets/UI assets/game/gui/bar/left.png" id="6_nx055"]
+[ext_resource type="Texture2D" uid="uid://dprq1wdcmqdih" path="res://assets/UI assets/game/gui/bar/right.png" id="7_ou1tt"]
 
-[node name="PortalUnlockScreen" type="Control"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_624o5"]
+texture = ExtResource("2_i5qhx")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8wgif"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_62nj6"]
+texture = ExtResource("6_nx055")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tq64y"]
+texture = ExtResource("7_ou1tt")
+
+[node name="PortalUnlockScreen" type="Control" unique_id=1613488357]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,11 +28,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_unlock")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2056786324]
 
-[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer"]
+[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer" unique_id=262788822]
 custom_minimum_size = Vector2(600, 400)
-layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -27,40 +43,67 @@ offset_right = 300.0
 offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_624o5")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/PanelContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/PanelContainer" unique_id=1833571364]
 layout_mode = 2
+theme_override_constants/separation = 20
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=63451347]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_fonts/font = ExtResource("3_pvpp0")
+theme_override_font_sizes/font_size = 64
 text = "Portal Unlock"
 horizontal_alignment = 1
 
-[node name="FactLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=1243826917]
+layout_mode = 2
+texture = ExtResource("4_g0ere")
+
+[node name="FactLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=1301726153]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(560, 0)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_05ey3")
+theme_override_font_sizes/font_size = 40
 text = "Fact card"
-autowrap_mode = 3
 horizontal_alignment = 1
+autowrap_mode = 3
 
-[node name="EntryIdLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="EntryIdLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=1922908516]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_05ey3")
+theme_override_font_sizes/font_size = 40
 text = "Museum Entry"
 horizontal_alignment = 1
 
-[node name="FallbackLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="FallbackLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=134194466]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_05ey3")
+theme_override_font_sizes/font_size = 40
 text = "Offline fallback result"
 horizontal_alignment = 1
 
-[node name="ContinueButton" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer"]
-unique_name_in_owner = true
+[node name="HSeparator" type="HSeparator" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=555314060]
 layout_mode = 2
+theme_override_constants/separation = 10
+theme_override_styles/separator = SubResource("StyleBoxEmpty_8wgif")
+
+[node name="ContinueButton" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=18255315]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(500, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("5_05ey3")
+theme_override_font_sizes/font_size = 33
+theme_override_styles/normal = SubResource("StyleBoxTexture_62nj6")
+theme_override_styles/hover = SubResource("StyleBoxTexture_tq64y")
 text = "Continue"
