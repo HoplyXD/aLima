@@ -7,6 +7,9 @@
 [ext_resource type="PackedScene" uid="uid://dre33nw45m7tr" path="res://assets/3d Assets/Bookcase/Book.glb" id="5_book"]
 [ext_resource type="PackedScene" uid="uid://chyonocig3s54" path="res://assets/3d Assets/Box/Box.glb" id="6_box"]
 [ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/Pause_menu.tres" id="7_jodhg"]
+[ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="8_54x15"]
+[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="9_ot4no"]
+[ext_resource type="Texture2D" uid="uid://ll0ti7n7ud2p" path="res://assets/UI assets/game/gui/button/slot_idle_background.png" id="10_47eic"]
 
 [sub_resource type="Environment" id="Environment_rest"]
 background_mode = 1
@@ -21,6 +24,13 @@ roughness = 0.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_bench"]
 size = Vector3(4.8, 0.15, 2.05)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4edn4"]
+texture = ExtResource("8_54x15")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_b7lon"]
+texture = ExtResource("10_47eic")
+region_rect = Rect2(481.04584, 225.01788, 858.42975, 784.42706)
 
 [node name="RestorationView" type="CanvasLayer" unique_id=1846151877]
 process_mode = 3
@@ -109,6 +119,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 64.0
 grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_4edn4")
 
 [node name="Margin" type="MarginContainer" parent="HUD/TopBar" unique_id=485188538]
 layout_mode = 1
@@ -117,20 +128,23 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 18
+theme_override_constants/margin_left = 167
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 8
 
 [node name="Bar" type="HBoxContainer" parent="HUD/TopBar/Margin" unique_id=1160495384]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 138
 
 [node name="Title" type="Label" parent="HUD/TopBar/Margin/Bar" unique_id=1007205693]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+size_flags_horizontal = 8
+theme_override_fonts/font = ExtResource("9_ot4no")
+theme_override_font_sizes/font_size = 67
 text = "Restoration Bench"
+horizontal_alignment = 2
 
 [node name="SelectLabel" type="Label" parent="HUD/TopBar/Margin/Bar" unique_id=1676281416]
 visible = false
@@ -150,7 +164,7 @@ size_flags_horizontal = 3
 [node name="ClockLabel" type="Label" parent="HUD/TopBar/Margin/Bar" unique_id=1961161940]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 35
 text = "Day 1 · 07:00"
 
 [node name="ScanButton" type="Button" parent="HUD/TopBar/Margin/Bar" unique_id=525801037]
@@ -179,6 +193,7 @@ offset_top = 204.0
 offset_bottom = -136.0
 grow_horizontal = 0
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_b7lon")
 
 [node name="Margin" type="MarginContainer" parent="HUD/LeftMeters" unique_id=147531990]
 layout_mode = 1
@@ -199,12 +214,13 @@ theme_override_constants/separation = 8
 [node name="StateLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=1866239708]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 30
 text = "State: Dirty"
 
 [node name="ConditionLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=1191571793]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 30
 text = "Condition 0 / 100"
 
 [node name="ConditionBar" type="ProgressBar" parent="HUD/LeftMeters/Margin/VBox" unique_id=1186969987]
@@ -216,15 +232,18 @@ show_percentage = false
 [node name="ValueLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=594556757]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 30
 text = "Value: P0"
 
 [node name="DamageLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=410083370]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 30
 text = "Recorded damage: 0"
 
 [node name="SurfaceCaption" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=969480184]
 layout_mode = 2
+theme_override_font_sizes/font_size = 30
 text = "Surface cleaned"
 
 [node name="SurfaceBar" type="ProgressBar" parent="HUD/LeftMeters/Margin/VBox" unique_id=677679685]
@@ -237,6 +256,7 @@ show_percentage = false
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.85, 0.45, 1)
+theme_override_font_sizes/font_size = 30
 text = "Pendant is clean — open the clasp."
 autowrap_mode = 3
 
