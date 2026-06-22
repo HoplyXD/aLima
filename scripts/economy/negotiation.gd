@@ -21,6 +21,9 @@ var honest: bool = true
 var category: String = ""
 
 var ceiling: int = 0  ## The most this buyer will ever pay (private).
+## Hard cap from the buyer's remaining wallet — they can never offer more than they have.
+## Effectively unlimited for Mr. Maverick.
+var cash_cap: int = 1 << 30
 var current_offer: int = 0  ## The buyer's standing offer.
 var round_index: int = 0
 var patience_left: int = 0
@@ -85,7 +88,12 @@ const MOOD_MAX := 0.3
 
 ## Opens a fresh session and computes the buyer's opening offer + line.
 static func open(
-	buyer: BuyerPersona, item_value: int, item_condition: int, item_category: String, is_honest: bool = true
+	buyer: BuyerPersona,
+	item_value: int,
+	item_condition: int,
+	item_category: String,
+	is_honest: bool = true,
+	max_cash: int = 1 << 30
 ) -> Negotiation:
 	var n := Negotiation.new()
 	n.persona = buyer
@@ -93,6 +101,7 @@ static func open(
 	n.condition = clampi(item_condition, 0, 100)
 	n.category = item_category
 	n.honest = is_honest
+	n.cash_cap = maxi(1, max_cash)
 	n.patience_left = buyer.patience
 	n._recompute_ceiling()
 	n.current_offer = clampi(int(round(n.ceiling * buyer.open_factor)), 1, maxi(1, n.ceiling))
@@ -111,9 +120,11 @@ func _raw_ceiling() -> float:
 	return float(base_value) * condition_mult * category_mult * honesty_mult
 
 
-## Applies mood to the raw ceiling and clamps to the persona's budget.
+## Applies mood to the raw ceiling and clamps to the persona's budget AND their remaining
+## cash — a buyer simply cannot offer more than they can afford.
 func _recompute_ceiling() -> void:
-	ceiling = clampi(int(round(_raw_ceiling() * (1.0 + mood))), 1, maxi(1, persona.budget_range.y))
+	var cap := mini(maxi(1, persona.budget_range.y), maxi(1, cash_cap))
+	ceiling = clampi(int(round(_raw_ceiling() * (1.0 + mood))), 1, cap)
 
 
 # --- Conversational banter ---------------------------------------------------
@@ -229,13 +240,16 @@ func propose_price(player_price: int) -> Dictionary:
 ## via the Accept button finalizes). `agreed` = the buyer takes the seller's price;
 ## otherwise `counter_price` (the buyer's number, e.g. from the AI's reply) becomes the
 ## offer, clamped to a sane range.
+## The buyer never pays above `ceiling` (value + condition + mood, capped by their wallet),
+## so an unreasonable ask is silently capped — this is what stops a buyer from agreeing to
+## pay far above an item's worth just because the seller asserts it.
 func set_offer_from_haggle(agreed: bool, seller_price: int, counter_price: int) -> void:
 	if closed:
 		return
 	if agreed:
-		current_offer = maxi(1, seller_price)
+		current_offer = clampi(seller_price, 1, ceiling)
 	elif counter_price > 0:
-		current_offer = clampi(counter_price, 1, maxi(1, seller_price))
+		current_offer = clampi(counter_price, 1, mini(maxi(1, seller_price), ceiling))
 
 
 ## Mood-only banter (no price): warms/cools the buyer and may nudge the standing offer.

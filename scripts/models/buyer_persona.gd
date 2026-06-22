@@ -24,6 +24,13 @@ var category_bonus: float = 0.15  ## Ceiling bump when the item is a preferred c
 var condition_weight: float = 0.4  ## How strongly restoration condition moves the ceiling (0..1).
 var fallback_lines: Dictionary = {}  ## phase ("open"/"counter"/"accept"/"walk") -> Array[String].
 
+## Per-loop wallet (MKT-R economy): a buyer can never pay more than the cash they have.
+## `starting_cash` is their wallet at loop start (0 = fall back to budget max); each new
+## day adds `daily_allowance`. Mr. Maverick is `unlimited_cash` — never capped, never spent.
+var starting_cash: int = 0
+var daily_allowance: int = 0
+var unlimited_cash: bool = false
+
 
 func _init() -> void:
 	pass
@@ -45,6 +52,9 @@ static func from_dictionary(data: Dictionary) -> BuyerPersona:
 	b.patience = ModelUtils.as_int(data.get("patience"), 3)
 	b.category_bonus = ModelUtils.as_float(data.get("category_bonus"), 0.15)
 	b.condition_weight = ModelUtils.as_float(data.get("condition_weight"), 0.4)
+	b.starting_cash = ModelUtils.as_int(data.get("starting_cash"), 0)
+	b.daily_allowance = ModelUtils.as_int(data.get("daily_allowance"), 0)
+	b.unlimited_cash = bool(data.get("unlimited_cash", false))
 	b.fallback_lines = ModelUtils.as_dictionary(data.get("lines"))
 	return b
 
@@ -65,12 +75,21 @@ func to_dictionary() -> Dictionary:
 		"patience": patience,
 		"category_bonus": category_bonus,
 		"condition_weight": condition_weight,
+		"starting_cash": starting_cash,
+		"daily_allowance": daily_allowance,
+		"unlimited_cash": unlimited_cash,
 		"lines": fallback_lines.duplicate(true),
 	}
 
 
 func likes_category(category: String) -> bool:
 	return preferred_categories.has(category)
+
+
+## The buyer's wallet at loop start: their authored starting cash, or their budget max
+## when none is set. Maverick is unlimited and not capped by this.
+func wallet_start() -> int:
+	return starting_cash if starting_cash > 0 else budget_range.y
 
 
 ## A canned banter line for a negotiation phase, with `{offer}` substituted. `index`

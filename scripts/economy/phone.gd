@@ -304,10 +304,12 @@ func _make_buyer_row(persona: BuyerPersona) -> Control:
 	return row
 
 
-## Opens the haggle session with the chosen buyer. Test seam.
+## Opens the haggle session with the chosen buyer. Reuses the buyer's persistent same-day
+## session, so shopping around other buyers and coming back keeps their conversation and
+## standing offer. Test seam.
 func begin_haggle(persona_id: String) -> void:
 	_buyer_id = persona_id
-	_negotiation = MarketplaceService.start_negotiation(_sell_uid, persona_id)
+	_negotiation = MarketplaceService.haggle_for(_sell_uid, persona_id)
 	if _negotiation == null:
 		_feedback_label.text = "That item can't be sold right now."
 		_back_to_market_home()
@@ -484,7 +486,13 @@ func _buyer_response(message: String, price: int) -> Dictionary:
 	if LocalAI.is_ready() and _negotiation != null:
 		var persona := DataRepository.singleton().get_buyer(_buyer_id)
 		var llm := await LocalAI.chat(
-			persona, _negotiation.current_offer, price, message, _negotiation.history
+			persona,
+			_negotiation.current_offer,
+			price,
+			_negotiation.ceiling,
+			_negotiation.base_value,
+			message,
+			_negotiation.history
 		)
 		if llm.get("ok", false) and not str(llm.get("reply", "")).is_empty():
 			return {

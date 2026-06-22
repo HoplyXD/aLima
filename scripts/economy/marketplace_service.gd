@@ -33,6 +33,20 @@ var _artifact_ghosts: Dictionary = {}  ## item uid -> [buyer_ids] (Maverick only
 ## Per-item buyer arrival times: uid -> {buyer_id: in-game minute index they show up}.
 var _buyer_schedule: Dictionary = {}
 
+## Per-loop buyer wallets: buyer_id -> remaining cash. A buyer can never offer more than
+## they hold; spending an artifact draws this down, and each new day tops it up by the
+## persona's daily_allowance. Mr. Maverick is unlimited and never tracked here. Lazily
+## initialised from the persona's starting cash; cleared on loop reset.
+var _wallets: Dictionary = {}
+
+## Persistent (same-day) haggle sessions: "uid|buyer_id" -> Negotiation. Re-opening a
+## buyer restores their conversation + standing offer, so the player can shop around other
+## buyers and come back to accept. Cleared on a new day (cash changes) and on loop reset.
+var _negotiations: Dictionary = {}
+
+## Sentinel "unlimited" cash for Mr. Maverick.
+const UNLIMITED_CASH: int = 1 << 30
+
 
 func _ready() -> void:
 	EventBus.hour_changed.connect(_on_hour_changed)
@@ -81,6 +95,42 @@ func _on_loop_reset(_loop_index: int) -> void:
 	_loop_ghosts.clear()
 	_artifact_ghosts.clear()
 	_buyer_schedule.clear()
+	_wallets.clear()
+	_negotiations.clear()
+
+
+# --- Buyer wallets (per-loop cash) -------------------------------------------
+
+
+## A buyer's remaining cash this loop. Mr. Maverick (unlimited_cash) returns the unlimited
+## sentinel and is never capped. Lazily initialised from the persona's starting wallet.
+func buyer_cash(buyer_id: String) -> int:
+	var persona := DataRepository.singleton().get_buyer(buyer_id)
+	if persona == null:
+		return 0
+	if persona.unlimited_cash:
+		return UNLIMITED_CASH
+	if not _wallets.has(buyer_id):
+		_wallets[buyer_id] = persona.wallet_start()
+	return int(_wallets[buyer_id])
+
+
+## Draws an amount down from a buyer's wallet after a sale (no-op for Maverick).
+func _deduct_cash(buyer_id: String, amount: int) -> void:
+	var persona := DataRepository.singleton().get_buyer(buyer_id)
+	if persona == null or persona.unlimited_cash:
+		return
+	_wallets[buyer_id] = maxi(0, buyer_cash(buyer_id) - maxi(0, amount))
+
+
+## Tops every (non-Maverick) buyer's wallet up by their daily allowance — called on a new
+## day, so leftover cash carries over and grows.
+func _add_daily_allowance() -> void:
+	for raw in DataRepository.singleton().get_buyers_sorted():
+		var persona := raw as BuyerPersona
+		if persona == null or persona.unlimited_cash or persona.daily_allowance <= 0:
+			continue
+		_wallets[persona.id] = buyer_cash(persona.id) + persona.daily_allowance
 
 
 ## Tools currently listed for purchase (authored `buyable`).
@@ -214,7 +264,8 @@ func _minute_index() -> int:
 	return (DayClock.get_day() * 24 + DayClock.get_hour()) * 60 + DayClock.get_minute()
 
 
-## Opens a haggle session for an item with one buyer, or null if it can't be sold.
+## Opens a haggle session for an item with one buyer, or null if it can't be sold. The
+## buyer's ceiling is capped by their remaining wallet (Maverick is unlimited).
 func start_negotiation(uid: String, persona_id: String) -> Negotiation:
 	var found := _find_instance(uid)
 	if found.is_empty():
@@ -227,7 +278,28 @@ func start_negotiation(uid: String, persona_id: String) -> Negotiation:
 	if persona == null:
 		return null
 	var category := template.category if template != null else ""
-	return Negotiation.open(persona, assessed_value(uid), int(round(inst.condition)), category)
+	return Negotiation.open(
+		persona, assessed_value(uid), int(round(inst.condition)), category, true, buyer_cash(persona_id)
+	)
+
+
+## The persistent (same-day) haggle session for this item + buyer — created on first open
+## and reused afterwards, so a buyer's conversation and standing offer survive while the
+## player shops around other buyers and comes back. Null if the item can't be sold.
+func haggle_for(uid: String, persona_id: String) -> Negotiation:
+	var key := "%s|%s" % [uid, persona_id]
+	if _negotiations.has(key):
+		return _negotiations[key]
+	var n := start_negotiation(uid, persona_id)
+	if n != null:
+		_negotiations[key] = n
+	return n
+
+
+func _clear_negotiations_for(uid: String) -> void:
+	for key in _negotiations.keys():
+		if str(key).begins_with(uid + "|"):
+			_negotiations.erase(key)
 
 
 ## Finalises a sale: credits money, removes the instance, updates the persistent
@@ -246,6 +318,8 @@ func complete_sale(uid: String, price: int, buyer_id: String) -> Dictionary:
 
 	var loop := GameState.save_state.loop
 	loop.money += price
+	_deduct_cash(buyer_id, price)  # the buyer spends from their wallet
+	_clear_negotiations_for(uid)  # the item is gone; drop its cached haggles
 	_remove_instance(uid)
 	_record_best_sale(price, template, buyer_id, inst.condition, loop.current_day)
 	SaveService.save_game()
@@ -318,6 +392,8 @@ func _on_hour_changed(day: int, hour: int) -> void:
 
 func _on_day_changed(day: int) -> void:
 	_day_ghosts.clear()  # a new day forgives the day-scoped (failed-banter) ghosts
+	_add_daily_allowance()  # buyers' wallets top up; leftover cash carries over
+	_negotiations.clear()  # haggles reset each day (cash and mood are fresh)
 	deliver_due(day, GameState.save_state.loop.current_hour)
 
 

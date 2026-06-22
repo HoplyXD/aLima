@@ -96,6 +96,50 @@ func test_maverick_only_ever_artifact_ghosts() -> void:
 	)
 
 
+# --- Buyer wallets (per-loop cash) -------------------------------------------
+
+
+func test_wallet_starts_from_persona_and_maverick_is_unlimited() -> void:
+	MarketplaceService._on_loop_reset(0)
+	var student := _repo.get_buyer("student")
+	assert_eq(
+		MarketplaceService.buyer_cash("student"), student.wallet_start(), "wallet seeds from persona"
+	)
+	assert_gt(
+		MarketplaceService.buyer_cash(MarketplaceService.MAVERICK_ID),
+		100000,
+		"Mr. Maverick has unlimited cash"
+	)
+
+
+func test_daily_allowance_tops_up_the_wallet() -> void:
+	MarketplaceService._on_loop_reset(0)
+	var before := MarketplaceService.buyer_cash("student")
+	MarketplaceService._add_daily_allowance()
+	var student := _repo.get_buyer("student")
+	assert_eq(
+		MarketplaceService.buyer_cash("student"),
+		before + student.daily_allowance,
+		"a new day tops the wallet up by the daily allowance"
+	)
+
+
+func test_selling_draws_down_the_wallet_but_not_mavericks() -> void:
+	MarketplaceService._on_loop_reset(0)
+	var before := MarketplaceService.buyer_cash("student")
+	MarketplaceService._deduct_cash("student", 50)
+	assert_eq(
+		MarketplaceService.buyer_cash("student"), before - 50, "a purchase spends the buyer's cash"
+	)
+	var mav_before := MarketplaceService.buyer_cash(MarketplaceService.MAVERICK_ID)
+	MarketplaceService._deduct_cash(MarketplaceService.MAVERICK_ID, 5000)
+	assert_eq(
+		MarketplaceService.buyer_cash(MarketplaceService.MAVERICK_ID),
+		mav_before,
+		"Mr. Maverick's unlimited cash never drops"
+	)
+
+
 func test_artifact_ghosted_maverick_leaves_that_items_buyer_list() -> void:
 	var uid := "maverick_leaves_item"
 	MarketplaceService.ghost_failed_banter(uid, MarketplaceService.MAVERICK_ID)

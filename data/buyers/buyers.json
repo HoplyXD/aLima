@@ -16,6 +16,8 @@
       "patience": 4,
       "category_bonus": 0.2,
       "condition_weight": 0.45,
+      "starting_cash": 900,
+      "daily_allowance": 120,
       "lines": {
         "open": ["A fine piece. I could give you ₱{offer} for it.", "Provenance matters to me. ₱{offer}, to start."],
         "counter": ["Hm. I can come up to ₱{offer}.", "For the right piece, ₱{offer}."],
@@ -40,6 +42,8 @@
       "patience": 2,
       "category_bonus": 0.08,
       "condition_weight": 0.2,
+      "starting_cash": 360,
+      "daily_allowance": 70,
       "lines": {
         "open": ["I'll take it off your hands for ₱{offer}, final-ish.", "Eh, ₱{offer}. It's basically scrap."],
         "counter": ["Fine, fine — ₱{offer}, and that's me being generous.", "₱{offer}. Don't push it."],
@@ -64,6 +68,8 @@
       "patience": 3,
       "category_bonus": 0.12,
       "condition_weight": 0.3,
+      "starting_cash": 160,
+      "daily_allowance": 50,
       "lines": {
         "open": ["This is so cute! Could you do ₱{offer}?", "I'm on a budget... ₱{offer}?"],
         "counter": ["Okay, I can stretch to ₱{offer}.", "Maybe ₱{offer}? That's most of my allowance."],
@@ -88,6 +94,8 @@
       "patience": 4,
       "category_bonus": 0.25,
       "condition_weight": 0.55,
+      "starting_cash": 520,
+      "daily_allowance": 90,
       "lines": {
         "open": ["It's for my wife's birthday. ₱{offer}?", "If it's truly restored well — ₱{offer}."],
         "counter": ["For her, I can manage ₱{offer}.", "₱{offer}, if you promise it's spotless."],
@@ -112,6 +120,8 @@
       "patience": 3,
       "category_bonus": 0.1,
       "condition_weight": 0.7,
+      "starting_cash": 600,
+      "daily_allowance": 100,
       "lines": {
         "open": ["Condition is everything. ₱{offer} as it stands.", "I inspected it closely — ₱{offer}."],
         "counter": ["The work is decent. ₱{offer}.", "I'll allow ₱{offer} for that finish."],
@@ -136,6 +146,7 @@
       "patience": 3,
       "category_bonus": 0.1,
       "condition_weight": 0.2,
+      "unlimited_cash": true,
       "lines": {
         "open": ["Junk like this? ₱{offer}, and I'm being kind.", "Eh. ₱{offer}, take it or leave it, kid."],
         "counter": ["Fine, fine — ₱{offer}. That's me being generous.", "Ugh. ₱{offer}. Don't push your luck."],

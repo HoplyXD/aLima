@@ -155,3 +155,24 @@ func test_offensive_chat_ends_the_deal() -> void:
 	assert_null(phone._negotiation, "an offensive message ends the deal")
 	assert_true(MarketplaceService.is_ghosted("c1", "collector"), "the buyer is ghosted")
 	assert_eq(MarketplaceService.get_sellable().size(), 1, "the item is kept, not sold")
+
+
+func test_haggle_persists_when_shopping_around_and_returning() -> void:
+	_add_clean_item("c1", 200)
+	var a := MarketplaceService.haggle_for("c1", "collector")
+	a.set_offer_from_haggle(true, 80, 0)  # banter the offer to ₱80
+	# Shop around (open another buyer) then come back to the first.
+	MarketplaceService.haggle_for("c1", "reseller")
+	var b := MarketplaceService.haggle_for("c1", "collector")
+	assert_eq(b, a, "returning to a buyer restores the very same session")
+	assert_eq(b.current_offer, 80, "their standing offer is preserved while you shop around")
+
+
+func test_buyer_offer_is_capped_by_their_wallet() -> void:
+	MarketplaceService._on_loop_reset(0)
+	_add_clean_item("c1", 1000)  # a pricey piece, well above a student's wallet
+	var n := MarketplaceService.haggle_for("c1", "student")
+	assert_true(
+		n.ceiling <= MarketplaceService.buyer_cash("student"),
+		"a buyer's ceiling can never exceed the cash they hold"
+	)

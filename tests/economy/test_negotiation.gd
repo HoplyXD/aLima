@@ -85,6 +85,19 @@ func test_set_offer_agreed_moves_to_the_sellers_price() -> void:
 	assert_false(n.is_closed())
 
 
+func test_cash_cap_limits_the_ceiling() -> void:
+	# A buyer with only ₱90 in their wallet cannot value a ₱200 piece above ₱90.
+	var n := Negotiation.open(_persona(), 200, 100, "metal", true, 90)
+	assert_true(n.ceiling <= 90, "the ceiling is capped by the buyer's remaining cash")
+
+
+func test_offer_never_exceeds_a_cash_capped_ceiling() -> void:
+	# Even if the seller asks ₱200 and the buyer "agrees", a ₱90 wallet caps the offer.
+	var n := Negotiation.open(_persona(), 200, 100, "metal", true, 90)
+	n.set_offer_from_haggle(true, 200, 0)
+	assert_true(n.current_offer <= 90, "an unaffordable ask is capped to what the buyer can pay")
+
+
 func test_repeated_greedy_asks_make_the_buyer_walk() -> void:
 	var n := Negotiation.open(_persona({"patience": 2}), 200, 100, "metal")
 	var greedy := n.ceiling * 5
