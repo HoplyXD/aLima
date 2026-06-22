@@ -4,16 +4,19 @@
 [ext_resource type="Script" uid="uid://djwc88bwh11ab" path="res://scripts/portal/artifact_found_screen.gd" id="1_found"]
 [ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="3_h7bgg"]
 [ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="4_lk80a"]
-[ext_resource type="Texture2D" uid="uid://gkfx8vh1gdg5" path="res://assets/UI assets/game/gui/phone/nvl.png" id="5_620ey"]
+[ext_resource type="Texture2D" uid="uid://dxr4jmbwn30dm" path="res://assets/UI assets/game/gui/bar/left.png" id="5_h7bgg"]
+[ext_resource type="Texture2D" uid="uid://dprq1wdcmqdih" path="res://assets/UI assets/game/gui/bar/right.png" id="6_lk80a"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_3sqe8"]
 texture = ExtResource("3_h7bgg")
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_q7okt"]
-texture = ExtResource("5_620ey")
+texture = ExtResource("5_h7bgg")
 expand_margin_left = 50.0
 expand_margin_right = 50.0
-region_rect = Rect2(0, 377.84357, 1920, 470.92572)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_620ey"]
+texture = ExtResource("6_lk80a")
 
 [node name="ArtifactFoundScreen" type="Control" unique_id=9274559]
 layout_mode = 3
@@ -99,5 +102,8 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(300, 40)
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxTexture_q7okt")
+theme_override_styles/hover = SubResource("StyleBoxTexture_620ey")
 text = "Send to Portal"
