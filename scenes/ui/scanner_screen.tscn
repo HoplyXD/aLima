@@ -1,22 +1,32 @@
 [gd_scene format=3 uid="uid://b4bxq6wb6m7yh"]
 
-[ext_resource type="Script" path="res://scripts/scanner/scanner_screen.gd" id="1_scanner"]
+[ext_resource type="Script" uid="uid://bp3613uu3rgti" path="res://scripts/scanner/scanner_screen.gd" id="1_scanner"]
+[ext_resource type="Theme" uid="uid://jr6503orak54" path="res://Themes/scanner.tres" id="2_vlm2r"]
+[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="3_ql5bc"]
+[ext_resource type="Texture2D" uid="uid://fea2iartni8r" path="res://assets/UI assets/game/gui/separator.png" id="4_mmpfc"]
 
-[node name="ScannerScreen" type="CanvasLayer"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ddhd"]
+bg_color = Color(1, 1, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ldtip"]
+bg_color = Color(0.9200223, 0.4488619, 1.347661e-06, 1)
+
+[node name="ScannerScreen" type="CanvasLayer" unique_id=884118485]
 process_mode = 3
 layer = 10
 script = ExtResource("1_scanner")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=273390631]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme = ExtResource("2_vlm2r")
 color = Color(0.05, 0.045, 0.04, 1)
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=1778282056]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -26,8 +36,9 @@ offset_right = -160.0
 offset_bottom = -80.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_vlm2r")
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=829506294]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,84 +49,114 @@ offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_vlm2r")
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
 
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+[node name="Buttons" type="HBoxContainer" parent="Panel/Margin" unique_id=460260333]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+theme_override_constants/separation = 12
+alignment = 2
+
+[node name="BackButton" type="Button" parent="Panel/Margin/Buttons" unique_id=1205507376]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_3ddhd")
+theme_override_styles/hover = SubResource("StyleBoxFlat_ldtip")
+text = "Back"
+
+[node name="CloseButton" type="Button" parent="Panel/Margin/Buttons" unique_id=1065927892]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_3ddhd")
+theme_override_styles/hover = SubResource("StyleBoxFlat_ldtip")
+text = "Close"
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin" unique_id=776103801]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+[node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=912121541]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_fonts/font = ExtResource("3_ql5bc")
+theme_override_font_sizes/font_size = 138
 text = "Scanner Analysis"
 horizontal_alignment = 1
 
-[node name="ObjectLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="ObjectLabel" type="Label" parent="Panel/Margin/VBox" unique_id=1491595722]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 69
 text = "Object: ---"
 horizontal_alignment = 1
 
-[node name="StatusLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="StatusLabel" type="Label" parent="Panel/Margin/VBox" unique_id=134753127]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = ""
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="Panel/Margin/VBox"]
+[node name="TextureRect" type="TextureRect" parent="Panel/Margin/VBox" unique_id=454945875]
+layout_mode = 2
+texture = ExtResource("4_mmpfc")
+
+[node name="HSeparator" type="HSeparator" parent="Panel/Margin/VBox" unique_id=1924211212]
 layout_mode = 2
 
-[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox"]
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox" unique_id=146710864]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Content" type="VBoxContainer" parent="Panel/Margin/VBox/Scroll"]
+[node name="Content" type="VBoxContainer" parent="Panel/Margin/VBox/Scroll" unique_id=1729088991]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="VerdictSection" type="VBoxContainer" parent="Panel/Margin/VBox"]
+[node name="VScrollBar" type="VScrollBar" parent="Panel/Margin/VBox/Scroll" unique_id=1918673303]
+layout_mode = 2
+
+[node name="VerdictSection" type="VBoxContainer" parent="Panel/Margin/VBox" unique_id=2134106730]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="VerdictTitle" type="Label" parent="Panel/Margin/VBox/VerdictSection"]
+[node name="VerdictTitle" type="Label" parent="Panel/Margin/VBox/VerdictSection" unique_id=1316355784]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme = ExtResource("2_vlm2r")
+theme_override_font_sizes/font_size = 50
 text = "Your Verdict"
 
-[node name="VerdictHint" type="Label" parent="Panel/Margin/VBox/VerdictSection"]
+[node name="VerdictHint" type="Label" parent="Panel/Margin/VBox/VerdictSection" unique_id=45697635]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 40
 text = "Choose one. The scanner cannot decide for you."
 
-[node name="VerdictButtons" type="HBoxContainer" parent="Panel/Margin/VBox/VerdictSection"]
+[node name="VerdictButtons" type="HBoxContainer" parent="Panel/Margin/VBox/VerdictSection" unique_id=2005578175]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ConfirmButton" type="Button" parent="Panel/Margin/VBox"]
-unique_name_in_owner = true
+[node name="HSeparator2" type="HSeparator" parent="Panel/Margin/VBox" unique_id=754260945]
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_constants/separation = 19
+
+[node name="ConfirmButton" type="Button" parent="Panel/Margin/VBox" unique_id=1617752708]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1000, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 52
 disabled = true
 text = "Confirm Verdict"
-
-[node name="Buttons" type="HBoxContainer" parent="Panel/Margin/VBox"]
-layout_mode = 2
-alignment = 2
-theme_override_constants/separation = 12
-
-[node name="BackButton" type="Button" parent="Panel/Margin/VBox/Buttons"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Back"
-
-[node name="CloseButton" type="Button" parent="Panel/Margin/VBox/Buttons"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Close"

@@ -1,0 +1,49 @@
+[gd_resource type="Theme" format=3 uid="uid://jr6503orak54"]
+
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="1_pjpqu"]
+[ext_resource type="Texture2D" uid="uid://dprq1wdcmqdih" path="res://assets/UI assets/game/gui/bar/right.png" id="2_kwjtp"]
+[ext_resource type="Texture2D" uid="uid://dxr4jmbwn30dm" path="res://assets/UI assets/game/gui/bar/left.png" id="3_yyi1t"]
+[ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="4_11tyr"]
+[ext_resource type="Texture2D" uid="uid://canx2013ec6hh" path="res://assets/UI assets/game/gui/slider/horizontal_idle_thumb.png" id="5_dmoks"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8wvrq"]
+bg_color = Color(0.08, 0.08, 0.08, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.18, 0.18, 0.18, 1)
+border_blend = true
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5veco"]
+texture = ExtResource("2_kwjtp")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_gyeqv"]
+texture = ExtResource("3_yyi1t")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_imui3"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_uqc0h"]
+texture = ExtResource("4_11tyr")
+expand_margin_left = 20.0
+expand_margin_top = 20.0
+expand_margin_right = 20.0
+expand_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_upsnv"]
+texture = ExtResource("5_dmoks")
+
+[resource]
+Button/colors/font_color = Color(0, 0, 0, 1)
+Button/font_sizes/font_size = 30
+Button/fonts/font = ExtResource("1_pjpqu")
+Button/styles/disabled = SubResource("StyleBoxFlat_8wvrq")
+Button/styles/hover = SubResource("StyleBoxTexture_5veco")
+Button/styles/normal = SubResource("StyleBoxTexture_gyeqv")
+HSeparator/styles/separator = SubResource("StyleBoxEmpty_imui3")
+Label/font_sizes/font_size = 35
+Label/fonts/font = ExtResource("1_pjpqu")
+Panel/styles/panel = SubResource("StyleBoxTexture_uqc0h")
+VScrollBar/styles/grabber = SubResource("StyleBoxTexture_upsnv")
+VScrollBar/styles/grabber_highlight = SubResource("StyleBoxTexture_upsnv")
+VScrollBar/styles/grabber_pressed = SubResource("StyleBoxTexture_upsnv")
