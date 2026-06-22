@@ -244,7 +244,24 @@ func arrived_buyers(uid: String) -> Array[BuyerPersona]:
 	for persona in eligible:
 		if int(schedule.get(persona.id, 0)) <= now:
 			out.append(persona)
+	# Order the list by when each buyer arrived: the first to show up sits at the top,
+	# the most recent at the bottom (Mr. Maverick is scheduled at "now", so he leads).
+	out.sort_custom(
+		func(a: BuyerPersona, b: BuyerPersona) -> bool:
+			return int(schedule.get(a.id, 0)) < int(schedule.get(b.id, 0))
+	)
 	return out
+
+
+## The buyer's current standing offer for this item, for the picker list. Uses their live
+## haggle session if one is open, otherwise a fresh opening offer (without starting a
+## session). 0 if the item can't be sold.
+func preview_offer(uid: String, persona_id: String) -> int:
+	var key := "%s|%s" % [uid, persona_id]
+	if _negotiations.has(key):
+		return (_negotiations[key] as Negotiation).current_offer
+	var probe := start_negotiation(uid, persona_id)
+	return probe.current_offer if probe != null else 0
 
 
 ## Assigns an arrival time (in-game minute index) to any newly-eligible buyer for `uid`

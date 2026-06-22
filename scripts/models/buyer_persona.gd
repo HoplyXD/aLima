@@ -8,7 +8,8 @@ class_name BuyerPersona
 
 ## PRD §4.10 contract fields.
 var id: String = ""
-var display_name: String = ""
+var display_name: String = ""  ## A person's name (first, or first + last).
+var occupation: String = ""  ## Short role shown under the name in the buyer list.
 var motive: String = ""
 var budget_range: Vector2i = Vector2i.ZERO  ## [min interest, max they can pay].
 var preferred_categories: Array[String] = []
@@ -43,6 +44,7 @@ static func from_dictionary(data: Dictionary) -> BuyerPersona:
 	var b := BuyerPersona.new()
 	b.id = ModelUtils.as_string(data.get("id"))
 	b.display_name = ModelUtils.as_string(data.get("display_name"))
+	b.occupation = ModelUtils.as_string(data.get("occupation"))
 	b.motive = ModelUtils.as_string(data.get("motive"))
 	var budget := ModelUtils.as_vector2(data.get("budget_range"))
 	b.budget_range = Vector2i(int(budget.x), int(budget.y))
@@ -68,6 +70,7 @@ func to_dictionary() -> Dictionary:
 		"record_type": "buyer_persona",
 		"id": id,
 		"display_name": display_name,
+		"occupation": occupation,
 		"motive": motive,
 		"budget_range": [budget_range.x, budget_range.y],
 		"preferred_categories": preferred_categories.duplicate(),

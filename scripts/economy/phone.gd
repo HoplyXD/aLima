@@ -288,15 +288,19 @@ func _make_buyer_row(persona: BuyerPersona) -> Control:
 	name_label.text = persona.display_name
 	name_label.add_theme_font_size_override("font_size", 15)
 	box.add_child(name_label)
-	var motive := Label.new()
-	motive.text = persona.motive
-	motive.add_theme_font_size_override("font_size", 11)
-	motive.add_theme_color_override("font_color", Color(0.7, 0.7, 0.78))
-	motive.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(motive)
+	var occupation := Label.new()
+	occupation.text = persona.occupation if not persona.occupation.is_empty() else persona.motive
+	occupation.add_theme_font_size_override("font_size", 11)
+	occupation.add_theme_color_override("font_color", Color(0.7, 0.7, 0.78))
+	box.add_child(occupation)
+	var offer := Label.new()
+	offer.text = "Offer: ₱%d" % MarketplaceService.preview_offer(_sell_uid, persona.id)
+	offer.add_theme_font_size_override("font_size", 12)
+	offer.add_theme_color_override("font_color", Color(0.85, 0.78, 0.5))
+	box.add_child(offer)
 	row.add_child(box)
 	var talk := Button.new()
-	talk.text = "Haggle"
+	talk.text = "Message"
 	talk.focus_mode = Control.FOCUS_ALL
 	var persona_id := persona.id
 	talk.pressed.connect(func() -> void: begin_haggle(persona_id))

@@ -1,18 +1,17 @@
-[gd_scene format=3 uid="uid://cph0ne5cr33na"]
+[gd_scene load_steps=5 format=3 uid="uid://cph0ne5cr33na"]
 
 [ext_resource type="Script" path="res://scripts/economy/phone.gd" id="1_phone"]
+[ext_resource type="PackedScene" uid="uid://c55yre3k0bgf8" path="res://assets/3d Assets/Phone.glb" id="2_phonemdl"]
+
+[sub_resource type="Environment" id="env_phone"]
+background_mode = 1
+background_color = Color(0, 0, 0, 0)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.64, 0.72, 1)
+ambient_light_energy = 0.7
 
 [sub_resource type="StyleBoxFlat" id="body"]
-bg_color = Color(0.1, 0.1, 0.12, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.02, 0.02, 0.03, 1)
-corner_radius_top_left = 36
-corner_radius_top_right = 36
-corner_radius_bottom_right = 36
-corner_radius_bottom_left = 36
+bg_color = Color(0, 0, 0, 0)
 
 [sub_resource type="StyleBoxFlat" id="screen"]
 bg_color = Color(0.06, 0.07, 0.09, 1)
@@ -31,6 +30,34 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0, 0, 0, 0.6)
+
+[node name="PhoneRender" type="SubViewportContainer" parent="Dim"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Dim/PhoneRender"]
+own_world_3d = true
+transparent_bg = true
+gui_disable_input = true
+
+[node name="World" type="Node3D" parent="Dim/PhoneRender/SubViewport"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Dim/PhoneRender/SubViewport/World"]
+environment = SubResource("env_phone")
+
+[node name="Camera3D" type="Camera3D" parent="Dim/PhoneRender/SubViewport/World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.7)
+fov = 40.0
+
+[node name="Light" type="DirectionalLight3D" parent="Dim/PhoneRender/SubViewport/World"]
+transform = Transform3D(1, 0, 0, 0, 0.94, 0.34, 0, -0.34, 0.94, 0, 0, 0)
+light_energy = 1.2
+
+[node name="PhoneModel" parent="Dim/PhoneRender/SubViewport/World" instance=ExtResource("2_phonemdl")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
 
 [node name="Center" type="CenterContainer" parent="Dim"]
 anchors_preset = 15

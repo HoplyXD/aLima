@@ -4,7 +4,8 @@
     {
       "record_type": "buyer_persona",
       "id": "collector",
-      "display_name": "Doña Esperanza",
+      "display_name": "Esperanza Vega",
+      "occupation": "Heirloom Collector",
       "motive": "Completes a private collection of fine heirlooms.",
       "budget_range": [120, 900],
       "preferred_categories": ["jewelry", "ceramic"],
@@ -30,7 +31,8 @@
     {
       "record_type": "buyer_persona",
       "id": "reseller",
-      "display_name": "Boy Tindahan",
+      "display_name": "Boy Santos",
+      "occupation": "Reseller",
       "motive": "Flips junk for a quick margin.",
       "budget_range": [40, 360],
       "preferred_categories": ["metal", "ceramic"],
@@ -56,7 +58,8 @@
     {
       "record_type": "buyer_persona",
       "id": "student",
-      "display_name": "Maya the Student",
+      "display_name": "Maya Reyes",
+      "occupation": "Student",
       "motive": "Hunts cheap decor for a tiny apartment.",
       "budget_range": [20, 160],
       "preferred_categories": ["paper", "photo"],
@@ -82,7 +85,8 @@
     {
       "record_type": "buyer_persona",
       "id": "gift",
-      "display_name": "Tito Ramon",
+      "display_name": "Ramon Aquino",
+      "occupation": "Gift Shopper",
       "motive": "Wants a sentimental, beautifully restored gift.",
       "budget_range": [80, 520],
       "preferred_categories": ["photo", "jewelry"],
@@ -108,7 +112,8 @@
     {
       "record_type": "buyer_persona",
       "id": "hobbyist",
-      "display_name": "Engineer Lito",
+      "display_name": "Lito Fernandez",
+      "occupation": "Engineer",
       "motive": "Collects only pristine, well-conserved pieces.",
       "budget_range": [60, 600],
       "preferred_categories": ["metal", "ceramic"],
@@ -134,7 +139,8 @@
     {
       "record_type": "buyer_persona",
       "id": "appraiser",
-      "display_name": "The Appraiser",
+      "display_name": "Marco Villar",
+      "occupation": "Appraiser",
       "motive": "Buys purely on condition and craftsmanship — sentiment means nothing.",
       "budget_range": [80, 700],
       "preferred_categories": ["metal", "ceramic"],
@@ -161,7 +167,8 @@
     {
       "record_type": "buyer_persona",
       "id": "tourist",
-      "display_name": "Visiting Collector",
+      "display_name": "Hannah Cole",
+      "occupation": "Tourist",
       "motive": "Pays generously for pieces with a story to take back home.",
       "budget_range": [100, 550],
       "preferred_categories": ["photo", "paper", "ceramic"],
@@ -187,7 +194,8 @@
     {
       "record_type": "buyer_persona",
       "id": "lola",
-      "display_name": "Lola Pacing",
+      "display_name": "Pacita Salazar",
+      "occupation": "Retiree",
       "motive": "Looks for keepsakes that remind her of the old days.",
       "budget_range": [20, 180],
       "preferred_categories": ["photo", "jewelry"],
@@ -214,6 +222,7 @@
       "record_type": "buyer_persona",
       "id": "suspicious",
       "display_name": "Mr. Maverick",
+      "occupation": "Mystery Buyer",
       "motive": "Always lurking the market — and he'll always lowball you.",
       "budget_range": [10, 2000],
       "preferred_categories": ["jewelry", "metal"],
