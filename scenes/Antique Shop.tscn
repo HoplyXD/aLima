@@ -96,7 +96,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.036783457, 0.055381596, -0.
 shape = SubResource("BoxShape3D_dcu3k")
 
 [node name="Book" parent="Interactables/JournalInteractable" unique_id=1431567541 instance=ExtResource("5_ggowf")]
-transform = Transform3D(1.2737905e-15, 2.9140926e-08, 0.6666667, 0.6666667, -2.9140926e-08, 0, 2.9140926e-08, 0.6666667, -2.9140926e-08, 0.017254591, 0.03370732, -0.0018706322)
+transform = Transform3D(-5.4916523e-08, 3.5073406e-08, -0.6666667, -0.66301465, 0.069685675, 5.8281852e-08, 0.069685675, 0.66301465, 2.9140926e-08, 0.017254591, 0.03370732, -0.0018706322)
 
 [node name="PhoneInteractable" type="Area3D" parent="Interactables" unique_id=2100961380]
 transform = Transform3D(1.4182779, 0, -0.4883522, 0, 1.5, 0, 0.4883522, 0, 1.4182779, 0.95, 2.9985766, 0.7625952)
@@ -105,9 +105,6 @@ prompt_text = "Check the phone marketplace"
 
 [node name="Collision" type="CollisionShape3D" parent="Interactables/PhoneInteractable" unique_id=1702429021]
 shape = SubResource("BoxShape3D_u5nwe")
-
-[node name="Phone" parent="Interactables/PhoneInteractable" unique_id=2097862164 instance=ExtResource("8_nc6ge")]
-transform = Transform3D(0.63034576, 0, 0.21704543, 0, 0.6666667, 0, -0.21704543, 0, 0.63034576, 0.19826509, -0.9002368, 0.07380958)
 
 [node name="Phone2" parent="Interactables/PhoneInteractable" unique_id=1547379669 instance=ExtResource("8_nc6ge")]
 transform = Transform3D(-0.395, -4.4703484e-08, 2.220446e-15, 0, -1.7266e-08, -0.39500007, 4.4703484e-08, -0.395, 1.7266e-08, -0.004625678, -0.0139709115, 0.030020952)
