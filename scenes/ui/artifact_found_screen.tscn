@@ -1,21 +1,34 @@
-[gd_scene load_steps=2 format=3 uid="uid://c0pportalfound01"]
+[gd_scene format=3 uid="uid://vrgisogeeyey"]
 
-[ext_resource type="Script" path="res://scripts/portal/artifact_found_screen.gd" id="1_found"]
+[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/Pause_menu.tres" id="1_4t6ak"]
+[ext_resource type="Script" uid="uid://djwc88bwh11ab" path="res://scripts/portal/artifact_found_screen.gd" id="1_found"]
+[ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="3_h7bgg"]
+[ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="4_lk80a"]
+[ext_resource type="Texture2D" uid="uid://gkfx8vh1gdg5" path="res://assets/UI assets/game/gui/phone/nvl.png" id="5_620ey"]
 
-[node name="ArtifactFoundScreen" type="Control"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_3sqe8"]
+texture = ExtResource("3_h7bgg")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_q7okt"]
+texture = ExtResource("5_620ey")
+expand_margin_left = 50.0
+expand_margin_right = 50.0
+region_rect = Rect2(0, 377.84357, 1920, 470.92572)
+
+[node name="ArtifactFoundScreen" type="Control" unique_id=9274559]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_4t6ak")
 script = ExtResource("1_found")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1414384270]
 
-[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer"]
+[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer" unique_id=263036423]
 custom_minimum_size = Vector2(600, 400)
-layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -27,57 +40,64 @@ offset_right = 300.0
 offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_4t6ak")
+theme_override_styles/panel = SubResource("StyleBoxTexture_3sqe8")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/PanelContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/PanelContainer" unique_id=392722772]
 layout_mode = 2
+theme_override_constants/separation = 28
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=272882532]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_fonts/font = ExtResource("4_lk80a")
+theme_override_font_sizes/font_size = 79
 text = "Artifact Found"
 horizontal_alignment = 1
 
-[node name="NameLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=1912038127]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Name"
 horizontal_alignment = 1
 
-[node name="OriginLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="OriginLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=2053121709]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Origin"
 horizontal_alignment = 1
 
-[node name="ConditionLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="ConditionLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=818631614]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Condition"
 horizontal_alignment = 1
 
-[node name="ProgressLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="ProgressLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=1883830880]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Fragments: 0 / 5"
 horizontal_alignment = 1
 
-[node name="LoadingLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="LoadingLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=1120950104]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Contacting Portal..."
 horizontal_alignment = 1
 
-[node name="ErrorLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="ErrorLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=464018073]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Error"
 horizontal_alignment = 1
 
-[node name="ContinueButton" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer"]
+[node name="ContinueButton" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=125815186]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 40)
 layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/normal = SubResource("StyleBoxTexture_q7okt")
 text = "Send to Portal"
