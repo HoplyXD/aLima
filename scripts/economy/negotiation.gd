@@ -63,6 +63,51 @@ const _FRIENDLY_WORDS := [
 ]
 const _OFFENDED_LINE := "Excuse me? That's vile — we're done here. Don't message me again."
 
+## Free-text banter classification. "Substance" = talking up the object itself (history,
+## age, provenance, condition) — this is the ONLY thing that moves an all-business buyer
+## (ignores_banter). "Flattery" = complimenting the buyer/seller — this sways warm buyers
+## but does nothing to all-business ones.
+const _SUBSTANCE_WORDS := [
+	"history",
+	"old",
+	"antique",
+	"vintage",
+	"year",
+	"era",
+	"century",
+	"provenance",
+	"story",
+	"heritage",
+	"family",
+	"heirloom",
+	"rare",
+	"craftsmanship",
+	"handmade",
+	"made",
+	"original",
+	"authentic",
+	"restored",
+	"condition",
+	"quality",
+]
+const _FLATTERY_WORDS := [
+	"nice",
+	"beautiful",
+	"lovely",
+	"gorgeous",
+	"pretty",
+	"perfect",
+	"cute",
+	"sweet",
+	"kind",
+	"generous",
+	"friend",
+	"wonderful",
+	"amazing",
+	"taste",
+	"charming",
+]
+
 ## move id -> {label (player button), say (player utterance)}.
 const BANTER_MOVES := {
 	"history": {"label": "Talk up its history", "say": "This piece has real history behind it."},
@@ -75,7 +120,7 @@ const BANTER_MOVES := {
 ## ceiling); off-putting ones cool them. Unknown styles use DEFAULT_BIAS.
 const BANTER_BIAS := {
 	"appraising": {"history": 0.10, "honest": 0.06, "charm": 0.05, "press": -0.07},
-	"aggressive": {"history": -0.05, "honest": 0.05, "charm": -0.05, "press": 0.10},
+	"aggressive": {"history": 0.06, "honest": 0.05, "charm": -0.05, "press": 0.10},
 	"earnest": {"history": 0.03, "honest": 0.07, "charm": 0.08, "press": -0.06},
 	"sentimental": {"history": 0.08, "honest": 0.06, "charm": 0.12, "press": -0.10},
 	"exacting": {"history": 0.07, "honest": 0.08, "charm": -0.04, "press": 0.0},
@@ -151,8 +196,11 @@ func banter(move_id: String) -> Dictionary:
 	history.append(
 		{"role": "player", "text": str(BANTER_MOVES[move_id]["say"]), "offer": current_offer}
 	)
-	# A robotic / all-business buyer is unmoved by banter — their price never shifts.
-	var delta := 0.0 if persona.ignores_banter else _banter_delta(move_id)
+	# All-business buyers shrug off flattery ("charm") but still respond to substance
+	# (history / honesty about condition).
+	var delta := _banter_delta(move_id)
+	if persona.ignores_banter and move_id == "charm":
+		delta = 0.0
 	mood = clampf(mood + delta, MOOD_MIN, MOOD_MAX)
 	_recompute_ceiling()
 	# A warmer mood can lift the standing offer; a colder one caps it to the ceiling.
@@ -256,13 +304,35 @@ func set_offer_from_haggle(agreed: bool, seller_price: int, counter_price: int) 
 ## Mood-only banter (no price): warms/cools the buyer and may nudge the standing offer.
 ## No dialogue line is added — the caller appends the AI/offline reply.
 func banter_mood_only(text: String) -> void:
-	if closed or persona.ignores_banter:
-		return  # robotic buyers don't warm to anything the seller says
-	var delta := 0.16 if _sounds_friendly(text) else 0.04
+	if closed:
+		return
+	var lower := text.to_lower()
+	var substance := _mentions_any(lower, _SUBSTANCE_WORDS)
+	var flattery := _mentions_any(lower, _FLATTERY_WORDS)
+	var delta := 0.0
+	if persona.ignores_banter:
+		# All-business: only the item's substance moves them; flattery does nothing.
+		delta = 0.14 if substance else 0.0
+	else:
+		if flattery:
+			delta += 0.16
+		if substance:
+			delta += 0.10
+		if delta == 0.0 and _sounds_friendly(text):
+			delta = 0.04
+	if delta == 0.0:
+		return
 	mood = clampf(mood + delta, MOOD_MIN, MOOD_MAX)
 	_recompute_ceiling()
 	var warmed := int(round(ceiling * persona.open_factor))
 	current_offer = clampi(maxi(current_offer, warmed), 1, maxi(1, ceiling))
+
+
+func _mentions_any(lower_text: String, words: Array) -> bool:
+	for word in words:
+		if lower_text.contains(word):
+			return true
+	return false
 
 
 func add_player_line(text: String) -> void:
@@ -271,6 +341,16 @@ func add_player_line(text: String) -> void:
 
 func add_buyer_line(text: String) -> void:
 	history.append({"role": "buyer", "text": text, "offer": current_offer})
+
+
+## Rewrites the most recent buyer line in place (used when an AI reply upgrades the
+## canned banter-move line, so the AI text is what persists in the saved conversation).
+func set_last_buyer_line(text: String) -> void:
+	for i in range(history.size() - 1, -1, -1):
+		if history[i].get("role") == "buyer":
+			history[i]["text"] = text
+			return
+	add_buyer_line(text)
 
 
 ## Player accepts the buyer's standing offer. Returns the agreed price.
