@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="8_54x15"]
 [ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="9_ot4no"]
 [ext_resource type="Texture2D" uid="uid://ll0ti7n7ud2p" path="res://assets/UI assets/game/gui/button/slot_idle_background.png" id="10_47eic"]
+[ext_resource type="PackedScene" uid="uid://ccw18fb4d26lu" path="res://assets/3d Assets/Table.glb" id="11_table"]
 
 [sub_resource type="Environment" id="Environment_rest"]
 background_mode = 1
@@ -17,13 +18,6 @@ background_color = Color(0.07, 0.06, 0.05, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.55, 0.49, 0.4, 1)
 ambient_light_energy = 0.5
-
-[sub_resource type="StandardMaterial3D" id="Material_bench"]
-albedo_color = Color(0.27, 0.19, 0.13, 1)
-roughness = 0.8
-
-[sub_resource type="BoxMesh" id="BoxMesh_bench"]
-size = Vector3(4.8, 0.15, 2.05)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4edn4"]
 texture = ExtResource("8_54x15")
@@ -76,10 +70,8 @@ light_energy = 1.4
 transform = Transform3D(0.866, 0.25, -0.433, 0, 0.866, 0.5, 0.5, -0.433, 0.75, -2, 1.5, 1.5)
 light_energy = 0.5
 
-[node name="Workbench" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World" unique_id=1815913401]
+[node name="Workbench" parent="ViewportContainer/SubViewport/World" instance=ExtResource("11_table")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.85, 0)
-material_override = SubResource("Material_bench")
-mesh = SubResource("BoxMesh_bench")
 
 [node name="ObjectPivot" parent="ViewportContainer/SubViewport/World" unique_id=311061395 instance=ExtResource("2_object")]
 
