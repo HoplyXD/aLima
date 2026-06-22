@@ -147,74 +147,74 @@ script = ExtResource("1_tool")
 
 [node name="Cloth" type="MeshInstance3D" parent="Geometry/soft_cloth"]
 mesh = SubResource("Mesh_cloth_pad")
-surface_material_override/0 = SubResource("Mat_soft_cloth")
+material_override = SubResource("Mat_soft_cloth")
 
 [node name="damp_cloth" type="Node3D" parent="Geometry"]
 
 [node name="Cloth" type="MeshInstance3D" parent="Geometry/damp_cloth"]
 mesh = SubResource("Mesh_cloth_pad")
-surface_material_override/0 = SubResource("Mat_damp_cloth")
+material_override = SubResource("Mat_damp_cloth")
 
 [node name="polishing_cloth" type="Node3D" parent="Geometry"]
 
 [node name="Cloth" type="MeshInstance3D" parent="Geometry/polishing_cloth"]
 mesh = SubResource("Mesh_cloth_pad")
-surface_material_override/0 = SubResource("Mat_polish_cloth")
+material_override = SubResource("Mat_polish_cloth")
 
 [node name="soft_brush" type="Node3D" parent="Geometry"]
 
 [node name="Handle" type="MeshInstance3D" parent="Geometry/soft_brush"]
 mesh = SubResource("Mesh_brush_handle")
-surface_material_override/0 = SubResource("Mat_soft_handle")
+material_override = SubResource("Mat_soft_handle")
 
 [node name="Bristles" type="MeshInstance3D" parent="Geometry/soft_brush"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.2)
 mesh = SubResource("Mesh_brush_bristles")
-surface_material_override/0 = SubResource("Mat_soft_bristle")
+material_override = SubResource("Mat_soft_bristle")
 
 [node name="rust_brush" type="Node3D" parent="Geometry"]
 
 [node name="Handle" type="MeshInstance3D" parent="Geometry/rust_brush"]
 mesh = SubResource("Mesh_brush_handle")
-surface_material_override/0 = SubResource("Mat_rust_handle")
+material_override = SubResource("Mat_rust_handle")
 
 [node name="Bristles" type="MeshInstance3D" parent="Geometry/rust_brush"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.2)
 mesh = SubResource("Mesh_brush_bristles")
-surface_material_override/0 = SubResource("Mat_rust_bristle")
+material_override = SubResource("Mat_rust_bristle")
 
 [node name="solvent" type="Node3D" parent="Geometry"]
 
 [node name="Body" type="MeshInstance3D" parent="Geometry/solvent"]
 mesh = SubResource("Mesh_bottle_body")
-surface_material_override/0 = SubResource("Mat_solvent_body")
+material_override = SubResource("Mat_solvent_body")
 
 [node name="Cap" type="MeshInstance3D" parent="Geometry/solvent"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
 mesh = SubResource("Mesh_bottle_cap")
-surface_material_override/0 = SubResource("Mat_solvent_cap")
+material_override = SubResource("Mat_solvent_cap")
 
 [node name="stain_lifter" type="Node3D" parent="Geometry"]
 
 [node name="Body" type="MeshInstance3D" parent="Geometry/stain_lifter"]
 mesh = SubResource("Mesh_bottle_body")
-surface_material_override/0 = SubResource("Mat_stain_body")
+material_override = SubResource("Mat_stain_body")
 
 [node name="Cap" type="MeshInstance3D" parent="Geometry/stain_lifter"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
 mesh = SubResource("Mesh_bottle_cap")
-surface_material_override/0 = SubResource("Mat_stain_cap")
+material_override = SubResource("Mat_stain_cap")
 
 [node name="consolidant" type="Node3D" parent="Geometry"]
 
 [node name="Body" type="MeshInstance3D" parent="Geometry/consolidant"]
 mesh = SubResource("Mesh_bottle_body")
-surface_material_override/0 = SubResource("Mat_consol_body")
+material_override = SubResource("Mat_consol_body")
 
 [node name="Cap" type="MeshInstance3D" parent="Geometry/consolidant"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
 mesh = SubResource("Mesh_bottle_cap")
-surface_material_override/0 = SubResource("Mat_consol_cap")
+material_override = SubResource("Mat_consol_cap")
 
 [node name="InfoPanel" type="MeshInstance3D" parent="."]
 transform = Transform3D(1.3018137, 0, 0, 0, 1.8811226, 0, 0, 0, 1, 0, -0.28382063, 0.05)

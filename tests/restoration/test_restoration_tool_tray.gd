@@ -48,11 +48,20 @@ func _first_material(tool_id: String) -> StandardMaterial3D:
 
 
 ## The prop's geometry now lives under a child node, so search recursively for the
-## first MeshInstance3D's StandardMaterial3D (the one the highlight toggles).
+## first VISIBLE MeshInstance3D's StandardMaterial3D (the one the highlight toggles).
+## Only visible nodes are checked — hidden geometry nodes (tools not active on this prop)
+## share materials across instances and would produce false results.
+## Matches _collect_materials: checks get_surface_override_material(0) first (authored
+## scene props use surface override), then falls back to material_override (procedural).
 func _find_mesh_material(node: Node) -> StandardMaterial3D:
 	for child in node.get_children():
+		if child is Node3D and not (child as Node3D).visible:
+			continue
 		if child is MeshInstance3D:
-			var mat := (child as MeshInstance3D).material_override
+			var mi := child as MeshInstance3D
+			var mat: Material = mi.get_surface_override_material(0)
+			if mat == null:
+				mat = mi.material_override
 			if mat is StandardMaterial3D:
 				return mat as StandardMaterial3D
 		var nested := _find_mesh_material(child)
