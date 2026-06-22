@@ -99,7 +99,7 @@ material_override = SubResource("Material_bench")
 script = ExtResource("3_tray")
 
 [node name="Phone" parent="ViewportContainer/SubViewport/World" instance=ExtResource("4_phone")]
-transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, -1.95, -0.6, 0.78)
+transform = Transform3D(0.14, 0, 0, 0, 0, 0.14, 0, -0.14, 0, -1.7, -0.766, 0.6)
 
 [node name="Journal" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.95, -0.71, -0.05)

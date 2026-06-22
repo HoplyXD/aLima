@@ -22,7 +22,7 @@ var _negotiation: Negotiation = null
 var _said_label: Label = null  ## The buyer's spoken-line label, upgraded with live banter.
 var _ai_label: Label = null  ## "AI: live / offline" indicator in the haggle view.
 
-@onready var _close_button: Button = %CloseButton
+@onready var _dim: ColorRect = $Dim
 @onready var _home_button: Button = %HomeButton
 @onready var _home: VBoxContainer = %Home
 @onready var _app_grid: GridContainer = %AppGrid
@@ -34,9 +34,21 @@ var _ai_label: Label = null  ## "AI: live / offline" indicator in the haggle vie
 
 func _ready() -> void:
 	visible = false
-	_close_button.pressed.connect(close)
+	# Clicking the dimmed area outside the phone closes it (the phone body/UI sits on top
+	# and consumes its own clicks).
+	_dim.gui_input.connect(_on_dim_input)
 	_home_button.pressed.connect(show_home)
 	_build_app_grid()
+
+
+## Closes the phone when the player clicks the dim backdrop (outside the phone).
+func _on_dim_input(event: InputEvent) -> void:
+	if (
+		event is InputEventMouseButton
+		and (event as InputEventMouseButton).pressed
+		and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+	):
+		close()
 
 
 ## Opens the phone on its home screen and pauses shop time.
@@ -46,7 +58,7 @@ func open() -> void:
 	if not visible:
 		visible = true
 	show_home()
-	_close_button.grab_focus()
+	_home_button.grab_focus()
 
 
 func close() -> void:
@@ -66,16 +78,21 @@ func _release_pause_if_owned() -> void:
 	_owns_pause = false
 
 
-# Backspace backs out of an app to the home screen, or closes the phone from home
-# (Esc is reserved for the pause menu).
+# Esc closes the phone outright; Backspace backs out of an app to the home screen (or
+# closes from home). Both are consumed so the bench behind doesn't also act on them.
 func _input(event: InputEvent) -> void:
-	if not visible or not event.is_action_pressed("back"):
+	if not visible:
 		return
-	if _current_app.is_empty():
+	if event.is_action_pressed("ui_cancel"):
 		close()
-	else:
-		show_home()
-	get_viewport().set_input_as_handled()
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("back"):
+		if _current_app.is_empty():
+			close()
+		else:
+			show_home()
+		get_viewport().set_input_as_handled()
 
 
 # --- Navigation --------------------------------------------------------------
@@ -134,7 +151,9 @@ func _build_app_grid() -> void:
 func _make_app_icon(label: String, app_id: String, disabled: bool) -> Button:
 	var button := Button.new()
 	button.text = label
-	button.custom_minimum_size = Vector2(110, 110)
+	# Sized so three across fit inside the phone body's fixed width, otherwise the home
+	# screen would be wider than the app views and the phone appears to resize on tap.
+	button.custom_minimum_size = Vector2(100, 100)
 	button.disabled = disabled
 	button.focus_mode = Control.FOCUS_ALL
 	if not disabled:

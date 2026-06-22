@@ -55,6 +55,8 @@ var _scanner_screen: ScannerScreen
 var _journal_viewport: BookViewport
 var _phone: Phone
 var _storage_screen: StorageScreen
+## Captured base scale of each bench prop (so hover-grow is relative, not absolute).
+var _prop_base_scales: Dictionary = {}
 
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
@@ -1031,11 +1033,19 @@ func _update_hover(pos: Vector2) -> void:
 	_set_bench_hover(_bench_object_pick(origin, dir))
 
 
-## Grows the hovered bench prop (phone/journal/storage), clearing the others.
+## Grows the hovered bench prop (phone/journal/storage) by 10% of its OWN base scale,
+## clearing the others. (The props have different base scales — e.g. the phone model is
+## tiny — so we must scale relative to each, not to an absolute 1.0.)
 func _set_bench_hover(id: String) -> void:
-	_phone_prop.scale = Vector3.ONE * (1.1 if id == "phone" else 1.0)
-	_journal_prop.scale = Vector3.ONE * (1.1 if id == "journal" else 1.0)
-	_storage_prop.scale = Vector3.ONE * (1.1 if id == "storage" else 1.0)
+	if _prop_base_scales.is_empty():
+		_prop_base_scales = {
+			"phone": _phone_prop.scale,
+			"journal": _journal_prop.scale,
+			"storage": _storage_prop.scale,
+		}
+	_phone_prop.scale = _prop_base_scales["phone"] * (1.1 if id == "phone" else 1.0)
+	_journal_prop.scale = _prop_base_scales["journal"] * (1.1 if id == "journal" else 1.0)
+	_storage_prop.scale = _prop_base_scales["storage"] * (1.1 if id == "storage" else 1.0)
 
 
 func _controller_clean() -> void:
