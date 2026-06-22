@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://cvks8q2h8c441"]
+
+; Auntie's Framed Portrait (template id: auntie_frame_portrait). Swap the model and adjust
+; the ArtifactConditionDecal children. "Randomized Decal Count" picks how many appear per run.
+
+[ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
+[ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_decal"]
+[ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="3_dust"]
+[ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="4_tarnish"]
+[ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="5_crack"]
+
+[node name="AuntieFramePortrait" type="Node3D"]
+script = ExtResource("1_obj")
+randomized_decal_count = 2
+
+[node name="DustDecal" parent="." instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.12, 0.5)
+texture = ExtResource("3_dust")
+
+[node name="TarnishDecal" parent="." instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, -0.04, 0.5)
+texture = ExtResource("4_tarnish")
+
+[node name="CrackingDecal" parent="." instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, -0.26, 0.49)
+texture = ExtResource("5_crack")
