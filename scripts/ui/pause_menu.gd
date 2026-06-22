@@ -12,7 +12,6 @@ var _open: bool = false
 var _resume_button: Button
 var _res_option: OptionButton
 var _fullscreen_check: CheckButton
-var _online_check: CheckButton
 var _previews_check: CheckButton
 var _renderer_option: OptionButton
 var _apply_renderer_button: Button
@@ -136,13 +135,6 @@ func _build_ui() -> void:
 	vbox.add_child(_row("Fullscreen", _fullscreen_check))
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_section("Online"))
-
-	_online_check = CheckButton.new()
-	_online_check.toggled.connect(_on_online_toggled)
-	vbox.add_child(_row("Live buyer banter", _online_check))
-
-	vbox.add_child(HSeparator.new())
 	vbox.add_child(_section("Performance"))
 
 	_previews_check = CheckButton.new()
@@ -177,7 +169,6 @@ func _build_ui() -> void:
 func _refresh() -> void:
 	_res_option.select(SettingsService.resolution_index())
 	_fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
-	_online_check.set_pressed_no_signal(SettingsService.online_services)
 	_previews_check.set_pressed_no_signal(SettingsService.artifact_previews)
 
 	var mobile_ok: bool = SettingsService.mobile_supported()
@@ -199,10 +190,6 @@ func _on_resolution_selected(index: int) -> void:
 
 func _on_fullscreen_toggled(pressed: bool) -> void:
 	SettingsService.set_fullscreen(pressed)
-
-
-func _on_online_toggled(pressed: bool) -> void:
-	SettingsService.set_online_services(pressed)
 
 
 func _on_previews_toggled(pressed: bool) -> void:

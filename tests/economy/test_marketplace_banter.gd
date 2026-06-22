@@ -94,3 +94,16 @@ func test_maverick_only_ever_artifact_ghosts() -> void:
 		MarketplaceService.is_ghosted("other_item", MarketplaceService.MAVERICK_ID),
 		"Mr. Maverick still buys every other artifact"
 	)
+
+
+func test_artifact_ghosted_maverick_leaves_that_items_buyer_list() -> void:
+	var uid := "maverick_leaves_item"
+	MarketplaceService.ghost_failed_banter(uid, MarketplaceService.MAVERICK_ID)
+	var ids: Array = []
+	for persona in MarketplaceService.interested_buyers(uid):
+		ids.append(persona.id)
+	assert_does_not_have(ids, MarketplaceService.MAVERICK_ID, "ghosted Maverick is gone for this item")
+	var other_ids: Array = []
+	for persona in MarketplaceService.interested_buyers("a_different_item"):
+		other_ids.append(persona.id)
+	assert_has(other_ids, MarketplaceService.MAVERICK_ID, "but he's still on other items")

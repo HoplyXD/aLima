@@ -314,7 +314,6 @@ func begin_haggle(persona_id: String) -> void:
 		return
 	_market_view = "haggle"
 	_render_marketplace()
-	_refresh_ai_status()  # probe the backend so the indicator is accurate on open
 
 
 func _render_haggle() -> void:
@@ -353,18 +352,7 @@ func _render_haggle() -> void:
 	offer.add_theme_font_size_override("font_size", 18)
 	_app_content.add_child(offer)
 
-	# Accept the standing offer, or type how much to ask for.
 	_app_content.add_child(_make_action("Accept ₱%d" % _negotiation.current_offer, accept_offer))
-	var ask_row := HBoxContainer.new()
-	ask_row.add_theme_constant_override("separation", 8)
-	var ask_input := LineEdit.new()
-	ask_input.placeholder_text = "Ask for ₱…"
-	ask_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ask_input.focus_mode = Control.FOCUS_ALL
-	ask_input.text_submitted.connect(func(t: String) -> void: _submit_ask(t))
-	ask_row.add_child(ask_input)
-	ask_row.add_child(_make_action("Ask", func() -> void: _submit_ask(ask_input.text)))
-	_app_content.add_child(ask_row)
 
 	# Conversational banter moves (each usable once) — one full-width row each so the
 	# longer labels stay easy to read.
@@ -380,13 +368,14 @@ func _render_haggle() -> void:
 			banter_box.add_child(b)
 		_app_content.add_child(banter_box)
 
-	# Free-text chat: type anything to banter. Keep it civil — offensive/NSFW messages
-	# disgust the buyer, end the deal, and ghost them.
-	_app_content.add_child(_make_section_label("Say something"))
+	# One free-text box does everything: chat to warm them up, AND make an offer by naming
+	# a price (e.g. "I'll take it for 80 pesos"). The buyer accepts, counters, or walks —
+	# and the current offer updates to match.
+	_app_content.add_child(_make_section_label("Say something (mention a price to make an offer)"))
 	var chat_row := HBoxContainer.new()
 	chat_row.add_theme_constant_override("separation", 8)
 	var chat_input := LineEdit.new()
-	chat_input.placeholder_text = "Type a message…"
+	chat_input.placeholder_text = ""
 	chat_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chat_input.focus_mode = Control.FOCUS_ALL
 	chat_input.text_submitted.connect(func(text: String) -> void: haggle_chat(text))
@@ -402,13 +391,7 @@ func accept_offer() -> void:
 	_settle(_negotiation.accept())
 
 
-## Parses a typed asking amount (digits only) and counters with it. Test seam.
-func _submit_ask(text: String) -> void:
-	var price := _parse_price(text)
-	if price > 0:
-		haggle_ask(price)
-
-
+## Pulls the first run of digits out of a typed message as a peso amount (0 = none).
 static func _parse_price(text: String) -> int:
 	var digits := ""
 	for ch in text:
@@ -417,124 +400,121 @@ static func _parse_price(text: String) -> int:
 	return int(digits) if not digits.is_empty() else 0
 
 
-## Player counters with an asking price. Closes the sale if the buyer accepts; if the
-## buyer runs out of patience and walks, that's a failed banter (day ghost). Otherwise
-## re-renders with the new offer. Test seam.
-func haggle_ask(price: int) -> void:
-	if _negotiation == null:
-		return
-	var result := _negotiation.counter(price)
-	if result["accepted"]:
-		_settle(_negotiation.final_price)
-		return
-	if result.get("walked", false):
-		MarketplaceService.ghost_failed_banter(_sell_uid, _buyer_id)
-		_feedback_label.text = "%s walked away." % _buyer_display()
-		_back_to_market_home()
-		return
-	_render_marketplace()
-	await _upgrade_buyer_line("How about ₱%d?" % price)
-
-
-## Replaces the buyer's canned line with a live LLM banter line when online services
-## are on and the backend is reachable; otherwise leaves the offline line in place.
-func _upgrade_buyer_line(player_text: String) -> void:
-	if _negotiation == null or _negotiation.is_closed():
-		return
-	var persona := DataRepository.singleton().get_buyer(_buyer_id)
-	var line: String = await NegotiationClient.fetch_banter(
-		persona, _negotiation.current_offer, player_text, _negotiation.history
-	)
-	_refresh_ai_label()
-	if line.is_empty():
-		return
-	if _current_app == "marketplace" and _market_view == "haggle" and is_instance_valid(_said_label):
-		_said_label.text = "\"%s\"" % line
-
-
-## Player plays a banter move (chat) to shift the buyer's mood, then re-renders.
-## Test seam.
+## Player plays a quick banter move (preset) to shift the buyer's mood. The buyer's reply
+## is the on-device AI line when a model is loaded, otherwise the move's canned persona
+## line. Exactly one reply — no flicker. Test seam.
 func haggle_banter(move_id: String) -> void:
 	if _negotiation == null:
 		return
 	_negotiation.banter(move_id)
 	_render_marketplace()
-	await _upgrade_buyer_line(str(Negotiation.BANTER_MOVES[move_id]["say"]))
-
-
-## Player sends a free-text banter message. Offensive/NSFW input offends the buyer:
-## the deal ends and they are ghosted (won't show up again for this item). Civil chat
-## warms the mood; online, the buyer's reply is upgraded by the LLM. Test seam.
-func haggle_chat(text: String) -> void:
-	if _negotiation == null or text.strip_edges().is_empty():
+	if not LocalAI.is_ready():
+		return  # offline: keep the move's canned persona line
+	_show_typing()
+	var resp := await _buyer_response(str(Negotiation.BANTER_MOVES[move_id]["say"]), 0)
+	if _negotiation == null:
 		return
-	# Respond INSTANTLY with the deterministic reply + keyword moderation (no network
-	# wait, so sending never lags). The LLM then upgrades the reply / catches contextual
-	# offenses in the background.
-	if _negotiation.chat(text).get("offended", false):
-		_ghost_offended()
-		return
-	_render_marketplace()
-	await _upgrade_chat_line(text)
-
-
-## Replaces the offline reply with a live LLM line and applies the LLM's contextual
-## moderation verdict (which catches creepy/inappropriate lines the keyword filter
-## misses, e.g. being hit on). Runs after the instant offline response, so there is no
-## perceptible delay when sending. No-op offline / when the deal has since closed.
-func _upgrade_chat_line(player_text: String) -> void:
-	if not SettingsService.online_enabled() or DisplayServer.get_name() == "headless":
-		return
-	if _negotiation == null or _negotiation.is_closed():
-		return
-	var persona := DataRepository.singleton().get_buyer(_buyer_id)
-	var reply := await NegotiationClient.fetch_chat(
-		persona, _negotiation.current_offer, player_text, _negotiation.history
-	)
-	_refresh_ai_label()
-	if _negotiation == null or _negotiation.is_closed() or not reply.get("ok", false):
-		return
-	if bool(reply.get("offended", false)):
-		_negotiation.force_offended()
-		_ghost_offended()
-		return
-	var line := str(reply.get("reply", ""))
-	if line.is_empty():
-		return
-	if _current_app == "marketplace" and _market_view == "haggle" and is_instance_valid(_said_label):
+	var line := str(resp.get("reply", ""))
+	if (
+		not line.is_empty()
+		and _current_app == "marketplace"
+		and _market_view == "haggle"
+		and is_instance_valid(_said_label)
+	):
 		_said_label.text = "\"%s\"" % line
 
 
-## Probes the backend status when entering the haggle so the indicator is accurate
-## before the player sends anything.
-func _refresh_ai_status() -> void:
-	await NegotiationClient.refresh_status()
-	_refresh_ai_label()
+## Player sends ONE free-text message that does everything:
+##   • If it names a price ("I'll do 80 pesos"), the buyer agrees to it or counters with
+##     its own number, and the standing offer updates to match — but the sale ONLY closes
+##     when the player taps Accept.
+##   • Otherwise it's pure banter that warms or cools the buyer's mood.
+## There is exactly one buyer reply — the on-device AI line when a model is loaded, else
+## the offline bot. Offensive/NSFW input offends the buyer and ghosts them. Test seam.
+func haggle_chat(text: String) -> void:
+	if _negotiation == null:
+		return
+	var message := text.strip_edges()
+	if message.is_empty():
+		return
+	_negotiation.add_player_line(message)
+	_show_typing()
+
+	var price := _parse_price(message)
+	var resp := await _buyer_response(message, price)
+	if _negotiation == null:
+		return
+	var reply := str(resp.get("reply", ""))
+	var offended := ContentModeration.is_inappropriate(message)
+	if bool(resp.get("offended", false)):
+		offended = true
+	if offended:
+		_negotiation.force_offended()
+		if not reply.is_empty():
+			_negotiation.add_buyer_line(reply)
+		_ghost_offended()
+		return
+
+	# Move the standing offer to the haggled price (never closes — only Accept sells).
+	if price > 0:
+		var agreed := bool(resp.get("agreed", false))
+		var counter := int(resp.get("counter", 0))
+		_negotiation.set_offer_from_haggle(agreed, price, counter)
+	else:
+		_negotiation.banter_mood_only(message)
+
+	if not reply.is_empty():
+		_negotiation.add_buyer_line(reply)
+	if _current_app == "marketplace" and _market_view == "haggle":
+		_render_marketplace()
 
 
-## Updates the AI/offline indicator from the live setting, the status probe, and the
-## last real reply.
+## Shows a "buyer is typing" placeholder on the spoken-line label while we await a reply.
+func _show_typing() -> void:
+	if is_instance_valid(_said_label):
+		_said_label.text = "(%s is typing a message…)" % _buyer_display()
+
+
+## The buyer's response: its spoken line plus, when the seller named a price, its haggle
+## decision (agree to the price, or counter with its own number). Uses the on-device model
+## (NobodyWho) when loaded — its stated number becomes the counter — and falls back to the
+## offline bot + deterministic numbers otherwise. Returns {reply, offended, agreed,
+## counter}. Coroutine — await it.
+func _buyer_response(message: String, price: int) -> Dictionary:
+	if LocalAI.is_ready() and _negotiation != null:
+		var persona := DataRepository.singleton().get_buyer(_buyer_id)
+		var llm := await LocalAI.chat(
+			persona, _negotiation.current_offer, price, message, _negotiation.history
+		)
+		if llm.get("ok", false) and not str(llm.get("reply", "")).is_empty():
+			return {
+				"reply": str(llm["reply"]),
+				"offended": bool(llm.get("offended", false)),
+				"agreed": price > 0 and bool(llm.get("accept", false)),
+				"counter": int(llm.get("counter", 0)),
+			}
+	# Offline: the deterministic engine decides the number, the offline bot supplies a line.
+	var decision := {"agreed": false, "counter": 0}
+	if price > 0 and _negotiation != null:
+		decision = _negotiation.propose_price(price)
+	return {
+		"reply": BanterBot.reply(message),
+		"offended": false,
+		"agreed": bool(decision.get("agreed", false)),
+		"counter": int(decision.get("counter", 0)),
+	}
+
+
+## Updates the on-device AI indicator.
 func _refresh_ai_label() -> void:
 	if not is_instance_valid(_ai_label):
 		return
-	var amber := Color(0.88, 0.6, 0.4)
-	var green := Color(0.45, 0.85, 0.5)
-	var gray := Color(0.62, 0.62, 0.66)
-	if not SettingsService.online_enabled():
-		_ai_label.text = "AI banter: OFF — offline replies"
-		_ai_label.add_theme_color_override("font_color", gray)
-	elif NegotiationClient.last_live:
-		_ai_label.text = "AI banter: LIVE"
-		_ai_label.add_theme_color_override("font_color", green)
-	elif NegotiationClient.status_reachable and NegotiationClient.status_live_capable:
-		_ai_label.text = "AI banter: ready — say something to go live"
-		_ai_label.add_theme_color_override("font_color", green)
-	elif NegotiationClient.status_reachable:
-		_ai_label.text = "AI banter: backend up, no model — set a key or LLM_PROVIDER=local"
-		_ai_label.add_theme_color_override("font_color", amber)
+	if LocalAI.is_ready():
+		_ai_label.text = "AI banter: on-device"
+		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.5))
 	else:
-		_ai_label.text = "AI banter: offline — start the backend (npm start in server/)"
-		_ai_label.add_theme_color_override("font_color", amber)
+		_ai_label.text = "AI banter: offline — add a model in models/ for AI replies"
+		_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
 
 
 func _ghost_offended() -> void:

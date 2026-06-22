@@ -195,9 +195,9 @@ func _sounds_friendly(text: String) -> bool:
 	return false
 
 
-## Closes the deal as offended/walked after the fact — used when the LLM's contextual
-## moderation (online) flags a message the offline keyword filter let through (e.g.
-## being hit on). The buyer's reaction line is appended by the caller.
+## Closes the deal as offended/walked after the fact — used when the AI's contextual
+## moderation flags a message the keyword filter let through (e.g. being hit on). The
+## buyer's reaction line is appended by the caller.
 func force_offended() -> void:
 	if closed:
 		return
@@ -206,6 +206,56 @@ func force_offended() -> void:
 	closed = true
 	mood = MOOD_MIN
 	_recompute_ceiling()
+
+
+# --- Free-text driven haggle (price + reply come from one typed message) ---------
+
+
+## Deterministic fallback decision for a price the player named in free text (used when
+## no on-device AI is loaded). PURE: mutates nothing and NEVER closes the sale — only the
+## Accept button finalizes. Returns {agreed, counter}: `agreed` = the buyer would pay the
+## seller's price; otherwise `counter` is the peso amount the buyer offers instead.
+func propose_price(player_price: int) -> Dictionary:
+	if player_price <= current_offer:
+		return {"agreed": true, "counter": player_price}
+	var step := maxi(1, int(round(float(ceiling - current_offer) * persona.concession_rate)))
+	var reach := mini(ceiling, current_offer + step)
+	if player_price <= reach:
+		return {"agreed": true, "counter": player_price}
+	return {"agreed": false, "counter": reach}
+
+
+## Moves the standing offer to the haggled price WITHOUT closing the sale (only accept()
+## via the Accept button finalizes). `agreed` = the buyer takes the seller's price;
+## otherwise `counter_price` (the buyer's number, e.g. from the AI's reply) becomes the
+## offer, clamped to a sane range.
+func set_offer_from_haggle(agreed: bool, seller_price: int, counter_price: int) -> void:
+	if closed:
+		return
+	if agreed:
+		current_offer = maxi(1, seller_price)
+	elif counter_price > 0:
+		current_offer = clampi(counter_price, 1, maxi(1, seller_price))
+
+
+## Mood-only banter (no price): warms/cools the buyer and may nudge the standing offer.
+## No dialogue line is added — the caller appends the AI/offline reply.
+func banter_mood_only(text: String) -> void:
+	if closed:
+		return
+	var delta := 0.16 if _sounds_friendly(text) else 0.04
+	mood = clampf(mood + delta, MOOD_MIN, MOOD_MAX)
+	_recompute_ceiling()
+	var warmed := int(round(ceiling * persona.open_factor))
+	current_offer = clampi(maxi(current_offer, warmed), 1, maxi(1, ceiling))
+
+
+func add_player_line(text: String) -> void:
+	history.append({"role": "player", "text": text, "offer": current_offer})
+
+
+func add_buyer_line(text: String) -> void:
+	history.append({"role": "buyer", "text": text, "offer": current_offer})
 
 
 ## Player accepts the buyer's standing offer. Returns the agreed price.

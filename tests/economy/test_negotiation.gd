@@ -51,6 +51,40 @@ func test_reachable_ask_closes_the_deal() -> void:
 	assert_eq(n.final_price, n.ceiling)
 
 
+# --- free-text price haggling (decision + offer; never closes on its own) ----
+
+
+func test_propose_reachable_price_is_agreed_without_closing() -> void:
+	var n := Negotiation.open(_persona({"concession_rate": 1.0}), 200, 100, "metal")
+	var decision := n.propose_price(n.ceiling)
+	assert_true(decision["agreed"], "a price the buyer can reach is agreed to")
+	assert_false(n.is_closed(), "agreeing does NOT finalize — only accept() (the button) sells")
+	assert_eq(n.history.size(), 1, "propose_price is pure: no dialogue line, no offer change")
+
+
+func test_propose_greedy_price_counters_with_a_lower_number() -> void:
+	var n := Negotiation.open(_persona(), 200, 100, "metal")
+	var decision := n.propose_price(n.ceiling * 5)
+	assert_false(decision["agreed"], "an out-of-reach price is not agreed to")
+	assert_gt(int(decision["counter"]), 0)
+	assert_lt(int(decision["counter"]), n.ceiling * 5, "the counter sits below what the seller asked")
+
+
+func test_set_offer_uses_the_buyers_own_number() -> void:
+	# Player asks ₱60, the buyer (AI or engine) says ₱50 — the standing offer becomes ₱50.
+	var n := Negotiation.open(_persona(), 200, 100, "metal")
+	n.set_offer_from_haggle(false, 60, 50)
+	assert_eq(n.current_offer, 50, "the buyer's stated number becomes the offer")
+	assert_false(n.is_closed(), "still open until the player taps Accept")
+
+
+func test_set_offer_agreed_moves_to_the_sellers_price() -> void:
+	var n := Negotiation.open(_persona(), 200, 100, "metal")
+	n.set_offer_from_haggle(true, 70, 0)
+	assert_eq(n.current_offer, 70, "agreeing moves the offer to the seller's asking price")
+	assert_false(n.is_closed())
+
+
 func test_repeated_greedy_asks_make_the_buyer_walk() -> void:
 	var n := Negotiation.open(_persona({"patience": 2}), 200, 100, "metal")
 	var greedy := n.ceiling * 5

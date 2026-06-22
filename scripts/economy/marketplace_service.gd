@@ -155,9 +155,10 @@ func assessed_value(uid: String) -> int:
 func interested_buyers(uid: String) -> Array[BuyerPersona]:
 	var value := assessed_value(uid)
 	var out: Array[BuyerPersona] = []
-	# Mr Maverick always shows up first (he can't be ghosted).
+	# Mr. Maverick shows up first — unless he's artifact-ghosted for THIS item (he never
+	# day/loop ghosts, but a failed banter / offence on a piece does block that piece).
 	var maverick := DataRepository.singleton().get_buyer(MAVERICK_ID)
-	if maverick != null:
+	if maverick != null and not is_ghosted(uid, MAVERICK_ID):
 		out.append(maverick)
 	for raw in DataRepository.singleton().get_buyers_sorted():
 		var persona := raw as BuyerPersona
@@ -167,7 +168,7 @@ func interested_buyers(uid: String) -> Array[BuyerPersona]:
 			continue  # a buyer you failed/ghosted won't return for this item
 		if persona.budget_range.y >= int(round(value * 0.35)):
 			out.append(persona)
-	if out.is_empty() and maverick != null:
+	if out.is_empty() and maverick != null and not is_ghosted(uid, MAVERICK_ID):
 		out.append(maverick)
 	return out
 

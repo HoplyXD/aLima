@@ -30,3 +30,6 @@ server/cache/
 *.log
 .DS_Store
 Thumbs.db
+
+# On-device AI model files (large; downloaded per machine)
+models/*.gguf

@@ -108,3 +108,50 @@ func test_marketplace_walk_keeps_the_item() -> void:
 	phone.haggle_walk()
 
 	assert_eq(MarketplaceService.get_sellable().size(), 1, "walking away keeps the item")
+
+
+func test_typed_price_updates_the_offer_but_only_accept_sells() -> void:
+	_add_clean_item("c1", 200)
+	var phone := await _open_phone()
+	phone.open_app("marketplace")
+	phone.open_buyers("c1")
+	phone.begin_haggle("collector")
+	var before := GameState.save_state.loop.money
+
+	await phone.haggle_chat("It's a lovely piece — I'll let it go for 1 peso")
+
+	assert_eq(GameState.save_state.loop.money, before, "typing a price does NOT auto-sell")
+	assert_eq(MarketplaceService.get_sellable().size(), 1, "the item is still held")
+	assert_eq(phone._negotiation.current_offer, 1, "the offer moves to the agreed price")
+
+	phone.accept_offer()
+
+	assert_gt(GameState.save_state.loop.money, before, "only tapping Accept finalizes the sale")
+	assert_eq(MarketplaceService.get_sellable().size(), 0, "the item sold after Accept")
+
+
+func test_civil_chat_without_a_price_keeps_haggling() -> void:
+	_add_clean_item("c1", 200)
+	var phone := await _open_phone()
+	phone.open_app("marketplace")
+	phone.open_buyers("c1")
+	phone.begin_haggle("collector")
+
+	await phone.haggle_chat("What a beautiful little thing this is.")
+
+	assert_false(phone._negotiation.is_closed(), "a civil non-price message keeps the deal open")
+	assert_eq(MarketplaceService.get_sellable().size(), 1, "nothing sells from banter alone")
+
+
+func test_offensive_chat_ends_the_deal() -> void:
+	_add_clean_item("c1", 200)
+	var phone := await _open_phone()
+	phone.open_app("marketplace")
+	phone.open_buyers("c1")
+	phone.begin_haggle("collector")
+
+	await phone.haggle_chat("fuck you")
+
+	assert_null(phone._negotiation, "an offensive message ends the deal")
+	assert_true(MarketplaceService.is_ghosted("c1", "collector"), "the buyer is ghosted")
+	assert_eq(MarketplaceService.get_sellable().size(), 1, "the item is kept, not sold")

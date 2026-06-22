@@ -12,7 +12,6 @@ func before_each() -> void:
 	SettingsService.resolution = Vector2i(1920, 1080)
 	SettingsService.fullscreen = false
 	SettingsService.renderer = SettingsService.DEFAULT_RENDERER
-	SettingsService.online_services = true
 
 
 func after_each() -> void:
@@ -66,18 +65,6 @@ func test_request_renderer_saves_without_quitting_in_headless() -> void:
 
 func test_request_renderer_rejects_unknown_method() -> void:
 	assert_false(SettingsService.request_renderer("ray_tracing"))
-
-
-func test_online_services_default_on() -> void:
-	assert_true(SettingsService.online_enabled(), "online banter is on by default")
-
-
-func test_online_services_toggle_persists() -> void:
-	SettingsService.set_online_services(false)
-	assert_false(SettingsService.online_enabled())
-	assert_false(bool(_saved().get_value("services", "online")))
-	SettingsService.set_online_services(true)
-	assert_true(SettingsService.online_enabled())
 
 
 func test_mobile_unlocked_when_player_chose_compatibility() -> void:
