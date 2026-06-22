@@ -1,73 +1,85 @@
 [gd_scene format=3 uid="uid://b5vdlwu6lrg0"]
 
-[ext_resource type="Script" path="res://scenes/ui/echo_hud.gd" id="1_8g3wj"]
+[ext_resource type="Script" uid="uid://crxpsad5lskcv" path="res://scenes/ui/echo_hud.gd" id="1_8g3wj"]
+[ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_i0krg"]
+[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="3_gqxa3"]
+[ext_resource type="FontFile" uid="uid://d0g0hfveuuypx" path="res://assets/fonts/startedbyamouse.ttf" id="4_y4nwu"]
+[ext_resource type="FontFile" uid="uid://7gx30v1rvopa" path="res://assets/fonts/The Antique.otf" id="5_y4nwu"]
+[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="6_vvsy4"]
 
-[node name="EchoHud" type="CanvasLayer"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vvsy4"]
+texture = ExtResource("2_i0krg")
+
+[node name="EchoHud" type="CanvasLayer" unique_id=397439411]
 script = ExtResource("1_8g3wj")
 
-[node name="Panel" type="Panel" parent="."]
-anchors_preset = 2
+[node name="Panel" type="Panel" parent="." unique_id=1726437069]
+anchors_preset = -1
+anchor_left = 0.012
 anchor_top = 1.0
+anchor_right = 0.012
 anchor_bottom = 1.0
-offset_left = 24.0
+offset_left = 0.9599991
 offset_top = -232.0
-offset_right = 384.0
+offset_right = 360.96
 offset_bottom = -24.0
 grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_vvsy4")
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=459783510]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 12
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 15
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 12
 
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin" unique_id=1960727668]
 layout_mode = 2
+theme = ExtResource("3_gqxa3")
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+[node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=2011515508]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_fonts/font = ExtResource("4_y4nwu")
+theme_override_font_sizes/font_size = 38
 text = "Cultural Echo"
 
-[node name="MeterLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="MeterLabel" type="Label" parent="Panel/Margin/VBox" unique_id=1287210430]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "Resonance 0%"
+text = "Resonance"
 
-[node name="Meter" type="ProgressBar" parent="Panel/Margin/VBox"]
+[node name="Meter" type="ProgressBar" parent="Panel/Margin/VBox" unique_id=95443088]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_y4nwu")
 max_value = 1.0
-step = 0.01
-value = 0.0
 
-[node name="Bands" type="Label" parent="Panel/Margin/VBox"]
+[node name="Bands" type="Label" parent="Panel/Margin/VBox" unique_id=939662733]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Silent"
 autowrap_mode = 3
 
-[node name="Caption" type="Label" parent="Panel/Margin/VBox"]
+[node name="Caption" type="Label" parent="Panel/Margin/VBox" unique_id=384109051]
 visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Voice caption appears here."
 autowrap_mode = 3
 
-[node name="Pulse" type="ProgressBar" parent="Panel/Margin/VBox"]
+[node name="Pulse" type="ProgressBar" parent="Panel/Margin/VBox" unique_id=488791473]
 visible = false
 layout_mode = 2
+theme_override_fonts/font = ExtResource("6_vvsy4")
 max_value = 1.0
-step = 0.01
-value = 0.0
 
-[node name="Loss" type="Label" parent="Panel/Margin/VBox"]
+[node name="Loss" type="Label" parent="Panel/Margin/VBox" unique_id=93741197]
 visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
