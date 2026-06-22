@@ -17,8 +17,8 @@ signal closed
 const ZOOM_MIN: float = 1.0
 const ZOOM_MAX: float = 4.0
 const ZOOM_STEP: float = 1.2
-const PAGE_HALF_WIDTH: float = 1.3  ## book-local x within which a click counts as on a page
-const PAGE_HALF_HEIGHT: float = 1.0
+const PAGE_HALF_WIDTH: float = 0.8  ## book-local x within which a click counts as on a page
+const PAGE_HALF_HEIGHT: float = 0.95
 
 var _zoom: float = 1.0
 var _panning: bool = false
@@ -30,7 +30,6 @@ var _owns_pause: bool = false
 @onready var _book: JournalBook = $ViewportContainer/SubViewport/Book
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/Camera3D
 @onready var _input_catcher: Control = $InputCatcher
-@onready var _close_button: Button = $CloseButton
 
 
 func _ready() -> void:
@@ -39,7 +38,6 @@ func _ready() -> void:
 	# We ray-pick the book ourselves, so the SubViewport doesn't need physics picking.
 	_subviewport.physics_object_picking = false
 	_input_catcher.gui_input.connect(_on_catcher_input)
-	_close_button.pressed.connect(close)
 	set_process_input(false)
 
 
@@ -88,7 +86,7 @@ func _reset_camera() -> void:
 # Uses _input (not _unhandled_input) so Backspace closes the journal before the host
 # scene (e.g. the restoration bench) can act on it. Esc is reserved for the pause menu.
 func _input(event: InputEvent) -> void:
-	if visible and event.is_action_pressed("back"):
+	if visible and (event.is_action_pressed("back") or event.is_action_pressed("ui_cancel")):
 		close()
 		get_viewport().set_input_as_handled()
 
@@ -179,8 +177,18 @@ func _handle_page_click(screen_pos: Vector2) -> void:
 	if t < 0.0:
 		return
 	var local := _book.to_local(o + d * t)
-	if absf(local.x) <= PAGE_HALF_WIDTH and absf(local.y) <= PAGE_HALF_HEIGHT:
+	if absf(local.y) <= PAGE_HALF_HEIGHT and _on_clickable_page(local.x):
 		_book.click_at_local_x(local.x)
 	else:
-		# Clicking off the book at default zoom closes the journal.
+		# Clicking off the book (or, while closed, on the empty left side) closes it.
 		close()
+
+
+## Whether `local_x` is on a clickable page. When the book is OPEN both pages count
+## (|x| within half-width). When CLOSED only the front cover (the right page, x >= 0) is
+## live — the offset cover sits to the right of the spine, so the left side is empty and
+## clicking it should close the journal rather than register as a giant page hitbox.
+func _on_clickable_page(local_x: float) -> bool:
+	if _book.is_open():
+		return absf(local_x) <= PAGE_HALF_WIDTH
+	return local_x >= 0.0 and local_x <= PAGE_HALF_WIDTH

@@ -8,7 +8,8 @@ class_name BuyerPersona
 
 ## PRD §4.10 contract fields.
 var id: String = ""
-var display_name: String = ""
+var display_name: String = ""  ## A person's name (first, or first + last).
+var occupation: String = ""  ## Short role shown under the name in the buyer list.
 var motive: String = ""
 var budget_range: Vector2i = Vector2i.ZERO  ## [min interest, max they can pay].
 var preferred_categories: Array[String] = []
@@ -30,6 +31,9 @@ var fallback_lines: Dictionary = {}  ## phase ("open"/"counter"/"accept"/"walk")
 var starting_cash: int = 0
 var daily_allowance: int = 0
 var unlimited_cash: bool = false
+## A "robotic"/all-business buyer: banter and the seller's explanation never move their
+## price — they value only the object's condition + category. Their AI replies stay terse.
+var ignores_banter: bool = false
 
 
 func _init() -> void:
@@ -40,6 +44,7 @@ static func from_dictionary(data: Dictionary) -> BuyerPersona:
 	var b := BuyerPersona.new()
 	b.id = ModelUtils.as_string(data.get("id"))
 	b.display_name = ModelUtils.as_string(data.get("display_name"))
+	b.occupation = ModelUtils.as_string(data.get("occupation"))
 	b.motive = ModelUtils.as_string(data.get("motive"))
 	var budget := ModelUtils.as_vector2(data.get("budget_range"))
 	b.budget_range = Vector2i(int(budget.x), int(budget.y))
@@ -55,6 +60,7 @@ static func from_dictionary(data: Dictionary) -> BuyerPersona:
 	b.starting_cash = ModelUtils.as_int(data.get("starting_cash"), 0)
 	b.daily_allowance = ModelUtils.as_int(data.get("daily_allowance"), 0)
 	b.unlimited_cash = bool(data.get("unlimited_cash", false))
+	b.ignores_banter = bool(data.get("ignores_banter", false))
 	b.fallback_lines = ModelUtils.as_dictionary(data.get("lines"))
 	return b
 
@@ -64,6 +70,7 @@ func to_dictionary() -> Dictionary:
 		"record_type": "buyer_persona",
 		"id": id,
 		"display_name": display_name,
+		"occupation": occupation,
 		"motive": motive,
 		"budget_range": [budget_range.x, budget_range.y],
 		"preferred_categories": preferred_categories.duplicate(),
@@ -78,6 +85,7 @@ func to_dictionary() -> Dictionary:
 		"starting_cash": starting_cash,
 		"daily_allowance": daily_allowance,
 		"unlimited_cash": unlimited_cash,
+		"ignores_banter": ignores_banter,
 		"lines": fallback_lines.duplicate(true),
 	}
 

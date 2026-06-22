@@ -22,7 +22,7 @@ var _negotiation: Negotiation = null
 var _said_label: Label = null  ## The buyer's spoken-line label, upgraded with live banter.
 var _ai_label: Label = null  ## "AI: live / offline" indicator in the haggle view.
 
-@onready var _close_button: Button = %CloseButton
+@onready var _dim: ColorRect = $Dim
 @onready var _home_button: Button = %HomeButton
 @onready var _home: VBoxContainer = %Home
 @onready var _app_grid: GridContainer = %AppGrid
@@ -34,9 +34,21 @@ var _ai_label: Label = null  ## "AI: live / offline" indicator in the haggle vie
 
 func _ready() -> void:
 	visible = false
-	_close_button.pressed.connect(close)
+	# Clicking the dimmed area outside the phone closes it (the phone body/UI sits on top
+	# and consumes its own clicks).
+	_dim.gui_input.connect(_on_dim_input)
 	_home_button.pressed.connect(show_home)
 	_build_app_grid()
+
+
+## Closes the phone when the player clicks the dim backdrop (outside the phone).
+func _on_dim_input(event: InputEvent) -> void:
+	if (
+		event is InputEventMouseButton
+		and (event as InputEventMouseButton).pressed
+		and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+	):
+		close()
 
 
 ## Opens the phone on its home screen and pauses shop time.
@@ -46,7 +58,7 @@ func open() -> void:
 	if not visible:
 		visible = true
 	show_home()
-	_close_button.grab_focus()
+	_home_button.grab_focus()
 
 
 func close() -> void:
@@ -66,16 +78,21 @@ func _release_pause_if_owned() -> void:
 	_owns_pause = false
 
 
-# Backspace backs out of an app to the home screen, or closes the phone from home
-# (Esc is reserved for the pause menu).
+# Esc closes the phone outright; Backspace backs out of an app to the home screen (or
+# closes from home). Both are consumed so the bench behind doesn't also act on them.
 func _input(event: InputEvent) -> void:
-	if not visible or not event.is_action_pressed("back"):
+	if not visible:
 		return
-	if _current_app.is_empty():
+	if event.is_action_pressed("ui_cancel"):
 		close()
-	else:
-		show_home()
-	get_viewport().set_input_as_handled()
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("back"):
+		if _current_app.is_empty():
+			close()
+		else:
+			show_home()
+		get_viewport().set_input_as_handled()
 
 
 # --- Navigation --------------------------------------------------------------
@@ -134,7 +151,9 @@ func _build_app_grid() -> void:
 func _make_app_icon(label: String, app_id: String, disabled: bool) -> Button:
 	var button := Button.new()
 	button.text = label
-	button.custom_minimum_size = Vector2(110, 110)
+	# Sized so three across fit inside the phone body's fixed width, otherwise the home
+	# screen would be wider than the app views and the phone appears to resize on tap.
+	button.custom_minimum_size = Vector2(100, 100)
 	button.disabled = disabled
 	button.focus_mode = Control.FOCUS_ALL
 	if not disabled:
@@ -288,15 +307,19 @@ func _make_buyer_row(persona: BuyerPersona) -> Control:
 	name_label.text = persona.display_name
 	name_label.add_theme_font_size_override("font_size", 15)
 	box.add_child(name_label)
-	var motive := Label.new()
-	motive.text = persona.motive
-	motive.add_theme_font_size_override("font_size", 11)
-	motive.add_theme_color_override("font_color", Color(0.7, 0.7, 0.78))
-	motive.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(motive)
+	var occupation := Label.new()
+	occupation.text = persona.occupation if not persona.occupation.is_empty() else persona.motive
+	occupation.add_theme_font_size_override("font_size", 11)
+	occupation.add_theme_color_override("font_color", Color(0.7, 0.7, 0.78))
+	box.add_child(occupation)
+	var offer := Label.new()
+	offer.text = "Offer: ₱%d" % MarketplaceService.preview_offer(_sell_uid, persona.id)
+	offer.add_theme_font_size_override("font_size", 12)
+	offer.add_theme_color_override("font_color", Color(0.85, 0.78, 0.5))
+	box.add_child(offer)
 	row.add_child(box)
 	var talk := Button.new()
-	talk.text = "Haggle"
+	talk.text = "Message"
 	talk.focus_mode = Control.FOCUS_ALL
 	var persona_id := persona.id
 	talk.pressed.connect(func() -> void: begin_haggle(persona_id))
@@ -393,13 +416,20 @@ func accept_offer() -> void:
 	_settle(_negotiation.accept())
 
 
-## Pulls the first run of digits out of a typed message as a peso amount (0 = none).
+## The player's offered price = the LAST run of digits in the message, so
+## "it's worth 70 but I'll do 60" reads as ₱60, not ₱70 (and not "7060").
 static func _parse_price(text: String) -> int:
-	var digits := ""
+	var last := ""
+	var current := ""
 	for ch in text:
 		if ch >= "0" and ch <= "9":
-			digits += ch
-	return int(digits) if not digits.is_empty() else 0
+			current += ch
+		elif not current.is_empty():
+			last = current
+			current = ""
+	if not current.is_empty():
+		last = current
+	return int(last) if not last.is_empty() else 0
 
 
 ## Player plays a quick banter move (preset) to shift the buyer's mood. The buyer's reply

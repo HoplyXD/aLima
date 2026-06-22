@@ -1,8 +1,9 @@
-[gd_scene load_steps=13 format=3 uid="uid://b3drest0rview3d"]
+[gd_scene load_steps=14 format=3 uid="uid://b3drest0rview3d"]
 
 [ext_resource type="Script" path="res://scripts/restoration/restoration_view.gd" id="1_view"]
 [ext_resource type="PackedScene" path="res://scenes/restoration/restoration_artifact.tscn" id="2_object"]
 [ext_resource type="Script" path="res://scripts/restoration/restoration_tool_tray.gd" id="3_tray"]
+[ext_resource type="PackedScene" uid="uid://c55yre3k0bgf8" path="res://assets/3d Assets/Phone.glb" id="4_phone"]
 
 [sub_resource type="Environment" id="Environment_rest"]
 background_mode = 1
@@ -97,10 +98,8 @@ material_override = SubResource("Material_bench")
 [node name="ToolTray" type="Node3D" parent="ViewportContainer/SubViewport/World"]
 script = ExtResource("3_tray")
 
-[node name="Phone" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.95, -0.69, 0.78)
-mesh = SubResource("BoxMesh_phone")
-material_override = SubResource("Material_phone")
+[node name="Phone" parent="ViewportContainer/SubViewport/World" instance=ExtResource("4_phone")]
+transform = Transform3D(0.14, 0, 0, 0, 0, 0.14, 0, -0.14, 0, -1.7, -0.766, 0.6)
 
 [node name="Journal" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.95, -0.71, -0.05)

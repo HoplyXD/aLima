@@ -11,8 +11,8 @@ func before_each() -> void:
 
 func test_repository_loads_with_buyers() -> void:
 	assert_true(_repo.is_loaded(), "data (including buyers) loads cleanly")
-	assert_eq(_repo.buyer_personas.size(), 6, "six authored buyer personas (MKT-R1)")
-	assert_eq(_repo.get_buyers_sorted().size(), 6)
+	assert_eq(_repo.buyer_personas.size(), 9, "nine authored buyer personas (MKT-R1)")
+	assert_eq(_repo.get_buyers_sorted().size(), 9)
 
 
 func test_suspicious_buyer_ties_to_the_buyer_route() -> void:

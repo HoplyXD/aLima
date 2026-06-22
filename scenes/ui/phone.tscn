@@ -1,118 +1,157 @@
 [gd_scene format=3 uid="uid://cph0ne5cr33na"]
 
-[ext_resource type="Script" path="res://scripts/economy/phone.gd" id="1_phone"]
+[ext_resource type="Script" uid="uid://b4gpap6sv1o46" path="res://scripts/economy/phone.gd" id="1_phone"]
+[ext_resource type="PackedScene" uid="uid://c55yre3k0bgf8" path="res://assets/3d Assets/Phone.glb" id="2_phonemdl"]
+
+[sub_resource type="Environment" id="env_phone"]
+background_mode = 1
+background_color = Color(0, 0, 0, 0)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.64, 0.72, 1)
+ambient_light_energy = 0.7
 
 [sub_resource type="StyleBoxFlat" id="body"]
-bg_color = Color(0.1, 0.1, 0.12, 1)
+bg_color = Color(0, 0, 0, 0)
 border_width_left = 4
 border_width_top = 4
 border_width_right = 4
 border_width_bottom = 4
 border_color = Color(0.02, 0.02, 0.03, 1)
-corner_radius_top_left = 36
-corner_radius_top_right = 36
-corner_radius_bottom_right = 36
-corner_radius_bottom_left = 36
+corner_radius_top_left = 50
+corner_radius_top_right = 50
+corner_radius_bottom_right = 50
+corner_radius_bottom_left = 50
 
 [sub_resource type="StyleBoxFlat" id="screen"]
 bg_color = Color(0.06, 0.07, 0.09, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+corner_radius_top_left = 50
+corner_radius_top_right = 50
+corner_radius_bottom_right = 50
+corner_radius_bottom_left = 50
 
-[node name="Phone" type="CanvasLayer"]
+[node name="Phone" type="CanvasLayer" unique_id=2081289313]
 process_mode = 3
 layer = 10
 script = ExtResource("1_phone")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Dim" type="ColorRect" parent="." unique_id=2018516513]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0, 0, 0, 0.6)
 
-[node name="Center" type="CenterContainer" parent="Dim"]
-anchors_preset = 15
+[node name="PhoneRender" type="SubViewportContainer" parent="Dim" unique_id=782316991]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
+stretch = true
 
-[node name="Body" type="PanelContainer" parent="Dim/Center"]
-custom_minimum_size = Vector2(440, 820)
+[node name="SubViewport" type="SubViewport" parent="Dim/PhoneRender" unique_id=675586154]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+gui_disable_input = true
+size = Vector2i(1920, 1080)
+render_target_update_mode = 4
+
+[node name="World" type="Node3D" parent="Dim/PhoneRender/SubViewport" unique_id=1666169186]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Dim/PhoneRender/SubViewport/World" unique_id=177849744]
+environment = SubResource("env_phone")
+
+[node name="Camera3D" type="Camera3D" parent="Dim/PhoneRender/SubViewport/World" unique_id=614047413]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 0, 2.7)
+fov = 40.0
+
+[node name="Light" type="DirectionalLight3D" parent="Dim/PhoneRender/SubViewport/World" unique_id=965287552]
+transform = Transform3D(1, 0, 0, 0, 0.94, 0.34, 0, -0.34, 0.94, 0, 0, 0)
+light_energy = 1.2
+
+[node name="PhoneModel" parent="Dim/PhoneRender/SubViewport/World" unique_id=1567887512 instance=ExtResource("2_phonemdl")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.1, -0.075, 0)
+
+[node name="Center" type="CenterContainer" parent="Dim" unique_id=1063307366]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -96.0
+mouse_filter = 2
+
+[node name="Body" type="PanelContainer" parent="Dim/Center" unique_id=1691144934]
+custom_minimum_size = Vector2(380, 815)
+layout_mode = 2
 theme_override_styles/panel = SubResource("body")
 
-[node name="Margin" type="MarginContainer" parent="Dim/Center/Body"]
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
-
-[node name="VBox" type="VBoxContainer" parent="Dim/Center/Body/Margin"]
-theme_override_constants/separation = 12
-
-[node name="TopBar" type="HBoxContainer" parent="Dim/Center/Body/Margin/VBox"]
-
-[node name="Title" type="Label" parent="Dim/Center/Body/Margin/VBox/TopBar"]
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
-text = "Phone"
-
-[node name="CloseButton" type="Button" parent="Dim/Center/Body/Margin/VBox/TopBar"]
-unique_name_in_owner = true
-text = "✕"
-
-[node name="Screen" type="PanelContainer" parent="Dim/Center/Body/Margin/VBox"]
-size_flags_vertical = 3
+[node name="Screen" type="PanelContainer" parent="Dim/Center/Body" unique_id=1914971813]
+layout_mode = 2
 theme_override_styles/panel = SubResource("screen")
 
-[node name="ScreenMargin" type="MarginContainer" parent="Dim/Center/Body/Margin/VBox/Screen"]
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 14
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 14
+[node name="ScreenMargin" type="MarginContainer" parent="Dim/Center/Body/Screen" unique_id=878592829]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
 
-[node name="Home" type="VBoxContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin"]
-unique_name_in_owner = true
+[node name="MainVBox" type="VBoxContainer" parent="Dim/Center/Body/Screen/ScreenMargin" unique_id=482670580]
+layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="HomeTitle" type="Label" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/Home"]
+[node name="Home" type="VBoxContainer" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox" unique_id=431456541]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="HomeTitle" type="Label" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/Home" unique_id=1828751966]
+layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Apps"
 
-[node name="AppGrid" type="GridContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/Home"]
+[node name="AppGrid" type="GridContainer" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/Home" unique_id=1003723613]
 unique_name_in_owner = true
+layout_mode = 2
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
 columns = 3
 
-[node name="AppView" type="VBoxContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin"]
+[node name="AppView" type="VBoxContainer" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox" unique_id=2077106438]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="AppTitle" type="Label" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/AppView"]
+[node name="AppTitle" type="Label" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/AppView" unique_id=178880186]
 unique_name_in_owner = true
+layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Marketplace"
 
-[node name="AppScroll" type="ScrollContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/AppView"]
+[node name="AppScroll" type="ScrollContainer" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/AppView" unique_id=1893132702]
+layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="AppContent" type="VBoxContainer" parent="Dim/Center/Body/Margin/VBox/Screen/ScreenMargin/AppView/AppScroll"]
+[node name="AppContent" type="VBoxContainer" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/AppView/AppScroll" unique_id=716742589]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="BottomBar" type="HBoxContainer" parent="Dim/Center/Body/Margin/VBox"]
-theme_override_constants/separation = 10
-
-[node name="HomeButton" type="Button" parent="Dim/Center/Body/Margin/VBox/BottomBar"]
+[node name="FeedbackLabel" type="Label" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox" unique_id=259508535]
 unique_name_in_owner = true
-text = "⌂ Home"
-
-[node name="FeedbackLabel" type="Label" parent="Dim/Center/Body/Margin/VBox/BottomBar"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 13
+layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="HomeButton" type="Button" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox" unique_id=544340017]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "⌂ Home"

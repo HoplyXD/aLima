@@ -151,7 +151,8 @@ func banter(move_id: String) -> Dictionary:
 	history.append(
 		{"role": "player", "text": str(BANTER_MOVES[move_id]["say"]), "offer": current_offer}
 	)
-	var delta := _banter_delta(move_id)
+	# A robotic / all-business buyer is unmoved by banter — their price never shifts.
+	var delta := 0.0 if persona.ignores_banter else _banter_delta(move_id)
 	mood = clampf(mood + delta, MOOD_MIN, MOOD_MAX)
 	_recompute_ceiling()
 	# A warmer mood can lift the standing offer; a colder one caps it to the ceiling.
@@ -255,8 +256,8 @@ func set_offer_from_haggle(agreed: bool, seller_price: int, counter_price: int) 
 ## Mood-only banter (no price): warms/cools the buyer and may nudge the standing offer.
 ## No dialogue line is added — the caller appends the AI/offline reply.
 func banter_mood_only(text: String) -> void:
-	if closed:
-		return
+	if closed or persona.ignores_banter:
+		return  # robotic buyers don't warm to anything the seller says
 	var delta := 0.16 if _sounds_friendly(text) else 0.04
 	mood = clampf(mood + delta, MOOD_MIN, MOOD_MAX)
 	_recompute_ceiling()
