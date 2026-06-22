@@ -9,8 +9,10 @@
 [ext_resource type="PackedScene" uid="uid://cg1vhgd66d0he" path="res://assets/3d Assets/Walls and Floors/Wood Floor.glb" id="5_dcu3k"]
 [ext_resource type="PackedScene" uid="uid://dre33nw45m7tr" path="res://assets/3d Assets/Bookcase/Book.glb" id="5_ggowf"]
 [ext_resource type="PackedScene" uid="uid://cqnp6tj67rrvv" path="res://assets/3d Assets/Apple/trn_Apple.fbx" id="6_xhn4e"]
+[ext_resource type="PackedScene" uid="uid://bk05oms0otiob" path="res://assets/3d Assets/FireLog/Fire.glb" id="7_1dirw"]
 [ext_resource type="PackedScene" uid="uid://chyonocig3s54" path="res://assets/3d Assets/Box/Box.glb" id="7_16mbf"]
 [ext_resource type="PackedScene" uid="uid://b2kfaoxbcjkdk" path="res://assets/3d Assets/Bookcase/Bookcase with Books.glb" id="7_cet3k"]
+[ext_resource type="PackedScene" uid="uid://c55yre3k0bgf8" path="res://assets/3d Assets/Phone.glb" id="8_nc6ge"]
 [ext_resource type="PackedScene" uid="uid://cxa6sot7wqvqt" path="res://assets/3d Assets/Plants/Plants - Assorted shelf plants.glb" id="9_3j7l6"]
 [ext_resource type="PackedScene" uid="uid://t1re3go1cyg0" path="res://assets/3d Assets/Candelabra/trn_Candelabra.fbx" id="9_207k4"]
 [ext_resource type="PackedScene" uid="uid://bwnp3s8rrwdcc" path="res://assets/3d Assets/Candles/trn_Candle.fbx" id="10_3j7l6"]
@@ -26,6 +28,7 @@
 [ext_resource type="PackedScene" uid="uid://32xn2r7g3h3x" path="res://assets/3d Assets/Paper/Debris Papers.glb" id="22_xto8d"]
 [ext_resource type="PackedScene" uid="uid://b1mi44jnsk07v" path="res://assets/3d Assets/Paper/Envelopes.glb" id="23_2y6xu"]
 [ext_resource type="PackedScene" uid="uid://c758vciy6cv7n" path="res://assets/3d Assets/Bookcase/books.glb" id="26_6nloe"]
+[ext_resource type="PackedScene" uid="uid://7wc33npp34v8" path="res://assets/3d Assets/FireLog/trn_Log.fbx" id="29_cxprb"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8dvp"]
 size = Vector3(1.5947266, 2.9886718, 0.15)
@@ -35,14 +38,6 @@ size = Vector3(4.1403074, 0.5, 1.9896729)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_dcu3k"]
 size = Vector3(0.5, 0.15753418, 0.5788184)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ykcv1"]
-albedo_color = Color(0.12, 0.13, 0.16, 1)
-emission = Color(0.4, 0.7, 0.95, 1)
-emission_energy_multiplier = 0.6
-
-[sub_resource type="BoxMesh" id="BoxMesh_cet3k"]
-size = Vector3(0.32, 0.05, 0.6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_u5nwe"]
 size = Vector3(0.32, 0.05, 0.6)
@@ -108,13 +103,14 @@ transform = Transform3D(1.4182779, 0, -0.4883522, 0, 1.5, 0, 0.4883522, 0, 1.418
 script = ExtResource("1_gqv0n")
 prompt_text = "Check the phone marketplace"
 
-[node name="Mesh" type="MeshInstance3D" parent="Interactables/PhoneInteractable" unique_id=1678648961]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04192686, 0)
-material_override = SubResource("StandardMaterial3D_ykcv1")
-mesh = SubResource("BoxMesh_cet3k")
-
 [node name="Collision" type="CollisionShape3D" parent="Interactables/PhoneInteractable" unique_id=1702429021]
 shape = SubResource("BoxShape3D_u5nwe")
+
+[node name="Phone" parent="Interactables/PhoneInteractable" unique_id=2097862164 instance=ExtResource("8_nc6ge")]
+transform = Transform3D(0.63034576, 0, 0.21704543, 0, 0.6666667, 0, -0.21704543, 0, 0.63034576, 0.19826509, -0.9002368, 0.07380958)
+
+[node name="Phone2" parent="Interactables/PhoneInteractable" unique_id=1547379669 instance=ExtResource("8_nc6ge")]
+transform = Transform3D(-0.395, -4.4703484e-08, 2.220446e-15, 0, -1.7266e-08, -0.39500007, 4.4703484e-08, -0.395, 1.7266e-08, -0.004625678, -0.0139709115, 0.030020952)
 
 [node name="DeliveryInteractable" type="Area3D" parent="Interactables" unique_id=2071250212]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6243045, 2.45, -2.6346831)
@@ -288,4 +284,19 @@ transform = Transform3D(-9, 0, -7.86805e-07, 0, 9, 0, 7.86805e-07, 0, -9, 1.3378
 transform = Transform3D(-0.10452851, 0, -0.9945219, 0, 1, 0, 0.9945219, 0, -0.10452851, 2.424613, 2.4053633, -7.328536)
 
 [node name="trn_CandleFlame3" parent="trn_Candle_half" unique_id=1175482121 instance=ExtResource("13_idnp1")]
-transform = Transform3D(0.010438105, 0, 0.012225069, 0, 0.016, 0, -0.012225052, 0, 0.010370573, 0.0019440651, 0.1688664, -0.00597775)
+transform = Transform3D(0.010438109, 0, 0.012225077, 0, 0.016, 0, -0.012225055, 0, 0.010370575, 0.0010666847, 0.17145848, -0.0024114847)
+
+[node name="trn_Log" parent="." unique_id=897901522 instance=ExtResource("29_cxprb")]
+transform = Transform3D(1.6905321, 0, 0.39029005, 0, 1.735, 0, -0.39029005, 0, 1.6905321, -1.4072738, 0.6164464, -6.534982)
+
+[node name="trn_Log2" parent="trn_Log" unique_id=530212264 instance=ExtResource("29_cxprb")]
+transform = Transform3D(0.8400303, 0.043359913, -0.62007564, 0, 1.0424544, 0.07289551, 0.62158984, -0.058597554, 0.83798414, 0.30557054, 0.003451854, -0.122153044)
+
+[node name="trn_Log3" parent="trn_Log" unique_id=174314284 instance=ExtResource("29_cxprb")]
+transform = Transform3D(0.9710037, -0.03377083, 0.48294532, 0, 1.082357, 0.07568578, -0.4841246, -0.067733794, 0.9686386, 0.16919363, -0.016824573, 0.046563625)
+
+[node name="trn_Log4" parent="trn_Log" unique_id=329912278 instance=ExtResource("29_cxprb")]
+transform = Transform3D(0.27429837, 0.07969918, -1.1397514, 0, 1.1721377, 0.08196385, 1.1425346, -0.019134084, 0.27363017, 0.15694249, 0.003451854, 0.11034751)
+
+[node name="Fire" parent="." unique_id=196894878 instance=ExtResource("7_1dirw")]
+transform = Transform3D(2.586602, 0, -1.4628434, 0, 3.053, 0, 1.7883375, 0, 2.590235, -1.1094544, 0.982775, -6.5365744)
