@@ -98,13 +98,22 @@ func test_offer_never_exceeds_a_cash_capped_ceiling() -> void:
 	assert_true(n.current_offer <= 90, "an unaffordable ask is capped to what the buyer can pay")
 
 
-func test_robotic_buyer_is_unmoved_by_banter() -> void:
+func test_all_business_buyer_ignores_flattery_but_responds_to_substance() -> void:
 	var n := Negotiation.open(_persona({"ignores_banter": true}), 200, 100, "metal")
 	var before := n.ceiling
-	n.banter_mood_only("This piece has a beautiful family history I think you'll love!")
-	assert_eq(n.ceiling, before, "free-text banter doesn't move a robotic buyer's ceiling")
+	n.banter_mood_only("You're so lovely and kind, what a sweet, generous person!")
+	assert_eq(n.ceiling, before, "pure flattery doesn't move an all-business buyer")
+	n.banter_mood_only("This is a rare antique with real provenance and craftsmanship.")
+	assert_gt(n.ceiling, before, "but solid points about the item raise what they'll pay")
+
+
+func test_all_business_buyer_charm_move_does_nothing_history_move_helps() -> void:
+	var n := Negotiation.open(_persona({"ignores_banter": true}), 200, 100, "metal")
+	var before := n.ceiling
+	n.banter("charm")
+	assert_eq(n.ceiling, before, "the charm (flattery) move doesn't sway them")
 	n.banter("history")
-	assert_eq(n.ceiling, before, "a banter move doesn't move it either — only the object matters")
+	assert_gt(n.ceiling, before, "talking up the history does")
 
 
 func test_repeated_greedy_asks_make_the_buyer_walk() -> void:

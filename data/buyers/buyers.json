@@ -19,6 +19,7 @@
       "condition_weight": 0.45,
       "starting_cash": 900,
       "daily_allowance": 120,
+      "ignores_banter": true,
       "lines": {
         "open": ["A fine piece. I could give you ₱{offer} for it.", "Provenance matters to me. ₱{offer}, to start."],
         "counter": ["Hm. I can come up to ₱{offer}.", "For the right piece, ₱{offer}."],
@@ -235,6 +236,7 @@
       "category_bonus": 0.1,
       "condition_weight": 0.2,
       "unlimited_cash": true,
+      "ignores_banter": true,
       "lines": {
         "open": ["Junk like this? ₱{offer}, and I'm being kind.", "Eh. ₱{offer}, take it or leave it, kid."],
         "counter": ["Fine, fine — ₱{offer}. That's me being generous.", "Ugh. ₱{offer}. Don't push your luck."],

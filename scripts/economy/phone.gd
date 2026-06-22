@@ -312,6 +312,13 @@ func _make_buyer_row(persona: BuyerPersona) -> Control:
 	occupation.add_theme_font_size_override("font_size", 11)
 	occupation.add_theme_color_override("font_color", Color(0.7, 0.7, 0.78))
 	box.add_child(occupation)
+	if not persona.motive.is_empty():
+		var desc := Label.new()
+		desc.text = persona.motive
+		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc.add_theme_font_size_override("font_size", 10)
+		desc.add_theme_color_override("font_color", Color(0.55, 0.57, 0.63))
+		box.add_child(desc)
 	var offer := Label.new()
 	offer.text = "Offer: ₱%d" % MarketplaceService.preview_offer(_sell_uid, persona.id)
 	offer.add_theme_font_size_override("font_size", 12)
@@ -342,12 +349,27 @@ func begin_haggle(persona_id: String) -> void:
 
 
 func _render_haggle() -> void:
-	_app_content.add_child(_make_back_button())
+	# Back returns to the buyer list for this item (not the sell list), so you can pick
+	# another buyer; the cached session keeps this buyer's conversation for when you return.
+	_app_content.add_child(_make_back_button(func() -> void: open_buyers(_sell_uid)))
 	var persona := DataRepository.singleton().get_buyer(_buyer_id)
 	var who := Label.new()
 	who.text = persona.display_name if persona != null else _buyer_id
 	who.add_theme_font_size_override("font_size", 16)
 	_app_content.add_child(who)
+	if persona != null and not persona.occupation.is_empty():
+		var occ := Label.new()
+		occ.text = persona.occupation
+		occ.add_theme_font_size_override("font_size", 12)
+		occ.add_theme_color_override("font_color", Color(0.72, 0.74, 0.82))
+		_app_content.add_child(occ)
+	if persona != null and not persona.motive.is_empty():
+		var desc := Label.new()
+		desc.text = persona.motive
+		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc.add_theme_font_size_override("font_size", 11)
+		desc.add_theme_color_override("font_color", Color(0.6, 0.62, 0.68))
+		_app_content.add_child(desc)
 
 	# Shows whether banter is using the live AI or the offline fallback.
 	_ai_label = Label.new()
@@ -447,9 +469,11 @@ func haggle_banter(move_id: String) -> void:
 	if _negotiation == null:
 		return
 	var line := str(resp.get("reply", ""))
+	if line.is_empty():
+		return
+	_negotiation.set_last_buyer_line(line)  # persist the AI reply so it survives leaving + returning
 	if (
-		not line.is_empty()
-		and _current_app == "marketplace"
+		_current_app == "marketplace"
 		and _market_view == "haggle"
 		and is_instance_valid(_said_label)
 	):
@@ -613,11 +637,11 @@ func _make_section_label(text: String) -> Label:
 	return label
 
 
-func _make_back_button() -> Button:
+func _make_back_button(handler: Callable = Callable()) -> Button:
 	var back := Button.new()
 	back.text = "← Back"
 	back.focus_mode = Control.FOCUS_ALL
-	back.pressed.connect(_back_to_market_home)
+	back.pressed.connect(handler if handler.is_valid() else _back_to_market_home)
 	return back
 
 
