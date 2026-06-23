@@ -1,0 +1,29 @@
+[gd_scene load_steps=6 format=3]
+
+; Oton Death Mask — a pre-colonial gold burial mask (Oton, Iloilo). A historically
+; significant (gold) piece. Open this scene to swap in the real model and place/adjust its
+; ArtifactConditionDecal children. "Randomized Decal Count" picks how many appear per run.
+; NOTE: this is the 3D presentation only — to make it a playable, spawnable artifact it
+; also needs a matching template (id "oton_death_mask") in data/objects/objects.json.
+
+[ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
+[ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_decal"]
+[ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="3_tarnish"]
+[ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
+[ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="5_grime"]
+
+[node name="OtonDeathMask" type="Node3D"]
+script = ExtResource("1_obj")
+randomized_decal_count = 2
+
+[node name="TarnishDecal" parent="." instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.12, 0.5)
+texture = ExtResource("3_tarnish")
+
+[node name="DustDecal" parent="." instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, -0.04, 0.5)
+texture = ExtResource("4_dust")
+
+[node name="GrimeCondition" parent="." instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, -0.26, 0.49)
+texture = ExtResource("5_grime")
