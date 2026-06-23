@@ -4,7 +4,7 @@
 [ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="2_vur48"]
 [ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="3_80ekr"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_17orc"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vur48"]
 
 [node name="StorageScreen" type="CanvasLayer" unique_id=2146993191]
 process_mode = 3
@@ -41,7 +41,7 @@ text = "Storage"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxTexture_17orc")
+theme_override_styles/panel = SubResource("StyleBoxTexture_vur48")
 current_tab = 0
 
 [node name="Artifacts" type="HBoxContainer" parent="Dim/Margin/VBox/Tabs" unique_id=1523946346]

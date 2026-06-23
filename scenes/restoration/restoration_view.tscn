@@ -11,6 +11,8 @@
 [ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="9_ot4no"]
 [ext_resource type="Texture2D" uid="uid://gkfx8vh1gdg5" path="res://assets/UI assets/game/gui/phone/nvl.png" id="11_ot4no"]
 [ext_resource type="PackedScene" uid="uid://ccw18fb4d26lu" path="res://assets/3d Assets/Table.glb" id="11_table"]
+[ext_resource type="Texture2D" uid="uid://2ni4wolm4vun" path="res://assets/UI assets/game/gui/ProgressBar/BackgroundBar.png" id="12_4edn4"]
+[ext_resource type="Texture2D" uid="uid://cxt72gfq0usdm" path="res://assets/UI assets/game/gui/ProgressBar/Bar.png" id="13_b7lon"]
 
 [sub_resource type="Environment" id="Environment_rest"]
 background_mode = 1
@@ -27,6 +29,12 @@ texture = ExtResource("11_ot4no")
 expand_margin_left = 30.0
 expand_margin_right = 50.0
 region_rect = Rect2(0, 336.40826, 1920, 609.2702)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_j1aef"]
+texture = ExtResource("12_4edn4")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0op7g"]
+texture = ExtResource("13_b7lon")
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_47eic"]
 texture = ExtResource("8_54x15")
@@ -225,6 +233,8 @@ text = "Condition 0 / 100"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxTexture_j1aef")
+theme_override_styles/fill = SubResource("StyleBoxTexture_0op7g")
 show_percentage = false
 
 [node name="ValueLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=594556757]
@@ -246,7 +256,7 @@ text = "Surface cleaned"
 
 [node name="SurfaceBar" type="ProgressBar" parent="HUD/LeftMeters/Margin/VBox" unique_id=677679685]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 16)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 show_percentage = false
 
