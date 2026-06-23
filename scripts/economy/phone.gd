@@ -1,8 +1,8 @@
 class_name Phone
 extends CanvasLayer
 ## The shop phone: an authored phone-frame scene (phone.tscn) with a home screen
-## of apps. For now the only app is the Marketplace (buy tools; selling/banter is
-## the deferred Phase-14 negotiation).
+## of apps. Apps are the Local PH Tools Shop (buy tools), the Marketplace (sell /
+## haggle / banter), and the offline Flashlight.
 ##
 ## Presentation only: the structural nodes live in phone.tscn; this script handles
 ## navigation (home <-> app), renders the dynamic app content, and delegates every
@@ -110,7 +110,8 @@ func show_home() -> void:
 	_home_button.visible = false
 
 
-## Opens an app by id: "tools_shop" (buy tools) or "marketplace" (sell artifacts).
+## Opens an app by id. Marketplace is online and may be blocked during a brownout;
+## Flashlight is offline and works even when the internet is down.
 func open_app(app_id: String) -> void:
 	_current_app = app_id
 	_home.visible = false
@@ -122,8 +123,14 @@ func open_app(app_id: String) -> void:
 			_render_tools_shop()
 		"marketplace":
 			_app_title.text = "Marketplace"
-			_market_view = "home"
-			_render_marketplace()
+			if EventDirector == null or EventDirector.is_marketplace_available():
+				_market_view = "home"
+				_render_marketplace()
+			else:
+				_render_marketplace_offline()
+		"flashlight":
+			_app_title.text = "Flashlight"
+			_render_flashlight()
 		_:
 			_app_title.text = "Unknown app"
 
@@ -144,8 +151,8 @@ func _build_app_grid() -> void:
 		child.queue_free()
 	_app_grid.add_child(_make_app_icon("Local PH\nTools Shop", "tools_shop", false))
 	_app_grid.add_child(_make_app_icon("Marketplace", "marketplace", false))
-	# Room for more apps later; shown disabled so the home screen reads as a phone.
-	_app_grid.add_child(_make_app_icon("Soon", "", true))
+	# The flashlight is an offline app that works even during a brownout.
+	_app_grid.add_child(_make_app_icon("Flashlight", "flashlight", false))
 
 
 func _make_app_icon(label: String, app_id: String, disabled: bool) -> Button:
@@ -200,6 +207,25 @@ func _render_marketplace() -> void:
 			_render_market_home()
 
 
+func _render_marketplace_offline() -> void:
+	for child in _app_content.get_children():
+		child.queue_free()
+
+	var notice := Label.new()
+	notice.text = "No connection — the brownout knocked out the internet."
+	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	notice.add_theme_font_size_override("font_size", 14)
+	notice.add_theme_color_override("font_color", Color(0.9, 0.6, 0.5))
+	_app_content.add_child(notice)
+
+	var hint := Label.new()
+	hint.text = "The Marketplace will come back once power returns."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.62, 0.68))
+	_app_content.add_child(hint)
+
+
 func _render_market_home() -> void:
 	var money := Label.new()
 	money.text = "Money: ₱%d" % GameState.save_state.loop.money
@@ -217,6 +243,44 @@ func _render_market_home() -> void:
 	else:
 		for inst in sellable:
 			_app_content.add_child(_make_sell_row(inst))
+
+
+# --- Flashlight app ----------------------------------------------------------
+
+
+func _render_flashlight() -> void:
+	for child in _app_content.get_children():
+		child.queue_free()
+
+	var status := Label.new()
+	status.text = "Flashlight: %s" % ("ON" if GameState.save_state.loop.flashlight_on else "OFF")
+	status.add_theme_font_size_override("font_size", 18)
+	status.add_theme_color_override(
+		"font_color",
+		Color(0.95, 0.9, 0.6) if GameState.save_state.loop.flashlight_on else Color(0.65, 0.65, 0.7)
+	)
+	_app_content.add_child(status)
+
+	var hint := Label.new()
+	hint.text = "Toggle the light to remove the brownout gloom penalty while restoring."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.62, 0.68))
+	_app_content.add_child(hint)
+
+	var toggle := Button.new()
+	toggle.text = "Turn %s" % ("OFF" if GameState.save_state.loop.flashlight_on else "ON")
+	toggle.focus_mode = Control.FOCUS_ALL
+	toggle.pressed.connect(toggle_flashlight)
+	_app_content.add_child(toggle)
+
+
+## Toggles the phone flashlight on/off. The flashlight is an offline app and stays
+## on after the phone is closed, so it can mitigate the brownout restoration penalty.
+func toggle_flashlight() -> void:
+	GameState.save_state.loop.flashlight_on = not GameState.save_state.loop.flashlight_on
+	if _current_app == "flashlight":
+		_render_flashlight()
 
 
 # --- Selling: list -> pick a buyer -> haggle ---------------------------------

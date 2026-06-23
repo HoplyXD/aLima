@@ -1430,11 +1430,21 @@ Manual: discover and seat all five fragments across ordinary seeded play, includ
 - `[ ]` **P18.5 Tune variation and fairness.** Prevent unwinnable fragments, impossible requests, route-window obstruction, or repeated event spam.
 - `[ ]` **P18.6 Test every event deterministically.** Cover trigger, outcome, save/reset, interaction with carriers, and cap behavior.
 
+- `[-]` **P18.7 Brownout / phone flashlight integration.**
+  - Corrected `sudden_brownout` event data: player text now says the internet is down (Marketplace offline) and the shop is dim; restoration is less precise unless you turn on a light such as the phone flashlight. Kept `blocked_tool_enables: ["electric"]` as inert future-proofing. Added `light_mitigates_condition: true` to brownout only; leak/damp events do not have this flag.
+  - Added `LoopState.flashlight_on` (loop-scoped, serialized, resets with loop state, no battery).
+  - `EventDirector` now reads flashlight state from `GameState.save_state.loop.flashlight_on`; `get_restoration_condition_multiplier()` applies the brownout penalty only when no light source is active, while leak/damp penalties always apply. `is_light_source_active()` is the single seam for future light sources.
+  - Phone home screen replaced the disabled "Soon" slot with a **Flashlight** offline app; Marketplace app is blocked during brownout with a "No connection — the brownout knocked out the internet." message; Flashlight toggles `flashlight_on` and stays on after closing the phone.
+  - `RestorationService` continues to use `EventDirector.get_restoration_condition_multiplier()` unchanged.
+  - Automated evidence (2026-06-23): `tests/core/test_event_director.gd` 6/6 passed; `tests/economy/test_phone.gd` 15/15 passed (includes 3 new flashlight/brownout tests); `tests/core/test_save_service.gd` 11/11 passed (flashlight round-trip); `tests/core/test_game_state.gd` 6/6 passed (flashlight reset); full GUT suite 508/508 passed, 1638 asserts.
+  - **Pending:** human on-screen verification — trigger brownout, open phone, confirm Marketplace offline and Flashlight toggles, verify brownout restoration penalty with flashlight off/on, verify leak/damp penalty unaffected by flashlight.
+
 ### Acceptance
 
-- [ ] All eight events are reachable, distinct, and recorded by the content manifest.
-- [ ] Event combinations never violate discovery winnability or route invariants.
-- [ ] Normal play varies without exceeding the documented per-loop cap.
+- `[-]` Brownout/phone flashlight behavior is implemented and automated-tested; manual on-screen verification is pending.
+- `[ ]` All eight events are reachable, distinct, and recorded by the content manifest.
+- `[ ]` Event combinations never violate discovery winnability or route invariants.
+- `[ ]` Normal play varies without exceeding the documented per-loop cap.
 
 ### Verification
 
@@ -1665,7 +1675,7 @@ This index names every current PRD requirement literally so automated parity che
 | Routes, schedules, returns, Safe/drawer | 15 | Partial — route data, portraits, and dialogue exist; visit scheduling, beats, returns, Safe/drawer not implemented |
 | Temporal Echoes, journal mystery, museum | 16 | Partial — P0 journal record and case implemented; 15 Echoes, mystery pages, and museum gallery not done |
 | Fifteen carriers and five-fragment discovery | 17 | Partial — slice carrier (pendant) and Spawn Director implemented; full carrier pool and five Echo sets not done |
-| All eight events | 18 | Not started |
+| All eight events | 18 | Partial — EventDirector system and brownout/phone-flashlight integration implemented; full event tuning and manual verification pending |
 | Character endings, Neutral, Yuyu finale | 19 | Not started |
 | Final narrative, assets, audio, review, replica/video | 20 | Not started |
 | Live services, platforms, inputs, accessibility, performance | 21 | Partial — P0 mock/cached scanner, portal, and offline negotiation fallback implemented; live service matrices, platform/input parity, and performance targets not verified |

@@ -105,24 +105,42 @@ func get_seconds_per_hour_multiplier() -> float:
 	return maxf(mult, MIN_SECONDS_PER_HOUR)
 
 
-## Multiplier applied to restoration condition gain while Rainy-Day Leak or
-## Sudden Brownout is active.
+## Multiplier applied to restoration condition gain while active events impose
+## a condition penalty. Each active event with `condition_multiplier < 1.0` may
+## also set `light_mitigates_condition: true`; when a light source is active,
+## that event's penalty is ignored (e.g. phone flashlight during a brownout).
+## Rainy-Day Leak / damp penalties are not flagged as mitigable, so they always
+## apply. The result is clamped to a small minimum so progress never stalls.
 func get_restoration_condition_multiplier() -> float:
 	var mult := 1.0
-	if is_event_active("rainy_day_leak"):
-		mult = minf(
-			mult,
-			ModelUtils.as_float(_get_event_param("rainy_day_leak", "condition_multiplier", 1.0))
+	for raw in _game_state.save_state.loop.event_active:
+		if not raw is Dictionary:
+			continue
+		var event_id := ModelUtils.as_string(raw.get("event_id"))
+		var def := get_event_definition(event_id)
+		if def == null:
+			continue
+		var event_mult := ModelUtils.as_float(def.outcome_params.get("condition_multiplier", 1.0))
+		if event_mult >= 1.0:
+			continue
+		var mitigates := ModelUtils.as_bool(
+			def.outcome_params.get("light_mitigates_condition", false)
 		)
-	if is_event_active("sudden_brownout"):
-		mult = minf(
-			mult,
-			ModelUtils.as_float(_get_event_param("sudden_brownout", "condition_multiplier", 1.0))
-		)
+		if mitigates and is_light_source_active():
+			continue
+		mult = minf(mult, event_mult)
 	return maxf(mult, 0.1)
 
 
-## True when Sudden Brownout disables the phone marketplace.
+## True when the player currently has an active light source. For Phase 18 this
+## is just the phone flashlight; future light sources can be OR'd in here.
+func is_light_source_active() -> bool:
+	return _game_state.save_state.loop.flashlight_on
+
+
+## True when the phone marketplace is reachable. During Sudden Brownout the
+## internet is down, so the online Marketplace is unavailable (the phone itself
+## still works and offline apps such as the flashlight remain usable).
 func is_marketplace_available() -> bool:
 	if not is_event_active("sudden_brownout"):
 		return true

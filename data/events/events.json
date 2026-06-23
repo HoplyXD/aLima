@@ -50,20 +50,21 @@
       "outcome_params": {
         "blocked_tool_enables": ["electric"],
         "condition_multiplier": 0.8,
-        "blocks_marketplace": true
+        "blocks_marketplace": true,
+        "light_mitigates_condition": true
       },
       "player_text": {
         "trigger_title": "Sudden Brownout",
-        "trigger_body": "The district power flickers and dies. The shop is running on dim emergency lights.",
-        "changed_rules": "Electric tools and the phone marketplace are unavailable until power returns.",
-        "consequences": "Restoration is slower in the gloom; online sales pause."
+        "trigger_body": "The district power flickers and dies. The shop is running on dim emergency lights, but the phone still has battery.",
+        "changed_rules": "The internet drops, so the online Marketplace is offline. The shop is dim, so restoration is less precise unless you turn on a light such as the phone flashlight.",
+        "consequences": "Use the phone flashlight to cancel the gloom penalty; online sales stay paused until power returns."
       },
-      "accessibility_caption": "Brownout: electric tools and marketplace offline for a few hours.",
+      "accessibility_caption": "Brownout: internet and Marketplace are down; restoration is dim unless you use the phone flashlight.",
       "fallback_content": {
         "trigger_title": "Sudden Brownout",
-        "trigger_body": "The power is out.",
-        "changed_rules": "Electric tools and marketplace blocked.",
-        "consequences": "Wait for power to return."
+        "trigger_body": "The power is out, but the phone still works.",
+        "changed_rules": "Marketplace is offline; restoration is dim without a light.",
+        "consequences": "Turn on the phone flashlight to work around the gloom."
       }
     },
     {

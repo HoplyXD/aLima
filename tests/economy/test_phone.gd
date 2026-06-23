@@ -25,6 +25,7 @@ func before_each() -> void:
 func after_each() -> void:
 	DayClock.reset()
 	MarketplaceService._on_loop_reset(0)  # clear any buyer ghosts so tests don't pollute
+	EventDirector.disable_debug_force()
 	SaveService.delete_save_files()
 	SaveService.set_save_paths(SaveService.DEFAULT_SAVE_PATH, SaveService.DEFAULT_TEMP_PATH)
 
@@ -177,6 +178,57 @@ func test_offensive_chat_ends_the_deal() -> void:
 	assert_null(phone._negotiation, "an offensive message ends the deal")
 	assert_true(MarketplaceService.is_ghosted("c1", "collector"), "the buyer is ghosted")
 	assert_eq(MarketplaceService.get_sellable().size(), 1, "the item is kept, not sold")
+
+
+func test_marketplace_app_blocked_during_brownout() -> void:
+	EventDirector.enable_debug_force()
+	assert_true(EventDirector.force_event("sudden_brownout"))
+
+	var phone := await _open_phone()
+	phone.open_app("marketplace")
+
+	assert_eq(phone.get_current_app(), "marketplace")
+	var found := false
+	for child in phone._app_content.get_children():
+		if child is Label and (child as Label).text.find("No connection") >= 0:
+			found = true
+			break
+	assert_true(found, "marketplace shows the brownout no-connection message")
+
+
+func test_flashlight_app_available_during_brownout() -> void:
+	EventDirector.enable_debug_force()
+	assert_true(EventDirector.force_event("sudden_brownout"))
+
+	var phone := await _open_phone()
+	phone.open_app("flashlight")
+
+	assert_eq(phone.get_current_app(), "flashlight", "flashlight opens during brownout")
+	var found := false
+	for child in phone._app_content.get_children():
+		if child is Label and (child as Label).text.find("Flashlight: OFF") >= 0:
+			found = true
+			break
+	assert_true(found, "flashlight shows its off state")
+
+
+func test_flashlight_toggles_loop_state() -> void:
+	var phone := await _open_phone()
+	phone.open_app("flashlight")
+	assert_false(GameState.save_state.loop.flashlight_on)
+
+	phone.toggle_flashlight()
+
+	assert_true(GameState.save_state.loop.flashlight_on, "toggle turns flashlight on")
+	var on_label_found := false
+	for child in phone._app_content.get_children():
+		if child is Label and (child as Label).text.find("Flashlight: ON") >= 0:
+			on_label_found = true
+			break
+	assert_true(on_label_found, "flashlight UI shows ON after toggle")
+
+	phone.toggle_flashlight()
+	assert_false(GameState.save_state.loop.flashlight_on, "toggle turns flashlight off")
 
 
 func test_haggle_persists_when_shopping_around_and_returning() -> void:
