@@ -106,7 +106,7 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 **K. Security (non-negotiable).** All LLM/API keys and calls live in the **backend only** — never embedded in the Godot client. Backend rate-limits LLM calls and ships **cached fallbacks** so the exhibit build never depends on venue internet.
 
 **L. Jam content rules.**
-- **Original assets only.** No third-party IP. Audio is original/folk-*inspired* — **never sample real recordings** of traditional songs.
+- **Assets: original OR free third-party that is CC0 / properly credited.** Per the mentor ruling (Sir Mark, 2026-06), free assets from itch.io and other sites are allowed *as long as they are CC0 or credited*. Every third-party asset must be logged in `CREDITS.md` (author · source · license). Still **no third-party IP** (no copyrighted characters/brands). Audio is original/folk-*inspired* — **never sample real recordings** of traditional songs.
 - **Folklore is framed as folklore, never as archaeological fact.** Scanner "facts" derive from verified records.
 - Excluded as source-of-fact: the **Code of Kalantiaw** (documented 20th-c. hoax). Maragtas may flavor lore but is treated as oral tradition.
 
@@ -222,7 +222,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 ## 9. Project Facts
 
-- **Team:** Francis Gabriel Austria (lead dev), Om Shanti Limpin (dev/design/narrative), Jorge Maverick Acidre (dev/design). WVSU, Iloilo City.
+- **Team:** Francis Gabriel Austria (lead dev/game design), Om Shanti Limpin (dev/design/narrative/artist/UI), Jorge Maverick Acidre (dev/design/3D modeler/character artist). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
 - **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`295/295` passing, 971 asserts as of 2026-06-17, including Phases 0–9), focused model/core/delivery/restoration/spawn/echo/scanner/portal/journal suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Backend suites also pass: `server/npm test` → 12/12; `mock-portal/npm test` → 4/4. Runtime tasks (including on-screen/real-time clock observation, restoration mouse/controller/touch flow, journal/case readability, and the full Found → Unlock end-to-end observation) still require their own acceptance checks before `[x]`.
 

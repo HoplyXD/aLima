@@ -16,7 +16,7 @@ local_ai/model_path="res://models/model.gguf"
 
 config/name="aLima"
 run/main_scene="uid://dgc2dadcifuf2"
-config/features=PackedStringArray("4.6", "Mobile")
+config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 
 [autoload]

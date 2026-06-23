@@ -436,9 +436,9 @@ Composition: Student • Region: VI – Western Visayas • City: Iloilo City �
 
 | Member | Role | Background |
 | :---- | :---- | :---- |
-| Francis Gabriel Austria | Lead Developer | BS Computer Science, WVSU; ships production full-stack (MERN) systems as a working freelance developer |
-| Om Shanti Limpin | Developer / Design / Narrative | BS Computer Science, WVSU |
-| Jorge Maverick Acidre | Developer / Design | BS Entertainment and Multimedia in Computing, WVSU |
+| Francis Gabriel Austria | Lead Developer / Game Design | BS Computer Science, WVSU; ships production full-stack (MERN) systems as a working freelance developer |
+| Om Shanti Limpin | Developer / Design / Narrative / Artist / UI | BS Computer Science, WVSU |
+| Jorge Maverick Acidre | Developer / Design / 3D Modeler / Character Artist | BS Entertainment and Multimedia in Computing, WVSU |
 
 All members 18 or older, each belonging to this team only; the team is within the 1–3 member limit.
 
