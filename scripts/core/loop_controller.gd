@@ -28,6 +28,9 @@ func begin_session() -> void:
 	DayClock.loop_index = GameState.loop_index
 	DayClock.running = true
 	_grant_starting_kit()
+	# Reflect any persisted RELEASED/SEATED fragment state onto the repo so the Spawn
+	# Director keeps placing a released-but-unfound fragment after a reload.
+	FragmentService.sync_repo_from_persistent()
 	DayClock.start_day(1)
 
 

@@ -4,7 +4,7 @@ Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, live/moc
 
 | Field | Value |
 |---|---|
-| Last audited | 2026-06-22 |
+| Last audited | 2026-06-23 |
 | Current milestone | June 30, 2026 vertical slice |
 | Engine target | Godot 4.6.3 |
 | Presentation | Hybrid 3D shop with 2D gameplay interfaces |
@@ -1042,50 +1042,64 @@ Manual (pending human on-screen observation under windowed 4.6.3): open the jour
 
 ### Tasks
 
-- `[-]` **P10.1 Preserve and migrate the existing Auntie prototype.**
+- `[x]` **P10.1 Preserve and migrate the existing Auntie prototype.**
   - Existing dialogue box, visitor placeholder, and sample lines are usable scaffolding.
-  - Move lines out of shop controllers into `data/routes/auntie.json`.
-  - Keep the controller responsible for flow, not prose.
-  - Progress (2026-06-17): Auntie's 3-quest line is authored as data — `CharacterRoute.beats` on the `auntie` route (Days 1/3/5) in `data/routes/routes.json`, three non-deliverable quest templates with decal sets (`auntie_photo_faded`, `auntie_frame_portrait`, `auntie_halfphoto_torn`) in `data/objects/objects.json`, and the supporting tools (incl. `archival_tape` for the join step) in `data/objects/tools.json`. The decal-cleaning + join restoration mechanics they drive are the Phase 13 down-payment below. Visit scheduling/Day-5 gating (P10.2) and the dialogue/showcase flow (P10.3) are not yet implemented.
+  - **Canonical data file is `data/routes/routes.json`** (not a separate `auntie.json`). The old tracker text named `auntie.json`; the repo's established pattern keeps every route in one `routes.json`, so Auntie stays there. Auntie's intro/return prose, portrait, schedule, rewards, `holds_fragment_id`, and 3-beat line (`CharacterRoute.beats`, Days 1/3/5) all live in `data/routes/routes.json`; the three non-deliverable quest templates and their tools live in `data/objects/objects.json` / `tools.json`.
+  - Controllers carry no authored Auntie prose. `ShopController` resolves the visitor via `RouteService.resolve_visitor()` and shows lines from `route.dialogue_for(...)`; the showcase reads the authored beat `summary`. Verified by grep: no Auntie/`Nang Shine`/beat prose is hardcoded in `scripts/` (only data + tests).
+  - Evidence (2026-06-23): full GUT suite `474/474`; the migrated prose renders through the data-driven door + showcase path.
 
-- `[ ]` **P10.2 Implement visit scheduling.**
-  - Offer Auntie from 12:00-14:00 on Days 1, 3, and 5.
-  - Consume an unanswered visit when the window closes.
-  - Add an explicit debug/demo override that is excluded from normal progression.
-  - **Day-5 visit gate (team decision, 2026-06-18):** on Day 5 an NPC only appears if they have completed their **beat 2** (which itself requires beat 1, since beat 2 is gated on beat 1). I.e. Day-5 (beat 3) is unlocked only after beats 1 and 2 are done. The Mysterious Buyer is the exception — he visits every day regardless. The Artisan/Scavenger mutual exclusion and the Archeologist cross-loop lead still apply on top of this gate (full route scheduling is Phase 15).
+- `[x]` **P10.2 Implement visit scheduling.** (logic verified; on-screen manual gate pending)
+  - Auntie is offered 12:00-14:00 on Days 1, 3, 5 (her authored `schedule`; `RouteService.resolve_visitor`).
+  - An unanswered visit is **consumed when its window closes**: `RouteService._on_hour_changed` watches `EventBus.hour_changed`; when the clock crosses a window's `end_hour` for a genuinely-offered visit that was not answered, it records the visit as missed and emits `EventBus.visit_missed(route_id, day)` exactly once. (`resolve_visitor` already excludes a closed window, so the record drives the signal/feedback, not gating.)
+  - Explicit debug override `RouteService.debug_force_visit(route_id)` / `debug_clear_forced_visit()` returns a forced route ignoring window/gating — reachable only from the demo menu and tests, never from normal progression.
+  - **Day-5 / beat gate (team decision, 2026-06-18):** `_beat_gate_allows_visit` — a route that authored a beat for the day appears only when every earlier beat is complete, so Day-5 (beat 3) needs beats 1 & 2, Day-3 (beat 2) needs beat 1. The Mysterious Buyer authors no beats, so he is never gated here. Artisan/Scavenger mutual exclusion and the Archeologist lead still apply on top (full route scheduling stays Phase 15).
+  - Evidence (2026-06-23): `tests/core/test_route_beats.gd` (window, Day-3/Day-5 gate, consumption, once-only signal, answered-not-missed, debug override).
 
-- `[ ]` **P10.3 Build the scripted photograph showcase.**
-  - Present a short authored interaction using the existing dialogue UI and 2D overlays.
-  - Treat it as an emotional showcase, not a second full restoration mini-game.
-  - Record route completion/reward state without directly granting a fragment.
+- `[-]` **P10.3 Build the scripted photograph showcase.** (logic + 2D overlay done; on-screen manual gate pending)
+  - `scripts/ui/showcase_screen.gd` (`ShowcaseScreen`, a paused 2D `CanvasLayer`): an emotional before -> restore -> after sequence framed by the route portrait + authored beat `summary`. It is **not** a second restoration mini-game.
+  - Opens after a route's door dialogue when a beat is due (`ShopController._maybe_open_showcase` + `RouteService.due_beat`). Completing it records the beat via `RouteService.complete_beat` (which enforces ordinal gating); it never grants a fragment, item, or money directly.
+  - Owns `DayClock.PAUSE_SHOWCASE` while open.
+  - Evidence (2026-06-23): `tests/ui/test_showcase_screen.gd` (pause, beat recorded, final beat releases via route not handoff, no item handed over). **Pending:** human on-screen verification.
 
-- `[ ]` **P10.4 Release the route fragment correctly.**
-  - Transition the assigned fragment from `LOCKED` to `RELEASED`.
-  - Let the Spawn Director place it in a later/current eligible delivery according to data.
-  - Do not put the fragment in Auntie's handoff or dialogue reward.
+- `[x]` **P10.4 Release the route fragment correctly.**
+  - `fragment_01` now starts `LOCKED` in `data/artifacts/fragments.json` (no pre-release shortcut). New `FragmentService` autoload (`scripts/core/fragment_service.gd`) owns the `LOCKED -> RELEASED` transition: it sets persistent state, mirrors onto the repo (the Spawn Director's source), persists atomically, and emits `EventBus.fragment_released`. Completing Auntie's final beat calls `FragmentService.release_fragment(holds_fragment_id)`.
+  - The Spawn Director then promotes an ordinary openable to carry it (`plan_loop_placements`); the fragment is never placed in Auntie's handoff, dialogue, inventory, or any overlay.
+  - Evidence (2026-06-23): `tests/core/test_fragment_service.gd` (transition, idempotence, repo mirror, reload-persist, seated-never-re-released) + `tests/core/test_route_beats.gd::test_released_fragment_becomes_spawn_director_eligible`.
 
-- `[ ]` **P10.5 Connect the complete P0 path.**
-  - Start Shop -> morning delivery -> triage.
-  - Follow Echoes to the carrier.
-  - Keep the pendant -> clean -> scan and judge -> clasp open.
-  - Show Artifact Found -> backend/mock Portal -> Portal Unlock.
-  - Persist Museum record -> seat fragment -> show 1/5 case.
+- `[-]` **P10.5 Connect the complete P0 path.** (wired + automated coverage; uninterrupted manual playthrough PENDING)
+  - The slice uses the existing production systems end to end: morning delivery/triage (`DeliveryGenerator`/`TriageController`) -> Echoes (`EchoController`) -> restoration clean+clasp (`RestorationView`/`RestorationService`) -> cached scanner verdict (`ScannerScreen`) -> Found/Portal (`PortalFlowController` + backend/mock) -> `SeatingService` persists a `MuseumEntry` and seats the fragment -> journal 1/5 case. No demo-only state bypasses these systems; the only new runtime state is the data-authored release path.
+  - Evidence (2026-06-23): full GUT suite `474/474`; Phase 8/9 portal+journal suites green; `test_released_fragment_becomes_spawn_director_eligible` ties route completion to discovery eligibility. **Pending:** one recorded uninterrupted end-to-end slice playthrough (manual).
 
-- `[ ]` **P10.6 Add a slice reset/demo menu.**
-  - Select a debug seed.
-  - Clear only demo save data with an explicit confirmation.
-  - Start the three placement runs without editing production data.
+- `[-]` **P10.6 Add a slice reset/demo menu.** (implemented + automated coverage; on-screen manual gate pending)
+  - `scripts/ui/demo_menu.gd` (`DemoMenu`, debug `CanvasLayer`, F9 in debug builds via a runtime-registered `demo_menu` action; absent from release builds): pick a debug seed; **Show 3 Placement Variations** (runs `SpawnDirector.run_three_seed_demo` and prints carrier/container/day per seed — no production data written); **Release Auntie's Fragment (debug)** (uses `FragmentService` + re-plans through the real Spawn Director); **Clear Demo Save** with a two-press confirmation. Clearly separated from normal progression.
+  - Evidence (2026-06-23): `tests/ui/test_demo_menu.gd` (seed override, debug release uses Spawn Director, 3 variations, two-press clear, pause). **Pending:** human on-screen verification.
 
 ### Acceptance
 
-- [ ] Auntie content is data-authored and appears only in its window without debug override.
-- [ ] Route completion releases rather than hands over a fragment.
-- [ ] The full P0 flow completes without console intervention.
-- [ ] One journal slot fills and remains filled after reload.
+- [x] Auntie content is data-authored and appears only in its window (and Day-5/beat gate) unless the explicit debug override is used. (`test_route_beats.gd`, 2026-06-23.)
+- [x] Day-5 Auntie beat is blocked unless beats 1 and 2 are complete; beat 2 requires beat 1. (`test_route_beats.gd`.)
+- [x] Unanswered valid visits are consumed when the window closes (`visit_missed` once). (`test_route_beats.gd`.)
+- [x] Route completion releases rather than hands over a fragment; the Spawn Director places it. (`test_fragment_service.gd`, `test_route_beats.gd`, `test_showcase_screen.gd`.)
+- [x] No artifact-specific value is hardcoded in gameplay logic (release is keyed off `holds_fragment_id`/`owning_character_id` in data).
+- [x] Existing Phase 1-9 automated tests remain green (`474/474`, 2026-06-23).
+- [ ] The full P0 flow completes without console intervention. (Wired; **manual uninterrupted playthrough not yet performed.**)
+- [ ] One journal slot fills and remains filled after reload. (Seating + reload covered by Phase 8/9 tests; **on-screen end-to-end confirmation pending.**)
 
 ### Verification
 
-Manual only after all automated phase tests pass: record one uninterrupted end-to-end slice playthrough.
+```powershell
+$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+& $godot --headless --editor --path . --quit
+# Result (2026-06-23): exit 0, no parser/resource errors.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-06-23): 474/474 passed, 1531 asserts.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core -gdir=res://tests/ui -gexit
+# Result (2026-06-23): 89/89 passed (incl. test_fragment_service, test_route_beats, test_showcase_screen, test_demo_menu).
+gdformat --check scripts scenes dialogue tests   # new Phase 10 files formatted
+gdlint scripts/core/fragment_service.gd scripts/core/route_service.gd scripts/ui/showcase_screen.gd scripts/ui/demo_menu.gd  # no problems
+```
+
+Manual (PENDING human on-screen observation under windowed 4.6.3): record one uninterrupted end-to-end slice playthrough — answer Auntie only inside her window; complete beats 1-3 across Days 1/3/5 (confirm Day 5 is blocked without beats 1-2); confirm route completion **releases** (does not hand over) the fragment; follow it into discovery via the real Spawn Director/Echoes/restoration/scanner/Portal; confirm the journal 1/5 case fills and persists after reload. The F9 demo menu (debug seed + release override) may be used to reach discovery quickly without a five-day playthrough.
 
 ---
 

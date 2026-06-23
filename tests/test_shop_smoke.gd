@@ -18,6 +18,9 @@ var _visitor: Sprite3D
 
 
 func before_each() -> void:
+	# Start from clean persistent state so a scheduled visitor (and her Phase 10
+	# showcase) resolve deterministically regardless of test order.
+	GameState.initialize("shop-smoke")
 	_shop = SHOP_SCENE.instantiate()
 	add_child_autofree(_shop)
 	await wait_physics_frames(1)
@@ -76,8 +79,16 @@ func test_door_dialogue_pauses_and_resumes_clock_via_keyboard() -> void:
 
 	assert_false(dialogue.visible, "Dialogue closes after advancing")
 	assert_signal_emitted(_hud, "dialogue_finished", "HUD re-emits dialogue_finished")
-	assert_true(_shop.is_day_running(), "Clock resumes after dialogue")
 	assert_false(_visitor.visible, "Visitor hides after dialogue")
+
+	# Phase 10: answering Auntie's door on a beat day leads into her scripted
+	# showcase, which keeps shop time paused until it is closed.
+	var showcase: ShowcaseScreen = _shop._showcase
+	assert_true(showcase.is_open(), "Auntie's showcase opens after her door dialogue")
+	assert_false(_shop.is_day_running(), "The showcase keeps time paused")
+	showcase.close()
+	await wait_physics_frames(1)
+	assert_true(_shop.is_day_running(), "Clock resumes after the showcase closes")
 
 
 func test_dialogue_advances_via_left_click() -> void:

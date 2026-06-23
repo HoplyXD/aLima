@@ -16,12 +16,23 @@ func before_each() -> void:
 	GameState.set_debug_seed_override(4242)  # deterministic new_run seed
 	DayClock.reset()
 	DayClock.seconds_per_hour = 1.0
+	# fragment_01 now starts LOCKED in authored data (released by the Auntie route at
+	# runtime, Phase 10). Release it so the loop-reset re-plan exercises a released
+	# fragment; the repo mirror is what the Spawn Director reads.
+	DataRepository.singleton().get_fragment("fragment_01").state = (
+		ModelEnums.FragmentState.RELEASED
+	)
+	GameState.save_state.persistent.fragments["fragment_01"].state = (
+		ModelEnums.FragmentState.RELEASED
+	)
 
 
 func after_each() -> void:
 	DayClock.reset()
 	SaveService.delete_save_files()
 	SaveService.set_save_paths(SaveService.DEFAULT_SAVE_PATH, SaveService.DEFAULT_TEMP_PATH)
+	# Restore authored fragment state so the released repo mirror never leaks.
+	DataRepository.singleton().load_from_filesystem()
 
 
 ## Ticks well past the 13 in-game hours so the current day reaches its 20:00 close.

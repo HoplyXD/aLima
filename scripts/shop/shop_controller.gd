@@ -53,6 +53,12 @@ const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
 @onready var _restoration_view: RestorationView = _create_restoration_view()
 @onready var _phone: Phone = _create_phone()
 @onready var _storage_screen: StorageScreen = _create_storage_screen()
+## Auntie's scripted photograph showcase (Phase 10). Opens after her door dialogue
+## when a beat is due; completing it records the beat and (on the final beat)
+## releases her fragment through RouteService -> FragmentService.
+@onready var _showcase: ShowcaseScreen = _create_showcase()
+## DEBUG-only slice/placement demo overlay (F9). Excluded from normal progression.
+@onready var _demo_menu: DemoMenu = _create_demo_menu()
 
 # Diegetic 3D shop interactables. Each one fires the same controller handler as
 # its HUD fallback button, so the physical prop and the accessibility button are
@@ -90,6 +96,8 @@ func _ready() -> void:
 	_phone.closed.connect(_on_phone_closed)
 	_storage_screen.closed.connect(_on_storage_closed)
 	_storage_screen.restore_requested.connect(_on_storage_restore_requested)
+	_showcase.closed.connect(_on_showcase_closed)
+	_register_demo_menu_action()
 	# The restoration bench opens the same shared journal / marketplace / storage overlays.
 	_restoration_view.set_journal_viewport(_book_viewport)
 	_restoration_view.set_phone(_phone)
@@ -307,6 +315,18 @@ func _create_storage_screen() -> StorageScreen:
 	return screen
 
 
+func _create_showcase() -> ShowcaseScreen:
+	var screen := ShowcaseScreen.new()
+	add_child(screen)
+	return screen
+
+
+func _create_demo_menu() -> DemoMenu:
+	var menu := DemoMenu.new()
+	add_child(menu)
+	return menu
+
+
 # --- Diegetic interactables ---------------------------------------------------
 
 
@@ -382,9 +402,12 @@ func _on_dialogue_finished() -> void:
 	_visitor.visible = false
 	# Finishing a visitor's conversation records that the player has met them, so
 	# the next visit (this loop or a later one — the flag is persistent) branches to
-	# their return dialogue.
-	if not _active_visitor_route_id.is_empty():
-		RouteService.mark_met(_active_visitor_route_id)
+	# their return dialogue. It also answers the scheduled visit so it is not later
+	# consumed as missed.
+	var finished_route_id := _active_visitor_route_id
+	if not finished_route_id.is_empty():
+		RouteService.mark_met(finished_route_id)
+		RouteService.notify_visit_answered(finished_route_id, DayClock.get_day())
 		_active_visitor_route_id = ""
 	_hud.set_actions_visible(true)
 	# Restoring all actions can re-show buttons that sit under an open journal;
@@ -398,3 +421,50 @@ func _on_dialogue_finished() -> void:
 	if _alya_delivering:
 		_alya_delivering = false
 		_generate_and_show_triage()
+		return
+	# After a route's door conversation, open its scripted showcase if a beat is due.
+	if not finished_route_id.is_empty():
+		_maybe_open_showcase(finished_route_id)
+
+
+## Opens the route's scripted showcase when a beat is authored and ready for the
+## current day (RouteService.due_beat handles the ordinal gating). The showcase, not
+## the dialogue, records the beat and triggers any fragment release.
+func _maybe_open_showcase(route_id: String) -> void:
+	var beat := RouteService.due_beat(route_id, DayClock.get_day())
+	if beat.is_empty():
+		return
+	var route := DataRepository.singleton().get_route(route_id)
+	if route == null:
+		return
+	_hud.set_actions_visible(false)
+	_set_interactables_enabled(false)
+	_showcase.open(route, beat)
+
+
+func _on_showcase_closed() -> void:
+	_hud.set_actions_visible(true)
+	_set_interactables_enabled(true)
+	_refresh_ui()
+
+
+# --- Debug demo menu (Phase 10, P10.6) ----------------------------------------
+
+
+func _register_demo_menu_action() -> void:
+	# F9 opens the DEBUG slice/placement demo menu in debug builds only.
+	if not OS.is_debug_build():
+		return
+	if not InputMap.has_action("demo_menu"):
+		InputMap.add_action("demo_menu")
+		var ev := InputEventKey.new()
+		ev.physical_keycode = KEY_F9
+		InputMap.action_add_event("demo_menu", ev)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
+	if InputMap.has_action("demo_menu") and event.is_action_pressed("demo_menu"):
+		_demo_menu.toggle()
+		get_viewport().set_input_as_handled()

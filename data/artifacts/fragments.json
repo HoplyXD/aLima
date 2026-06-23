@@ -6,7 +6,7 @@
       "master_artifact_id": "master_artifact_demo",
       "owning_character_id": "auntie",
       "case_slot_index": 0,
-      "state": "released",
+      "state": "locked",
       "echo_set_ref": "demo_echo_set",
       "historical_fact_ref": "fragment_01_fact"
     },

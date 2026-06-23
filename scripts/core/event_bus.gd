@@ -13,6 +13,14 @@ signal clock_pause_changed(is_paused: bool, owner_id: String)
 
 # --- Route / story events ---
 signal route_completed(route_id: String)
+## Emitted when an authored route beat (e.g. an Auntie showcase step) is completed.
+signal route_beat_completed(route_id: String, beat_id: String)
+## Emitted the moment a fragment transitions LOCKED -> RELEASED (a route was helped,
+## or a debug override fired). The Spawn Director places it; it is never handed over.
+signal fragment_released(fragment_id: String)
+## Emitted when a scheduled visitor's valid window closes without the player
+## answering the door (the visit is consumed). owner is the route id.
+signal visit_missed(route_id: String, day: int)
 
 # --- Delivery and triage events ---
 signal delivery_generated(day: int, instance_ids: Array[String])

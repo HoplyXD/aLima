@@ -3,6 +3,23 @@ extends GutTest
 ## Tests that EventBus exposes the Stable Interface signals and that typed
 ## payloads can be emitted and received.
 
+const TEST_SAVE := "user://test_eventbus_save.json"
+const TEST_TEMP := "user://test_eventbus_save.tmp"
+
+
+func before_each() -> void:
+	# Emitting portal_completed below reaches the live SeatingService autoload. Use an
+	# isolated save path and a RELEASED fragment_01 so that reaction seats cleanly
+	# (fragment_01 now starts LOCKED in authored data; the Auntie route releases it).
+	SaveService.set_save_paths(TEST_SAVE, TEST_TEMP)
+	SaveService.delete_save_files()
+	GameState.initialize("eventbus-test-player")
+
+
+func after_each() -> void:
+	SaveService.delete_save_files()
+	SaveService.set_save_paths(SaveService.DEFAULT_SAVE_PATH, SaveService.DEFAULT_TEMP_PATH)
+
 
 func test_clock_signals_compile_and_fire() -> void:
 	watch_signals(EventBus)
@@ -34,6 +51,10 @@ func test_delivery_and_restoration_signals_compile_and_fire() -> void:
 
 func test_discovery_signals_compile_and_fire() -> void:
 	watch_signals(EventBus)
+	# Release fragment_01 so the live SeatingService seats it without error.
+	GameState.save_state.persistent.fragments["fragment_01"].state = (
+		ModelEnums.FragmentState.RELEASED
+	)
 	EventBus.carrier_activated.emit("inst_001", "fragment_01")
 	EventBus.echo_proximity_changed.emit("inst_001", 0.75, "voice")
 	EventBus.fragment_discovered.emit("fragment_01", "inst_001")

@@ -11,6 +11,22 @@ func before_each() -> void:
 	GameState.set_debug_seed_override(5555)
 	GameState.new_run()
 	_repo = DataRepository.singleton()
+	_release_fragment_01()
+
+
+func after_each() -> void:
+	# fragment_01 starts LOCKED in authored data (released by the Auntie route at
+	# runtime, Phase 10). Restore that so this suite never leaks RELEASED into others.
+	_repo.load_from_filesystem()
+
+
+## fragment_01 is released by the Auntie route at runtime; these placement tests
+## need it RELEASED, so release it in the repo (the Spawn Director's source).
+func _release_fragment_01() -> void:
+	_repo.get_fragment("fragment_01").state = ModelEnums.FragmentState.RELEASED
+	GameState.save_state.persistent.fragments["fragment_01"].state = (
+		ModelEnums.FragmentState.RELEASED
+	)
 
 
 func test_plans_only_released_fragments() -> void:

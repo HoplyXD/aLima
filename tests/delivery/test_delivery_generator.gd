@@ -16,12 +16,26 @@ func before_each() -> void:
 	GameState.initialize("delivery-test-player")
 	DayClock.reset()
 	_repo = DataRepository.singleton()
+	_release_fragment_01()
 
 
 func after_each() -> void:
 	DayClock.reset()
 	SaveService.delete_save_files()
 	SaveService.set_save_paths(SaveService.DEFAULT_SAVE_PATH, SaveService.DEFAULT_TEMP_PATH)
+	# Restore authored fragment state (fragment_01 starts LOCKED; the Auntie route
+	# releases it at runtime, Phase 10) so this suite never leaks RELEASED into others.
+	_repo.load_from_filesystem()
+
+
+## fragment_01 is released by the Auntie route at runtime; these carrier-injection
+## tests need it RELEASED up front, so release it in both the repo (the Spawn
+## Director's source) and persistent state.
+func _release_fragment_01() -> void:
+	_repo.get_fragment("fragment_01").state = ModelEnums.FragmentState.RELEASED
+	GameState.save_state.persistent.fragments["fragment_01"].state = (
+		ModelEnums.FragmentState.RELEASED
+	)
 
 
 func _make_generator() -> DeliveryGenerator:

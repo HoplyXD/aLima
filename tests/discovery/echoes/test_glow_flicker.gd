@@ -14,6 +14,11 @@ func before_each() -> void:
 	GameState.set_debug_seed_override(4242)
 	GameState.new_run()
 	_grant_starting_kit()
+	# fragment_01 (the carrier under test) now starts LOCKED in authored data (released
+	# by the Auntie route at runtime, Phase 10); release it so flicker is authorized.
+	GameState.save_state.persistent.fragments["fragment_01"].state = (
+		ModelEnums.FragmentState.RELEASED
+	)
 	EchoController.clear_active_target()
 
 

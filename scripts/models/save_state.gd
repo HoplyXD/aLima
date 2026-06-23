@@ -69,6 +69,7 @@ class PersistentState:
 	var story_clues: Array[String] = []
 	var dialogue_flags: Array[String] = []
 	var route_completion: Dictionary = {}  ## route_id -> bool.
+	var route_beats_completed: Array[String] = []  ## Completed beat ids (e.g. "auntie_beat_1").
 	var fragments: Dictionary = {}  ## fragment_id -> Fragment.
 	var legacy_items: Array[String] = []
 	var leads: Array[String] = []
@@ -87,6 +88,7 @@ class PersistentState:
 		p.story_clues = ModelUtils.as_string_array(data.get("story_clues"))
 		p.dialogue_flags = ModelUtils.as_string_array(data.get("dialogue_flags"))
 		p.route_completion = data.get("route_completion", {}) as Dictionary
+		p.route_beats_completed = ModelUtils.as_string_array(data.get("route_beats_completed"))
 		p.fragments = SaveState._entry_dict(data.get("fragments", {}), Fragment)
 		p.legacy_items = ModelUtils.as_string_array(data.get("legacy_items"))
 		p.leads = ModelUtils.as_string_array(data.get("leads"))
@@ -106,6 +108,7 @@ class PersistentState:
 			"story_clues": story_clues.duplicate(),
 			"dialogue_flags": dialogue_flags.duplicate(),
 			"route_completion": route_completion.duplicate(),
+			"route_beats_completed": route_beats_completed.duplicate(),
 			"fragments": SaveState._dict_to_raw(fragments),
 			"legacy_items": legacy_items.duplicate(),
 			"leads": leads.duplicate(),

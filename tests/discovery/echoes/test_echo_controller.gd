@@ -16,6 +16,12 @@ func before_each() -> void:
 	GameState.set_debug_seed_override(4242)
 	GameState.new_run()
 	_grant_starting_kit()
+	# fragment_01 is the active carrier these echo tests exercise. It now starts
+	# LOCKED in authored data (released by the Auntie route at runtime, Phase 10), so
+	# release it here; the EchoController gates echoes on persistent RELEASED state.
+	GameState.save_state.persistent.fragments["fragment_01"].state = (
+		ModelEnums.FragmentState.RELEASED
+	)
 	EchoController.clear_active_target()
 
 

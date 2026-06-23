@@ -17,9 +17,24 @@ extends Node
 
 const _MET_PREFIX := "route_met:"
 
+## Visit ordering scanned by resolve_visitor when (rarely) windows overlap.
+const _VISIT_PRIORITY: Array[String] = ["archeologist", "auntie", "scavenger", "artisan", "buyer"]
+
+## Loop-scoped record of which scheduled visits the player answered or let expire,
+## keyed "day:route_id". Cleared on loop reset. Not persisted: a visit that closes
+## unanswered is consumed for the current loop only (CLAUDE.md §4-J).
+var _visit_log: Dictionary = {}
+
+## Debug/demo override: when set to a route id, resolve_visitor returns that route
+## ignoring the window, gating, and consumption. Only reachable via debug_force_visit
+## (the slice/demo menu and tests) — never through normal progression.
+var _debug_forced_route: String = ""
+
 
 func _ready() -> void:
 	EventBus.fragment_seated.connect(_on_fragment_seated)
+	EventBus.hour_changed.connect(_on_hour_changed)
+	EventBus.loop_reset.connect(_on_loop_reset)
 
 
 # --- Met / completed state ----------------------------------------------------
@@ -62,21 +77,172 @@ func has_lead(lead_id: String) -> bool:
 	return GameState.save_state.persistent.leads.has(lead_id)
 
 
+# --- Authored route beats -----------------------------------------------------
+
+
+## True once an authored beat (e.g. "auntie_beat_1") has been completed. Beat
+## progress is persistent metaknowledge and survives the loop reset.
+func is_beat_complete(beat_id: String) -> bool:
+	return GameState.save_state.persistent.route_beats_completed.has(beat_id)
+
+
+## The number of this route's authored beats the player has completed.
+func beats_completed_count(route_id: String) -> int:
+	var route := _repo().get_route(route_id)
+	if route == null:
+		return 0
+	var count := 0
+	for beat in route.beats:
+		if beat is Dictionary and is_beat_complete(str(beat.get("id"))):
+			count += 1
+	return count
+
+
+## The beat authored for this route on a given day, ready to be played now: it is
+## not yet complete and every earlier beat is complete. Returns {} when there is no
+## such beat (none authored for the day, already done, or blocked by a missed
+## earlier beat). The shop calls this after a route's door dialogue to decide
+## whether to open the scripted showcase.
+func due_beat(route_id: String, day: int) -> Dictionary:
+	var route := _repo().get_route(route_id)
+	if route == null:
+		return {}
+	for i in route.beats.size():
+		var beat: Variant = route.beats[i]
+		if not beat is Dictionary:
+			continue
+		if ModelUtils.as_int(beat.get("day"), -1) != day:
+			continue
+		var beat_id := str(beat.get("id"))
+		if is_beat_complete(beat_id):
+			return {}
+		if not _prior_beats_complete(route, i):
+			return {}
+		return beat
+	return {}
+
+
+## Records an authored beat as complete and announces it. Enforces ordinal gating —
+## every earlier beat in the route must already be complete (so beat 2 requires beat
+## 1, beat 3 requires beat 2). Completing the route's final authored beat RELEASES
+## the route's fragment through FragmentService (never a handoff; the Spawn Director
+## then places it). Idempotent; returns true only on a new, valid completion.
+func complete_beat(route_id: String, beat_id: String) -> bool:
+	var route := _repo().get_route(route_id)
+	if route == null:
+		return false
+	var index := _beat_index(route, beat_id)
+	if index < 0:
+		push_warning("RouteService: '%s' has no beat '%s'" % [route_id, beat_id])
+		return false
+	if is_beat_complete(beat_id):
+		return false
+	if not _prior_beats_complete(route, index):
+		push_warning("RouteService: beat '%s' is gated by an earlier incomplete beat" % beat_id)
+		return false
+
+	GameState.save_state.persistent.route_beats_completed.append(beat_id)
+	EventBus.route_beat_completed.emit(route_id, beat_id)
+
+	# The final authored beat releases the route's fragment into the scrap stream.
+	if index == route.beats.size() - 1 and not route.holds_fragment_id.is_empty():
+		FragmentService.release_fragment(route.holds_fragment_id, "route '%s' completed" % route_id)
+	return true
+
+
+func _beat_index(route: CharacterRoute, beat_id: String) -> int:
+	for i in route.beats.size():
+		var beat: Variant = route.beats[i]
+		if beat is Dictionary and str(beat.get("id")) == beat_id:
+			return i
+	return -1
+
+
+func _prior_beats_complete(route: CharacterRoute, index: int) -> bool:
+	for i in index:
+		var beat: Variant = route.beats[i]
+		if beat is Dictionary and not is_beat_complete(str(beat.get("id"))):
+			return false
+	return true
+
+
+# --- Visit scheduling / consumption -------------------------------------------
+
+
+## Marks a scheduled visit as answered for the current loop so it is not later
+## consumed as missed. Called by the shop when a route's door dialogue finishes.
+func notify_visit_answered(route_id: String, day: int) -> void:
+	if route_id.is_empty():
+		return
+	_visit_log[_visit_key(day, route_id)] = "answered"
+
+
+## True once a scheduled visit for this day/route has been recorded (answered or
+## allowed to expire) in the current loop. Used to avoid double-handling.
+func is_visit_consumed(route_id: String, day: int) -> bool:
+	return _visit_log.has(_visit_key(day, route_id))
+
+
+## True once a scheduled visit closed unanswered in the current loop. Such a visit
+## no longer answers the door (the visitor moved on).
+func is_visit_missed(route_id: String, day: int) -> bool:
+	return _visit_log.get(_visit_key(day, route_id), "") == "missed"
+
+
+## Forces resolve_visitor to return this route regardless of window, gating, or
+## consumption. Debug/demo only — there is no normal-progression path here.
+func debug_force_visit(route_id: String) -> void:
+	_debug_forced_route = route_id
+
+
+func debug_clear_forced_visit() -> void:
+	_debug_forced_route = ""
+
+
 # --- Visit resolution ---------------------------------------------------------
 
 
 ## Returns the route whose visit window covers the given day/hour and whose visit
 ## gating is satisfied, or null. Ranked by a stable priority so a deterministic
-## visitor answers when (rarely) more than one window overlaps.
+## visitor answers when (rarely) more than one window overlaps. A window only closes
+## at end_hour, and _window_covers already excludes hour >= end_hour, so an expired
+## (consumed) visit can never resolve here — the is_visit_missed record drives the
+## visit_missed signal and feedback, not resolution.
 func resolve_visitor(day: int, hour: int) -> CharacterRoute:
 	var repo := _repo()
-	for route_id in ["archeologist", "auntie", "scavenger", "artisan", "buyer"]:
+	if not _debug_forced_route.is_empty():
+		return repo.get_route(_debug_forced_route)
+	for route_id in _VISIT_PRIORITY:
 		var route := repo.get_route(route_id)
 		if route == null:
 			continue
-		if _window_covers(route, day, hour) and can_visit(route_id):
-			return route
+		if not _window_covers(route, day, hour):
+			continue
+		if not can_visit(route_id):
+			continue
+		if not _beat_gate_allows_visit(route, day):
+			continue
+		return route
 	return null
+
+
+## Day-5 / beat gate (team decision, 2026-06-18): a route that authored a beat for
+## this day only appears once every earlier beat is complete. The beat for the day
+## may still be unstarted (it becomes the showcase), but a missed earlier beat hides
+## the character. Routes without an authored beat for the day (e.g. the Mysterious
+## Buyer, who has none) are never gated here.
+func _beat_gate_allows_visit(route: CharacterRoute, day: int) -> bool:
+	var index := -1
+	for i in route.beats.size():
+		var beat: Variant = route.beats[i]
+		if beat is Dictionary and ModelUtils.as_int(beat.get("day"), -1) == day:
+			index = i
+			break
+	if index < 0:
+		return true
+	if is_beat_complete(str(route.beats[index].get("id"))):
+		return true
+	return _prior_beats_complete(route, index)
 
 
 ## Whether a route may currently answer the door. Only route-id prerequisites and
@@ -129,6 +295,57 @@ func _on_fragment_seated(fragment_id: String, _slot_index: int) -> void:
 		return
 	if _repo().character_routes.has(fragment.owning_character_id):
 		mark_completed(fragment.owning_character_id)
+
+
+## When the clock crosses a visit window's close hour, any genuinely-offered visit
+## the player did not answer is consumed (it moves on) and announced once via
+## EventBus.visit_missed. This is what makes a missed Day-1/Day-3 beat block the
+## later beats (CLAUDE.md §4-J).
+func _on_hour_changed(day: int, hour: int) -> void:
+	if not _debug_forced_route.is_empty():
+		return
+	var repo := _repo()
+	for route_id in _VISIT_PRIORITY:
+		var route := repo.get_route(route_id)
+		if route == null:
+			continue
+		if not _window_closes_at(route, day, hour):
+			continue
+		if is_visit_consumed(route_id, day):
+			continue
+		# Only count a visit the player could actually have answered as "missed".
+		if not can_visit(route_id) or not _beat_gate_allows_visit(route, day):
+			continue
+		_visit_log[_visit_key(day, route_id)] = "missed"
+		EventBus.visit_missed.emit(route_id, day)
+
+
+func _on_loop_reset(_loop_index: int) -> void:
+	# Visit answer/expiry is loop-scoped; a new loop re-offers every visit.
+	_visit_log.clear()
+
+
+func _visit_key(day: int, route_id: String) -> String:
+	return "%d:%s" % [day, route_id]
+
+
+## True when `hour` is exactly the close hour (end_hour) of a window that covers the
+## given day — i.e. the window has just closed on this tick.
+func _window_closes_at(route: CharacterRoute, day: int, hour: int) -> bool:
+	for window in route.schedule:
+		if not window is Dictionary:
+			continue
+		var days: Variant = window.get("days")
+		if not days is Array:
+			continue
+		var day_matches := false
+		for d in days:
+			if ModelUtils.as_int(d) == day:
+				day_matches = true
+				break
+		if day_matches and ModelUtils.as_int(window.get("end_hour")) == hour:
+			return true
+	return false
 
 
 func _grant_rewards(rewards: Array) -> void:
