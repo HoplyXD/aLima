@@ -23,12 +23,16 @@ func _init(repo: DataRepository, game_state: GameState) -> void:
 
 ## Generates today's delivery. Returns an array of ObjectInstance. Also stores
 ## the instance uids in GameState.save_state.loop.current_delivery_ids.
-func generate_day_delivery(day: int) -> Array[ObjectInstance]:
+## `override_cfg` and `extra_instances` are optional event-driven modifiers (Phase 18)
+## that do not change the generator's core logic.
+func generate_day_delivery(
+	day: int, override_cfg: DeliveryConfig = null, extra_instances: Array[ObjectInstance] = []
+) -> Array[ObjectInstance]:
 	var rng := _game_state.make_rng(DELIVERY_STREAM + "_day_%d" % day)
 	var instances: Array[ObjectInstance] = []
 	var used_uids := {}
 
-	var cfg := _repo.get_delivery_config()
+	var cfg := override_cfg if override_cfg != null else _repo.get_delivery_config()
 	var batch_size := rng.randi_range(cfg.batch_min, cfg.batch_max)
 	batch_size = clampi(batch_size, cfg.batch_min, cfg.batch_max)
 
@@ -50,10 +54,17 @@ func generate_day_delivery(day: int) -> Array[ObjectInstance]:
 
 	_inject_carriers(instances, day, used_uids)
 
+	for extra in extra_instances:
+		if extra == null or used_uids.has(extra.uid):
+			continue
+		used_uids[extra.uid] = true
+		instances.append(extra)
+
 	var ids: Array[String] = []
 	for inst in instances:
 		ids.append(inst.uid)
 	_game_state.save_state.loop.current_delivery_ids = ids
+	EventBus.delivery_generated.emit(day, ids)
 	return instances
 
 
@@ -116,7 +127,7 @@ func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance
 ## Scatters a random set of surface conditions onto an ordinary instance so each
 ## delivered artifact arrives with different marks to clean. Carriers are left
 ## untouched (they keep the surface-stroke clean toward their clasp). Deterministic
-## via the delivery RNG.
+## via the delivery RNG. Phase 18: active events may append extra conditions.
 func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator) -> void:
 	var catalog := _repo.get_surface_conditions_sorted()
 	if catalog.is_empty():
@@ -139,6 +150,8 @@ func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator)
 				}
 			)
 		)
+	if EventDirector != null:
+		decals.append_array(EventDirector.get_extra_conditions_for_delivery())
 	inst.spawned_decals = decals
 
 

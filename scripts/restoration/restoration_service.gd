@@ -121,6 +121,7 @@ func get_available_tools() -> Array[ToolDefinition]:
 ## player deliberately removed everything (bench shows nothing). The only fallback
 ## to "all available" is the id-set-only path (no durability instances at all),
 ## which is the legacy/seed case used in tests.
+## Phase 18: tools blocked by an active event (e.g. Sudden Brownout) are hidden.
 func get_workbench_tools() -> Array[ToolDefinition]:
 	var loadout: Array = _game_state.save_state.loop.workbench_tools
 	if loadout.is_empty():
@@ -279,8 +280,12 @@ func apply_tool(uid: String, tool_id: String) -> ToolResult:
 	var compatible := _is_compatible_tool(template, tool)
 	result.compatible = compatible
 
+	if EventDirector != null and EventDirector.is_tool_blocked(tool_id):
+		result.feedback = "That tool is unavailable during the brownout."
+		return result
+
 	if compatible:
-		var gain := _calculate_condition_gain(template, tool)
+		var gain := _calculate_condition_gain(template, tool) * _event_condition_multiplier()
 		inst.condition = minf(inst.condition + gain, float(template.clean_completion_threshold))
 		var value_gain := _calculate_value_gain(template, tool)
 		inst.value = clampi(
@@ -400,6 +405,13 @@ func _learned_technique(minigame: String) -> TechniqueDefinition:
 		if tech != null and tech.enables_minigame == minigame:
 			return tech
 	return null
+
+
+## Phase 18 event modifier for restoration condition gain.
+func _event_condition_multiplier() -> float:
+	if EventDirector == null:
+		return 1.0
+	return EventDirector.get_restoration_condition_multiplier()
 
 
 ## Persists the exact dirt-mask PNG onto the instance so the cleaned spots survive
@@ -549,10 +561,22 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 	result.compatible = decal.required_tool == tool_id
 	var tool := _repo.get_tool(tool_id)
 	var tool_name := tool.display_name if tool != null else tool_id
+	if EventDirector != null and EventDirector.is_tool_blocked(tool_id):
+		result.feedback = "That tool is unavailable during the brownout."
+		return result
+
 	if result.compatible:
 		inst.removed_decals.append(decal_id)
 		var total := decals.size()
-		inst.condition = minf(float(inst.removed_decals.size()) / float(total) * 100.0, 100.0)
+		inst.condition = minf(
+			(
+				float(inst.removed_decals.size())
+				/ float(total)
+				* 100.0
+				* _event_condition_multiplier()
+			),
+			100.0
+		)
 		inst.value = clampi(
 			inst.value + template.clean_value_bonus,
 			int(template.base_value_range.x),
@@ -616,7 +640,9 @@ func register_authored_clean(
 	var threshold := template.clean_completion_threshold if template != null else 100
 	if total_active > 0:
 		var fraction := float(cleaned_active) / float(total_active)
-		inst.condition = clampf(fraction * float(threshold), 0.0, float(threshold))
+		inst.condition = clampf(
+			fraction * float(threshold) * _event_condition_multiplier(), 0.0, float(threshold)
+		)
 	if finished_one and template != null:
 		inst.value = clampi(
 			inst.value + template.clean_value_bonus,

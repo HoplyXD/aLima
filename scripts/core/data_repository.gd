@@ -24,6 +24,7 @@ var placement_containers: Dictionary = {}  ## id -> PlacementContainer
 var scanner_cache_entries: Dictionary = {}  ## id -> ScannerCacheEntry
 var surface_conditions: Dictionary = {}  ## id -> SurfaceCondition
 var buyer_personas: Dictionary = {}  ## id -> BuyerPersona
+var event_definitions: Dictionary = {}  ## id -> EventDefinition
 var delivery_config: DeliveryConfig = DeliveryConfig.new()
 var spawn_config: SpawnConfig = SpawnConfig.new()
 var starting_kit: Dictionary = {"tool_ids": [], "technique_ids": []}
@@ -60,6 +61,7 @@ func load_from_filesystem() -> ValidationResult:
 	_load_directory("delivery", _parse_delivery_file)
 	_load_directory("journal", _parse_journal_file)
 	_load_directory("buyers", _parse_buyer_file)
+	_load_directory("events", _parse_event_file)
 
 	if not _validation.is_valid():
 		_clear_state()
@@ -127,6 +129,10 @@ func get_buyer(id: String) -> BuyerPersona:
 	return buyer_personas.get(id) as BuyerPersona
 
 
+func get_event(id: String) -> EventDefinition:
+	return event_definitions.get(id) as EventDefinition
+
+
 ## Buyer personas sorted by id for a stable marketplace order.
 func get_buyers_sorted() -> Array:
 	var ids := buyer_personas.keys()
@@ -170,6 +176,7 @@ func _clear_state() -> void:
 	scanner_cache_entries.clear()
 	surface_conditions.clear()
 	buyer_personas.clear()
+	event_definitions.clear()
 	delivery_config = DeliveryConfig.new()
 	spawn_config = SpawnConfig.new()
 	starting_kit = {"tool_ids": [], "technique_ids": []}
@@ -384,6 +391,25 @@ func _parse_buyer_file(file_path: String) -> void:
 		persona.validate(_validation, file_path)
 
 
+func _parse_event_file(file_path: String) -> void:
+	var doc: Variant = _read_json_file(file_path)
+	if doc == null:
+		return
+	var items := _get_items(doc, file_path)
+	for item in items:
+		if not item is Dictionary:
+			continue
+		var record_type := ModelUtils.as_string(item.get("record_type"))
+		if record_type != "event_definition":
+			_validation.add_field_error(
+				file_path, "", "record_type", "unknown record_type '%s'" % record_type
+			)
+			continue
+		var event_def := EventDefinition.from_dictionary(item)
+		_add_record(event_definitions, event_def.id, event_def, file_path, "event_definition")
+		event_def.validate(_validation, file_path)
+
+
 func _get_items(doc: Dictionary, file_path: String) -> Array:
 	if not doc.has("items"):
 		return [doc]
@@ -554,6 +580,65 @@ func _validate_cross_references() -> void:
 				buyer_id,
 				"route_id",
 				"unknown route reference '%s'" % persona.route_id
+			)
+
+	const REQUIRED_EVENT_IDS: Array[String] = [
+		"rush_delivery",
+		"sudden_brownout",
+		"community_request",
+		"suspicious_antique",
+		"rare_buyer_alert",
+		"mystery_box",
+		"rainy_day_leak",
+		"tool_breakdown",
+	]
+	for event_id in REQUIRED_EVENT_IDS:
+		if not event_definitions.has(event_id):
+			_validation.add_field_error(
+				"data/events", event_id, "id", "missing required event '%s'" % event_id
+			)
+	for event_id in event_definitions.keys():
+		var event_def: EventDefinition = event_definitions[event_id]
+		var params: Dictionary = event_def.outcome_params
+		var template_ref := ModelUtils.as_string(params.get("request_template_id"))
+		if not template_ref.is_empty() and not scrap_object_templates.has(template_ref):
+			_validation.add_field_error(
+				"data/events",
+				event_id,
+				"outcome_params.request_template_id",
+				"unknown template reference '%s'" % template_ref
+			)
+		template_ref = ModelUtils.as_string(params.get("antique_template_id"))
+		if not template_ref.is_empty() and not scrap_object_templates.has(template_ref):
+			_validation.add_field_error(
+				"data/events",
+				event_id,
+				"outcome_params.antique_template_id",
+				"unknown template reference '%s'" % template_ref
+			)
+		template_ref = ModelUtils.as_string(params.get("box_template_id"))
+		if not template_ref.is_empty() and not scrap_object_templates.has(template_ref):
+			_validation.add_field_error(
+				"data/events",
+				event_id,
+				"outcome_params.box_template_id",
+				"unknown template reference '%s'" % template_ref
+			)
+		var buyer_ref := ModelUtils.as_string(params.get("buyer_persona_id"))
+		if not buyer_ref.is_empty() and not buyer_personas.has(buyer_ref):
+			_validation.add_field_error(
+				"data/events",
+				event_id,
+				"outcome_params.buyer_persona_id",
+				"unknown buyer reference '%s'" % buyer_ref
+			)
+		var condition_ref := ModelUtils.as_string(params.get("extra_condition_type"))
+		if not condition_ref.is_empty() and not surface_conditions.has(condition_ref):
+			_validation.add_field_error(
+				"data/events",
+				event_id,
+				"outcome_params.extra_condition_type",
+				"unknown surface condition reference '%s'" % condition_ref
 			)
 
 	for tool_id in starting_kit.tool_ids:

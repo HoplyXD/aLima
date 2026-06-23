@@ -255,13 +255,21 @@ func _generate_and_show_triage() -> void:
 		var director := SpawnDirector.new(repo, GameState)
 		director.plan_loop_placements()
 
+	# Trigger/apply morning mini-events (Rush Delivery, Mystery Box, Community Request,
+	# Suspicious Antique) before generating the batch so their modifiers and injected
+	# instances are included.
+	EventDirector.roll_morning_event(GameState.save_state.loop.current_day)
+	var event_cfg := EventDirector.modify_delivery_config(repo.get_delivery_config())
+	var extras := EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
+
 	var generator := DeliveryGenerator.new(repo, GameState)
-	var delivery := generator.generate_day_delivery(GameState.save_state.loop.current_day)
+	var delivery := generator.generate_day_delivery(
+		GameState.save_state.loop.current_day, event_cfg, extras
+	)
 	# The day is only marked "delivered" once triage is actually applied (see
 	# TriageService.apply_triage), so exiting triage without confirming lets the player
 	# reopen the morning delivery instead of silently losing the whole batch.
-	var cfg := repo.get_delivery_config()
-	_triage_screen.open(delivery, cfg.storage_cap)
+	_triage_screen.open(delivery, event_cfg.storage_cap)
 
 
 func _on_morning_delivery_pressed() -> void:
