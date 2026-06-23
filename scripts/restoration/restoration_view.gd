@@ -57,6 +57,8 @@ var _phone: Phone
 var _storage_screen: StorageScreen
 ## Captured base scale of each bench prop (so hover-grow is relative, not absolute).
 var _prop_base_scales: Dictionary = {}
+## Resource path of the scene `_object` currently uses, so we only swap when it changes.
+var _object_scene_path: String = "res://scenes/restoration/restoration_artifact.tscn"
 
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
@@ -292,6 +294,8 @@ func _populate_instances() -> void:
 
 const ARTIFACT_CARD_SCENE := preload("res://scenes/restoration/artifact_card.tscn")
 const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
+# Per-template authored scenes live in ArtifactScenes (shared with the triage screen).
+const ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 
 
 ## Builds the horizontal, scrollable strip of artifact cards (one square per
@@ -314,7 +318,8 @@ func _rebuild_artifact_bar() -> void:
 		if previews_on and template != null:
 			# Embed the real artifact (model + its condition decals) so the rotating
 			# preview shows the player exactly what they'll need to restore.
-			var preview: RestorationObject3D = ARTIFACT_OBJECT_SCENE.instantiate()
+			var preview_scene: PackedScene = ArtifactScenes.scene_for(template.id, ARTIFACT_OBJECT_SCENE)
+			var preview: RestorationObject3D = preview_scene.instantiate()
 			card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
 			_present_object(preview, inst, template, _artifact_seed(uid))
 
@@ -358,6 +363,24 @@ func _rarity_color(rarity: int) -> Color:
 
 ## Loads a specific instance into the 3D view. Public so the Shop/tests can drive
 ## selection directly; presentation is rebuilt purely from saved instance state.
+## Swaps the bench object to `template_id`'s authored scene (if mapped) or the default
+## placeholder. Reassigns `_object`; the view holds no signals on it, so this is safe.
+func _ensure_object_for(template_id: String) -> void:
+	var scene: PackedScene = ArtifactScenes.scene_for(template_id, ARTIFACT_OBJECT_SCENE)
+	if scene.resource_path == _object_scene_path:
+		return
+	var world := _object.get_parent()
+	var xform := _object.transform
+	world.remove_child(_object)
+	_object.queue_free()
+	var fresh: RestorationObject3D = scene.instantiate()
+	fresh.name = "ObjectPivot"
+	world.add_child(fresh)
+	fresh.transform = xform
+	_object = fresh
+	_object_scene_path = scene.resource_path
+
+
 func load_instance(uid: String) -> void:
 	# Preserve where the player cleaned on the outgoing artifact before switching.
 	_cache_current_dirt()
@@ -370,6 +393,8 @@ func load_instance(uid: String) -> void:
 	if inst == null or template == null:
 		_show_invalid_state()
 		return
+	# Swap the bench object to this artifact's own scene (custom model) if one is mapped.
+	_ensure_object_for(template.id)
 	# Per-instance seed so a shared placed decal scatters/cleans independently per
 	# artifact; folding in the loop index re-rolls which random conditions appear each loop.
 	var instance_seed := _artifact_seed(uid)

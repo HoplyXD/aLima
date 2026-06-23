@@ -12,6 +12,7 @@ signal closed  ## Emitted after triage is confirmed and applied.
 ## Rotating 3D artifact preview, shared with the bench/storage.
 const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
 const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
+const ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 
 var _state: TriageState
 var _service: TriageService
@@ -93,7 +94,7 @@ func _fill_row_preview(row: Control, inst: ObjectInstance) -> void:
 	if template == null:
 		return
 	var card: Preview3DCard = row.get_meta("preview_card")
-	var obj: RestorationObject3D = ARTIFACT_OBJECT_SCENE.instantiate()
+	var obj: RestorationObject3D = ArtifactScenes.scene_for(template.id, ARTIFACT_OBJECT_SCENE).instantiate()
 	var color := GlowMapper.get_instance_glow_color(template.base_rarity, false, false)
 	card.set_preview(obj, template.display_name, color, 0.46)
 	_restoration.present_object(obj, inst, template, inst.uid.hash())

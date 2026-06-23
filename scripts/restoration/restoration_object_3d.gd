@@ -2,12 +2,44 @@
 class_name RestorationObject3D
 extends Node3D
 
-## How many of the author-placed ArtifactConditionDecal children are active on any one
-## run. 0 (or a value >= the number placed) uses them ALL. Otherwise a random subset of
-## this size is chosen, seeded per save + loop, so the same relic shows a different mix of
-## conditions each loop / new save. Set this on each category artifact scene in the
-## inspector ("Randomized Decal Count").
+## Per-artifact customisation — one directive per line, in the Inspector. Supported now:
+##   Max Decals: N    -> only N of the placed ArtifactConditionDecal children appear,
+##                       chosen at random (seeded per save + loop). Place as many decals
+##                       as you like; N show in game. 0 / omitted = show ALL.
+## Unknown lines are ignored, so more directives can be added later.
+@export_multiline var customization: String = "Max Decals: 0"
+## Legacy fallback for the decal limit (use the "Max Decals" line above instead). Only
+## consulted when the customisation text has no "Max Decals" directive.
 @export var randomized_decal_count: int = 0
+## OPTIONAL authored 3D model for this artifact. When set, it is instanced and shown in
+## place of the placeholder medallion (the placeholder sphere stays, invisible, as the
+## rotate/clean hit-test proxy). Set this on a per-artifact scene to use the real model.
+@export var model_scene: PackedScene:
+	set(value):
+		model_scene = value
+		if _built:
+			_apply_authored_model()
+## OPTIONAL authored Mesh (e.g. a `.obj`, which Godot imports as a Mesh, not a scene).
+## Used like `model_scene` but for a bare mesh. `model_scene` wins if both are set.
+@export var model_mesh: Mesh:
+	set(value):
+		model_mesh = value
+		if _built:
+			_apply_authored_model()
+## OPTIONAL material for a `model_mesh`. A bare .obj has no material (renders grey), so
+## assign one here (e.g. a gold StandardMaterial3D) to give it a look. Ignored for a
+## model_scene, which carries its own materials.
+@export var model_material: Material:
+	set(value):
+		model_material = value
+		if _built:
+			_apply_authored_model()
+## Uniform scale applied to the authored model (raw .glb/.obj are often metres-large).
+@export var model_scale: float = 1.0:
+	set(value):
+		model_scale = value
+		if _model_instance != null:
+			_model_instance.scale = Vector3.ONE * model_scale
 ## NOTE: @tool so the placeholder geometry builds in the editor — open
 ## scenes/restoration/restoration_artifact.tscn to view/iterate the model directly.
 ## Editor execution only ever runs _build()/reset_orientation() (pure geometry);
@@ -61,6 +93,7 @@ var _built: bool = false
 var _radius: float = 0.55
 var _clasp_radius: float = 0.18
 var _clasp_interactive: bool = false
+var _model_instance: Node3D = null  ## Authored model_scene instance, when set.
 
 var _medallion: MeshInstance3D
 var _bail: MeshInstance3D
@@ -453,10 +486,15 @@ func _condition_layout(index: int, count: int) -> Vector3:
 func _set_photo_mode(enabled: bool) -> void:
 	_conditions_mode = false
 	_photo_mode = enabled
+	# A custom model_scene keeps the placeholder medallion/bail hidden (the sphere is only
+	# the invisible hit-test proxy); otherwise the placeholder shows outside photo mode.
+	var show_placeholder := not enabled and _model_instance == null
 	if _medallion != null:
-		_medallion.visible = not enabled
+		_medallion.visible = show_placeholder
 	if _bail != null:
-		_bail.visible = not enabled
+		_bail.visible = show_placeholder
+	if _model_instance != null:
+		_model_instance.visible = not enabled
 	if _clasp != null and enabled:
 		_clasp.visible = false
 		_clasp_interactive = false
@@ -564,13 +602,12 @@ func _clear_blemishes() -> void:
 # driven blemishes above and are cleaned through the same view, with particles.
 
 
-## Discovers ArtifactConditionDecal children, resolves each to a journal surface
-## condition (tint + required tool), aims it at the surface, and registers it as a
-## cleanable hotspot. Idempotent: safe to call again on reload (cleaned ones stay
-## cleaned because the node keeps its own removed flag).
-## `seed_value` (e.g. the instance uid hash) makes a shared placed decal land in a
-## different spot per artifact and resets it to fully dirty, so each artifact is
-## cleaned independently — cleaning one no longer cleans them all.
+## Discovers ArtifactConditionDecal children, resolves each to a journal surface condition
+## (its TYPE comes from the texture's file name, e.g. Rust.png -> rust -> the wire/rust
+## brush), tints it, and registers it as a cleanable hotspot AT ITS AUTHORED POSITION.
+## Idempotent: safe to call again on reload (cleaned ones keep their removed flag).
+## `seed_value` (instance uid + loop) only drives which decals are active this run
+## (randomized_decal_count) and resets dirt; it does NOT move the decals.
 func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> void:
 	_authored.clear()
 	var rng := RandomNumberGenerator.new()
@@ -600,27 +637,15 @@ func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> 
 			required_tool = condition.cleaning_tool
 			type_id = condition.id
 		decal.tint(color)
-		if decal.align_to_surface:
-			# Scatter the placed decal to a random front-surface spot for this instance.
-			var pos := _random_surface_point(rng, decal.box_size)
-			decal.position = pos
-			_orient_sticker(decal, pos.normalized())
+		# Keep the decal EXACTLY where the dev placed it in the artifact scene (its authored
+		# transform). Positions/rotations set in the editor carry straight into the game; the
+		# only randomisation is WHICH decals are active (randomized_decal_count above).
 		_authored[decal.name] = {
 			"node": decal,
 			"required_tool": required_tool,
 			"type_id": type_id,
 			"removed": decal.is_cleaned(),
 		}
-
-
-## A random point on the front hemisphere of the medallion surface (seeded for
-## per-instance stability).
-func _random_surface_point(rng: RandomNumberGenerator, decal_size: float) -> Vector3:
-	var ang := rng.randf() * TAU
-	var y := rng.randf_range(-0.55, 0.6)
-	var ring := sqrt(maxf(0.0, 1.0 - y * y))
-	var dir := Vector3(cos(ang) * ring, y, absf(sin(ang) * ring) + 0.2).normalized()
-	return dir * (_radius + decal_size * 0.2)
 
 
 ## Ray-tests the uncleaned authored decals. Returns {hit, condition_id}.
@@ -870,6 +895,40 @@ func _build() -> void:
 	add_child(_clasp)
 
 	_built = true
+	_apply_authored_model()
+
+
+## Instances `model_scene` (if set) as the visible artifact and hides the placeholder
+## medallion + bail. The placeholder sphere stays in the tree (invisible) so the view's
+## analytic rotate/clean hit-testing still works against it. Idempotent.
+func _apply_authored_model() -> void:
+	if _model_instance != null and is_instance_valid(_model_instance):
+		_model_instance.queue_free()
+		_model_instance = null
+	var has_model := model_scene != null or model_mesh != null
+	if _medallion != null:
+		_medallion.visible = not has_model
+	if _bail != null:
+		_bail.visible = not has_model
+	if not has_model:
+		return
+	# model_scene (.glb, a PackedScene with materials) wins; otherwise wrap the bare
+	# model_mesh (.obj) in a MeshInstance3D.
+	if model_scene != null:
+		var inst: Node = model_scene.instantiate()
+		if inst is Node3D:
+			_model_instance = inst
+	else:
+		var mi := MeshInstance3D.new()
+		mi.mesh = model_mesh
+		if model_material != null:
+			mi.material_override = model_material
+		_model_instance = mi
+	if _model_instance == null:
+		return
+	_model_instance.name = "Model"
+	_model_instance.scale = Vector3.ONE * model_scale
+	add_child(_model_instance)
 
 
 func _apply_preset(preset: Dictionary) -> void:

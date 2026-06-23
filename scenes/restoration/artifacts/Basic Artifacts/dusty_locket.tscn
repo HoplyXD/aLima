@@ -1,21 +1,30 @@
-[gd_scene load_steps=5 format=3 uid="uid://calimalockt001"]
-
-; Dusty Locket (template id: dusty_locket). Swap the model and adjust the
-; ArtifactConditionDecal children. "Randomized Decal Count" picks how many appear per run.
+[gd_scene format=3 uid="uid://cvks8m11ye441"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
 [ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_decal"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="3_dust"]
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="4_tarnish"]
+[ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Locket.obj" id="5_locket"]
 
-[node name="DustyLocket" type="Node3D"]
+[sub_resource type="StandardMaterial3D" id="locket_gold"]
+albedo_color = Color(0.85, 0.7, 0.3, 1)
+metallic = 0.85
+metallic_specular = 0.6
+roughness = 0.35
+
+[node name="DustyLocket" type="Node3D" unique_id=1252588796]
+transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+customization = null
 randomized_decal_count = 2
+model_mesh = ExtResource("5_locket")
+model_material = SubResource("locket_gold")
+model_scale = 0.1
 
-[node name="DustDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.12, 0.5)
+[node name="DustDecal" parent="." unique_id=1955187762 instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.047793463, -0.32079, 0.1687588)
 texture = ExtResource("3_dust")
 
-[node name="TarnishDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, -0.04, 0.5)
+[node name="TarnishDecal" parent="." unique_id=1503128335 instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.09133574, -0.24847211, -0.11886971)
 texture = ExtResource("4_tarnish")
