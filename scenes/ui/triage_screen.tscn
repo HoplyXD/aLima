@@ -1,12 +1,30 @@
 [gd_scene format=3 uid="uid://bwmj5triq5qvx"]
 
-[ext_resource type="Script" path="res://scenes/ui/triage_controller.gd" id="1_triage"]
+[ext_resource type="Script" uid="uid://dk260ihakjiyh" path="res://scenes/ui/triage_controller.gd" id="1_triage"]
+[ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_oyyef"]
+[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="3_qrd20"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="4_1vmhu"]
+[ext_resource type="Texture2D" uid="uid://dxr4jmbwn30dm" path="res://assets/UI assets/game/gui/bar/left.png" id="5_cuj4i"]
+[ext_resource type="Texture2D" uid="uid://dprq1wdcmqdih" path="res://assets/UI assets/game/gui/bar/right.png" id="6_7h80y"]
+[ext_resource type="Texture2D" uid="uid://c11csnwuhrll7" path="res://assets/UI assets/game/gui/overlay/confirm.png" id="7_3m4ny"]
 
-[node name="TriageScreen" type="CanvasLayer"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tj61w"]
+texture = ExtResource("2_oyyef")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_q1i8a"]
+texture = ExtResource("5_cuj4i")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_iv7uq"]
+texture = ExtResource("6_7h80y")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bcddo"]
+texture = ExtResource("7_3m4ny")
+
+[node name="TriageScreen" type="CanvasLayer" unique_id=194688073]
 process_mode = 3
 script = ExtResource("1_triage")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=2124188988]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -16,8 +34,9 @@ offset_right = -160.0
 offset_bottom = -90.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_tj61w")
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=8954751]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,42 +47,54 @@ offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
 
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin" unique_id=232205049]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+[node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=684170290]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_fonts/font = ExtResource("3_qrd20")
+theme_override_font_sizes/font_size = 100
 text = "Alya's Delivery"
 horizontal_alignment = 1
 
-[node name="StorageLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="StorageLabel" type="Label" parent="Panel/Margin/VBox" unique_id=1203174269]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_fonts/font = ExtResource("4_1vmhu")
+theme_override_font_sizes/font_size = 45
 text = "Storage: 0 / 0 used, 0 available"
 horizontal_alignment = 1
 
-[node name="ValidationLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="ValidationLabel" type="Label" parent="Panel/Margin/VBox" unique_id=1117610224]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
-text = ""
+theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 
-[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox"]
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox" unique_id=1910261181]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Items" type="VBoxContainer" parent="Panel/Margin/VBox/Scroll"]
+[node name="Items" type="VBoxContainer" parent="Panel/Margin/VBox/Scroll" unique_id=711343450]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="ConfirmButton" type="Button" parent="Panel/Margin/VBox"]
+[node name="ConfirmButton" type="Button" parent="Panel/Margin/VBox" unique_id=1099483432]
+custom_minimum_size = Vector2(1000, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_1vmhu")
+theme_override_font_sizes/font_size = 41
+theme_override_styles/normal = SubResource("StyleBoxTexture_q1i8a")
+theme_override_styles/hover = SubResource("StyleBoxTexture_iv7uq")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_bcddo")
 disabled = true
 text = "Confirm Triage"
