@@ -22,6 +22,18 @@ var _negotiation: Negotiation = null
 var _said_label: Label = null  ## The buyer's spoken-line label, upgraded with live banter.
 var _ai_label: Label = null  ## "AI: live / offline" indicator in the haggle view.
 
+# Test seam: injected fake NegotiationClient; null means use the real NegotiationClient autoload.
+var _banter_client: Object = null
+
+
+func _get_banter_client() -> Object:
+	return _banter_client if _banter_client != null else NegotiationClient
+
+
+func set_banter_client(c: Object) -> void:
+	_banter_client = c
+
+
 @onready var _dim: ColorRect = $Dim
 @onready var _home_button: Button = %HomeButton
 @onready var _home: VBoxContainer = %Home
@@ -411,6 +423,9 @@ func begin_haggle(persona_id: String) -> void:
 		_back_to_market_home()
 		return
 	_market_view = "haggle"
+	# Probe the backend once per haggle entry; skip in headless so tests never make real HTTP calls.
+	if _banter_client == null and DisplayServer.get_name() != "headless":
+		await NegotiationClient.probe_status()
 	_render_marketplace()
 
 
@@ -605,8 +620,9 @@ func _show_typing() -> void:
 ## offline bot + deterministic numbers otherwise. Returns {reply, offended, agreed,
 ## counter}. Coroutine — await it.
 func _buyer_response(message: String, price: int) -> Dictionary:
+	var persona := DataRepository.singleton().get_buyer(_buyer_id)
+	# Tier 1: on-device (unchanged behavior)
 	if LocalAI.is_ready() and _negotiation != null:
-		var persona := DataRepository.singleton().get_buyer(_buyer_id)
 		var llm := await LocalAI.chat(
 			persona,
 			_negotiation.current_offer,
@@ -623,7 +639,21 @@ func _buyer_response(message: String, price: int) -> Dictionary:
 				"agreed": price > 0 and bool(llm.get("accept", false)),
 				"counter": int(llm.get("counter", 0)),
 			}
-	# Offline: the deterministic engine decides the number, the offline bot supplies a line.
+	# Tier 2 (NEW): backend live banter; the NUMBER stays deterministic
+	var client := _get_banter_client()
+	if client != null and client.is_live() and _negotiation != null and persona != null:
+		var b: Dictionary = await client.fetch_banter(
+			persona, _negotiation.current_offer, price, message, _negotiation.history
+		)
+		if b.get("ok", false):
+			var d := _negotiation.propose_price(price) if price > 0 else {}
+			return {
+				"reply": str(b.get("reply", "")),
+				"offended": bool(b.get("offended", false)),
+				"agreed": price > 0 and bool(d.get("agreed", false)),
+				"counter": int(d.get("counter", 0)),
+			}
+	# Tier 3: offline (unchanged)
 	var decision := {"agreed": false, "counter": 0}
 	if price > 0 and _negotiation != null:
 		decision = _negotiation.propose_price(price)
@@ -639,11 +669,16 @@ func _buyer_response(message: String, price: int) -> Dictionary:
 func _refresh_ai_label() -> void:
 	if not is_instance_valid(_ai_label):
 		return
+	var client := _get_banter_client()
 	if LocalAI.is_ready():
 		_ai_label.text = "AI banter: on-device"
 		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.5))
+	elif client != null and client.is_live():
+		var m := str(client.model_name())
+		_ai_label.text = "AI banter: live" + ((" (%s)" % m) if not m.is_empty() else "")
+		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.75, 0.9))
 	else:
-		_ai_label.text = "AI banter: offline — add a model in models/ for AI replies"
+		_ai_label.text = "AI banter: offline"
 		_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
 
 

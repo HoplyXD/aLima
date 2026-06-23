@@ -50,7 +50,7 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input. Authored prose lives in data: each route in `data/routes/routes.json` carries a `portrait` and a `dialogue` map keyed by visit state (`intro`/`return`, with optional `dayN_*` overrides), loaded via the extended `CharacterRoute` model (`dialogue_for()`). The `RouteService` autoload picks the key per visit (`dialogue_key()`), so the Loop 1 vs Loop 2 branch variants are live; the Shop controller hardcodes no lines.
 - `[x]` All six characters (Auntie/Shine, Artisan/Lave, Scavenger/Ayla, Archeologist/Sam, Buyer/Maverick, Uncle/Yuyu) have authored intro **and** return dialogue plus sketch portraits (`assets/Characters/*.png`). The Shop door asks `RouteService.resolve_visitor(day, hour)` for the scheduled visitor and `RouteService.dialogue_key()` for the intro/return branch; finishing a conversation marks the route **met** (persistent), so the next visit plays the return set. Covered by `tests/core/test_route_service.gd` + `tests/test_shop_smoke.gd`.
 - `[-]` Route progress is tracked in `RouteService` over PersistentState (so it survives the loop reset): a **met** flag (`dialogue_flags`) drives the dialogue branch, and **completion** (`route_completion`) drives mutual-exclusion visit gating — the artisan (prereq: auntie) displaces the scavenger in their shared afternoon slot only once the auntie route completes, and yields to her until then. Completion is wired to `EventBus.fragment_seated` (seating a route's fragment completes it, grants its rewards, and emits `EventBus.route_completed`). Still missing: the archeologist-lead extra-window shift, the scripted multi-day restoration beats themselves, and route expiry on an unanswered visit.
-- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, atomic seating, buyer-persona marketplace economy (buy/sell/haggle/banter), settings/pause menu, and Windows/Web export presets are implemented and covered by GUT/backend tests or verified CLI export under Godot 4.7 / Node. The full disposition router (return/preserve/journal), evening system, video evidence, and final submission package are not implemented.
+- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, atomic seating, buyer-persona marketplace economy (buy/sell/haggle/banter with 3-tier banter: on-device → backend `/api/negotiate` → offline fallback), settings/pause menu, and Windows/Web export presets are implemented and covered by GUT/backend tests or verified CLI export under Godot 4.7 / Node. The full disposition router (return/preserve/journal), evening system, video evidence, final submission package, and live-provider manual gate are not implemented.
 - `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. Cleaning tools are **visible, selectable 3D props on the bench** (`RestorationToolTray`, REST-R9 / task P4.8); the HUD tool buttons are a labelled accessibility/fallback. Author-placed condition decals (`ArtifactConditionDecal`) and per-instance random surface conditions are now supported. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate.
 - `[-]` The major shop actions (door, workbench, journal, phone, morning delivery) are **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
 
@@ -1274,7 +1274,8 @@ Manual: complete every restoration interaction with correct and wrong tools, the
   - `data/buyers/buyers.json` now contains **nine** authored buyer personas (collector, reseller, student, gift, hobbyist, appraiser, tourist, lola, suspicious/Mr. Maverick), each with budget, preferred categories, negotiation style, per-loop wallet tuning, and fallback line sets. The `BuyerPersona` model loads and validates them.
   - The deterministic offline haggle engine (`Negotiation`) uses persona tuning (`open_factor`, `concession_rate`, `patience`, `condition_weight`, `category_bonus`, `ignores_banter`) and fallback lines.
   - Backend persona prompts/guardrails are server-side in `server/src/services/negotiate_service.js`.
-  - Evidence (2026-06-22): `tests/economy/test_buyer_personas.gd` 3/3 passed; full economy suite 61/61 passed.
+  - The Godot client now calls the backend `/api/negotiate` proxy as tier 2 of a 3-tier banter stack: on-device `LocalAI` (NobodyWho GGUF) → backend `NegotiationClient` → offline `BanterBot`. The LLM supplies only the spoken line + offended flag; all prices remain deterministic in the `Negotiation` engine.
+  - Evidence (2026-06-22): `tests/economy/test_buyer_personas.gd` 3/3 passed; full economy suite 61/61 passed. Backend tier wiring and deterministic-price tests added 2026-06-24 (counts to be recorded below).
 - `[-]` **P14.3 Implement the disposition router.**
   - `SELL` is reachable from the Storage/Phone sell flow and completes via `MarketplaceService.complete_sale()` (idempotent; cannot sell the same instance twice).
   - `RETURN`, `PRESERVE`, and `JOURNAL` dispositions are not yet offered as explicit player choices. Journal routing already happens automatically for Purple-and-below on restoration/scan (Phase 9); museum routing happens on fragment seating (Phase 8).
@@ -1286,9 +1287,9 @@ Manual: complete every restoration interaction with correct and wrong tools, the
   - Buyer ghosts, wallets, schedules, and haggle sessions are loop-scoped and cleared on `loop_reset`.
   - Full disposition/evening event partition is pending P14.3-P14.5.
 - `[-]` **P14.7 Test economy and transaction safety.**
-  - Covered: duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, and banter mood effects.
-  - Evidence (2026-06-22): `tests/economy/` 61/61 passed (test_buyer_personas 3, test_marketplace 13, test_marketplace_banter 11, test_negotiation 21, test_phone 12, test_storage_screen 11, test_tool_durability 4, test_tool_loadout 10); server `npm test` 22/22 passed.
-  - Pending: invalid disposition rejection, return/preserve/journal flow tests, and Day 5 evening advancement.
+  - Covered: duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, banter mood effects, and the 3-tier banter fallback (backend reply use, offline fallback, offended propagation, deterministic pricing).
+  - Evidence (2026-06-24): `tests/economy/` 92/92 passed (test_buyer_personas 3, test_marketplace 13, test_marketplace_banter 11, test_negotiation 21, test_phone 19, test_storage_screen 11, test_tool_durability 4, test_tool_loadout 10); full GUT suite 512/512 passed (1645 asserts); server `npm test` 24/24 passed.
+  - Pending: live-provider manual gate (Gemini/Ollama configured in `server/.env`), invalid disposition rejection, return/preserve/journal flow tests, and Day 5 evening advancement.
 ### Acceptance
 
 - `[-]` Sell flow completes via Storage/Phone Marketplace; return, preserve, and journal flows are not yet explicit player choices.
@@ -1299,15 +1300,17 @@ Manual: complete every restoration interaction with correct and wrong tools, the
 
 ```powershell
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/economy
-# Result (2026-06-22): 61/61 passed.
+# Result (2026-06-24): 92/92 passed.
 
 Push-Location server
 npm test
-# Result (2026-06-22): 22/22 passed.
+# Result (2026-06-24): 24/24 passed.
 Pop-Location
 ```
 
-Manual (pending): play two days using every disposition, negotiate with all personas, perform upkeep, and confirm the next delivery reflects preparation.
+Manual (pending):
+- Live provider: configure `server/.env` with `LLM_PROVIDER=local`, `LOCAL_LLM_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`, `LOCAL_LLM_MODEL=gemini-2.0-flash` (or current Flash id from AI Studio), and a Google AI Studio key; start the backend (`Push-Location server; npm run dev`), run the game, sell an item, open haggle, and confirm varied buyer lines + the "AI banter: live (gemini-2.0-flash)" label; stop the backend and confirm fallback to "AI banter: offline" + BanterBot lines.
+- Play two days using every disposition, negotiate with all personas, perform upkeep, and confirm the next delivery reflects preparation.
 
 ---
 
