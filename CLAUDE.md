@@ -4,7 +4,7 @@
 
 **aLima** — a cozy AI-powered historical-restoration roguelite set in a Western Visayas junk shop. Built for the *AI Game On!* jam (AI Fest 2026, Iloilo City). Theme: *"Giving Our History a New Heartbeat through the Intelligence of Tomorrow."*
 
-> **STACK CONTRACT:** The project targets **Godot 4.6.3 (GDScript) + a Node/Express backend**. The presentation is hybrid and trends **diegetic**: a 3D shop scene whose major actions (door, workbench, journal, phone, delivery) are **physical 3D interactables** the player hovers and clicks — not flat HUD buttons (SHELL-R1; HUD buttons survive only as labelled accessibility/fallback). **Restoration is a focused 3D object-manipulation interaction** (a manipulable 3D model the player orbits/rotates and cleans by working the tool across its surface), and its **cleaning tools are visible, selectable 3D props on the workbench** (REST-R9), framed by a 2D background + HUD overlay that is supportive only (meters, feedback, captions, accessibility) and must not replace the tactile 3D tool interaction; the **journal is hybrid 2D/3D** (a 2D book/paper UI that embeds 3D viewers for the Fragment Case and restored objects); **triage, scanner, dialogue, and Portal** flows are 2D `Control`/`CanvasLayer` screens. If the project moves to another engine or stack, stop and update §2, §3, §6, the PRD, and the phase tracker together.
+> **STACK CONTRACT:** The project targets **Godot 4.7 (GDScript) + a Node/Express backend**. The presentation is hybrid and trends **diegetic**: a 3D shop scene whose major actions (door, workbench, journal, phone, delivery) are **physical 3D interactables** the player hovers and clicks — not flat HUD buttons (SHELL-R1; HUD buttons survive only as labelled accessibility/fallback). **Restoration is a focused 3D object-manipulation interaction** (a manipulable 3D model the player orbits/rotates and cleans by working the tool across its surface), and its **cleaning tools are visible, selectable 3D props on the workbench** (REST-R9), framed by a 2D background + HUD overlay that is supportive only (meters, feedback, captions, accessibility) and must not replace the tactile 3D tool interaction; the **journal is hybrid 2D/3D** (a 2D book/paper UI that embeds 3D viewers for the Fragment Case and restored objects); **triage, scanner, dialogue, and Portal** flows are 2D `Control`/`CanvasLayer` screens. If the project moves to another engine or stack, stop and update §2, §3, §6, the PRD, and the phase tracker together.
 
 ---
 
@@ -25,7 +25,7 @@
 
 | Layer | Tech | Purpose |
 |---|---|---|
-| Game client | **Godot 4.6.3**, typed GDScript | hybrid 3D shop + focused 3D restoration + hybrid 2D/3D journal + 2D interfaces (triage, scanner, dialogue, Portal) |
+| Game client | **Godot 4.7**, typed GDScript | hybrid 3D shop + focused 3D restoration + hybrid 2D/3D journal + 2D interfaces (triage, scanner, dialogue, Portal) |
 | Backend | **Node.js + Express** | server-side LLM proxy (scanner, buyer chat), Portal API client. **All secrets live here, never in the client.** |
 | Mock Portal | Node (Express) | local stand-in for the City-Wide Portal API; mirrors the real contract 1:1 |
 | Object DB | **JSON** (+ Godot `.tres` resources) | artifact-agnostic object/echo/route definitions |
@@ -41,7 +41,7 @@
 alima/
 ├── CLAUDE.md                  ← you are here
 ├── README.md                  ← GDD / narrative and design source
-├── project.godot              ← Godot 4.6.3 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService
+├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService, SettingsService, PauseMenu, LocalAI
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
@@ -135,13 +135,13 @@ Full detail: `docs/PRD.md` §12.
 
 ## 6. Commands
 
-Use the **explicit Godot 4.6.3 console executable** for reliable CI/automation: `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`. A PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` because its `godot.exe` appears earlier in the effective PATH than the `.cmd` shim. Open a fresh shell after any PATH change.
+Use the **explicit Godot 4.7 console executable** for reliable CI/automation: `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe`. A PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` because its `godot.exe` appears earlier in the effective PATH than the `.cmd` shim. Open a fresh shell after any PATH change.
 
 ```powershell
-# --- Game (Godot 4.6.3; project.godot is in this directory) ---
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+# --- Game (Godot 4.7; project.godot is in this directory) ---
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 godot --version                                      # currently 4.5.1.stable; diagnostic only
-& $godot --version                                   # expect 4.6.3.stable
+& $godot --version                                   # expect 4.7.stable
 & $godot --editor --path .
 & $godot --headless --editor --path . --quit         # import/build check
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
@@ -161,7 +161,7 @@ npm install
 Copy-Item .env.example .env     # fill in keys locally; NEVER commit .env
 # Required: PORT, PORTAL_BASE_URL, PORTAL_TIMEOUT_MS (see server/.env.example)
 npm run dev                     # run in a dedicated terminal
-npm test                        # 12/12 passing as of 2026-06-16 (uses --forceExit due to open Supertest handles)
+npm test                        # 24/24 passing as of 2026-06-23 (uses --forceExit due to open Supertest handles)
 Pop-Location
 
 # --- Mock Portal (Phase 8) ---
@@ -169,7 +169,7 @@ Push-Location mock-portal
 npm install
 Copy-Item .env.example .env     # optional; defaults in config
 npm start                       # run in a dedicated terminal
-npm test                        # 4/4 passing as of 2026-06-16
+npm test                        # 4/4 passing as of 2026-06-23
 Pop-Location
 
 # --- Full local end-to-end (run server + mock-portal first) ---
@@ -224,7 +224,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev/game design), Om Shanti Limpin (dev/design/narrative/artist/UI), Jorge Maverick Acidre (dev/design/3D modeler/character artist). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.6. Official Godot 4.6.3 console build is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`). A 4.6.3 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.6.3 executable for all verification. The editor import, main-scene startup, complete GUT suite (`295/295` passing, 971 asserts as of 2026-06-17, including Phases 0–9), focused model/core/delivery/restoration/spawn/echo/scanner/portal/journal suites, and the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior pass under 4.6.3. Backend suites also pass: `server/npm test` → 12/12; `mock-portal/npm test` → 4/4. Runtime tasks (including on-screen/real-time clock observation, restoration mouse/controller/touch flow, journal/case readability, and the full Found → Unlock end-to-end observation) still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.7. Official Godot 4.7 console build is installed at `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` and verified (`--version` → `4.7.stable.official.5b4e0cb0f`). A 4.7 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.7 executable for all verification. The editor import, main-scene startup, complete GUT suite (477/477, 1556 asserts), focused model/core/delivery/restoration/spawn/echo/scanner/portal/journal suites, the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior, and Windows/Web CLI exports pass under 4.7. Backend suites also pass: `server/npm test` → 24/24; `mock-portal/npm test` → 4/4. Runtime tasks (including on-screen/real-time clock observation, restoration mouse/controller/touch flow, journal/case readability, the full Found → Unlock end-to-end observation, and the Web runtime in a browser) still require their own acceptance checks before `[x]`.
 
 ---
 

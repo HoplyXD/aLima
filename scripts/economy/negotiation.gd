@@ -111,7 +111,8 @@ const _FLATTERY_WORDS := [
 ## move id -> {label (player button), say (player utterance)}.
 const BANTER_MOVES := {
 	"history": {"label": "Talk up its history", "say": "This piece has real history behind it."},
-	"honest": {"label": "Be honest about flaws", "say": "I'll be straight with you about its condition."},
+	"honest":
+	{"label": "Be honest about flaws", "say": "I'll be straight with you about its condition."},
 	"charm": {"label": "Charm them", "say": "For someone with your eye, it's perfect."},
 	"press": {"label": "Press hard", "say": "Come on — it's worth far more than that."},
 }
@@ -159,7 +160,9 @@ static func open(
 func _raw_ceiling() -> float:
 	var c := float(condition) / 100.0
 	# Condition swings the price around the base value by ±condition_weight.
-	var condition_mult := lerpf(1.0 - persona.condition_weight, 1.0 + persona.condition_weight * 0.25, c)
+	var condition_mult := lerpf(
+		1.0 - persona.condition_weight, 1.0 + persona.condition_weight * 0.25, c
+	)
 	var category_mult := 1.0 + persona.category_bonus if persona.likes_category(category) else 1.0
 	var honesty_mult := 1.0 if honest else 0.75
 	return float(base_value) * condition_mult * category_mult * honesty_mult
@@ -208,7 +211,11 @@ func banter(move_id: String) -> Dictionary:
 	current_offer = clampi(maxi(current_offer, warmed), 1, maxi(1, ceiling))
 	var phase := "banter_warm" if delta >= 0.0 else "banter_cool"
 	history.append(
-		{"role": "buyer", "text": persona.line(phase, current_offer, used_moves.size()), "offer": current_offer}
+		{
+			"role": "buyer",
+			"text": persona.line(phase, current_offer, used_moves.size()),
+			"offer": current_offer
+		}
 	)
 	return _result()
 
@@ -241,9 +248,7 @@ func chat(text: String) -> Dictionary:
 	current_offer = clampi(maxi(current_offer, warmed), 1, maxi(1, ceiling))
 	# A varied, topic-aware offline reply (the LLM upgrades it online) so the buyer
 	# doesn't just repeat two canned lines.
-	history.append(
-		{"role": "buyer", "text": BanterBot.reply(text), "offer": current_offer}
-	)
+	history.append({"role": "buyer", "text": BanterBot.reply(text), "offer": current_offer})
 	return _result()
 
 
@@ -431,7 +436,9 @@ func _result() -> Dictionary:
 
 
 func _say_buyer(phase: String, offer: int) -> void:
-	history.append({"role": "buyer", "text": persona.line(phase, offer, round_index), "offer": offer})
+	history.append(
+		{"role": "buyer", "text": persona.line(phase, offer, round_index), "offer": offer}
+	)
 
 
 func _say_player(price: int) -> void:

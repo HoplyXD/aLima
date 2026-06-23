@@ -32,8 +32,14 @@ func after_each() -> void:
 
 func _grant_tools() -> void:
 	var tools := [
-		"soft_brush", "damp_cloth", "stain_lifter", "photo_kit", "polishing_cloth",
-		"consolidant", "solvent", "archival_tape"
+		"soft_brush",
+		"damp_cloth",
+		"stain_lifter",
+		"photo_kit",
+		"polishing_cloth",
+		"consolidant",
+		"solvent",
+		"archival_tape"
 	]
 	for t in tools:
 		GameState.save_state.loop.tool_items.append(t)
@@ -68,7 +74,9 @@ func test_quest_templates_load_with_decals() -> void:
 
 
 func test_new_tools_and_join_tool_exist() -> void:
-	for tool_id in ["soft_brush", "damp_cloth", "stain_lifter", "photo_kit", "solvent", "archival_tape"]:
+	for tool_id in [
+		"soft_brush", "damp_cloth", "stain_lifter", "photo_kit", "solvent", "archival_tape"
+	]:
 		assert_not_null(_repo.get_tool(tool_id), "missing tool %s" % tool_id)
 	var half := _repo.get_template(HALF)
 	assert_true(half.requires_join)

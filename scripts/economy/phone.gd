@@ -1,8 +1,8 @@
 class_name Phone
 extends CanvasLayer
 ## The shop phone: an authored phone-frame scene (phone.tscn) with a home screen
-## of apps. For now the only app is the Marketplace (buy tools; selling/banter is
-## the deferred Phase-14 negotiation).
+## of apps. Apps are the Local PH Tools Shop (buy tools), the Marketplace (sell /
+## haggle / banter), and the offline Flashlight.
 ##
 ## Presentation only: the structural nodes live in phone.tscn; this script handles
 ## navigation (home <-> app), renders the dynamic app content, and delegates every
@@ -21,6 +21,18 @@ var _buyer_id: String = ""
 var _negotiation: Negotiation = null
 var _said_label: Label = null  ## The buyer's spoken-line label, upgraded with live banter.
 var _ai_label: Label = null  ## "AI: live / offline" indicator in the haggle view.
+
+# Test seam: injected fake NegotiationClient; null means use the real NegotiationClient autoload.
+var _banter_client: Object = null
+
+
+func _get_banter_client() -> Object:
+	return _banter_client if _banter_client != null else NegotiationClient
+
+
+func set_banter_client(c: Object) -> void:
+	_banter_client = c
+
 
 @onready var _dim: ColorRect = $Dim
 @onready var _home_button: Button = %HomeButton
@@ -110,7 +122,8 @@ func show_home() -> void:
 	_home_button.visible = false
 
 
-## Opens an app by id: "tools_shop" (buy tools) or "marketplace" (sell artifacts).
+## Opens an app by id. Marketplace is online and may be blocked during a brownout;
+## Flashlight is offline and works even when the internet is down.
 func open_app(app_id: String) -> void:
 	_current_app = app_id
 	_home.visible = false
@@ -122,8 +135,14 @@ func open_app(app_id: String) -> void:
 			_render_tools_shop()
 		"marketplace":
 			_app_title.text = "Marketplace"
-			_market_view = "home"
-			_render_marketplace()
+			if EventDirector == null or EventDirector.is_marketplace_available():
+				_market_view = "home"
+				_render_marketplace()
+			else:
+				_render_marketplace_offline()
+		"flashlight":
+			_app_title.text = "Flashlight"
+			_render_flashlight()
 		_:
 			_app_title.text = "Unknown app"
 
@@ -144,8 +163,8 @@ func _build_app_grid() -> void:
 		child.queue_free()
 	_app_grid.add_child(_make_app_icon("Local PH\nTools Shop", "tools_shop", false))
 	_app_grid.add_child(_make_app_icon("Marketplace", "marketplace", false))
-	# Room for more apps later; shown disabled so the home screen reads as a phone.
-	_app_grid.add_child(_make_app_icon("Soon", "", true))
+	# The flashlight is an offline app that works even during a brownout.
+	_app_grid.add_child(_make_app_icon("Flashlight", "flashlight", false))
 
 
 func _make_app_icon(label: String, app_id: String, disabled: bool) -> Button:
@@ -200,6 +219,25 @@ func _render_marketplace() -> void:
 			_render_market_home()
 
 
+func _render_marketplace_offline() -> void:
+	for child in _app_content.get_children():
+		child.queue_free()
+
+	var notice := Label.new()
+	notice.text = "No connection — the brownout knocked out the internet."
+	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	notice.add_theme_font_size_override("font_size", 14)
+	notice.add_theme_color_override("font_color", Color(0.9, 0.6, 0.5))
+	_app_content.add_child(notice)
+
+	var hint := Label.new()
+	hint.text = "The Marketplace will come back once power returns."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.62, 0.68))
+	_app_content.add_child(hint)
+
+
 func _render_market_home() -> void:
 	var money := Label.new()
 	money.text = "Money: ₱%d" % GameState.save_state.loop.money
@@ -219,6 +257,44 @@ func _render_market_home() -> void:
 			_app_content.add_child(_make_sell_row(inst))
 
 
+# --- Flashlight app ----------------------------------------------------------
+
+
+func _render_flashlight() -> void:
+	for child in _app_content.get_children():
+		child.queue_free()
+
+	var status := Label.new()
+	status.text = "Flashlight: %s" % ("ON" if GameState.save_state.loop.flashlight_on else "OFF")
+	status.add_theme_font_size_override("font_size", 18)
+	status.add_theme_color_override(
+		"font_color",
+		Color(0.95, 0.9, 0.6) if GameState.save_state.loop.flashlight_on else Color(0.65, 0.65, 0.7)
+	)
+	_app_content.add_child(status)
+
+	var hint := Label.new()
+	hint.text = "Toggle the light to remove the brownout gloom penalty while restoring."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.62, 0.68))
+	_app_content.add_child(hint)
+
+	var toggle := Button.new()
+	toggle.text = "Turn %s" % ("OFF" if GameState.save_state.loop.flashlight_on else "ON")
+	toggle.focus_mode = Control.FOCUS_ALL
+	toggle.pressed.connect(toggle_flashlight)
+	_app_content.add_child(toggle)
+
+
+## Toggles the phone flashlight on/off. The flashlight is an offline app and stays
+## on after the phone is closed, so it can mitigate the brownout restoration penalty.
+func toggle_flashlight() -> void:
+	GameState.save_state.loop.flashlight_on = not GameState.save_state.loop.flashlight_on
+	if _current_app == "flashlight":
+		_render_flashlight()
+
+
 # --- Selling: list -> pick a buyer -> haggle ---------------------------------
 
 
@@ -232,7 +308,9 @@ func _make_sell_row(inst: ObjectInstance) -> Control:
 	name_label.add_theme_font_size_override("font_size", 15)
 	row.add_child(name_label)
 	var detail := Label.new()
-	detail.text = "≈₱%d · %d%%" % [MarketplaceService.assessed_value(inst.uid), int(round(inst.condition))]
+	detail.text = (
+		"≈₱%d · %d%%" % [MarketplaceService.assessed_value(inst.uid), int(round(inst.condition))]
+	)
 	detail.add_theme_font_size_override("font_size", 12)
 	detail.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
 	row.add_child(detail)
@@ -345,6 +423,9 @@ func begin_haggle(persona_id: String) -> void:
 		_back_to_market_home()
 		return
 	_market_view = "haggle"
+	# Probe the backend once per haggle entry; skip in headless so tests never make real HTTP calls.
+	if _banter_client == null and DisplayServer.get_name() != "headless":
+		await NegotiationClient.probe_status()
 	_render_marketplace()
 
 
@@ -378,7 +459,7 @@ func _render_haggle() -> void:
 	_app_content.add_child(_ai_label)
 
 	_said_label = Label.new()
-	_said_label.text = "\"%s\"" % _negotiation.history.back()["text"]
+	_said_label.text = '"%s"' % _negotiation.history.back()["text"]
 	_said_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_said_label.add_theme_font_size_override("font_size", 14)
 	_said_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.7))
@@ -387,7 +468,9 @@ func _render_haggle() -> void:
 	if _negotiation.is_closed():
 		var outcome := Label.new()
 		if _negotiation.walked:
-			outcome.text = "%s walked away. No sale." % (persona.display_name if persona != null else "")
+			outcome.text = (
+				"%s walked away. No sale." % (persona.display_name if persona != null else "")
+			)
 		else:
 			outcome.text = "Sold for ₱%d!" % _negotiation.final_price
 		outcome.add_theme_font_size_override("font_size", 15)
@@ -477,7 +560,7 @@ func haggle_banter(move_id: String) -> void:
 		and _market_view == "haggle"
 		and is_instance_valid(_said_label)
 	):
-		_said_label.text = "\"%s\"" % line
+		_said_label.text = '"%s"' % line
 
 
 ## Player sends ONE free-text message that does everything:
@@ -537,8 +620,9 @@ func _show_typing() -> void:
 ## offline bot + deterministic numbers otherwise. Returns {reply, offended, agreed,
 ## counter}. Coroutine — await it.
 func _buyer_response(message: String, price: int) -> Dictionary:
+	var persona := DataRepository.singleton().get_buyer(_buyer_id)
+	# Tier 1: on-device (unchanged behavior)
 	if LocalAI.is_ready() and _negotiation != null:
-		var persona := DataRepository.singleton().get_buyer(_buyer_id)
 		var llm := await LocalAI.chat(
 			persona,
 			_negotiation.current_offer,
@@ -555,7 +639,21 @@ func _buyer_response(message: String, price: int) -> Dictionary:
 				"agreed": price > 0 and bool(llm.get("accept", false)),
 				"counter": int(llm.get("counter", 0)),
 			}
-	# Offline: the deterministic engine decides the number, the offline bot supplies a line.
+	# Tier 2 (NEW): backend live banter; the NUMBER stays deterministic
+	var client := _get_banter_client()
+	if client != null and client.is_live() and _negotiation != null and persona != null:
+		var b: Dictionary = await client.fetch_banter(
+			persona, _negotiation.current_offer, price, message, _negotiation.history
+		)
+		if b.get("ok", false):
+			var d := _negotiation.propose_price(price) if price > 0 else {}
+			return {
+				"reply": str(b.get("reply", "")),
+				"offended": bool(b.get("offended", false)),
+				"agreed": price > 0 and bool(d.get("agreed", false)),
+				"counter": int(d.get("counter", 0)),
+			}
+	# Tier 3: offline (unchanged)
 	var decision := {"agreed": false, "counter": 0}
 	if price > 0 and _negotiation != null:
 		decision = _negotiation.propose_price(price)
@@ -571,11 +669,16 @@ func _buyer_response(message: String, price: int) -> Dictionary:
 func _refresh_ai_label() -> void:
 	if not is_instance_valid(_ai_label):
 		return
+	var client := _get_banter_client()
 	if LocalAI.is_ready():
 		_ai_label.text = "AI banter: on-device"
 		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.5))
+	elif client != null and client.is_live():
+		var m := str(client.model_name())
+		_ai_label.text = "AI banter: live" + ((" (%s)" % m) if not m.is_empty() else "")
+		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.75, 0.9))
 	else:
-		_ai_label.text = "AI banter: offline — add a model in models/ for AI replies"
+		_ai_label.text = "AI banter: offline"
 		_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
 
 

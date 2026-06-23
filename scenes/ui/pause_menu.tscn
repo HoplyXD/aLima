@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bp5sxjtl6tvh1"]
 
 [ext_resource type="Script" uid="uid://ctsaxlfrbicto" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
-[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="2_8uki6"]
+[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/Pause_menu.tres" id="2_8uki6"]
 [ext_resource type="Theme" uid="uid://ctwdpy3fslv3e" path="res://Themes/title_screen.tres" id="3_0bnpd"]
 [ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="3_4inpj"]
 [ext_resource type="Texture2D" uid="uid://dvon5n1qg4s5o" path="res://assets/UI assets/game/gui/namebox.png" id="4_4inpj"]

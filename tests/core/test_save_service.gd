@@ -30,6 +30,17 @@ func test_save_and_load_round_trip() -> void:
 	assert_eq(GameState.save_state.loop.money, 500)
 
 
+func test_flashlight_on_round_trips_through_save() -> void:
+	GameState.save_state.loop.flashlight_on = true
+	var save_result := SaveService.save_game()
+	assert_true(save_result.ok, "Save should succeed: %s" % save_result.get("error", ""))
+
+	GameState.initialize("other-player")
+	var load_result := SaveService.load_game()
+	assert_true(load_result.ok, "Load should succeed: %s" % load_result.get("error", ""))
+	assert_true(GameState.save_state.loop.flashlight_on, "flashlight_on survives save/load")
+
+
 func test_rejects_malformed_save_file() -> void:
 	var file := FileAccess.open(SaveService.save_path, FileAccess.WRITE)
 	file.store_string("{not valid json")

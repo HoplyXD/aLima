@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://buhpiyrxqhra0"
 path.s3tc="res://.godot/imported/Grime.png-837bda8592255505f150e5b77ca1aa8b.s3tc.ctex"
+path.etc2="res://.godot/imported/Grime.png-837bda8592255505f150e5b77ca1aa8b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/artifact_conditions/Grime.png"
-dest_files=["res://.godot/imported/Grime.png-837bda8592255505f150e5b77ca1aa8b.s3tc.ctex"]
+dest_files=["res://.godot/imported/Grime.png-837bda8592255505f150e5b77ca1aa8b.s3tc.ctex", "res://.godot/imported/Grime.png-837bda8592255505f150e5b77ca1aa8b.etc2.ctex"]
 
 [params]
 

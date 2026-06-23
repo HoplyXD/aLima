@@ -6,6 +6,7 @@ extends GutTest
 ## shipping one.)
 
 const VIEW_SCENE := preload("res://scenes/restoration/restoration_view.tscn")
+const RUST_TEXTURE := preload("res://assets/artifact_conditions/Rust.png")
 const TEST_SAVE := "user://test_authored_view_save.json"
 const TEST_TEMP := "user://test_authored_view_save.tmp"
 
@@ -70,7 +71,7 @@ func _attach_rust_decal(obj: RestorationObject3D) -> void:
 			child.free()
 	var decal := ArtifactConditionDecal.new()
 	decal.name = "ConditionRust"
-	decal.texture = load("res://assets/artifact_conditions/Rust.png")
+	decal.texture = RUST_TEXTURE
 	decal.position = Vector3(0.0, 0.0, 0.58)
 	obj.add_child(decal)
 	obj.register_authored_conditions(DataRepository.singleton())
@@ -84,7 +85,7 @@ func test_condition_slug_derives_type_from_albedo_filename() -> void:
 	add_child_autofree(decal)
 	decal.texture = load("res://assets/artifact_conditions/Water Stain.png")
 	assert_eq(decal.condition_slug(), "water_stain")
-	decal.texture = load("res://assets/artifact_conditions/Rust.png")
+	decal.texture = RUST_TEXTURE
 	assert_eq(decal.condition_slug(), "rust")
 
 
@@ -174,7 +175,7 @@ func test_randomized_decal_count_limits_active_conditions() -> void:
 	for i in range(4):
 		var decal := ArtifactConditionDecal.new()
 		decal.name = "Condition%d" % i
-		decal.texture = load("res://assets/artifact_conditions/Rust.png")
+		decal.texture = RUST_TEXTURE
 		obj.add_child(decal)
 	obj.randomized_decal_count = 2
 
@@ -199,9 +200,7 @@ func test_repeated_correct_strokes_clean_and_sparkle() -> void:
 	assert_true(cleaned, "repeated correct-tool strokes fully clean it")
 	assert_true(decal.is_cleaned())
 	assert_eq(obj.uncleaned_authored_ids().size(), 0)
-	assert_true(
-		(decal.get_node("CleanParticles") as GPUParticles3D).emitting, "grime puff played"
-	)
+	assert_true((decal.get_node("CleanParticles") as GPUParticles3D).emitting, "grime puff played")
 	assert_true(
 		(decal.get_node("SparkleParticles") as GPUParticles3D).emitting, "success sparkle played"
 	)

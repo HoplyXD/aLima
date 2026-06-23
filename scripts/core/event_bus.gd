@@ -42,6 +42,23 @@ signal sale_completed(instance_id: String, buyer_id: String, price: int)
 signal scanner_response_received(instance_id: String, status: String)
 signal scanner_verdict_committed(instance_id: String, verdict: String)
 
+# --- Mini-event events (Phase 18) ---
+## Emitted when a mini-event starts. UI/dialogue should surface title, body,
+## changed rules, consequences, and the accessibility caption.
+signal event_triggered(
+	event_id: String,
+	display_name: String,
+	changed_rules: String,
+	consequences: String,
+	accessibility_caption: String
+)
+## Emitted when a timed mini-event expires.
+signal event_expired(event_id: String, display_name: String)
+## Emitted when a mini-event resolves its bounded outcome (e.g. request fulfilled,
+## suspicious antique judged, tool broke). Persisted to LoopState for the evening
+## summary; the evening summary UI itself is a future Phase 14 dependency.
+signal event_outcome_resolved(event_id: String, outcome_type: String, outcome_data: Dictionary)
+
 # --- Discovery events ---
 signal carrier_activated(instance_id: String, fragment_id: String)
 signal echo_proximity_changed(instance_id: String, proximity: float, band: String)

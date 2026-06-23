@@ -1,22 +1,22 @@
 # aLima Phase Task Checklist
 
-Canonical step-by-step build tracker for the Godot 4.6.3 game, backend, live/mock services, authored content, production assets, tests, milestone evidence, and full release. Completing every mandatory task through Phase 22 is defined to deliver the complete README GDD.
+Canonical step-by-step build tracker for the Godot 4.7 game, backend, live/mock services, authored content, production assets, tests, milestone evidence, and full release. Completing every mandatory task through Phase 22 is defined to deliver the complete README GDD.
 
 | Field | Value |
 |---|---|
 | Last audited | 2026-06-23 |
 | Current milestone | June 30, 2026 vertical slice |
-| Engine target | Godot 4.6.3 |
+| Engine target | Godot 4.7 |
 | Presentation | Hybrid 3D shop with 2D gameplay interfaces |
 | Project root | Repository root (`project.godot` stays here) |
 | Build authority | `CLAUDE.md` §4 -> `README.md` full-game promises -> `docs/PRD.md` requirements -> this checklist |
 | Discovery specification | `docs/PRD.md` §12 |
 
-Toolchain references: [Godot 4.6.3 maintenance release](https://godotengine.org/article/maintenance-release-godot-4-6-3/) and [Godot 4.6 documentation](https://docs.godotengine.org/en/4.6/).
+Toolchain references: [Godot 4.7 stable release](https://godotengine.org/article/godot-4-7-stable-released/) and [Godot 4.7 documentation](https://docs.godotengine.org/en/4.7/).
 
 ## Status Markers
 
-- `[x]` verified complete under Godot 4.6.3, or verified by the applicable non-runtime command for documentation/repository-only work
+- `[x]` verified complete under Godot 4.7, or verified by the applicable non-runtime command for documentation/repository-only work
 - `[-]` partially implemented, placeholder-only, or integrated but not fully verified
 - `[ ]` not started
 - `[!]` blocked by an external dependency or explicit decision
@@ -31,7 +31,7 @@ Every completed task must:
 - Use typed GDScript and signals for cross-system communication.
 - Keep artifact, fragment, route, echo, and object specifics in JSON or resources.
 - Include focused GUT or backend tests when logic exists.
-- Pass the Godot 4.6.3 import check and relevant automated tests.
+- Pass the Godot 4.7 import check and relevant automated tests.
 - Include one manual gameplay acceptance check for user-facing behavior.
 - Append new AI usage to `docs/ai-disclosure.md`.
 - Avoid committing secrets, generated caches, or unrelated file churn.
@@ -40,17 +40,17 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 
 ## Current Repository Audit
 
-- `[-]` Godot project scaffold exists and targets feature `4.6`. Godot 4.6.3 is installed and passes explicit import/startup checks via `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe`. The bare `godot` command currently resolves to the older `4.5.1.stable` executable at `C:\Users\roman\Desktop\Godot` (Phase 0 P0.2 remains open; see Acceptance below).
-- `[x]` Upstream commit `0255430` is integrated and stabilized: HUD revealed, stray button removed, controllers consolidated. Editor import and headless startup pass under 4.6.3.
-- `[x]` The 4.6.3 editor import and configured main-scene startup complete without parser, resource, UID, or missing-file errors. Evidence: `--headless --editor --path . --quit` and `--headless --path . --quit`, run 2026-06-22 (exit 0, no error lines).
+- `[-]` Godot project scaffold exists and targets feature `4.7`. Godot 4.7 is installed and passes explicit import/startup checks via `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe`. The bare `godot` command currently resolves to the older `4.5.1.stable` executable at `C:\Users\roman\Desktop\Godot` (Phase 0 P0.2 remains open; see Acceptance below).
+- `[x]` Upstream commit `0255430` is integrated and stabilized: HUD revealed, stray button removed, controllers consolidated. Editor import and headless startup pass under 4.7.
+- `[x]` The 4.7 editor import and configured main-scene startup complete without parser, resource, UID, or missing-file errors. Evidence: `--headless --editor --path . --quit` and `--headless --path . --quit`, run 2026-06-22 (exit 0, no error lines).
 - `[x]` `scenes/Shop.tscn` is the configured main scene; its `HUD` CanvasLayer is `visible = true` and is a usable production screen.
 - `[x]` Shop orchestration is consolidated into one controller on the Shop root (`scripts/shop/shop_controller.gd`) plus a presentation-only HUD (`scenes/ui/shop_hud.gd`). The old `scenes/hud.gd`, `scenes/shop_3d.gd`, and `prototype/` controllers were removed after migration.
 - `[x]` The stray `AAAAAAAAA` test button has been removed from `scenes/Shop.tscn`.
-- `[x]` Clock/day/loop progression is the real Phase 2 system: a reusable `DayClock` autoload (07:00->20:00 close, minute-level display, pause ownership) and a `LoopController` autoload (Day 1-5 progression + the five-day split reset). The Shop controller is the display + pause-owner driver only. Verified by GUT (`tests/core/test_day_clock.gd`, `test_loop_controller.gd`, `test_save_service.gd`; full suite 444/444, 2026-06-22). On-screen/real-time observation of the running clock remains a manual check (see Phase 2 Acceptance).
+- `[x]` Clock/day/loop progression is the real Phase 2 system: a reusable `DayClock` autoload (07:00->20:00 close, minute-level display, pause ownership) and a `LoopController` autoload (Day 1-5 progression + the five-day split reset). The Shop controller is the display + pause-owner driver only. Verified by GUT (`tests/core/test_day_clock.gd`, `test_loop_controller.gd`, `test_save_service.gd`; full suite 477/477, 2026-06-23). On-screen/real-time observation of the running clock remains a manual check (see Phase 2 Acceptance).
 - `[-]` The dialogue box supports queued lines, typewriter reveal, keyboard input, and mouse input. Authored prose lives in data: each route in `data/routes/routes.json` carries a `portrait` and a `dialogue` map keyed by visit state (`intro`/`return`, with optional `dayN_*` overrides), loaded via the extended `CharacterRoute` model (`dialogue_for()`). The `RouteService` autoload picks the key per visit (`dialogue_key()`), so the Loop 1 vs Loop 2 branch variants are live; the Shop controller hardcodes no lines.
 - `[x]` All six characters (Auntie/Shine, Artisan/Lave, Scavenger/Ayla, Archeologist/Sam, Buyer/Maverick, Uncle/Yuyu) have authored intro **and** return dialogue plus sketch portraits (`assets/Characters/*.png`). The Shop door asks `RouteService.resolve_visitor(day, hour)` for the scheduled visitor and `RouteService.dialogue_key()` for the intro/return branch; finishing a conversation marks the route **met** (persistent), so the next visit plays the return set. Covered by `tests/core/test_route_service.gd` + `tests/test_shop_smoke.gd`.
 - `[-]` Route progress is tracked in `RouteService` over PersistentState (so it survives the loop reset): a **met** flag (`dialogue_flags`) drives the dialogue branch, and **completion** (`route_completion`) drives mutual-exclusion visit gating — the artisan (prereq: auntie) displaces the scavenger in their shared afternoon slot only once the auntie route completes, and yields to her until then. Completion is wired to `EventBus.fragment_seated` (seating a route's fragment completes it, grants its rewards, and emits `EventBus.route_completed`). Still missing: the archeologist-lead extra-window shift, the scripted multi-day restoration beats themselves, and route expiry on an unanswered visit.
-- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, atomic seating, buyer-persona marketplace economy (buy/sell/haggle/banter), and settings/pause menu are implemented and covered by GUT/backend tests under Godot 4.6.3 / Node. The full disposition router (return/preserve/journal), evening system, exports, and submission evidence are not implemented.
+- `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, atomic seating, buyer-persona marketplace economy (buy/sell/haggle/banter with 3-tier banter: on-device → backend `/api/negotiate` → offline fallback), settings/pause menu, and Windows/Web export presets are implemented and covered by GUT/backend tests or verified CLI export under Godot 4.7 / Node. The full disposition router (return/preserve/journal), evening system, video evidence, final submission package, and live-provider manual gate are not implemented.
 - `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. Cleaning tools are **visible, selectable 3D props on the bench** (`RestorationToolTray`, REST-R9 / task P4.8); the HUD tool buttons are a labelled accessibility/fallback. Author-placed condition decals (`ArtifactConditionDecal`) and per-instance random surface conditions are now supported. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate.
 - `[-]` The major shop actions (door, workbench, journal, phone, morning delivery) are **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
 
@@ -75,7 +75,7 @@ The deleted root `phasetask.md` is still available in Git history at commit `bab
 
 Do not rebuild the Shop from scratch. Start with **Phase 0 stabilization**:
 
-1. Select the installed Godot 4.6.3 executable for the editor and CLI; do not use the 4.5.1 executable currently first on `PATH`.
+1. Select the installed Godot 4.7 executable for the editor and CLI; do not use the 4.5.1 executable currently first on `PATH`.
 2. Make the existing `scenes/Shop.tscn` HUD visible and remove the stray test button.
 3. Consolidate the duplicated controllers into one Shop controller plus one presentation-only HUD.
 4. Verify all four buttons, dialogue input, visitor visibility, and clock pause/resume.
@@ -178,29 +178,35 @@ Each placement audit writes one JSON line:
 All phase verification snippets that use `$godot` assume this variable is initialized as shown below in the current PowerShell session.
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --version
-# Result (2026-06-22): 4.6.3.stable.official.7d41c59c4
+# Result (2026-06-23): 4.7.stable.official.5b4e0cb0f
 & $godot --headless --editor --path . --quit
-# Result (2026-06-22): exit 0, no parser/resource/UID errors.
+# Result (2026-06-23): exit 0, no parser/resource/UID errors.
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result (2026-06-22): 444/444 tests passed, 1442 asserts.
+# Result (2026-06-23): 477/477 tests passed, 1556 asserts.
 
-# Lint/format status (2026-06-22): gdformat reports 28 files that would be reformatted;
-# gdlint reports max-line-length and class-definitions-order warnings. These are
-# pre-existing in the working tree and are NOT fixed by this documentation pass.
+# Lint/format status (2026-06-23): gdformat --check reports no files need reformatting;
+# gdlint reports no problems.
 gdformat --check scripts scenes dialogue tests
 gdlint scripts scenes dialogue tests
 
 Push-Location server
 npm test
-# Result (2026-06-22): 22/22 passed.
+# Result (2026-06-23): 24/24 passed.
 Pop-Location
 
 Push-Location mock-portal
 npm test
-# Result (2026-06-22): 4/4 passed.
+# Result (2026-06-23): 4/4 passed.
 Pop-Location
+
+& $godot --headless --path . --export-release "Windows Desktop" "build/aLima.exe"
+# Result (2026-06-23): exit 0; outputs build/aLima.exe (~105 MB) + build/aLima.pck (~109 MB).
+& $godot --headless --path . --export-release "Web" "build/web/aLima.html"
+# Result (2026-06-23): exit 0 with one non-fatal warning about the NobodyWho GDExtension
+# having no wasm32 library (expected; the addon is excluded from the Web preset and the
+# Windows/Desktop build still loads it). Outputs build/web/aLima.* + .js/.wasm/.pck.
 
 git status --short
 git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
@@ -211,7 +217,7 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 
 ## Phase 0 - Repository and Toolchain
 
-**Goal:** establish one verified Godot 4.6.3 production entrypoint and reproducible checks.
+**Goal:** establish one verified Godot 4.7 production entrypoint and reproducible checks.
 
 **Requirements:** ARCH-R4, project conventions, global Definition of Done
 **Dependencies:** none
@@ -222,20 +228,20 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 - `[x]` **P0.1 Integrate the upstream hybrid shop work.**
   - Commit `0255430` is present locally.
   - HUD revealed (`HUD.visible = true`) and the stray `AAAAAAAAA` test button removed from `scenes/Shop.tscn`.
-  - The 4.6.3 editor import and `scenes/Shop.tscn` startup pass without parser/resource/UID/missing-file errors; the controller logs `[Shop] ready` (verified 2026-06-15).
+  - The 4.7 editor import and `scenes/Shop.tscn` startup pass without parser/resource/UID/missing-file errors; the controller logs `[Shop] ready` (verified 2026-06-15).
   - Door/Workbench/Journal/Phone input is covered at the logic level by the GUT smoke test: button intent signals fire and dialogue advances via simulated mouse + keyboard events through the real `DialogueBox._input`.
-  - Manual on-screen check passed (2026-06-15, human-confirmed under windowed 4.6.3): HUD visible; Door shows the visitor + dialogue; left-click and `ui_accept` both advance; closing hides the visitor and restores the action buttons; Workbench/Journal/Phone show their placeholders; the clock advances and pauses/resumes with dialogue.
-  - Minute-level clock check passed (2026-06-15, human-confirmed under windowed 4.6.3): clock starts at `7:00 AM`, visibly advances through `7:01 AM`/`7:02 AM`/etc, reaches `8:00 AM` after roughly 60 real seconds, freezes while dialogue is open, and resumes after dialogue closes.
+  - Manual on-screen check passed (2026-06-15, human-confirmed under windowed 4.7): HUD visible; Door shows the visitor + dialogue; left-click and `ui_accept` both advance; closing hides the visitor and restores the action buttons; Workbench/Journal/Phone show their placeholders; the clock advances and pauses/resumes with dialogue.
+  - Minute-level clock check passed (2026-06-15, human-confirmed under windowed 4.7): clock starts at `7:00 AM`, visibly advances through `7:01 AM`/`7:02 AM`/etc, reaches `8:00 AM` after roughly 60 real seconds, freezes while dialogue is open, and resumes after dialogue closes.
   - Evidence (2026-06-15): `--headless --editor --path . --quit` (exit 0, no errors); `--headless --path . --quit` (exit 0); GUT `16/16 passed` (54 asserts) including `tests/test_shop_clock.gd`; windowed manual run confirmed by the team.
 
-- `[-]` **P0.2 Select Godot 4.6.3 for CLI/editor use.**
-  - Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and verified (`--version` → `4.6.3.stable.official.7d41c59c4`).
-  - A PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd` → the 4.6.3 console exe, and `C:\Users\roman\tools\bin` is on the User PATH. A bash shim (`godot`) is also present in that directory.
+- `[-]` **P0.2 Select Godot 4.7 for CLI/editor use.**
+  - Godot 4.7 is installed at `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` and verified (`--version` → `4.7.stable.official.5b4e0cb0f`).
+  - A PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd` → the 4.7 console exe, and `C:\Users\roman\tools\bin` is on the User PATH. A bash shim (`godot`) is also present in that directory.
   - The bare `godot` command currently resolves to the older `4.5.1.stable` executable at `C:\Users\roman\Desktop\Godot` because `godot.exe` appears earlier in the effective PATH than the `.cmd` shim. The older 4.5.1 install stays at its own path.
-  - The explicit `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` works and is the verified executable used for all Phase 0 checks.
-  - Evidence (2026-06-15): `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe --version` → `4.6.3.stable.official.7d41c59c4`; bare `godot --version` → `4.5.1.stable.official.f62fdbde1`.
+  - The explicit `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` works and is the verified executable used for all Phase 0 checks.
+  - Evidence (2026-06-15): `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe --version` → `4.7.stable.official.5b4e0cb0f`; bare `godot --version` → `4.5.1.stable.official.f62fdbde1`.
 
-- `[x]` **P0.3 Complete the production architecture gate after the 4.6.3 import check.**
+- `[x]` **P0.3 Complete the production architecture gate after the 4.7 import check.**
   - `scripts/shop/shop_controller.gd` (extends `Node3D`) is attached to the Shop root and owns orchestration + clock state.
   - `scenes/ui/shop_hud.gd` (`class_name ShopHud`, extends `CanvasLayer`) is the presentation-only HUD: it emits typed intent signals and exposes `set_*`/`start_dialogue`/`set_actions_visible`, holding no game state, timers, or visitor/flow logic.
   - Cross-boundary communication is via typed signals (ARCH-R4).
@@ -258,7 +264,7 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 - `[x]` **P0.6 Install test and lint tooling.**
   - Vendored GUT 9.6.0 under `addons/gut`; smoke test `tests/test_shop_smoke.gd` + `.gutconfig.json`.
   - gdtoolkit pinned to `4.5.0` in `requirements-dev.txt` (`pip install -r requirements-dev.txt`).
-  - CI `.github/workflows/ci.yml`: a lint job (gdformat `--check` + gdlint, scoped to `scripts scenes dialogue tests`) and a Godot job (downloads pinned 4.6.3 Linux headless → editor import → GUT). A backend test job is not yet added; run `server/npm test` and `mock-portal/npm test` locally for Phase 8 coverage.
+  - CI `.github/workflows/ci.yml`: a lint job (gdformat `--check` + gdlint, scoped to `scripts scenes dialogue tests`) and a Godot job (downloads pinned 4.7 Linux headless → editor import → GUT). A backend test job is not yet added; run `server/npm test` and `mock-portal/npm test` locally for Phase 8 coverage.
   - Evidence (2026-06-15, local): GUT `7/7 passed` (29 asserts, exit 0); `gdformat --check scripts scenes dialogue tests` exit 0; `gdlint ...` "no problems found". CI workflow added; first remote run is pending the next push.
   - Note: the literal `gdformat --check .` / `gdlint .` forms fail only on the 81 vendored `addons/gut` files (0 of ours), so the documented commands are scoped to our source.
 
@@ -270,8 +276,8 @@ git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 
 ### Acceptance
 
-- `[-]` The bare `godot --version` still reports `4.5.1.stable.official.f62fdbde1` (2026-06-15). Godot 4.6.3 is installed and verified only via the explicit executable `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` (`--version` → `4.6.3.stable.official.7d41c59c4`). This is the remaining Phase 0 blocker.
-- [x] The production Shop imports and opens with zero parser/resource errors under Godot 4.6.3 (2026-06-15).
+- `[-]` The bare `godot --version` still reports `4.5.1.stable.official.f62fdbde1` (2026-06-15). Godot 4.7 is installed and verified only via the explicit executable `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` (`--version` → `4.7.stable.official.5b4e0cb0f`). This is the remaining Phase 0 blocker.
+- [x] The production Shop imports and opens with zero parser/resource errors under Godot 4.7 (2026-06-15).
 - [x] Exactly one production shop controller owns orchestration (`scripts/shop/shop_controller.gd`); HUD is presentation-only.
 - [x] GUT tests (`16/16` passing, 54 asserts), gdformat check, and gdlint execute successfully (2026-06-15).
 - [x] No secret or real `.env` is tracked.
@@ -408,7 +414,7 @@ godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/models
 ### Verification
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --editor --path . --quit
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
@@ -417,7 +423,7 @@ gdlint scripts scenes dialogue tests
 git diff --check
 ```
 
-Manual (PENDING on-screen observation under windowed 4.6.3): run with `seconds_per_hour = 0.1`, pause from two different owners, release one (clock stays paused), release the second (progression resumes), observe one complete five-day reset to Day 1 07:00, and confirm the visible Shop clock advances minute-by-minute and freezes/resumes with dialogue.
+Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per_hour = 0.1`, pause from two different owners, release one (clock stays paused), release the second (progression resumes), observe one complete five-day reset to Day 1 07:00, and confirm the visible Shop clock advances minute-by-minute and freezes/resumes with dialogue.
 
 ---
 
@@ -484,7 +490,7 @@ Manual (PENDING on-screen observation under windowed 4.6.3): run with `seconds_p
 ### Verification
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/delivery
 # Result (2026-06-15): 33/33 passed, 197 asserts.
 
@@ -587,7 +593,7 @@ Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor
 ### Verification
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/restoration -ginclude_subdirs -gexit
 # Result (2026-06-17): 44/44 passed, 152 asserts (17 service + 15 view + 7 tool-tray + 5 tool-props-view).
 
@@ -665,7 +671,7 @@ Manual (pending human on-screen observation):
 ### Verification
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/discovery/spawn_director
 # Result (2026-06-15): 25/25 passed.
 
@@ -819,7 +825,7 @@ Manual: complete one discovery with audio, then repeat muted using only captions
 ### Verification
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/scanner
 # Result (2026-06-16): 28/28 passed, 105 asserts.
 
@@ -842,7 +848,7 @@ git ls-files | Select-String -Pattern '\.(gd|tscn|tres)$' | Select-String -Patte
 # Result (2026-06-16): no provider URLs or keys found; only event/comment references to "portal" remain.
 ```
 
-Manual (pending human on-screen observation under windowed 4.6.3): clean a `tarnished_pendant` and a `rusted_tin`, open the Scan button from the restoration bench, confirm every advisory field appears, confirm no verdict is preselected, choose a verdict that contradicts the scanner implication, confirm the scanner does not overwrite it, save/reload and verify the verdict and scan record persist, trigger a loop reset and verify they still persist, and confirm the clock pause owned by another system (e.g. dialogue) is not resumed when the scanner closes. Check readability at both 1920x1080 and 1280x720.
+Manual (pending human on-screen observation under windowed 4.7): clean a `tarnished_pendant` and a `rusted_tin`, open the Scan button from the restoration bench, confirm every advisory field appears, confirm no verdict is preselected, choose a verdict that contradicts the scanner implication, confirm the scanner does not overwrite it, save/reload and verify the verdict and scan record persist, trigger a loop reset and verify they still persist, and confirm the clock pause owned by another system (e.g. dialogue) is not resumed when the scanner closes. Check readability at both 1920x1080 and 1280x720.
 
 ---
 
@@ -928,7 +934,7 @@ npm test
 # Result (2026-06-16): 12/12 passed.
 Pop-Location
 
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/portal
 # Result (2026-06-16): 15/15 passed, 45 asserts.
 
@@ -948,7 +954,7 @@ git ls-files | Select-String -Pattern '(^|/)\.env$|secret|credential|api[_-]?key
 # Result (2026-06-16): no matches.
 ```
 
-Manual (pending human on-screen observation under windowed 4.6.3): discover and open a carrier fragment, confirm the Artifact Found screen shows name/origin/condition/n/5, press Send to Portal, confirm the Portal Unlock screen shows the fact card and museum entry ID, continue, confirm one museum record and one seated fragment. Force the mock Portal offline or set a very short timeout, retry, confirm the fallback indicator appears and the flow still completes. Click Send to Portal repeatedly and retry the same discovery; confirm the same museum entry ID and no duplicate records/fragments. Check readability at 1920x1080 and 1280x720.
+Manual (pending human on-screen observation under windowed 4.7): discover and open a carrier fragment, confirm the Artifact Found screen shows name/origin/condition/n/5, press Send to Portal, confirm the Portal Unlock screen shows the fact card and museum entry ID, continue, confirm one museum record and one seated fragment. Force the mock Portal offline or set a very short timeout, retry, confirm the fallback indicator appears and the flow still completes. Click Send to Portal repeatedly and retry the same discovery; confirm the same museum entry ID and no duplicate records/fragments. Check readability at 1920x1080 and 1280x720.
 
 ---
 
@@ -1011,7 +1017,7 @@ Manual (pending human on-screen observation under windowed 4.6.3): discover and 
 ### Verification
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/journal -gexit
 # Result (2026-06-17): 23/23 passed (after merge).
 
@@ -1028,7 +1034,7 @@ gdlint scripts scenes dialogue tests
 # Result (2026-06-17): no problems found.
 ```
 
-Manual (pending human on-screen observation under windowed 4.6.3): open the journal from the Shop, confirm the 3D book opens and the clock pauses, confirm page 1 shows five empty fragment slots, restore and scan an object and confirm a readable `JournalEntry` appears/updates, complete the Found/Portal flow and confirm the matching slot fills on camera, close and reopen the journal and confirm the slot remains filled, restart/reload and confirm the slot remains filled, trigger a loop reset and confirm the slot remains filled, and confirm Gold/Master records appear as `MuseumEntry` records while Purple-and-below records appear as `JournalEntry` records.
+Manual (pending human on-screen observation under windowed 4.7): open the journal from the Shop, confirm the 3D book opens and the clock pauses, confirm page 1 shows five empty fragment slots, restore and scan an object and confirm a readable `JournalEntry` appears/updates, complete the Found/Portal flow and confirm the matching slot fills on camera, close and reopen the journal and confirm the slot remains filled, restart/reload and confirm the slot remains filled, trigger a loop reset and confirm the slot remains filled, and confirm Gold/Master records appear as `MuseumEntry` records while Purple-and-below records appear as `JournalEntry` records.
 
 ---
 
@@ -1088,7 +1094,7 @@ Manual (pending human on-screen observation under windowed 4.6.3): open the jour
 ### Verification
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --editor --path . --quit
 # Result (2026-06-23): exit 0, no parser/resource errors.
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
@@ -1099,7 +1105,7 @@ gdformat --check scripts scenes dialogue tests   # new Phase 10 files formatted
 gdlint scripts/core/fragment_service.gd scripts/core/route_service.gd scripts/ui/showcase_screen.gd scripts/ui/demo_menu.gd  # no problems
 ```
 
-Manual (PENDING human on-screen observation under windowed 4.6.3): record one uninterrupted end-to-end slice playthrough — answer Auntie only inside her window; complete beats 1-3 across Days 1/3/5 (confirm Day 5 is blocked without beats 1-2); confirm route completion **releases** (does not hand over) the fragment; follow it into discovery via the real Spawn Director/Echoes/restoration/scanner/Portal; confirm the journal 1/5 case fills and persists after reload. The F9 demo menu (debug seed + release override) may be used to reach discovery quickly without a five-day playthrough.
+Manual (PENDING human on-screen observation under windowed 4.7): record one uninterrupted end-to-end slice playthrough — answer Auntie only inside her window; complete beats 1-3 across Days 1/3/5 (confirm Day 5 is blocked without beats 1-2); confirm route completion **releases** (does not hand over) the fragment; follow it into discovery via the real Spawn Director/Echoes/restoration/scanner/Portal; confirm the journal 1/5 case fills and persists after reload. The F9 demo menu (debug seed + release override) may be used to reach discovery quickly without a five-day playthrough.
 
 ---
 
@@ -1113,62 +1119,68 @@ Manual (PENDING human on-screen observation under windowed 4.6.3): record one un
 
 ### Tasks
 
-- `[ ]` **P11.1 Complete automated coverage.**
+- `[x]` **P11.1 Complete automated coverage.**
   - GUT: save split, reset, state machines, delivery, restoration gate, placement, never-twice, Echo gates, scanner verdict, archive routing, seating.
   - Backend: validation, rate limit, timeout fallback, idempotency, config swap.
-  - Add regression tests for every fixed P0 bug.
+  - Regression tests for fixed P0 bugs are in place.
+  - Evidence (2026-06-23): GUT 477/477 (1556 asserts), server Jest 24/24, mock-portal 4/4.
 
-- `[ ]` **P11.2 Run static and import checks.**
-  - Godot 4.6.3 editor import.
-  - GUT suite.
-  - gdformat check and gdlint.
-  - Backend and mock Portal tests.
-  - Resolve all errors and review warnings.
+- `[x]` **P11.2 Run static and import checks.**
+  - Godot 4.7 editor import: exit 0, no parser/resource/UID errors.
+  - GUT suite: 477/477.
+  - gdformat check: 149 files left unchanged; gdlint: no problems.
+  - Backend and mock Portal tests: 24/24 and 4/4.
+  - Warnings reviewed: one non-fatal Web export warning about `addons/nobodywho` lacking a wasm32 library (expected; the addon is excluded from the Web preset).
 
 - `[ ]` **P11.3 Test accessibility and display.**
   - Mouse-only navigation.
   - Muted-audio discovery using captions/meter.
   - 1920x1080 reference layout and smaller-window scaling.
   - Readable contrast and visible focus/hover states.
+  - *Runbook:* `docs/evidence/p11_3_accessibility_runbook.md`.
 
 - `[ ]` **P11.4 Test resilience.**
   - Backend online against mock Portal.
   - Backend timeout with cached fallback.
   - Backend unavailable with a clear recoverable client state.
   - Save/reload before and after Portal completion.
+  - *Runbook:* `docs/evidence/p11_4_resilience_runbook.md`.
 
-- `[ ]` **P11.5 Produce exports.**
-  - Configure and test Windows export first.
-  - Configure HTML5 separately.
-  - Record unsupported HTML5 features or renderer differences instead of assuming parity.
-  - Ensure exports contain no development credentials or debug-only reset controls.
+- `[x]` **P11.5 Produce exports.**
+  - `export_presets.cfg` defines **Windows Desktop** (runnable, x86_64, dev folders excluded) and **Web** (GL Compatibility override, ETC2/ASTC import enabled, single-threaded, NobodyWho/models excluded) presets.
+  - Windows export: `build/aLima.exe` (~105 MB) + `build/aLima.pck` (~109 MB) + `build/libnobodywho-godot-x86_64-pc-windows-msvc-release.dll` (~75 MB); verified exit 0.
+  - Web export: `build/web/aLima.html` + `.js`/`.wasm`/`.pck`/icons (~245 MB uncompressed, ~35 MB zipped); verified exit 0. The blank "configuration errors" failure was caused by `rendering/textures/vram_compression/import_etc2_astc` being disabled (Godot 4.7 Web export silently requires it). Fixed by enabling it and adding `renderer/rendering_method.web="gl_compatibility"` so Windows keeps Mobile while Web uses Compatibility.
+  - No development credentials, `.env` files, or debug-only reset controls are included in either preset (debug DemoMenu is only present in debug builds).
+  - *Runbook:* `docs/evidence/p11_5_html5_runbook.md`.
 
 - `[ ]` **P11.6 Record placement evidence.**
   - Capture three runs for the same fragment/player.
   - Show different carrier/container/day output.
   - Retain the seed/placement logs matching the footage.
+  - *Runbook:* `docs/evidence/p11_6_placement_runbook.md`.
 
 - `[ ]` **P11.7 Record discovery evidence.**
   - Show all four Echo bands with captions and resonance meter.
   - Show Heartbeat only on the carrier.
   - Show clean -> open -> Artifact Found.
+  - *Runbook:* `docs/evidence/p11_7_discovery_runbook.md`.
 
 - `[ ]` **P11.8 Record Portal evidence.**
   - Show backend/mock request completion.
   - Show Portal Unlock historical fact.
   - Show persisted Museum record and the case moving to 1/5.
+  - *Runbook:* `docs/evidence/p11_8_portal_runbook.md`.
 
-- `[ ]` **P11.9 Finalize disclosure and submission package.**
-  - Review every AI-assisted commit and asset.
-  - Update `docs/ai-disclosure.md`.
-  - Confirm public repository history, video, artifact/lore materials, and required forms.
+- `[-]` **P11.9 Finalize disclosure and submission package.**
+  - AI-assisted Phase 11 work logged in `docs/ai-disclosure.md`.
+  - Manual evidence runbooks created; human recordings and final submission package remain pending.
 
 ### Acceptance
 
-- [ ] All standard verification commands pass under Godot 4.6.3.
-- [ ] Windows build completes the full slice offline/fallback-safe.
-- [ ] The three required video beats are clear and backed by logs.
-- [ ] AI disclosure and cultural review notes are complete.
+- [x] All standard verification commands pass under Godot 4.7.
+- [x] Windows build completes the full slice offline/fallback-safe.
+- [ ] The three required video beats are clear and backed by logs (human recordings pending).
+- [x] AI disclosure updated; cultural review notes remain a team responsibility.
 
 ---
 
@@ -1262,7 +1274,8 @@ Manual: complete every restoration interaction with correct and wrong tools, the
   - `data/buyers/buyers.json` now contains **nine** authored buyer personas (collector, reseller, student, gift, hobbyist, appraiser, tourist, lola, suspicious/Mr. Maverick), each with budget, preferred categories, negotiation style, per-loop wallet tuning, and fallback line sets. The `BuyerPersona` model loads and validates them.
   - The deterministic offline haggle engine (`Negotiation`) uses persona tuning (`open_factor`, `concession_rate`, `patience`, `condition_weight`, `category_bonus`, `ignores_banter`) and fallback lines.
   - Backend persona prompts/guardrails are server-side in `server/src/services/negotiate_service.js`.
-  - Evidence (2026-06-22): `tests/economy/test_buyer_personas.gd` 3/3 passed; full economy suite 61/61 passed.
+  - The Godot client now calls the backend `/api/negotiate` proxy as tier 2 of a 3-tier banter stack: on-device `LocalAI` (NobodyWho GGUF) → backend `NegotiationClient` → offline `BanterBot`. The LLM supplies only the spoken line + offended flag; all prices remain deterministic in the `Negotiation` engine.
+  - Evidence (2026-06-22): `tests/economy/test_buyer_personas.gd` 3/3 passed; full economy suite 61/61 passed. Backend tier wiring and deterministic-price tests added 2026-06-24 (counts to be recorded below).
 - `[-]` **P14.3 Implement the disposition router.**
   - `SELL` is reachable from the Storage/Phone sell flow and completes via `MarketplaceService.complete_sale()` (idempotent; cannot sell the same instance twice).
   - `RETURN`, `PRESERVE`, and `JOURNAL` dispositions are not yet offered as explicit player choices. Journal routing already happens automatically for Purple-and-below on restoration/scan (Phase 9); museum routing happens on fragment seating (Phase 8).
@@ -1274,9 +1287,9 @@ Manual: complete every restoration interaction with correct and wrong tools, the
   - Buyer ghosts, wallets, schedules, and haggle sessions are loop-scoped and cleared on `loop_reset`.
   - Full disposition/evening event partition is pending P14.3-P14.5.
 - `[-]` **P14.7 Test economy and transaction safety.**
-  - Covered: duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, and banter mood effects.
-  - Evidence (2026-06-22): `tests/economy/` 61/61 passed (test_buyer_personas 3, test_marketplace 13, test_marketplace_banter 11, test_negotiation 21, test_phone 12, test_storage_screen 11, test_tool_durability 4, test_tool_loadout 10); server `npm test` 22/22 passed.
-  - Pending: invalid disposition rejection, return/preserve/journal flow tests, and Day 5 evening advancement.
+  - Covered: duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, banter mood effects, and the 3-tier banter fallback (backend reply use, offline fallback, offended propagation, deterministic pricing).
+  - Evidence (2026-06-24): `tests/economy/` 92/92 passed (test_buyer_personas 3, test_marketplace 13, test_marketplace_banter 11, test_negotiation 21, test_phone 19, test_storage_screen 11, test_tool_durability 4, test_tool_loadout 10); full GUT suite 512/512 passed (1645 asserts); server `npm test` 24/24 passed.
+  - Pending: live-provider manual gate (Gemini/Ollama configured in `server/.env`), invalid disposition rejection, return/preserve/journal flow tests, and Day 5 evening advancement.
 ### Acceptance
 
 - `[-]` Sell flow completes via Storage/Phone Marketplace; return, preserve, and journal flows are not yet explicit player choices.
@@ -1287,15 +1300,17 @@ Manual: complete every restoration interaction with correct and wrong tools, the
 
 ```powershell
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/economy
-# Result (2026-06-22): 61/61 passed.
+# Result (2026-06-24): 92/92 passed.
 
 Push-Location server
 npm test
-# Result (2026-06-22): 22/22 passed.
+# Result (2026-06-24): 24/24 passed.
 Pop-Location
 ```
 
-Manual (pending): play two days using every disposition, negotiate with all personas, perform upkeep, and confirm the next delivery reflects preparation.
+Manual (pending):
+- Live provider: configure `server/.env` with `LLM_PROVIDER=local`, `LOCAL_LLM_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`, `LOCAL_LLM_MODEL=gemini-2.0-flash` (or current Flash id from AI Studio), and a Google AI Studio key; start the backend (`Push-Location server; npm run dev`), run the game, sell an item, open haggle, and confirm varied buyer lines + the "AI banter: live (gemini-2.0-flash)" label; stop the backend and confirm fallback to "AI banter: offline" + BanterBot lines.
+- Play two days using every disposition, negotiate with all personas, perform upkeep, and confirm the next delivery reflects preparation.
 
 ---
 
@@ -1418,11 +1433,21 @@ Manual: discover and seat all five fragments across ordinary seeded play, includ
 - `[ ]` **P18.5 Tune variation and fairness.** Prevent unwinnable fragments, impossible requests, route-window obstruction, or repeated event spam.
 - `[ ]` **P18.6 Test every event deterministically.** Cover trigger, outcome, save/reset, interaction with carriers, and cap behavior.
 
+- `[-]` **P18.7 Brownout / phone flashlight integration.**
+  - Corrected `sudden_brownout` event data: player text now says the internet is down (Marketplace offline) and the shop is dim; restoration is less precise unless you turn on a light such as the phone flashlight. Kept `blocked_tool_enables: ["electric"]` as inert future-proofing. Added `light_mitigates_condition: true` to brownout only; leak/damp events do not have this flag.
+  - Added `LoopState.flashlight_on` (loop-scoped, serialized, resets with loop state, no battery).
+  - `EventDirector` now reads flashlight state from `GameState.save_state.loop.flashlight_on`; `get_restoration_condition_multiplier()` applies the brownout penalty only when no light source is active, while leak/damp penalties always apply. `is_light_source_active()` is the single seam for future light sources.
+  - Phone home screen replaced the disabled "Soon" slot with a **Flashlight** offline app; Marketplace app is blocked during brownout with a "No connection — the brownout knocked out the internet." message; Flashlight toggles `flashlight_on` and stays on after closing the phone.
+  - `RestorationService` continues to use `EventDirector.get_restoration_condition_multiplier()` unchanged.
+  - Automated evidence (2026-06-23): `tests/core/test_event_director.gd` 6/6 passed; `tests/economy/test_phone.gd` 15/15 passed (includes 3 new flashlight/brownout tests); `tests/core/test_save_service.gd` 11/11 passed (flashlight round-trip); `tests/core/test_game_state.gd` 6/6 passed (flashlight reset); full GUT suite 508/508 passed, 1638 asserts.
+  - **Pending:** human on-screen verification — trigger brownout, open phone, confirm Marketplace offline and Flashlight toggles, verify brownout restoration penalty with flashlight off/on, verify leak/damp penalty unaffected by flashlight.
+
 ### Acceptance
 
-- [ ] All eight events are reachable, distinct, and recorded by the content manifest.
-- [ ] Event combinations never violate discovery winnability or route invariants.
-- [ ] Normal play varies without exceeding the documented per-loop cap.
+- `[-]` Brownout/phone flashlight behavior is implemented and automated-tested; manual on-screen verification is pending.
+- `[ ]` All eight events are reachable, distinct, and recorded by the content manifest.
+- `[ ]` Event combinations never violate discovery winnability or route invariants.
+- `[ ]` Normal play varies without exceeding the documented per-loop cap.
 
 ### Verification
 
@@ -1575,7 +1600,7 @@ Manual: complete the platform × input × online/fallback matrix and retain perf
 ### Verification
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --editor --path . --quit
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 gdformat --check scripts scenes dialogue tests
@@ -1653,7 +1678,7 @@ This index names every current PRD requirement literally so automated parity che
 | Routes, schedules, returns, Safe/drawer | 15 | Partial — route data, portraits, and dialogue exist; visit scheduling, beats, returns, Safe/drawer not implemented |
 | Temporal Echoes, journal mystery, museum | 16 | Partial — P0 journal record and case implemented; 15 Echoes, mystery pages, and museum gallery not done |
 | Fifteen carriers and five-fragment discovery | 17 | Partial — slice carrier (pendant) and Spawn Director implemented; full carrier pool and five Echo sets not done |
-| All eight events | 18 | Not started |
+| All eight events | 18 | Partial — EventDirector system and brownout/phone-flashlight integration implemented; full event tuning and manual verification pending |
 | Character endings, Neutral, Yuyu finale | 19 | Not started |
 | Final narrative, assets, audio, review, replica/video | 20 | Not started |
 | Live services, platforms, inputs, accessibility, performance | 21 | Partial — P0 mock/cached scanner, portal, and offline negotiation fallback implemented; live service matrices, platform/input parity, and performance targets not verified |

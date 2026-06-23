@@ -79,20 +79,26 @@ func test_select_artifact_sets_restore_target() -> void:
 func test_toggle_tool_loads_and_unloads_bench() -> void:
 	var inst := _tools.grant_tool("solvent")  # auto-equips onto the bench
 	var screen := await _open_screen()
-	assert_true(GameState.save_state.loop.workbench_tools.has(inst.uid), "a granted tool auto-equips")
+	assert_true(
+		GameState.save_state.loop.workbench_tools.has(inst.uid), "a granted tool auto-equips"
+	)
 
 	screen.toggle_tool(inst.uid)
 	assert_false(GameState.save_state.loop.workbench_tools.has(inst.uid), "toggling unloads it")
 
 	screen.toggle_tool(inst.uid)
-	assert_true(GameState.save_state.loop.workbench_tools.has(inst.uid), "toggling again reloads it")
+	assert_true(
+		GameState.save_state.loop.workbench_tools.has(inst.uid), "toggling again reloads it"
+	)
 
 
 func test_auto_equip_never_loads_more_than_five() -> void:
 	for i in range(6):
 		_tools.grant_tool("solvent")
 	await _open_screen()
-	assert_eq(GameState.save_state.loop.workbench_tools.size(), 5, "auto-equip caps the bench at five")
+	assert_eq(
+		GameState.save_state.loop.workbench_tools.size(), 5, "auto-equip caps the bench at five"
+	)
 
 
 func test_open_renders_all_three_tabs_without_error() -> void:
@@ -113,9 +119,7 @@ func test_sell_restored_artifact_credits_money_and_removes_it() -> void:
 	screen.sell_artifact("art_clean")
 
 	assert_eq(GameState.save_state.loop.money, 175, "sale credits the assessed value")
-	assert_false(
-		_inventory_has("art_clean"), "the sold artifact leaves storage"
-	)
+	assert_false(_inventory_has("art_clean"), "the sold artifact leaves storage")
 
 
 func test_sell_ignores_unrestored_artifact() -> void:
@@ -150,7 +154,8 @@ func test_drag_equip_then_unequip_via_drop_handlers() -> void:
 
 	screen._on_unequip_drop({"kind": "storage_tool", "uid": inst.uid, "from_equipped": true})
 	assert_false(
-		GameState.save_state.loop.workbench_tools.has(inst.uid), "dragging out of the bench unequips"
+		GameState.save_state.loop.workbench_tools.has(inst.uid),
+		"dragging out of the bench unequips"
 	)
 
 

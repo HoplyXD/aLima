@@ -39,3 +39,9 @@ func test_debug_seed_override_is_used() -> void:
 	GameState.set_debug_seed_override(99999)
 	GameState.new_run()
 	assert_eq(GameState.run_seed, 99999)
+
+
+func test_flashlight_resets_with_loop_state() -> void:
+	GameState.save_state.loop.flashlight_on = true
+	GameState.reset_loop_state()
+	assert_false(GameState.save_state.loop.flashlight_on, "flashlight_on resets with LoopState")

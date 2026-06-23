@@ -147,7 +147,9 @@ func test_complete_sale_credits_removes_and_records_best() -> void:
 func test_cannot_sell_the_same_item_twice() -> void:
 	_add_item("c1", ModelEnums.ObjState.CLEAN, 250)
 	assert_true(MarketplaceService.complete_sale("c1", 250, "collector").ok)
-	assert_false(MarketplaceService.complete_sale("c1", 250, "collector").ok, "already sold (DISP-R5)")
+	assert_false(
+		MarketplaceService.complete_sale("c1", 250, "collector").ok, "already sold (DISP-R5)"
+	)
 
 
 func test_best_sale_keeps_the_highest_price() -> void:

@@ -47,7 +47,6 @@ const _BLOCKED: Array[String] = [
 	"nsfw",
 ]
 
-
 ## Multi-word phrases for romantic/creepy advances (hitting on the buyer, asking them
 ## out). Matched as substrings — phrased to avoid false positives on item talk like
 ## "I love this piece".

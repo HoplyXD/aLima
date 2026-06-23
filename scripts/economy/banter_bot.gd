@@ -76,18 +76,47 @@ static func _pool_for(lower: String) -> Array:
 	if _has_any(lower, ["hi", "hey", "hello", "kumusta", "magandang", "good morning", "good day"]):
 		return _GREETING
 	if _has_any(
-		lower, ["price", "peso", "pesos", "money", "cheap", "expensive", "lower", "discount", "pay", "cost"]
+		lower,
+		[
+			"price",
+			"peso",
+			"pesos",
+			"money",
+			"cheap",
+			"expensive",
+			"lower",
+			"discount",
+			"pay",
+			"cost"
+		]
 	):
 		return _PRICE
 	if _has_any(
-		lower, ["history", "old", "antique", "story", "heritage", "family", "grandma", "lola", "year", "ago"]
+		lower,
+		[
+			"history",
+			"old",
+			"antique",
+			"story",
+			"heritage",
+			"family",
+			"grandma",
+			"lola",
+			"year",
+			"ago"
+		]
 	):
 		return _STORY
-	if _has_any(lower, ["beautiful", "nice", "lovely", "great", "amazing", "smart", "kind", "good eye"]):
+	if _has_any(
+		lower, ["beautiful", "nice", "lovely", "great", "amazing", "smart", "kind", "good eye"]
+	):
 		return _COMPLIMENT
 	if _has_any(lower, ["please", "thank", "thanks", "sorry", "salamat"]):
 		return _POLITE
-	if lower.ends_with("?") or _has_any(lower, ["how", "what", "why", "would you", "can you", "do you"]):
+	if (
+		lower.ends_with("?")
+		or _has_any(lower, ["how", "what", "why", "would you", "can you", "do you"])
+	):
 		return _QUESTION
 	return _DEFAULT
 

@@ -565,7 +565,9 @@ func clean_authored_condition(condition_id: String) -> bool:
 	# is what makes the author-placed decals real conditions, not just a visual.
 	var total := _object.authored_active_count()
 	var done := total - _object.uncleaned_authored_ids().size()
-	var res := _service.register_authored_clean(_selected_uid, _selected_tool_id, total, done, cleaned)
+	var res := _service.register_authored_clean(
+		_selected_uid, _selected_tool_id, total, done, cleaned
+	)
 	if cleaned:
 		_feedback_label.text = "The %s lifts away — spotless!" % label
 		_caption_label.text = (

@@ -1,0 +1,32 @@
+# aLima gdlint configuration
+#
+# The project uses typed GDScript with signals and data-driven design. Several
+# service/view classes intentionally grow past the default structural thresholds
+# because they orchestrate a complete slice subsystem (restoration, marketplace,
+# shop) rather than being split artificially. Those warnings are pre-existing
+# technical debt and are suppressed here so gdlint stays actionable for real
+# issues (duplicated loads, unused arguments, line length, formatting).
+#
+# Disabled structural rules:
+# - class-definitions-order: the existing codebase groups related members
+#   (constants, signals, onready, public, private) in a readable order that
+#   does not match gdtoolkit's strict template.
+# - max-public-methods: service classes like RestorationService and
+#   RestorationObject3D expose many small, focused public helpers by design.
+# - max-file-lines: RestorationView.gd exceeds 1000 lines because it is the
+#   focused 3D bench controller; splitting it now would be a risky refactor.
+# - max-returns: clean_decal() has multiple early-exit guards.
+
+disable:
+  - class-definitions-order
+  - max-public-methods
+  - max-file-lines
+  - max-returns
+
+max-line-length: 100
+max-file-lines: 1000
+max-public-methods: 20
+max-returns: 6
+
+excluded_directories: !!set
+  .git: null

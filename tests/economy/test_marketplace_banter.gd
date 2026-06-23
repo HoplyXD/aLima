@@ -1,7 +1,6 @@
 extends GutTest
 ## Free-text banter moderation, buyer ghosting, and Mr. Maverick's always-present rule.
 
-
 var _repo: DataRepository
 
 
@@ -24,8 +23,12 @@ func _negotiation() -> Negotiation:
 func test_moderation_flags_offensive_but_not_innocent_substrings() -> void:
 	assert_true(ContentModeration.is_inappropriate("that is shit"), "profanity is flagged")
 	assert_true(ContentModeration.is_inappropriate("Fuck off"), "case-insensitive")
-	assert_true(ContentModeration.is_inappropriate("I love you date me pls"), "advances are flagged")
-	assert_true(ContentModeration.is_inappropriate("will you go out with me?"), "asking out is flagged")
+	assert_true(
+		ContentModeration.is_inappropriate("I love you date me pls"), "advances are flagged"
+	)
+	assert_true(
+		ContentModeration.is_inappropriate("will you go out with me?"), "asking out is flagged"
+	)
 	assert_false(ContentModeration.is_inappropriate("a fine class of ceramics"), "'class' is fine")
 	assert_false(ContentModeration.is_inappropriate("I love this piece"), "item talk is fine")
 	assert_false(ContentModeration.is_inappropriate("please, a fair deal?"), "polite text is fine")
@@ -89,7 +92,9 @@ func test_maverick_only_ever_artifact_ghosts() -> void:
 	var uid := "maverick_item"
 	# Even an offensive message only artifact-ghosts Maverick.
 	MarketplaceService.ghost_offensive(uid, MarketplaceService.MAVERICK_ID)
-	assert_true(MarketplaceService.is_ghosted(uid, MarketplaceService.MAVERICK_ID), "skips this artifact")
+	assert_true(
+		MarketplaceService.is_ghosted(uid, MarketplaceService.MAVERICK_ID), "skips this artifact"
+	)
 	assert_false(
 		MarketplaceService.is_ghosted("other_item", MarketplaceService.MAVERICK_ID),
 		"Mr. Maverick still buys every other artifact"
@@ -103,7 +108,9 @@ func test_wallet_starts_from_persona_and_maverick_is_unlimited() -> void:
 	MarketplaceService._on_loop_reset(0)
 	var student := _repo.get_buyer("student")
 	assert_eq(
-		MarketplaceService.buyer_cash("student"), student.wallet_start(), "wallet seeds from persona"
+		MarketplaceService.buyer_cash("student"),
+		student.wallet_start(),
+		"wallet seeds from persona"
 	)
 	assert_gt(
 		MarketplaceService.buyer_cash(MarketplaceService.MAVERICK_ID),
@@ -146,7 +153,9 @@ func test_artifact_ghosted_maverick_leaves_that_items_buyer_list() -> void:
 	var ids: Array = []
 	for persona in MarketplaceService.interested_buyers(uid):
 		ids.append(persona.id)
-	assert_does_not_have(ids, MarketplaceService.MAVERICK_ID, "ghosted Maverick is gone for this item")
+	assert_does_not_have(
+		ids, MarketplaceService.MAVERICK_ID, "ghosted Maverick is gone for this item"
+	)
 	var other_ids: Array = []
 	for persona in MarketplaceService.interested_buyers("a_different_item"):
 		other_ids.append(persona.id)

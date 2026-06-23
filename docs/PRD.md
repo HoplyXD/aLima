@@ -6,7 +6,7 @@
 |---|---|
 | **Project** | aLima — cozy AI-powered historical-restoration roguelite |
 | **Event** | AI Game On! · AI Fest 2026 · Iloilo City |
-| **Stack** | Godot 4.6.3 (typed GDScript) · hybrid 3D shop + focused 3D restoration + hybrid 2D/3D journal + 2D interfaces (triage, scanner, dialogue, Portal) · Node/Express backend · JSON/`.tres` data |
+| **Stack** | Godot 4.7 (typed GDScript) · hybrid 3D shop + focused 3D restoration + hybrid 2D/3D journal + 2D interfaces (triage, scanner, dialogue, Portal) · Node/Express backend · JSON/`.tres` data |
 | **Companion docs** | `CLAUDE.md` (operating spine + invariants) · `README.md` (GDD/design/narrative) · `docs/phase-task.md` (implementation order/status) |
 
 > **How to use this doc.** This is the testable build contract. Every requirement has an **ID** (e.g. `SCAN-R3`) and must map back to a promise in the full-game GDD. Authority order is **`CLAUDE.md` §4 implementation invariants → `README.md` full-game product promises → this PRD's implementation detail → `docs/phase-task.md` execution and proof**. This PRD may clarify the GDD but may not silently omit or downgrade it. `P0` is the June 30 slice; `P1` is mandatory for 100% full-GDD completion; `P2` is optional post-release expansion. **Section 12 is the complete discovery specification** for the Spawn Director, Cultural Echoes, and carriers.
@@ -83,7 +83,7 @@ One hybrid 3D shop space (restoration is a focused 3D object-manipulation view; 
 
 ```mermaid
 flowchart LR
-    subgraph Client["Godot 4.6.3 Client (repository root)"]
+    subgraph Client["Godot 4.7 Client (repository root)"]
         Core["Core: clock · loop · save · state"]
         Disc["Discovery: Spawn Director · Echoes · Carriers"]
         Rest["Restoration mini-games"]

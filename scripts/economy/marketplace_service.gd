@@ -102,6 +102,24 @@ func _on_loop_reset(_loop_index: int) -> void:
 # --- Buyer wallets (per-loop cash) -------------------------------------------
 
 
+## Public seam for event-driven wallet top-ups (e.g. Rare Buyer Alert).
+## Adds `amount` to the buyer's current wallet, creating it if necessary.
+func add_wallet_top_up(buyer_id: String, amount: int) -> void:
+	if amount <= 0:
+		return
+	var persona := DataRepository.singleton().get_buyer(buyer_id)
+	if persona == null or persona.unlimited_cash:
+		return
+	_wallets[buyer_id] = buyer_cash(buyer_id) + amount
+
+
+## Public seam for event-driven immediate buyer arrival (e.g. Rare Buyer Alert).
+func force_buyer_arrival(buyer_id: String) -> void:
+	var schedule: Dictionary = _buyer_schedule.get(buyer_id, {})
+	schedule[buyer_id] = _minute_index()
+	_buyer_schedule[buyer_id] = schedule
+
+
 ## A buyer's remaining cash this loop. Mr. Maverick (unlimited_cash) returns the unlimited
 ## sentinel and is never capped. Lazily initialised from the persona's starting wallet.
 func buyer_cash(buyer_id: String) -> int:
@@ -322,7 +340,12 @@ func start_negotiation(uid: String, persona_id: String) -> Negotiation:
 		return null
 	var category := template.category if template != null else ""
 	return Negotiation.open(
-		persona, assessed_value(uid), int(round(inst.condition)), category, true, buyer_cash(persona_id)
+		persona,
+		assessed_value(uid),
+		int(round(inst.condition)),
+		category,
+		true,
+		buyer_cash(persona_id)
 	)
 
 

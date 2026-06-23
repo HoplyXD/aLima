@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cgglnpahk30wy"
 path.s3tc="res://.godot/imported/Auntie.png-32f1b35d1624aa72b900b7a13072200a.s3tc.ctex"
+path.etc2="res://.godot/imported/Auntie.png-32f1b35d1624aa72b900b7a13072200a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Characters/Auntie.png"
-dest_files=["res://.godot/imported/Auntie.png-32f1b35d1624aa72b900b7a13072200a.s3tc.ctex"]
+dest_files=["res://.godot/imported/Auntie.png-32f1b35d1624aa72b900b7a13072200a.s3tc.ctex", "res://.godot/imported/Auntie.png-32f1b35d1624aa72b900b7a13072200a.etc2.ctex"]
 
 [params]
 

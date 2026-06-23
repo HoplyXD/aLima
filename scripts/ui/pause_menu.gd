@@ -168,8 +168,11 @@ func _on_apply_renderer() -> void:
 	if not SettingsService.request_renderer(method):
 		if SettingsService.running_in_editor():
 			_status_label.text = (
-				"Saved as %s. The editor can't switch renderers live — run the exported game "
-				+ "(or change the default and restart the editor) to see it."
-			) % pretty
+				(
+					"Saved as %s. The editor can't switch renderers live — run the exported game "
+					+ "(or change the default and restart the editor) to see it."
+				)
+				% pretty
+			)
 		else:
 			_status_label.text = "Saved. Restart the game to switch to %s." % pretty

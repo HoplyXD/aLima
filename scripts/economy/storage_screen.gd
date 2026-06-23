@@ -156,7 +156,12 @@ func refresh() -> void:
 	if _status_label.text == "":
 		_status_label.text = (
 			"Bench: %d / %d tools · Restoring: %s · %s"
-			% [loaded, ToolService.MAX_WORKBENCH_TOOLS, target_name, _peso(GameState.save_state.loop.money)]
+			% [
+				loaded,
+				ToolService.MAX_WORKBENCH_TOOLS,
+				target_name,
+				_peso(GameState.save_state.loop.money)
+			]
 		)
 
 
@@ -218,10 +223,13 @@ func _render_artifact_detail(host: VBoxContainer, uid: String) -> void:
 	var template: ScrapObjectTemplate = found["template"]
 
 	host.add_child(_make_title(template.display_name))
-	var meta := "%s · %s" % [
-		template.category.capitalize(),
-		ModelEnums.rarity_name(template.base_rarity).capitalize(),
-	]
+	var meta := (
+		"%s · %s"
+		% [
+			template.category.capitalize(),
+			ModelEnums.rarity_name(template.base_rarity).capitalize(),
+		]
+	)
 	host.add_child(_make_sub(meta))
 	host.add_child(_make_condition_bar(inst.condition))
 	host.add_child(_make_kv("State", _state_word(inst)))
@@ -672,11 +680,18 @@ func _artifact_description(template: ScrapObjectTemplate) -> String:
 	var materials := "unknown materials"
 	if not template.materials.is_empty():
 		materials = ", ".join(template.materials)
-	return "A %s piece of %s. %s" % [
-		template.category,
-		materials,
-		"It can be opened." if template.is_openable else "An ordinary find awaiting restoration.",
-	]
+	return (
+		"A %s piece of %s. %s"
+		% [
+			template.category,
+			materials,
+			(
+				"It can be opened."
+				if template.is_openable
+				else "An ordinary find awaiting restoration."
+			),
+		]
+	)
 
 
 func _is_restored(inst: ObjectInstance) -> bool:

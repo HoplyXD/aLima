@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "event_definition",
+      "id": "rush_delivery",
+      "display_name": "Rush Delivery",
+      "category": "disruptive",
+      "trigger_conditions": {
+        "eligible_days": [1, 2, 3, 4],
+        "eligible_hours": [7],
+        "weight": 1.0
+      },
+      "duration_hours": 24,
+      "per_loop_cap": 1,
+      "cooldown_hours": 0,
+      "outcome_params": {
+        "batch_size_bonus": 1,
+        "seconds_per_hour_multiplier": 0.75,
+        "min_seconds_per_hour": 30.0
+      },
+      "player_text": {
+        "trigger_title": "Rush Delivery",
+        "trigger_body": "Alya needs to clear the warehouse fast. Today's haul is bigger and the clock is tighter.",
+        "changed_rules": "Morning batch is larger; the day passes 25% faster while the rush lasts.",
+        "consequences": "More scrap to triage, less real time to decide."
+      },
+      "accessibility_caption": "Rush delivery active: extra batch and faster clock.",
+      "fallback_content": {
+        "trigger_title": "Rush Delivery",
+        "trigger_body": "Today's delivery is rushed.",
+        "changed_rules": "Larger batch, faster hours.",
+        "consequences": "Manage storage quickly."
+      }
+    },
+    {
+      "record_type": "event_definition",
+      "id": "sudden_brownout",
+      "display_name": "Sudden Brownout",
+      "category": "disruptive",
+      "trigger_conditions": {
+        "eligible_days": [1, 2, 3, 4, 5],
+        "min_hour": 10,
+        "max_hour": 18,
+        "weight": 0.8
+      },
+      "duration_hours": 3,
+      "per_loop_cap": 1,
+      "cooldown_hours": 4,
+      "outcome_params": {
+        "blocked_tool_enables": ["electric"],
+        "condition_multiplier": 0.8,
+        "blocks_marketplace": true,
+        "light_mitigates_condition": true
+      },
+      "player_text": {
+        "trigger_title": "Sudden Brownout",
+        "trigger_body": "The district power flickers and dies. The shop is running on dim emergency lights, but the phone still has battery.",
+        "changed_rules": "The internet drops, so the online Marketplace is offline. The shop is dim, so restoration is less precise unless you turn on a light such as the phone flashlight.",
+        "consequences": "Use the phone flashlight to cancel the gloom penalty; online sales stay paused until power returns."
+      },
+      "accessibility_caption": "Brownout: internet and Marketplace are down; restoration is dim unless you use the phone flashlight.",
+      "fallback_content": {
+        "trigger_title": "Sudden Brownout",
+        "trigger_body": "The power is out, but the phone still works.",
+        "changed_rules": "Marketplace is offline; restoration is dim without a light.",
+        "consequences": "Turn on the phone flashlight to work around the gloom."
+      }
+    },
+    {
+      "record_type": "event_definition",
+      "id": "community_request",
+      "display_name": "Community Request",
+      "category": "opportunity",
+      "trigger_conditions": {
+        "eligible_days": [1, 2, 3, 4],
+        "eligible_hours": [7],
+        "weight": 0.7
+      },
+      "duration_hours": 0,
+      "per_loop_cap": 2,
+      "cooldown_hours": 0,
+      "outcome_params": {
+        "request_template_id": "small_santo",
+        "reward_money": 150,
+        "reward_lead": "community_lead",
+        "reward_clue": "A neighbor remembers your uncle asking about old santo figures."
+      },
+      "player_text": {
+        "trigger_title": "Community Request",
+        "trigger_body": "A neighbor left a note: restore this small santo and they'll pay well.",
+        "changed_rules": "A request item is added to today's inventory. Restore and judge it to collect the reward.",
+        "consequences": "Success pays cash and adds a local lead."
+      },
+      "accessibility_caption": "Community request added: restore the santo before the day ends.",
+      "fallback_content": {
+        "trigger_title": "Community Request",
+        "trigger_body": "Someone asked for a restoration favor.",
+        "changed_rules": "A request item appears in today's delivery.",
+        "consequences": "Restore it for a reward."
+      }
+    },
+    {
+      "record_type": "event_definition",
+      "id": "suspicious_antique",
+      "display_name": "Suspicious Antique",
+      "category": "opportunity",
+      "trigger_conditions": {
+        "eligible_days": [1, 2, 3, 4, 5],
+        "eligible_hours": [7],
+        "weight": 0.6
+      },
+      "duration_hours": 0,
+      "per_loop_cap": 1,
+      "cooldown_hours": 0,
+      "outcome_params": {
+        "antique_template_id": "dusty_locket",
+        "scanner_confidence_multiplier": 0.5,
+        "reward_money_correct_judgment": 200,
+        "correct_verdicts": ["modified", "replica"]
+      },
+      "player_text": {
+        "trigger_title": "Suspicious Antique",
+        "trigger_body": "A dusty locket arrived with mismatched hinges and a too-clean clasp. Something feels off.",
+        "changed_rules": "Scanner confidence is lower for this piece; trust your judgment over the AI readout.",
+        "consequences": "Spotting the fake pays a bonus; calling it genuine does not."
+      },
+      "accessibility_caption": "Suspicious antique: scanner is uncertain; judge carefully.",
+      "fallback_content": {
+        "trigger_title": "Suspicious Antique",
+        "trigger_body": "A suspicious-looking antique arrived.",
+        "changed_rules": "Scanner hints are weaker.",
+        "consequences": "Correct judgment pays a bonus."
+      }
+    },
+    {
+      "record_type": "event_definition",
+      "id": "rare_buyer_alert",
+      "display_name": "Rare Buyer Alert",
+      "category": "opportunity",
+      "trigger_conditions": {
+        "eligible_days": [1, 2, 3, 4],
+        "min_hour": 13,
+        "max_hour": 17,
+        "weight": 0.6
+      },
+      "duration_hours": 0,
+      "per_loop_cap": 1,
+      "cooldown_hours": 0,
+      "outcome_params": {
+        "buyer_persona_id": "collector",
+        "wallet_bonus": 500,
+        "arrives_immediately": true
+      },
+      "player_text": {
+        "trigger_title": "Rare Buyer Alert",
+        "trigger_body": "Esperanza Vega is in town and has extra cash for the right piece.",
+        "changed_rules": "A high-budget collector is available immediately on the Marketplace today.",
+        "consequences": "List a quality restored piece before the day ends."
+      },
+      "accessibility_caption": "Rare buyer alert: a well-funded collector is browsing today.",
+      "fallback_content": {
+        "trigger_title": "Rare Buyer Alert",
+        "trigger_body": "A rare buyer is looking for pieces today.",
+        "changed_rules": "High-budget buyer available now.",
+        "consequences": "Sell a restored piece for extra profit."
+      }
+    },
+    {
+      "record_type": "event_definition",
+      "id": "mystery_box",
+      "display_name": "Mystery Box",
+      "category": "opportunity",
+      "trigger_conditions": {
+        "eligible_days": [1, 2, 3, 4],
+        "eligible_hours": [7],
+        "weight": 0.7
+      },
+      "duration_hours": 0,
+      "per_loop_cap": 1,
+      "cooldown_hours": 0,
+      "outcome_params": {
+        "box_template_id": "rusted_tin",
+        "box_rarity_boost": "green",
+        "box_tag": "mystery_box"
+      },
+      "player_text": {
+        "trigger_title": "Mystery Box",
+        "trigger_body": "A sealed tin with no return address was tucked into the morning haul.",
+        "changed_rules": "One extra mystery item appears in today's delivery.",
+        "consequences": "Open it to see what's inside — it could be junk, an echo, or a hidden find."
+      },
+      "accessibility_caption": "Mystery box added: one sealed tin in today's delivery.",
+      "fallback_content": {
+        "trigger_title": "Mystery Box",
+        "trigger_body": "A mystery box arrived.",
+        "changed_rules": "Extra sealed item in delivery.",
+        "consequences": "Open it to discover the contents."
+      }
+    },
+    {
+      "record_type": "event_definition",
+      "id": "rainy_day_leak",
+      "display_name": "Rainy-Day Leak",
+      "category": "disruptive",
+      "trigger_conditions": {
+        "eligible_days": [1, 2, 3, 4, 5],
+        "min_hour": 8,
+        "max_hour": 19,
+        "weight": 0.8
+      },
+      "duration_hours": 5,
+      "per_loop_cap": 1,
+      "cooldown_hours": 2,
+      "outcome_params": {
+        "condition_multiplier": 0.8,
+        "shipment_delay_hours": 1,
+        "extra_condition_type": "water_stain",
+        "extra_condition_count": 1
+      },
+      "player_text": {
+        "trigger_title": "Rainy-Day Leak",
+        "trigger_body": "A leak from the louvers is dripping onto the workbench. Everything is damp and slow.",
+        "changed_rules": "Restoration progress is slower; incoming deliveries carry extra water stains; shipments may be delayed.",
+        "consequences": "Work carefully — the damp worsens until the rain passes."
+      },
+      "accessibility_caption": "Rainy-day leak: restoration slowed, deliveries wetter, shipments delayed.",
+      "fallback_content": {
+        "trigger_title": "Rainy-Day Leak",
+        "trigger_body": "A leak is making the shop damp.",
+        "changed_rules": "Slower restoration and wetter deliveries.",
+        "consequences": "Wait for the rain to pass."
+      }
+    },
+    {
+      "record_type": "event_definition",
+      "id": "tool_breakdown",
+      "display_name": "Tool Breakdown",
+      "category": "disruptive",
+      "trigger_conditions": {
+        "eligible_days": [1, 2, 3, 4, 5],
+        "min_hour": 8,
+        "max_hour": 18,
+        "weight": 0.6
+      },
+      "duration_hours": 0,
+      "per_loop_cap": 1,
+      "cooldown_hours": 0,
+      "outcome_params": {
+        "excluded_tool_ids": ["soft_cloth", "soft_brush", "damp_cloth"],
+        "preferred_break_tags": ["durability_tracked"]
+      },
+      "player_text": {
+        "trigger_title": "Tool Breakdown",
+        "trigger_body": "One of your tools finally gave out with a sharp crack.",
+        "changed_rules": "A non-essential owned tool breaks immediately.",
+        "consequences": "Repair or replace it through the Marketplace; the tool is removed from your loadout."
+      },
+      "accessibility_caption": "Tool breakdown: one owned tool has broken.",
+      "fallback_content": {
+        "trigger_title": "Tool Breakdown",
+        "trigger_body": "A tool has broken.",
+        "changed_rules": "One owned tool is removed.",
+        "consequences": "Buy or replace it to keep working."
+      }
+    }
+  ]
+}

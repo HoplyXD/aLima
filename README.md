@@ -87,7 +87,7 @@ aLima’s answer to the theme is structural rather than decorative. Preservation
 | Working Title | aLima |
 | Genre | Cozy restoration sim × narrative roguelite |
 | Platform | PC (Windows) primary; HTML5/web build required for the AI Fest exhibit booth |
-| Engine | Godot 4.6.3 — hybrid 3D shop environment with 2D `Control`/`CanvasLayer` gameplay interfaces, audio-bus control for Cultural Echoes, and desktop/web export targets |
+| Engine | Godot 4.7 — hybrid 3D shop environment with 2D `Control`/`CanvasLayer` gameplay interfaces, audio-bus control for Cultural Echoes, and desktop/web export targets |
 | Mode | Single-player |
 | Session Length | ≈10–13 minutes real per in-game day (1 real minute \= 1 in-game hour); ≈1 hour per five-day loop; full story arc 6–10 hours |
 | Target Audience | Teens and adults; players of Unpacking, PowerWash Simulator, Strange Horticulture, and Coffee Talk |
@@ -336,7 +336,7 @@ Development AI (production tools, fully disclosed)
 
 # **11\. Technical Overview**
 
-• Engine: Godot 4.6.3 — the shop is a 3D environment whose major actions (door, workbench, journal, phone, delivery) are **diegetic 3D interactables** the player hovers and clicks, with HUD buttons kept only as labelled accessibility/fallback. **Restoration is a focused 3D object-manipulation interaction** (rotate the 3D object and clean its surface) whose **cleaning tools are visible, selectable 3D props on the bench**, framed by a supportive 2D HUD overlay; the **journal is hybrid 2D/3D** (a 2D book that embeds 3D viewers for the Fragment Case and restored objects). Triage, scanner, dialogue, and Portal flows use 2D `Control`/`CanvasLayer` interfaces. Godot’s audio buses drive the four-band echo mixer; Windows is primary and HTML5 is a separately verified exhibit target.
+• Engine: Godot 4.7 — the shop is a 3D environment whose major actions (door, workbench, journal, phone, delivery) are **diegetic 3D interactables** the player hovers and clicks, with HUD buttons kept only as labelled accessibility/fallback. **Restoration is a focused 3D object-manipulation interaction** (rotate the 3D object and clean its surface) whose **cleaning tools are visible, selectable 3D props on the bench**, framed by a supportive 2D HUD overlay; the **journal is hybrid 2D/3D** (a 2D book that embeds 3D viewers for the Fragment Case and restored objects). Triage, scanner, dialogue, and Portal flows use 2D `Control`/`CanvasLayer` interfaces. Godot’s audio buses drive the four-band echo mixer; Windows is primary and HTML5 is a separately verified exhibit target.
 
 • Architecture: game client ↔ a lightweight Node.js/Express service ↔ the City-Wide Portal API. LLM calls run server-side with rate limiting and cached fallbacks. The team’s lead developer ships production MERN systems, so this layer reuses proven tooling.
 

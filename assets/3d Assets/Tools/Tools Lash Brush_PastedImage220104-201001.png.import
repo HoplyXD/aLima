@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://clku50uqsla35"
 path.s3tc="res://.godot/imported/Tools Lash Brush_PastedImage220104-201001.png-aee1929bc7f7198567c8a3eb1144af98.s3tc.ctex"
+path.etc2="res://.godot/imported/Tools Lash Brush_PastedImage220104-201001.png-aee1929bc7f7198567c8a3eb1144af98.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/3d Assets/Tools/Tools Lash Brush_PastedImage220104-201001.png"
-dest_files=["res://.godot/imported/Tools Lash Brush_PastedImage220104-201001.png-aee1929bc7f7198567c8a3eb1144af98.s3tc.ctex"]
+dest_files=["res://.godot/imported/Tools Lash Brush_PastedImage220104-201001.png-aee1929bc7f7198567c8a3eb1144af98.s3tc.ctex", "res://.godot/imported/Tools Lash Brush_PastedImage220104-201001.png-aee1929bc7f7198567c8a3eb1144af98.etc2.ctex"]
 
 [params]
 
