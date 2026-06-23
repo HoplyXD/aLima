@@ -106,7 +106,7 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 **K. Security (non-negotiable).** All LLM/API keys and calls live in the **backend only** — never embedded in the Godot client. Backend rate-limits LLM calls and ships **cached fallbacks** so the exhibit build never depends on venue internet.
 
 **L. Jam content rules.**
-- **Original assets only.** No third-party IP. Audio is original/folk-*inspired* — **never sample real recordings** of traditional songs.
+- **Assets: original OR free third-party that is CC0 / properly credited.** Per the mentor ruling (Sir Mark, 2026-06), free assets from itch.io and other sites are allowed *as long as they are CC0 or credited*. Every third-party asset must be logged in `CREDITS.md` (author · source · license). Still **no third-party IP** (no copyrighted characters/brands). Audio is original/folk-*inspired* — **never sample real recordings** of traditional songs.
 - **Folklore is framed as folklore, never as archaeological fact.** Scanner "facts" derive from verified records.
 - Excluded as source-of-fact: the **Code of Kalantiaw** (documented 20th-c. hoax). Maragtas may flavor lore but is treated as oral tradition.
 

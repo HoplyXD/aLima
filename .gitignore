@@ -33,3 +33,7 @@ Thumbs.db
 
 # On-device AI model files (large; downloaded per machine)
 models/*.gguf
+
+# GDExtension hot-reload lock/temp files (Windows; created when a DLL is in use)
+addons/**/~*
+*~RF*.TMP

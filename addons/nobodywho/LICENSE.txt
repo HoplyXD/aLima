@@ -1,0 +1,25 @@
+NobodyWho — third-party Godot addon used by aLima
+=================================================
+
+Project : NobodyWho
+Author  : nobodywho-ooo
+Source  : https://github.com/nobodywho-ooo/nobodywho
+License : EUPL-1.2 (European Union Public Licence v1.2)
+Official license text: https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+
+How aLima uses it
+-----------------
+This addon (the precompiled GDExtension binaries + nobodywho.gdextension) is used
+UNMODIFIED to run an optional on-device LLM for marketplace buyer banter
+(scripts/economy/local_ai.gd). We have not changed NobodyWho's source code.
+
+License obligations met
+-----------------------
+- The EUPL-1.2 is reciprocal (copyleft) only for the covered work and its derivatives.
+  Because we use NobodyWho unmodified and merely call it from our own separate code, our
+  game code is NOT required to be EUPL-licensed.
+- This notice + the entry in /CREDITS.md provide attribution and point to the source.
+- If NobodyWho is ever MODIFIED, those modifications must be released under EUPL-1.2.
+
+TODO for the submission build: replace this notice with a verbatim copy of NobodyWho's
+own LICENSE file from the release/repo so the full EUPL-1.2 text ships with the addon.
