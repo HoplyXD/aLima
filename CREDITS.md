@@ -18,9 +18,9 @@ AI tools/models are logged separately in [docs/ai-disclosure.md](docs/ai-disclos
 
 | Name | Roles |
 |---|---|
-| Francis Gabriel Austria | Lead developer |
-| Om Shanti Limpin | Developer · design · narrative |
-| Jorge Maverick Acidre | Developer · design · **3D modeler / artist** |
+| Francis Gabriel Austria | Lead developer · game design |
+| Om Shanti Limpin | Developer · design · narrative · **artist · UI** |
+| Jorge Maverick Acidre | Developer · design · **3D modeler · character artist** |
 
 WVSU, Iloilo City.
 
@@ -35,6 +35,8 @@ WVSU, Iloilo City.
 | GUT 9.6.0 | bitwes | MIT | Godot unit testing (`addons/gut/`) |
 | gdtoolkit (gdformat/gdlint) | Scony | MIT | GDScript format/lint (dev only) |
 | Express + Node deps | respective authors | MIT (per package) | Backend LLM proxy / mock Portal |
+| story-teller (2D book with animated 3D pages) | Sanchit Gulati — https://github.com/sanchitgulati/story-teller | The Unlicense (public domain) | The journal's page-turn technique — a 2D book whose pages animate as 3D turnable pages (`scenes/Book/`) |
+| 3D book model/scene | _to confirm (teammate sourced separately)_ | _to confirm_ | The journal's 3D book itself (geometry/cover) — different source from story-teller; teammate to confirm |
 
 > **NobodyWho is EUPL-1.2** (copyleft). You CAN ship it in a proprietary/commercial game —
 > the copyleft only binds modifications to NobodyWho's *own* source, and we use the addon
