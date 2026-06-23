@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://c55yre3k0bgf8" path="res://assets/3d Assets/Phone.glb" id="4_phone"]
 [ext_resource type="PackedScene" uid="uid://dre33nw45m7tr" path="res://assets/3d Assets/Bookcase/Book.glb" id="5_book"]
 [ext_resource type="PackedScene" uid="uid://chyonocig3s54" path="res://assets/3d Assets/Box/Box.glb" id="6_box"]
-[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/Pause_menu.tres" id="7_jodhg"]
+[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="7_jodhg"]
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="8_54x15"]
 [ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="9_ot4no"]
 [ext_resource type="Texture2D" uid="uid://gkfx8vh1gdg5" path="res://assets/UI assets/game/gui/phone/nvl.png" id="11_ot4no"]
@@ -85,13 +85,13 @@ transform = Transform3D(-7.969736e-08, 3.4796617e-09, 1.825, 0.079605386, 1.8232
 script = ExtResource("3_tray")
 
 [node name="Phone" parent="ViewportContainer/SubViewport/World" unique_id=302565970 instance=ExtResource("4_phone")]
-transform = Transform3D(0.2211334, 0.105475225, 4.610469e-09, 0, -1.070929e-08, 0.245, 0.105475225, -0.2211334, -9.6660475e-09, -1.505, -0.786, 0.815)
+transform = Transform3D(0.28005928, -0.052524693, -0.0057402328, 0.0076706875, 0.00978279, 0.28472874, -0.052277666, -0.27994722, 0.0110268835, -2.095, -0.746, 0.075)
 
 [node name="Journal" parent="ViewportContainer/SubViewport/World" unique_id=1228215568 instance=ExtResource("5_book")]
-transform = Transform3D(9.595316e-09, -0.21951523, 0.6962133, -0.73, -3.1909313e-08, 0, 3.0432453e-08, -0.69621336, -0.21951522, -1.89, -0.7, 0.16)
+transform = Transform3D(0.019272838, 0.36774755, 0.6128746, -0.7140201, 0.03742022, 0, -0.03207539, -0.6120347, 0.36825222, -2.105, -0.655, -0.555)
 
 [node name="StorageBox" parent="ViewportContainer/SubViewport/World" unique_id=1481444188 instance=ExtResource("6_box")]
-transform = Transform3D(2.8939457, 0, 0.25318742, 0, 2.905, 0, -0.25318742, 0, 2.8939457, -1.525, -0.735, -0.53)
+transform = Transform3D(2.5701823, 0.003924379, 0.22482756, 0, 2.579607, -0.045027204, -0.2248618, 0.044855867, 2.5697908, 1.92, -0.75, -0.9)
 
 [node name="InputCatcher" type="Control" parent="." unique_id=2085662127]
 layout_mode = 3
