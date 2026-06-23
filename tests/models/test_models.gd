@@ -244,8 +244,10 @@ func test_character_route_dialogue_round_trip() -> void:
 		"portrait": "res://assets/Characters/Auntie.png",
 		"schedule": [{"days": [1, 3, 5], "start_hour": 12, "end_hour": 14}],
 		"holds_fragment_id": "fragment_01",
-		"dialogue": {
-			"default": [
+		"dialogue":
+		{
+			"default":
+			[
 				{"name": "Nang Shine", "text": "Ay, kamusta na?"},
 				"A line with no speaker.",
 			],
@@ -265,12 +267,15 @@ func test_character_route_dialogue_round_trip() -> void:
 
 
 func test_character_route_rejects_non_array_dialogue() -> void:
-	var route := CharacterRoute.from_dictionary(
-		{
-			"id": "bad",
-			"display_name": "Bad Route",
-			"dialogue": {"default": "not an array"},
-		}
+	var route := (
+		CharacterRoute
+		. from_dictionary(
+			{
+				"id": "bad",
+				"display_name": "Bad Route",
+				"dialogue": {"default": "not an array"},
+			}
+		)
 	)
 	var result := route.validate()
 	assert_false(result.is_valid(), "A non-array dialogue value should fail validation")

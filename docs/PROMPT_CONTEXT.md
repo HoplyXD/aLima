@@ -8,7 +8,7 @@ Canonical repository context for agents that write implementation prompts for aL
 - Then inspect the current code, scene, data, test, and documentation files relevant to the requested work. This snapshot does not replace source inspection.
 - Treat running code and assets as truth for what exists. Authority is `CLAUDE.md` Section 4 implementation invariants -> `README.md` full-game promises -> `docs/PRD.md` testable build contract -> `docs/phase-task.md` implementation order and evidence. The PRD may clarify but may not omit a GDD promise.
 - If source and docs disagree, report the disagreement. Do not silently rewrite behavior or requirements.
-- Snapshot last audited 2026-06-22. This refresh covers the Mobile renderer switch with gl_compatibility fallback, the SettingsService / global pause menu, the local-AI stack (on-device NobodyWho GGUF + backend Ollama/Anthropic proxy + deterministic offline fallback), the nine-persona marketplace economy (buy/sell/haggle/banter/wallets), the Storage/phone UI, authored artifact condition decals and per-artifact scenes, and the updated verification counts. Rotatable 3D fragment viewers and per-entry 3D object previews remain Phase 16 polish; the P0 five-slot case and stable entry system are complete. Repository branch is `main`. Refresh this file when implementation materially changes.
+- Snapshot last audited 2026-06-23. This refresh covers the Phase 11 export pipeline (Windows Desktop and HTML5/Web presets, the silent ETC2/ASTC import requirement that was blocking Web export, and the `renderer/rendering_method.web="gl_compatibility"` override that keeps Mobile on Windows), the Mobile renderer switch with gl_compatibility fallback, the SettingsService / global pause menu, the local-AI stack (on-device NobodyWho GGUF + backend Ollama/Anthropic proxy + deterministic offline fallback), the nine-persona marketplace economy (buy/sell/haggle/banter/wallets), the Storage/phone UI, authored artifact condition decals and per-artifact scenes, and the updated verification counts. The engine target is Godot 4.7 (project.godot features `4.7`, `Mobile`), verified with the 4.7 console binary. Rotatable 3D fragment viewers and per-entry 3D object previews remain Phase 16 polish; the P0 five-slot case and stable entry system are complete. Repository branch is `main`. Refresh this file when implementation materially changes.
 
 ## Game Identity
 
@@ -72,8 +72,8 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 
 ## Platforms, Input, And Presentation
 
-- **Target engine:** Godot 4.6.3 with typed GDScript.
-- **Current project settings:** Godot feature `4.6`, **Mobile** renderer (Vulkan/Forward+) with `gl_compatibility` fallback for low-end/mobile/web, Jolt 3D physics, 1920x1080 viewport, fullscreen mode, Windows D3D12 driver setting. `SettingsService` persists resolution/fullscreen/renderer/artifact-preview choices to `user://settings.cfg`; renderer changes apply on relaunch.
+- **Target engine:** Godot 4.7 with typed GDScript.
+- **Current project settings:** Godot feature `4.7`, **Mobile** renderer (Vulkan/Forward+) with `gl_compatibility` fallback for low-end/mobile and a `renderer/rendering_method.web="gl_compatibility"` override so Web exports use Compatibility while Windows stays on Mobile. ETC2/ASTC texture import is enabled because Godot 4.7's Web export validation silently requires it. Jolt 3D physics, 1920x1080 viewport, fullscreen mode, Windows D3D12 driver setting. `SettingsService` persists resolution/fullscreen/renderer/artifact-preview choices to `user://settings.cfg`; renderer changes apply on relaunch.
 - **Targets:** Windows is primary. HTML5/web is planned for the AI Fest exhibit and must be verified separately rather than assumed equivalent.
 - **Presentation:** One stylized 3D shop. **Restoration is a focused 3D object-manipulation interaction** (rotate the 3D object and clean its surface, framed by a 2D background + HUD overlay; REST-R8) — implemented in `scenes/restoration/restoration_view.tscn` (a `SubViewport` 3D object + 2D HUD, shader dirt mask or authored `ArtifactConditionDecal` hotspots, reusing `RestorationService`). **Cleaning tools are visible, selectable 3D props on the workbench** (`RestorationToolTray`, REST-R9): picking a prop chooses the tool; the HUD tool buttons are a labelled accessibility/fallback only. **The major shop actions are diegetic 3D interactables** (`Interactable3D` props for door/workbench/journal/phone/delivery, SHELL-R1/R2): the player hovers (prompt + highlight) and clicks the prop, which fires the same `ShopController` handler as the HUD fallback button. The **journal is hybrid 2D/3D** (a 2D book embedding the five-slot Fragment Case and object viewers; JRN-R6) and is implemented in `scenes/Book/Journal.tscn` / `BookViewport`. Triage, scanner, dialogue, and Portal flows are 2D `Control`/`CanvasLayer` screens.
 - **Input:** Mouse-first presentation, but mouse, controller, and touch are mandatory full-game targets. Current dialogue advances with `ui_accept` or left mouse click; broader input support is not implemented yet.
@@ -90,15 +90,16 @@ Prompts must preserve these invariants from `CLAUDE.md` and `docs/PRD.md`:
 
 ## Verified Repository State
 
-Verified with Godot `4.6.3.stable` on 2026-06-22:
+Verified with Godot `4.7.stable` on 2026-06-23:
 
-- Godot 4.6.3 is installed at `C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe` and reports `4.6.3.stable.official.7d41c59c4`.
-- The bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`). Use the explicit 4.6.3 executable for all verification.
+- Godot 4.7 is installed at `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` and reports `4.7.stable.official.5b4e0cb0f`.
+- The bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`). Use the explicit 4.7 executable for all verification.
 - `--headless --editor --path . --quit` completes with exit 0; `--headless --path . --quit` starts `scenes/Shop.tscn` without parser, resource, UID, or missing-file errors.
-- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `474/474 passed` (1531 asserts) as of 2026-06-23, including Phase 0–2 core, Phase 3 delivery/triage, Phase 4 restoration/opening/3D-view/tool-props, Phase 5 Spawn Director, Phase 6 Cultural Echoes, Phase 7 cached scanner, Phase 8 portal/Found/Unlock/seating, Phase 9 journal/Fragment Case, Phase 10 FragmentService/route-beats/showcase/demo-menu, and Phase 13/14 economy/marketplace/tool-durability coverage.
+- GUT 9.6.0 suite passes: `--headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` → `477/477 passed` (1556 asserts) as of 2026-06-23, including Phase 0–2 core, Phase 3 delivery/triage, Phase 4 restoration/opening/3D-view/tool-props, Phase 5 Spawn Director, Phase 6 Cultural Echoes, Phase 7 cached scanner, Phase 8 portal/Found/Unlock/seating, Phase 9 journal/Fragment Case, Phase 10 FragmentService/route-beats/showcase/demo-menu, Phase 11 export/runtime verification tests, and Phase 13/14 economy/marketplace/tool-durability coverage.
 - Focused suites (2026-06-22): `-gdir=res://tests/models` → `11/11 passed`; `-gdir=res://tests/core` → `~45/45 passed`; `-gdir=res://tests/delivery` → `~33/33 passed` (197 asserts); `-gdir=res://tests/restoration -ginclude_subdirs` → `~80+/80+` (decal/photo/condition/artifact-scene coverage); `-gdir=res://tests/shop -ginclude_subdirs` → `6/6 passed`; `-gdir=res://tests/discovery/spawn_director` → `25/25 passed`; `-gdir=res://tests/scanner` → `28/28 passed` (105 asserts); `-gdir=res://tests/journal` → `~30/30 passed`; `-gdir=res://tests/portal` → `15/15 passed` (45 asserts); `-gdir=res://tests/economy` → `61/61 passed`.
-- `gdformat --check scripts scenes dialogue tests` reports 28 files that would be reformatted; `gdlint scripts scenes dialogue tests` reports `max-line-length`, `class-definitions-order`, and `max-public-methods` warnings. These are pre-existing in the working tree and are not being fixed by this documentation pass.
-- Backend suites pass (2026-06-22): `server/npm test` → `22/22 passed`; `mock-portal/npm test` → `4/4 passed`.
+- `gdformat --check scripts scenes dialogue tests` reports 149 files would be left unchanged; `gdlint scripts scenes dialogue tests` reports no problems.
+- Backend suites pass (2026-06-23): `server/npm test` → `24/24 passed`; `mock-portal/npm test` → `4/4 passed`.
+- Export pipeline verified (2026-06-23): `--export-release "Windows Desktop" "build/aLima.exe"` exits 0; `--export-release "Web" "build/web/aLima.html"` exits 0 with one expected non-fatal warning about `addons/nobodywho` lacking a wasm32 library (the addon is excluded from the Web preset).
 - `dialogue/dialogue_box.tscn` loads. The `prototype/` directory was removed during Phase 0.
 - No tracked `.env`, secret, credential, or API-key file was found; no Godot source file contains API keys, provider URLs, or direct LLM calls. `.gitignore` excludes `node_modules/` and `server/cache/`.
 
@@ -119,7 +120,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-22:
 
 ### Implemented Or Reusable Pieces
 
-- Root Godot project and configured hybrid Shop scene (HUD visible; single controller on the root). Renderer is **Mobile** (`Vulkan/Forward+`) with `gl_compatibility` fallback; `SettingsService` + global pause menu persist resolution/fullscreen/renderer/online/previews.
+- Root Godot project and configured hybrid Shop scene (HUD visible; single controller on the root). Renderer is **Mobile** (`Vulkan/Forward+`) with `gl_compatibility` fallback and a Web-specific Compatibility override; `SettingsService` + global pause menu persist resolution/fullscreen/renderer/online/previews. Windows and Web export presets are configured in `export_presets.cfg`.
 - Production controller/HUD separation (`scripts/shop/shop_controller.gd` + `scenes/ui/shop_hud.gd`) and the Phase 0 source layout.
 - Reusable `DialogueBox` component in `dialogue/`.
 - Phase 2 clock: minute-level display with configurable `seconds_per_hour`, `DayClock` pause ownership, and `LoopController` five-day split reset.
@@ -151,7 +152,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-22:
 - (Phase 8 implemented) Node/Express backend (`server/`) with cached `/api/scan`, Portal proxy `/api/portal/discovery`; mock Portal (`mock-portal/`); `PortalFlowController`, Artifact Found/Unlock screens, and `SeatingService`.
 - (Phase 13/14 implemented) Durability-tracked tools, workbench loadout, nine-persona marketplace, deterministic haggling, free-text moderation, backend and on-device local AI for buyer banter, Storage/Phone UIs. Engraving reveal, mechanism inspection, full 30-object catalog, six counterfeits, learned techniques, and repair/upkeep are still pending.
 - (Phase 10 implemented) **Auntie route -> slice integration**: visit scheduling (12:00-14:00 on Days 1/3/5), the Day-5 / authored-beat gate (beat 3 needs beats 1-2; beat 2 needs beat 1), unanswered-visit consumption (`EventBus.visit_missed`), a paused 2D `ShowcaseScreen` opened after her door dialogue, and a debug visit override. Completing her final beat releases `fragment_01` (now LOCKED-by-default) through the new `FragmentService` autoload (`LOCKED -> RELEASED`, persistent + repo mirror), and the Spawn Director places it — never a handoff. A DEBUG-only `DemoMenu` (F9 in debug builds) offers seed selection, a three-seed placement demo, debug release, and a two-press save-clear. GUT-verified (`tests/core/test_fragment_service.gd`, `tests/core/test_route_beats.gd`, `tests/ui/test_showcase_screen.gd`, `tests/ui/test_demo_menu.gd`); the uninterrupted on-screen end-to-end playthrough remains a pending manual gate.
-- Still missing: full disposition router (`RETURN`/`PRESERVE` as explicit player choices), return-to-owner rewards, evening summary/upkeep, the other routes' beats/full scheduling (Phase 15), Safe/drawer, 15 Temporal Echoes / mystery pages / museum gallery, 15 carriers / five-fragment discovery, eight mini-events, character endings/Yuyu finale, production assets/audio/review, live service matrix verification, platform/input parity, exports, and submission evidence.
+- Still missing: full disposition router (`RETURN`/`PRESERVE` as explicit player choices), return-to-owner rewards, evening summary/upkeep, the other routes' beats/full scheduling (Phase 15), Safe/drawer, 15 Temporal Echoes / mystery pages / museum gallery, 15 carriers / five-fragment discovery, eight mini-events, character endings/Yuyu finale, production assets/audio/review, live service matrix verification, platform/input parity beyond the configured presets, manual video evidence, and final submission package.
 
 ### Mandatory Phase Map
 
@@ -202,7 +203,7 @@ Verified with Godot `4.6.3.stable` on 2026-06-22:
 - `data/objects/`, `data/artifacts/`, `data/echoes/`, `data/routes/`, `data/scanner-cache/`, `data/delivery/`, `data/journal/`, `data/buyers/`: authored JSON fixtures (schema_version = 1), including `data/delivery/spawn_config.json` and `data/buyers/buyers.json`.
 - `scripts/models/`: includes `placement_candidate.gd`.
 - `server/` and `mock-portal/`: Node/Express backend and mock Portal services with Jest tests.
-- `addons/gut/`: vendored GUT 9.6.0. `requirements-dev.txt`: pinned gdtoolkit. `.github/workflows/ci.yml`: CI (4.6.3 import + GUT + lint).
+- `addons/gut/`: vendored GUT 9.6.0. `requirements-dev.txt`: pinned gdtoolkit. `.github/workflows/ci.yml`: CI (4.7 import + GUT + lint).
 - `aLima.twee`: old interactive design prototype. Useful for route prose/tuning history, but subordinate to current invariants and PRD.
 
 ## Coding And Architecture Conventions
@@ -230,7 +231,7 @@ Every future implementation prompt for this repository must:
 6. Specify files/systems likely to change without pretending they already exist.
 7. Include concrete acceptance criteria covering relevant gameplay, game feel, controls, UX, audio, accessibility, performance, persistence, offline resilience, and security.
 8. Include automated commands plus a manual gameplay check. Never permit "works" or `[x]` status without running the relevant checks and reporting results.
-9. Require `docs/phase-task.md` evidence/status updates only after its stated automated and manual gates pass under Godot 4.6.3.
+9. Require `docs/phase-task.md` evidence/status updates only after its stated automated and manual gates pass under Godot 4.7.
 10. Require `docs/ai-disclosure.md` updates for new tools/models, generated assets/audio/text, runtime AI, or materially AI-assisted workflows.
 11. Require `CLAUDE.md` updates when layout, commands, stack, architecture, or invariants change. Change a GDD promise or PRD requirement only through an explicit design decision that updates the coverage matrix and phase index together.
 12. Respect the active milestone: optimize for the polished June 30 slice through Phase 11, then implement mandatory full-GDD Phases 12–22 without treating deferred slice work as optional.
@@ -240,7 +241,7 @@ Every future implementation prompt for this repository must:
 Target commands from the repository:
 
 ```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.6.3-stable_win64_console.exe"
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --version
 & $godot --headless --editor --path . --quit
 & $godot --headless --path . --quit
@@ -260,7 +261,7 @@ git status --short
 git ls-files | Select-String -Pattern '(^|/).env$|secret|credential|api[_-]?key'
 ```
 
-Current state (2026-06-22): Godot 4.6.3 is installed and verified via the explicit executable, but the bare `godot` command selects the older 4.5.1 executable. GUT, gdformat, and gdlint are present. `server/` and `mock-portal/` are present and tested (`npm test` passes 22/22 and 4/4 respectively). gdformat reports 28 files that would be reformatted and gdlint reports max-line-length/class-definitions-order/max-public-methods warnings; these are pre-existing and not blockers.
+Current state (2026-06-22): Godot 4.7 is installed and verified via the explicit executable, but the bare `godot` command selects the older 4.5.1 executable. GUT, gdformat, and gdlint are present. `server/` and `mock-portal/` are present and tested (`npm test` passes 22/22 and 4/4 respectively). gdformat reports 28 files that would be reformatted and gdlint reports max-line-length/class-definitions-order/max-public-methods warnings; these are pre-existing and not blockers.
 
 ## Hackathon And Submission Priorities
 
@@ -273,7 +274,7 @@ Current state (2026-06-22): Godot 4.6.3 is installed and verified via the explic
 
 ## Risks, Contradictions, And Unknowns
 
-- The bare `godot` command currently resolves to 4.5.1 because `C:\Users\roman\Desktop\Godot\godot.exe` precedes the 4.6.3 `.cmd` shim. Use the explicit 4.6.3 executable; CI and other machines must also select 4.6.3 explicitly.
+- The bare `godot` command currently resolves to 4.5.1 because `C:\Users\roman\Desktop\Godot\godot.exe` precedes the 4.7 `.cmd` shim. Use the explicit 4.7 executable; CI and other machines must also select 4.7 explicitly.
 - P0 gameplay systems (clock/loop, delivery/triage, restoration/opening, scanner/judgment, Cultural Echoes, portal/seating, journal/Fragment Case, marketplace buy/sell/haggle, settings/pause) are implemented and automated tests pass. Remaining P0 gaps: full disposition/evening, live-service verification, on-screen input verification, exports, and submission evidence.
 - Repository-history wording is reconciled: proposal planning is dated June 1, while public Git history begins June 13, 2026. Preserve that distinction in submission materials.
 - The Twine intro starts the player with one fragment, while current design requires only the journal and all five fragments hidden. Current PRD/invariants win.

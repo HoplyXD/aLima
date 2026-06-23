@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://10gnbktpeww7"
 path.s3tc="res://.godot/imported/trn_Candle_Emission.png-c6e87330ca33b1e3f0810553cec232a1.s3tc.ctex"
+path.etc2="res://.godot/imported/trn_Candle_Emission.png-c6e87330ca33b1e3f0810553cec232a1.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/3d Assets/Candles/trn_Candle_Emission.png"
-dest_files=["res://.godot/imported/trn_Candle_Emission.png-c6e87330ca33b1e3f0810553cec232a1.s3tc.ctex"]
+dest_files=["res://.godot/imported/trn_Candle_Emission.png-c6e87330ca33b1e3f0810553cec232a1.s3tc.ctex", "res://.godot/imported/trn_Candle_Emission.png-c6e87330ca33b1e3f0810553cec232a1.etc2.ctex"]
 
 [params]
 

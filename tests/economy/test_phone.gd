@@ -96,7 +96,9 @@ func test_item_is_not_sellable_until_scanned_and_judged() -> void:
 	var inv: Array = GameState.save_state.loop.inventory
 	inv.append(inst.to_dictionary())
 
-	assert_eq(MarketplaceService.get_sellable().size(), 0, "a clean but unscanned item can't be sold")
+	assert_eq(
+		MarketplaceService.get_sellable().size(), 0, "a clean but unscanned item can't be sold"
+	)
 
 	inst.authenticity = ModelEnums.Verdict.AUTHENTIC  # the player scans + commits a verdict
 	inv[inv.size() - 1] = inst.to_dictionary()

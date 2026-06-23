@@ -81,9 +81,7 @@ func validate(
 			file_path, id, "display_name", "surface condition display_name is required"
 		)
 	if not CATEGORY_LABELS.has(category):
-		result.add_field_error(
-			file_path, id, "category", "unknown category '%s'" % category
-		)
+		result.add_field_error(file_path, id, "category", "unknown category '%s'" % category)
 	if cleaning_tool.is_empty():
 		result.add_field_error(
 			file_path, id, "cleaning_tool", "surface condition cleaning_tool is required"

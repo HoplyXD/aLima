@@ -52,7 +52,9 @@ func _model_path() -> String:
 
 
 func _model_exists(path: String) -> bool:
-	return ResourceLoader.exists(path) or FileAccess.file_exists(ProjectSettings.globalize_path(path))
+	return (
+		ResourceLoader.exists(path) or FileAccess.file_exists(ProjectSettings.globalize_path(path))
+	)
 
 
 ## Generates an in-character buyer reply on-device AND the buyer's haggle decision. When
@@ -89,7 +91,9 @@ func chat(
 		session.call("start_worker")
 	session.call(
 		"say",
-		_user_text(persona, current_offer, seller_price, max_pay, item_value, player_message, history)
+		_user_text(
+			persona, current_offer, seller_price, max_pay, item_value, player_message, history
+		)
 	)
 	var text: Variant = await session.response_finished  # signal(response: String)
 	session.queue_free()
@@ -112,7 +116,11 @@ func _system_prompt(persona: BuyerPersona, haggling: bool) -> String:
 		"You are role-playing a buyer for a restored antique in a cozy Filipino junk-shop "
 		+ "game. Stay in character as %s" % persona.display_name
 		+ (" (motive: %s)" % persona.motive if not persona.motive.is_empty() else "")
-		+ (", style: %s. " % persona.negotiation_style if not persona.negotiation_style.is_empty() else ". ")
+		+ (
+			", style: %s. " % persona.negotiation_style
+			if not persona.negotiation_style.is_empty()
+			else ". "
+		)
 	)
 	var offended_rule := (
 		"Set offended=true ONLY if the seller's message is offensive, sexual, NSFW, harassing, "
@@ -135,8 +143,10 @@ func _system_prompt(persona: BuyerPersona, haggling: bool) -> String:
 		)
 	# Speak purely in-character, first person, with no transcript-style name labels.
 	var voice := (
-		"Speak ONLY as %s, in the first person. NEVER begin your reply with a name or a label "
-		% persona.display_name
+		(
+			"Speak ONLY as %s, in the first person. NEVER begin your reply with a name or a label "
+			% persona.display_name
+		)
 		+ "like 'Seller:', 'Buyer:', or your own name — just say your line. Reply naturally in "
 		+ "your own words; do not reuse a canned sentence. "
 	)
@@ -149,9 +159,12 @@ func _system_prompt(persona: BuyerPersona, haggling: bool) -> String:
 			+ 'short, natural in-character sentences>", "offended": <true|false>}. You are a '
 			+ "real person browsing the shop, NOT an AI assistant — never say you can't engage, "
 			+ "never apologise about 'this kind of dialogue', never refuse. ALWAYS reply in "
-			+ "character (even a simple 'aww' or 'hello' gets a reply). " + temperament + voice
+			+ "character (even a simple 'aww' or 'hello' gets a reply). "
+			+ temperament
+			+ voice
 			+ "Do NOT mention a price, an offer, or any peso amount unless THEY brought up a "
-			+ "number. " + offended_rule
+			+ "number. "
+			+ offended_rule
 		)
 	return (
 		intro
@@ -162,8 +175,11 @@ func _system_prompt(persona: BuyerPersona, haggling: bool) -> String:
 		+ "counter=0. Otherwise accept=false and counter = the MOST you will genuinely pay, "
 		+ "judged by how well they've convinced you: go higher (up to the maximum you're told) "
 		+ "if they've truly won you over, lower if they haven't. Say your number in your own "
-		+ "natural words. " + temperament + voice
-		+ "Never pay above the maximum you are told you can. " + offended_rule
+		+ "natural words. "
+		+ temperament
+		+ voice
+		+ "Never pay above the maximum you are told you can. "
+		+ offended_rule
 	)
 
 
@@ -193,22 +209,32 @@ func _user_text(
 					% [item_value, max_pay]
 				)
 			)
-		lines.append(
-			(
-				"The seller is asking ₱%d. Accept only if that is fair and within ₱%d; otherwise "
-				+ "counter with a number you'd actually pay (never above ₱%d)."
+		(
+			lines
+			. append(
+				(
+					(
+						"The seller is asking ₱%d. Accept only if that is fair and within ₱%d; otherwise "
+						+ "counter with a number you'd actually pay (never above ₱%d)."
+					)
+					% [seller_price, max_pay, max_pay]
+				)
 			)
-			% [seller_price, max_pay, max_pay]
 		)
 		lines.append("Reply as %s with one short in-character line as JSON." % persona.display_name)
 	else:
 		# Conversation — no price on the table; just chat back, don't mention numbers.
-		lines.append(
-			(
-				"Chat back as %s with one short, natural in-character line as JSON. Do not bring "
-				+ "up a price."
+		(
+			lines
+			. append(
+				(
+					(
+						"Chat back as %s with one short, natural in-character line as JSON. Do not bring "
+						+ "up a price."
+					)
+					% persona.display_name
+				)
 			)
-			% persona.display_name
 		)
 	return "\n".join(lines)
 

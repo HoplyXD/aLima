@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dkn0gtrq6hw4b"
 path.s3tc="res://.godot/imported/trn_CandleFlame.png-6030b064e781d34a46ab2c15b2916e02.s3tc.ctex"
+path.etc2="res://.godot/imported/trn_CandleFlame.png-6030b064e781d34a46ab2c15b2916e02.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/3d Assets/Candles/trn_CandleFlame.png"
-dest_files=["res://.godot/imported/trn_CandleFlame.png-6030b064e781d34a46ab2c15b2916e02.s3tc.ctex"]
+dest_files=["res://.godot/imported/trn_CandleFlame.png-6030b064e781d34a46ab2c15b2916e02.s3tc.ctex", "res://.godot/imported/trn_CandleFlame.png-6030b064e781d34a46ab2c15b2916e02.etc2.ctex"]
 
 [params]
 

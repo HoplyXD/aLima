@@ -84,7 +84,9 @@ func validate(
 		if beat is Dictionary:
 			_validate_beat(beat, beat_idx, result, file_path)
 		else:
-			result.add_field_error(file_path, id, "beats[%d]" % beat_idx, "beat must be a dictionary")
+			result.add_field_error(
+				file_path, id, "beats[%d]" % beat_idx, "beat must be a dictionary"
+			)
 		beat_idx += 1
 	for key in dialogue.keys():
 		var lines: Variant = dialogue[key]

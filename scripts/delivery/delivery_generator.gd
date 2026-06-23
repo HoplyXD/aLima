@@ -128,13 +128,16 @@ func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator)
 		var pick := rng.randi_range(0, available.size() - 1)
 		var condition: SurfaceCondition = catalog[available[pick]]
 		available.remove_at(pick)
-		decals.append(
-			{
-				"id": "%s_%d" % [condition.id, i],
-				"type": condition.id,
-				"color": condition.color,
-				"required_tool": condition.cleaning_tool,
-			}
+		(
+			decals
+			. append(
+				{
+					"id": "%s_%d" % [condition.id, i],
+					"type": condition.id,
+					"color": condition.color,
+					"required_tool": condition.cleaning_tool,
+				}
+			)
 		)
 	inst.spawned_decals = decals
 

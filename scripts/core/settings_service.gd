@@ -15,7 +15,9 @@ const DEFAULT_RENDERER := RENDERER_MOBILE
 
 ## Selectable windowed resolutions.
 const RESOLUTIONS: Array[Vector2i] = [
-	Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080),
+	Vector2i(1280, 720),
+	Vector2i(1600, 900),
+	Vector2i(1920, 1080),
 ]
 
 var resolution: Vector2i = Vector2i(1920, 1080)

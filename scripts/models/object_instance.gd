@@ -20,7 +20,8 @@ var recorded_damage: int = 0  ## Accumulated damage from wrong tools; persists w
 var removed_decals: Array[String] = []  ## Decal ids cleared so far (decal-based templates).
 var spawned_decals: Array = []  ## Random per-instance conditions; empty => use template decals.
 var is_joined: bool = false  ## True once a join-step object has been reassembled.
-var dirt_mask: PackedByteArray = PackedByteArray()  ## PNG of the exact cleaned grime mask (condition-based objects); empty => rebuild from condition.
+var dirt_mask: PackedByteArray = PackedByteArray()
+## PNG of the exact cleaned grime mask for condition-based objects; empty => rebuild from condition.
 
 
 func _init() -> void:

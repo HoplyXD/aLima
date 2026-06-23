@@ -24,5 +24,7 @@ func test_suspicious_buyer_ties_to_the_buyer_route() -> void:
 func test_each_persona_has_a_budget_and_banter() -> void:
 	for raw in _repo.get_buyers_sorted():
 		var persona := raw as BuyerPersona
-		assert_gt(persona.budget_range.y, persona.budget_range.x, "%s has a real budget" % persona.id)
+		assert_gt(
+			persona.budget_range.y, persona.budget_range.x, "%s has a real budget" % persona.id
+		)
 		assert_true(persona.fallback_lines.has("open"), "%s has opening banter" % persona.id)

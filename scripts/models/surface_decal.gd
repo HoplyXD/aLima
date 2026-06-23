@@ -70,7 +70,9 @@ func validate(
 	if type.is_empty():
 		result.add_field_error(file_path, id, "decal.type", "decal type is required")
 	if required_tool.is_empty():
-		result.add_field_error(file_path, id, "decal.required_tool", "decal required_tool is required")
+		result.add_field_error(
+			file_path, id, "decal.required_tool", "decal required_tool is required"
+		)
 	if not _is_valid_hex(color):
 		result.add_field_error(file_path, id, "decal.color", "color must be a #RRGGBB hex string")
 	return result

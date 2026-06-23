@@ -232,7 +232,9 @@ func _make_sell_row(inst: ObjectInstance) -> Control:
 	name_label.add_theme_font_size_override("font_size", 15)
 	row.add_child(name_label)
 	var detail := Label.new()
-	detail.text = "≈₱%d · %d%%" % [MarketplaceService.assessed_value(inst.uid), int(round(inst.condition))]
+	detail.text = (
+		"≈₱%d · %d%%" % [MarketplaceService.assessed_value(inst.uid), int(round(inst.condition))]
+	)
 	detail.add_theme_font_size_override("font_size", 12)
 	detail.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
 	row.add_child(detail)
@@ -378,7 +380,7 @@ func _render_haggle() -> void:
 	_app_content.add_child(_ai_label)
 
 	_said_label = Label.new()
-	_said_label.text = "\"%s\"" % _negotiation.history.back()["text"]
+	_said_label.text = '"%s"' % _negotiation.history.back()["text"]
 	_said_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_said_label.add_theme_font_size_override("font_size", 14)
 	_said_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.7))
@@ -387,7 +389,9 @@ func _render_haggle() -> void:
 	if _negotiation.is_closed():
 		var outcome := Label.new()
 		if _negotiation.walked:
-			outcome.text = "%s walked away. No sale." % (persona.display_name if persona != null else "")
+			outcome.text = (
+				"%s walked away. No sale." % (persona.display_name if persona != null else "")
+			)
 		else:
 			outcome.text = "Sold for ₱%d!" % _negotiation.final_price
 		outcome.add_theme_font_size_override("font_size", 15)
@@ -477,7 +481,7 @@ func haggle_banter(move_id: String) -> void:
 		and _market_view == "haggle"
 		and is_instance_valid(_said_label)
 	):
-		_said_label.text = "\"%s\"" % line
+		_said_label.text = '"%s"' % line
 
 
 ## Player sends ONE free-text message that does everything:

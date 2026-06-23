@@ -359,7 +359,11 @@ func _ray_sphere(origin: Vector3, direction: Vector3, center: Vector3, radius: f
 ## its placeholder tint; `removed_ids` hides already-cleaned blemishes so a reopened
 ## photo reconstructs saved progress.
 func enter_photo_mode(
-	decals: Array, removed_ids: Array, colors: Dictionary, textures: Dictionary = {}, seed_value: int = 0
+	decals: Array,
+	removed_ids: Array,
+	colors: Dictionary,
+	textures: Dictionary = {},
+	seed_value: int = 0
 ) -> void:
 	if not _built:
 		_build()
@@ -376,7 +380,11 @@ func enter_photo_mode(
 ## condition is removed. The medallion itself reads clean — the decals are the only
 ## dirt — so progress is communicated entirely by the discrete spots.
 func enter_conditions_mode(
-	decals: Array, removed_ids: Array, colors: Dictionary, textures: Dictionary = {}, seed_value: int = 0
+	decals: Array,
+	removed_ids: Array,
+	colors: Dictionary,
+	textures: Dictionary = {},
+	seed_value: int = 0
 ) -> void:
 	if not _built:
 		_build()
@@ -442,7 +450,9 @@ func _condition_layout(index: int, count: int) -> Vector3:
 	var t := (float(index) + 0.5) / float(maxi(count, 1))
 	# _layout_phase (seeded per instance) rotates the spiral and jitters height so the
 	# same template's conditions land in different spots on different artifacts.
-	var y := clampf(lerpf(0.6, -0.6, t) + sin(_layout_phase * 3.0 + float(index)) * 0.08, -0.82, 0.82)
+	var y := clampf(
+		lerpf(0.6, -0.6, t) + sin(_layout_phase * 3.0 + float(index)) * 0.08, -0.82, 0.82
+	)
 	var ring := sqrt(maxf(0.0, 1.0 - y * y))
 	var theta := golden * float(index) + _layout_phase
 	var x := cos(theta) * ring
@@ -762,7 +772,9 @@ func _blemish_layout(index: int, count: int) -> Vector3:
 	var fx := (float(col) + 0.5) / float(cols)
 	var fy := (float(row) + 0.5) / float(rows)
 	var x := lerpf(-PHOTO_HALF_W * 0.7, PHOTO_HALF_W * 0.7, fx) + sin(_layout_phase + index) * 0.05
-	var y := lerpf(PHOTO_HALF_H * 0.7, -PHOTO_HALF_H * 0.7, fy) + cos(_layout_phase * 1.3 + index) * 0.04
+	var y := (
+		lerpf(PHOTO_HALF_H * 0.7, -PHOTO_HALF_H * 0.7, fy) + cos(_layout_phase * 1.3 + index) * 0.04
+	)
 	return Vector3(x, y, 0.04)
 
 

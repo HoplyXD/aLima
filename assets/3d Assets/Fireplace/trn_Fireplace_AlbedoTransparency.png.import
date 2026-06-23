@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dcrwf44u7ewqk"
 path.s3tc="res://.godot/imported/trn_Fireplace_AlbedoTransparency.png-cfbb328be23e82cd069a945aa6d5e31d.s3tc.ctex"
+path.etc2="res://.godot/imported/trn_Fireplace_AlbedoTransparency.png-cfbb328be23e82cd069a945aa6d5e31d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/3d Assets/Fireplace/trn_Fireplace_AlbedoTransparency.png"
-dest_files=["res://.godot/imported/trn_Fireplace_AlbedoTransparency.png-cfbb328be23e82cd069a945aa6d5e31d.s3tc.ctex"]
+dest_files=["res://.godot/imported/trn_Fireplace_AlbedoTransparency.png-cfbb328be23e82cd069a945aa6d5e31d.s3tc.ctex", "res://.godot/imported/trn_Fireplace_AlbedoTransparency.png-cfbb328be23e82cd069a945aa6d5e31d.etc2.ctex"]
 
 [params]
 

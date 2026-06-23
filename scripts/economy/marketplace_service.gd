@@ -322,7 +322,12 @@ func start_negotiation(uid: String, persona_id: String) -> Negotiation:
 		return null
 	var category := template.category if template != null else ""
 	return Negotiation.open(
-		persona, assessed_value(uid), int(round(inst.condition)), category, true, buyer_cash(persona_id)
+		persona,
+		assessed_value(uid),
+		int(round(inst.condition)),
+		category,
+		true,
+		buyer_cash(persona_id)
 	)
 
 

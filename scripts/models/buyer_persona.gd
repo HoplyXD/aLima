@@ -133,7 +133,9 @@ func validate(
 	if display_name.is_empty():
 		result.add_field_error(file_path, id, "display_name", "display_name is required")
 	if budget_range.x < 0 or budget_range.y < budget_range.x:
-		result.add_field_error(file_path, id, "budget_range", "budget_range must be [min<=max], min>=0")
+		result.add_field_error(
+			file_path, id, "budget_range", "budget_range must be [min<=max], min>=0"
+		)
 	if patience < 1:
 		result.add_field_error(file_path, id, "patience", "patience must be >= 1")
 	return result

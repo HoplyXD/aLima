@@ -29,8 +29,10 @@ var counterfeit_profile: String = ""  ## Optional ref; empty if none.
 var historical_fact_ref: String = ""  ## Optional ref; empty if none.
 var can_hold_temporal_echo: bool = false
 var deliverable: bool = true  ## False => quest/given item; excluded from the delivery pool.
-var decals: Array[SurfaceDecal] = []  ## Authored grime/damage; empty => condition-based cleaning.
-var requires_join: bool = false  ## True => a join step (e.g. torn photo halves) completes restoration.
+var decals: Array[SurfaceDecal] = []
+## Authored grime/damage; empty => condition-based cleaning.
+var requires_join: bool = false
+## True => a join step (e.g. torn photo halves) completes restoration.
 var join_tool: String = ""  ## ToolDefinition id required for the join step.
 
 

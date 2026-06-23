@@ -137,9 +137,7 @@ func test_cleaned_spots_persist_through_save_and_reload() -> void:
 
 	var coverage_reloaded := view2.get_restoration_object().coverage()
 	view2.close()
-	assert_almost_eq(
-		coverage_reloaded, coverage_a, 0.001, "cleaned spots survive save/reload"
-	)
+	assert_almost_eq(coverage_reloaded, coverage_a, 0.001, "cleaned spots survive save/reload")
 
 
 # --- Workbench integration / pause ownership --------------------------------
@@ -404,9 +402,7 @@ func test_unequipping_in_storage_drops_the_tool_from_the_bench() -> void:
 	_view._on_storage_closed_from_bench()
 
 	assert_eq(_view.get_selected_tool_id(), "", "the held, now-unequipped tool is put down")
-	assert_false(
-		_view.get_tool_tray().get_tool_ids().has("rust_brush"), "and it leaves the table"
-	)
+	assert_false(_view.get_tool_tray().get_tool_ids().has("rust_brush"), "and it leaves the table")
 
 
 func _presentation_signature(view: RestorationView) -> Dictionary:

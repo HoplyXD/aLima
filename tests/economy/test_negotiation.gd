@@ -2,6 +2,7 @@ extends GutTest
 ## The deterministic haggle engine: opening offers, accepting, countering, walking,
 ## and how condition / preferred category / budget move the buyer's private ceiling.
 
+
 func _persona(overrides: Dictionary = {}) -> BuyerPersona:
 	var base := {
 		"id": "t",
@@ -67,7 +68,9 @@ func test_propose_greedy_price_counters_with_a_lower_number() -> void:
 	var decision := n.propose_price(n.ceiling * 5)
 	assert_false(decision["agreed"], "an out-of-reach price is not agreed to")
 	assert_gt(int(decision["counter"]), 0)
-	assert_lt(int(decision["counter"]), n.ceiling * 5, "the counter sits below what the seller asked")
+	assert_lt(
+		int(decision["counter"]), n.ceiling * 5, "the counter sits below what the seller asked"
+	)
 
 
 func test_set_offer_uses_the_buyers_own_number() -> void:

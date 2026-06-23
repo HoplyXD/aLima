@@ -37,7 +37,9 @@ func after_each() -> void:
 
 
 func _grant_photo_tools() -> void:
-	for tool_id in ["soft_brush", "damp_cloth", "stain_lifter", "photo_kit", "solvent", "archival_tape"]:
+	for tool_id in [
+		"soft_brush", "damp_cloth", "stain_lifter", "photo_kit", "solvent", "archival_tape"
+	]:
 		GameState.save_state.loop.tool_items.append(tool_id)
 
 
@@ -77,7 +79,7 @@ func _clean_blemish(view: RestorationView, template_id: String, decal_id: String
 	return view.attempt_clean_blemish_with_ray(origin, Vector3(0.0, 0.0, -1.0))
 
 
-func _clean_all(view: RestorationView, uid: String, template_id: String) -> void:
+func _clean_all(view: RestorationView, _uid: String, template_id: String) -> void:
 	var template := DataRepository.singleton().get_template(template_id)
 	for decal in template.decals:
 		assert_true(_clean_blemish(view, template_id, decal.id), "should hit blemish %s" % decal.id)

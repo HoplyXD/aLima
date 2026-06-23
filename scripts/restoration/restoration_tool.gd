@@ -206,6 +206,15 @@ func _collect_materials(root: Node) -> void:
 		var mat: Material = mi.get_surface_override_material(0)
 		if mat == null:
 			mat = mi.material_override
+		if mat == null and mi.mesh != null:
+			# Imported authored props (GLB/GLTF) often store materials on the mesh
+			# surfaces rather than as overrides; collect those for selection glow.
+			var mesh: Mesh = mi.mesh
+			for surface_i in mesh.get_surface_count():
+				var surface_mat: Material = mesh.surface_get_material(surface_i)
+				if surface_mat is StandardMaterial3D:
+					mat = surface_mat
+					break
 		if mat is StandardMaterial3D:
 			_materials.append(mat)
 	for child in root.get_children():
@@ -241,7 +250,9 @@ static func _static_cloth(holder: Node3D, preset: Dictionary, mats: Array) -> vo
 
 
 static func _static_brush(holder: Node3D, preset: Dictionary, mats: Array) -> void:
-	var handle := _static_mesh(holder, BoxMesh.new(), preset.get("handle", Color(0.6, 0.45, 0.28)), 0.7, mats)
+	var handle := _static_mesh(
+		holder, BoxMesh.new(), preset.get("handle", Color(0.6, 0.45, 0.28)), 0.7, mats
+	)
 	(handle.mesh as BoxMesh).size = Vector3(0.08, 0.05, 0.3)
 	var bristles := _static_mesh(
 		holder, BoxMesh.new(), preset.get("bristle", Color(0.2, 0.18, 0.14)), 0.85, mats
@@ -266,7 +277,9 @@ static func _static_bottle(holder: Node3D, preset: Dictionary, mats: Array) -> v
 
 
 static func _static_block(holder: Node3D, preset: Dictionary, mats: Array) -> void:
-	var block := _static_mesh(holder, BoxMesh.new(), preset.get("color", Color(0.72, 0.72, 0.74)), 0.7, mats)
+	var block := _static_mesh(
+		holder, BoxMesh.new(), preset.get("color", Color(0.72, 0.72, 0.74)), 0.7, mats
+	)
 	(block.mesh as BoxMesh).size = Vector3(0.2, 0.1, 0.2)
 
 
