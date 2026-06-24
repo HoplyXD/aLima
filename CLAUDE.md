@@ -46,7 +46,10 @@ alima/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
 │   ├── PROMPT_CONTEXT.md      ← verified context and prompt contract for agents
-│   └── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
+│   ├── ai-disclosure.md       ← running AI-usage log (APPEND when AI is used)
+│   ├── sources/               ← verified historical-source records (referenced by the content manifest; Phase 12+)
+│   ├── reviews/               ← cultural / native-speaker review records (Phase 12+)
+│   └── provenance/            ← asset/content provenance records (Phase 12+)
 ├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration view: restoration_view.tscn + restoration_dirt.gdshader; the manipulable artifact model lives in its own reusable restoration_artifact.tscn — an @tool RestorationObject3D devs can open standalone to view/iterate models — instanced under restoration_view's World; the old 2D placeholder scenes/ui/restoration_screen.* was retired in P4.7)
 ├── scripts/                   ← shop, core, models, delivery, discovery, restoration, scanner, journal, portal
 │   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController
@@ -61,12 +64,20 @@ alima/
 │   ├── core/                  ← repository, autoload, save, run-context tests
 │   ├── delivery/              ← delivery generation, placement, glow, triage tests
 │   └── journal/               ← journal entries, fragment case, and BookViewport pause tests
-├── .github/workflows/ci.yml   ← CI: 4.6.3 import + GUT + gdformat + gdlint
+├── .github/workflows/ci.yml   ← CI: 4.7 import + GUT + gdformat + gdlint
 ├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
 ├── server/                    ← Express: LLM proxy + portal client (Phase 8; cached `/api/scan`, `/api/portal/discovery` proxy, `.env.example`, Jest tests)
 ├── mock-portal/               ← mock City-Wide Portal API (Phase 8; deterministic fact cards, Jest tests)
-└── data/                      ← objects, artifacts, echoes, routes, scanner-cache, delivery (JSON; artifact-agnostic)
+└── data/                      ← objects, artifacts (+ packets/ artifact-lock), echoes, routes (+ beats/), scanner-cache, delivery, journal, buyers, events, design (§23 decisions), content-manifest.json, and full-game contract stubs: marketplace, counterfeits, temporal-echoes, evening, museum (JSON; artifact-agnostic)
 ```
+
+**Content manifest (Phase 12+, CLAUDE.md §4-M).** `data/content-manifest.json` is the versioned
+full-game content contract, validated by `scripts/core/content_manifest_validator.gd` (model in
+`scripts/models/content_manifest.gd`, tests in `tests/content/manifest/`). It declares the §4-M
+minimum counts, the named content IDs, the artifact-lock packet ref, the PRD §23 decision refs, and
+the provenance/source/review record refs. The validator fails while any blocking decision
+(`data/design/decisions.json`) or the artifact lock (`data/artifacts/packets/artifact_lock.json`) is
+`PENDING_TEAM_DECISION`, so an unresolved team/cultural-source call cannot be silently shipped.
 
 ---
 

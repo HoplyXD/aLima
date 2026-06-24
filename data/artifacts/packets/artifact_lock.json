@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "id": "artifact_lock",
+  "status": "PENDING_TEAM_DECISION",
+  "_note": "P12.1 team/cultural-consult output. Lives in a subdir so DataRepository (which parses every loose .json directly under data/artifacts/ as fragments or a Master Artifact) does not load it. The ContentManifestValidator reads it by path. Never mark P12.1 [x] from an invented value.",
+  "artifact": {
+    "id": "",
+    "display_name": "",
+    "status": "PENDING_TEAM_DECISION",
+    "region": "Western Visayas",
+    "frontrunner_note": "Frontrunner only: Heirloom Timepiece. Not the locked choice."
+  },
+  "natural_components": [
+    { "slot_index": 0, "id": "", "display_name": "", "status": "PENDING_TEAM_DECISION" },
+    { "slot_index": 1, "id": "", "display_name": "", "status": "PENDING_TEAM_DECISION" },
+    { "slot_index": 2, "id": "", "display_name": "", "status": "PENDING_TEAM_DECISION" },
+    { "slot_index": 3, "id": "", "display_name": "", "status": "PENDING_TEAM_DECISION" },
+    { "slot_index": 4, "id": "", "display_name": "", "status": "PENDING_TEAM_DECISION" }
+  ],
+  "source_refs": [],
+  "folklore_labels": [],
+  "reviewer_refs": [],
+  "approval_date": ""
+}

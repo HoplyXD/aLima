@@ -6,7 +6,7 @@ on:
 
 # No backend jobs yet: server/ and mock-portal/ do not exist (Phase 8).
 env:
-  GODOT_VERSION: "4.6.3"
+  GODOT_VERSION: "4.7"
   GDTOOLKIT_VERSION: "4.5.0"
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
         run: gdlint scripts scenes dialogue tests
 
   godot:
-    name: Godot ${{ env.GODOT_VERSION }} import + GUT
+    name: Godot 4.7 import + GUT
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +50,9 @@ jobs:
       # Editor import regenerates .godot/ and registers global classes (GutTest).
       - name: Editor import
         run: ./godot --headless --editor --path . --quit
+
+      - name: Content manifest validation (P12.4)
+        run: ./godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/content/manifest -gexit
 
       - name: GUT smoke tests
         run: ./godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
