@@ -12,6 +12,8 @@ func before_each() -> void:
 	SettingsService.resolution = Vector2i(1920, 1080)
 	SettingsService.fullscreen = false
 	SettingsService.renderer = SettingsService.DEFAULT_RENDERER
+	SettingsService.ai_mode = SettingsService.DEFAULT_AI_MODE
+	SettingsService.decal_highlight = false
 
 
 func after_each() -> void:
@@ -65,6 +67,27 @@ func test_request_renderer_saves_without_quitting_in_headless() -> void:
 
 func test_request_renderer_rejects_unknown_method() -> void:
 	assert_false(SettingsService.request_renderer("ray_tracing"))
+
+
+func test_default_ai_mode_is_offline() -> void:
+	assert_eq(SettingsService.DEFAULT_AI_MODE, "offline")
+	assert_false(SettingsService.ai_mode_is_online(), "the exhibit-safe default prefers on-device")
+
+
+func test_set_ai_mode_persists_and_rejects_unknown() -> void:
+	SettingsService.set_ai_mode(SettingsService.AI_ONLINE)
+	assert_true(SettingsService.ai_mode_is_online())
+	assert_eq(str(_saved().get_value("ai", "mode")), "online")
+	# Unknown values are ignored (the stored mode is unchanged).
+	SettingsService.set_ai_mode("psychic")
+	assert_eq(SettingsService.ai_mode, "online", "an invalid mode is rejected")
+
+
+func test_decal_highlight_defaults_off_and_persists() -> void:
+	assert_false(SettingsService.decal_highlight_enabled(), "the learning aid is off by default")
+	SettingsService.set_decal_highlight(true)
+	assert_true(SettingsService.decal_highlight_enabled())
+	assert_true(bool(_saved().get_value("ui", "decal_highlight")))
 
 
 func test_mobile_unlocked_when_player_chose_compatibility() -> void:

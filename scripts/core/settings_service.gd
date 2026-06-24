@@ -13,6 +13,14 @@ const RENDERER_MOBILE := "mobile"
 const RENDERER_COMPAT := "gl_compatibility"
 const DEFAULT_RENDERER := RENDERER_MOBILE
 
+## Marketplace AI banter source. "online" prefers the backend LLM proxy (NegotiationClient);
+## "offline" prefers the on-device Godot LLM (LocalAI). Either falls back to the deterministic
+## offline bot when its choice is unavailable, so banter never fully breaks (Invariant §4-O).
+## Default offline so the exhibit build never depends on venue internet (§4-K).
+const AI_ONLINE := "online"
+const AI_OFFLINE := "offline"
+const DEFAULT_AI_MODE := AI_OFFLINE
+
 ## Selectable windowed resolutions.
 const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1280, 720),
@@ -26,6 +34,12 @@ var renderer: String = DEFAULT_RENDERER
 ## Render small rotating 3D previews of artifacts in the bench picker. Off = text-only
 ## cards (cheaper on low-end hardware). Default on.
 var artifact_previews: bool = true
+## Which AI powers marketplace banter (see AI_ONLINE/AI_OFFLINE above).
+var ai_mode: String = DEFAULT_AI_MODE
+## When on, selecting a restoration tool throbs the conditions that tool can clean, as a
+## learning aid. Default OFF so the bench stays calm for players who prefer to read the
+## surface themselves.
+var decal_highlight: bool = false
 
 var _config_path: String = CONFIG_PATH
 
@@ -65,6 +79,28 @@ func set_artifact_previews(value: bool) -> void:
 
 func previews_enabled() -> bool:
 	return artifact_previews
+
+
+## Sets the marketplace AI source ("online" or "offline"); anything else is ignored.
+func set_ai_mode(mode: String) -> void:
+	if mode != AI_ONLINE and mode != AI_OFFLINE:
+		return
+	ai_mode = mode
+	_save()
+
+
+## True when banter should prefer the backend LLM proxy; false prefers the on-device LLM.
+func ai_mode_is_online() -> bool:
+	return ai_mode == AI_ONLINE
+
+
+func set_decal_highlight(value: bool) -> void:
+	decal_highlight = value
+	_save()
+
+
+func decal_highlight_enabled() -> bool:
+	return decal_highlight
 
 
 ## Applies the window size / mode. No-op when there is no real window (headless tests).
@@ -141,6 +177,10 @@ func _load() -> void:
 	fullscreen = bool(cfg.get_value("display", "fullscreen", fullscreen))
 	renderer = str(cfg.get_value("rendering", "renderer", DEFAULT_RENDERER))
 	artifact_previews = bool(cfg.get_value("display", "artifact_previews", artifact_previews))
+	ai_mode = str(cfg.get_value("ai", "mode", DEFAULT_AI_MODE))
+	if ai_mode != AI_ONLINE and ai_mode != AI_OFFLINE:
+		ai_mode = DEFAULT_AI_MODE
+	decal_highlight = bool(cfg.get_value("ui", "decal_highlight", decal_highlight))
 
 
 func _save() -> void:
@@ -150,6 +190,8 @@ func _save() -> void:
 	cfg.set_value("display", "fullscreen", fullscreen)
 	cfg.set_value("display", "artifact_previews", artifact_previews)
 	cfg.set_value("rendering", "renderer", renderer)
+	cfg.set_value("ai", "mode", ai_mode)
+	cfg.set_value("ui", "decal_highlight", decal_highlight)
 	cfg.save(_config_path)
 
 

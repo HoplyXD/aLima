@@ -184,6 +184,41 @@ func test_randomized_decal_count_limits_active_conditions() -> void:
 	assert_eq(obj.authored_active_count(), 2, "only the randomized number of conditions go live")
 
 
+## The "Max Decals: N" customization directive limits active conditions, and takes
+## precedence over the legacy randomized_decal_count when both are set.
+func test_max_decals_directive_limits_and_overrides_legacy() -> void:
+	var obj := RestorationObject3D.new()
+	add_child_autofree(obj)
+	await wait_physics_frames(1)
+	for child in obj.get_children():
+		if child.has_method("condition_slug"):
+			child.free()
+	for i in range(4):
+		var decal := ArtifactConditionDecal.new()
+		decal.name = "Condition%d" % i
+		decal.texture = RUST_TEXTURE
+		obj.add_child(decal)
+	# Directive says 2; the legacy field says 4 — the directive must win.
+	obj.customization = "Max Decals: 2"
+	obj.randomized_decal_count = 4
+
+	obj.register_authored_conditions(DataRepository.singleton(), 123)
+
+	assert_eq(obj.authored_active_count(), 2, "the Max Decals directive limits and overrides")
+
+
+## Scaling an artifact scene's ROOT node enlarges it on the bench AND grows the analytic
+## hit-test surface to match, so cleaning still lands. Regression for root scale being wiped.
+func test_root_scale_enlarges_the_surface_hit_test() -> void:
+	var obj := RestorationObject3D.new()
+	obj.scale = Vector3(2, 2, 2)  # the dev scales the artifact up in the editor
+	add_child_autofree(obj)
+	await wait_physics_frames(1)
+	# A ray offset past the unscaled 0.55 sphere but inside the 2x (1.1) one must now hit.
+	var hit := obj.ray_test_surface(Vector3(0.8, 0.0, 3.0), Vector3(0.0, 0.0, -1.0))
+	assert_true(hit.get("hit", false), "root scale grows the cleanable surface to match the model")
+
+
 func test_repeated_correct_strokes_clean_and_sparkle() -> void:
 	var obj := await _open_with_object()
 	var condition_id := obj.uncleaned_authored_ids()[0]

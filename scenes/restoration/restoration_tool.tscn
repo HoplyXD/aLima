@@ -2,58 +2,6 @@
 
 [ext_resource type="Script" uid="uid://c6u4elr76p12a" path="res://scripts/restoration/restoration_tool.gd" id="1_tool"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="2_8u2b2"]
-[ext_resource type="PackedScene" uid="uid://cqpljt8ve1co8" path="res://assets/3d Assets/Tools/Fan Brush.glb" id="3_fanbrush"]
-[ext_resource type="PackedScene" uid="uid://daqrr12xpexhs" path="res://assets/3d Assets/Tools/Tools Lash Brush.glb" id="4_lashbrush"]
-[ext_resource type="PackedScene" uid="uid://dugq78skyga6k" path="res://assets/3d Assets/Tools/Solvent.glb" id="5_solvent"]
-[ext_resource type="PackedScene" uid="uid://bkic100spnmbb" path="res://assets/3d Assets/Tools/Folded Towels.glb" id="6_towels"]
-[ext_resource type="PackedScene" uid="uid://hxoh31ngsuao" path="res://assets/3d Assets/Tools/Towel.glb" id="7_towel"]
-
-[sub_resource type="StandardMaterial3D" id="Mat_polish_cloth"]
-albedo_color = Color(0.8, 0.78, 0.6, 1)
-roughness = 0.95
-emission = Color(0.89, 0.879, 0.78, 1)
-emission_energy_multiplier = 0.6
-
-[sub_resource type="BoxMesh" id="Mesh_cloth_pad"]
-size = Vector3(0.32, 0.05, 0.24)
-
-[sub_resource type="StandardMaterial3D" id="Mat_stain_body"]
-albedo_color = Color(0.78, 0.7, 0.5, 1)
-metallic = 0.2
-roughness = 0.4
-emission = Color(0.879, 0.835, 0.725, 1)
-emission_energy_multiplier = 0.6
-
-[sub_resource type="CylinderMesh" id="Mesh_bottle_body"]
-top_radius = 0.08
-bottom_radius = 0.09
-height = 0.22
-
-[sub_resource type="StandardMaterial3D" id="Mat_stain_cap"]
-albedo_color = Color(0.507, 0.455, 0.325, 1)
-metallic = 0.2
-roughness = 0.6
-emission = Color(0.729, 0.7, 0.629, 1)
-emission_energy_multiplier = 0.6
-
-[sub_resource type="CylinderMesh" id="Mesh_bottle_cap"]
-top_radius = 0.04
-bottom_radius = 0.04
-height = 0.06
-
-[sub_resource type="StandardMaterial3D" id="Mat_consol_body"]
-albedo_color = Color(0.7, 0.62, 0.82, 1)
-metallic = 0.2
-roughness = 0.4
-emission = Color(0.835, 0.791, 0.901, 1)
-emission_energy_multiplier = 0.6
-
-[sub_resource type="StandardMaterial3D" id="Mat_consol_cap"]
-albedo_color = Color(0.455, 0.403, 0.533, 1)
-metallic = 0.2
-roughness = 0.6
-emission = Color(0.7, 0.671, 0.743, 1)
-emission_energy_multiplier = 0.6
 
 [sub_resource type="QuadMesh" id="QuadMesh_info"]
 size = Vector2(0.34, 0.22)
@@ -83,76 +31,23 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="RestorationTool" type="Node3D" unique_id=625693917]
+[node name="RestorationTool" type="Node3D"]
 script = ExtResource("1_tool")
 
-[node name="Geometry" type="Node3D" parent="." unique_id=1741447970]
+[node name="Geometry" type="Node3D" parent="."]
 
-[node name="soft_cloth" type="Node3D" parent="Geometry" unique_id=1642370254]
-
-[node name="FoldedTowels" parent="Geometry/soft_cloth" unique_id=1612098842 instance=ExtResource("6_towels")]
-transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0, 0)
-
-[node name="damp_cloth" type="Node3D" parent="Geometry" unique_id=47852161]
-transform = Transform3D(1.335, 0, 0, 0, 1.335, 0, 0, 0, 1.335, 0.255, 0, 0)
-
-[node name="Towel" parent="Geometry/damp_cloth" unique_id=159021390 instance=ExtResource("7_towel")]
-
-[node name="polishing_cloth" type="Node3D" parent="Geometry" unique_id=2035312312]
-
-[node name="Cloth" type="MeshInstance3D" parent="Geometry/polishing_cloth" unique_id=685181701]
-material_override = SubResource("Mat_polish_cloth")
-mesh = SubResource("Mesh_cloth_pad")
-
-[node name="soft_brush" type="Node3D" parent="Geometry" unique_id=1487573181]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
-
-[node name="FanBrush" parent="Geometry/soft_brush" unique_id=2059687958 instance=ExtResource("3_fanbrush")]
-
-[node name="rust_brush" type="Node3D" parent="Geometry" unique_id=1348074263]
-
-[node name="LashBrush" parent="Geometry/rust_brush" unique_id=1862887772 instance=ExtResource("4_lashbrush")]
-transform = Transform3D(0.035, 0, 0, 0, -1.5298985e-09, 0.035, 0, -0.035, -1.5298985e-09, 0, 0, 0)
-
-[node name="solvent" type="Node3D" parent="Geometry" unique_id=992614753]
-
-[node name="Solvent" parent="Geometry/solvent" unique_id=849976032 instance=ExtResource("5_solvent")]
-transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0, -0.136, 0)
-
-[node name="stain_lifter" type="Node3D" parent="Geometry" unique_id=2018477309]
-
-[node name="Body" type="MeshInstance3D" parent="Geometry/stain_lifter" unique_id=143696651]
-material_override = SubResource("Mat_stain_body")
-mesh = SubResource("Mesh_bottle_body")
-
-[node name="Cap" type="MeshInstance3D" parent="Geometry/stain_lifter" unique_id=1218547116]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
-material_override = SubResource("Mat_stain_cap")
-mesh = SubResource("Mesh_bottle_cap")
-
-[node name="consolidant" type="Node3D" parent="Geometry" unique_id=1747173946]
-
-[node name="Body" type="MeshInstance3D" parent="Geometry/consolidant" unique_id=1620503359]
-material_override = SubResource("Mat_consol_body")
-mesh = SubResource("Mesh_bottle_body")
-
-[node name="Cap" type="MeshInstance3D" parent="Geometry/consolidant" unique_id=2021392557]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
-material_override = SubResource("Mat_consol_cap")
-mesh = SubResource("Mesh_bottle_cap")
-
-[node name="InfoPanel" type="MeshInstance3D" parent="." unique_id=1026334037]
+[node name="InfoPanel" type="MeshInstance3D" parent="."]
 transform = Transform3D(1.3018137, 0, 0, 0, 1.8811226, 0, 0, 0, 1, 0, -0.28382063, 0.05)
 mesh = SubResource("QuadMesh_info")
 
-[node name="InfoViewport" type="SubViewport" parent="InfoPanel" unique_id=827593639]
+[node name="InfoViewport" type="SubViewport" parent="InfoPanel"]
 disable_3d = true
 transparent_bg = true
 handle_input_locally = false
 size = Vector2i(320, 206)
 render_target_update_mode = 4
 
-[node name="Panel" type="PanelContainer" parent="InfoPanel/InfoViewport" unique_id=1155533166]
+[node name="Panel" type="PanelContainer" parent="InfoPanel/InfoViewport"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -160,24 +55,24 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_info")
 
-[node name="VBox" type="VBoxContainer" parent="InfoPanel/InfoViewport/Panel" unique_id=1725787332]
+[node name="VBox" type="VBoxContainer" parent="InfoPanel/InfoViewport/Panel"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="ToolNameLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=328100350]
+[node name="ToolNameLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Tool"
 horizontal_alignment = 1
 
-[node name="DurabilityLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=1537890463]
+[node name="DurabilityLabel" type="Label" parent="InfoPanel/InfoViewport/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Durability"
 
-[node name="DurabilityBar" type="ProgressBar" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=1523870353]
+[node name="DurabilityBar" type="ProgressBar" parent="InfoPanel/InfoViewport/Panel/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
@@ -185,14 +80,14 @@ theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_bar_fill")
 show_percentage = false
 
-[node name="Conditions" type="GridContainer" parent="InfoPanel/InfoViewport/Panel/VBox" unique_id=1790494483]
+[node name="Conditions" type="GridContainer" parent="InfoPanel/InfoViewport/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 2
 columns = 2
 
-[node name="ConditionImage" type="TextureRect" parent="InfoPanel/InfoViewport/Panel/VBox/Conditions" unique_id=1084242386]
+[node name="ConditionImage" type="TextureRect" parent="InfoPanel/InfoViewport/Panel/VBox/Conditions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(54, 54)
 layout_mode = 2

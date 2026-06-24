@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://btoolsoftcloth0"]
+
+[ext_resource type="PackedScene" uid="uid://bkic100spnmbb" path="res://assets/3d Assets/Tools/Folded Towels/Folded Towels.glb" id="1_model"]
+
+[node name="soft_cloth" type="Node3D"]
+
+[node name="FoldedTowels" parent="." instance=ExtResource("1_model")]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0, 0)

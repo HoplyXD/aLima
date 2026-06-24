@@ -26,6 +26,10 @@ const START_DIRT: float = 230.0
 const MIN_DIRT: float = 55.0
 const PARTICLES_NAME := "CleanParticles"  ## The grime puff shown on every clean.
 const SPARKLE_PARTICLES_NAME := "SparkleParticles"  ## The success sparkle.
+## Dedicated render layer (20) the projected Decal is restricted to, so it lands ONLY on the
+## artifact's meshes (which RestorationObject3D puts on this same layer) and never on the
+## bench table behind them. Must match RestorationObject3D.ARTIFACT_DECAL_LAYER.
+const ARTIFACT_DECAL_LAYER: int = 1 << 19
 
 ## The condition texture. Its file name decides the type. (@tool: live-rebuilds the
 ## visual in the editor so you can see it on the artifact while authoring.)
@@ -46,9 +50,18 @@ const SPARKLE_PARTICLES_NAME := "SparkleParticles"  ## The success sparkle.
 var _removed: bool = false
 var _dirt: float = START_DIRT
 var _tint_color: Color = Color.WHITE
+var _highlight_scale: float = 1.0  ## 1.0 = normal; >1 throbs the visual as a tool-match cue.
 var _visual: Node3D  ## A Decal (Forward+/Mobile) or a sticker MeshInstance3D (compat).
 var _particles: GPUParticles3D  ## Grime puff (every clean).
 var _sparkle: GPUParticles3D  ## Success sparkle (when fully cleaned).
+
+
+func _enter_tree() -> void:
+	# In the editor, rebuild the visual whenever the node (re)enters the tree — e.g. right
+	# after a duplicate/paste — so a copied or stale Decal child can't linger at the wrong
+	# size/opacity. Runtime builds via _ready instead.
+	if Engine.is_editor_hint():
+		_apply()
 
 
 func _ready() -> void:
@@ -62,13 +75,22 @@ func _ready() -> void:
 
 ## (Re)builds the visual for the current renderer from the current texture / box_size.
 func _apply() -> void:
-	if _visual != null and is_instance_valid(_visual):
-		_visual.queue_free()
+	# Free EVERY prior visual before building a fresh one. A decal duplicated in the editor
+	# can carry a copied/stale Decal child — sometimes a default 2-metre one (hence a pasted
+	# decal looking several times too big), sometimes renamed "Visual2" — and the _visual ref
+	# is null on the copy. So clear by TYPE, not by ref or exact name: any Decal, or any
+	# "Visual"-named sticker mesh. (CleanParticles/SparkleParticles are GPUParticles3D, so
+	# they're untouched.) Leaving one behind stacks decals at the wrong size / double opacity.
+	for child in get_children():
+		if child is Decal or (child is MeshInstance3D and String(child.name).begins_with("Visual")):
+			child.free()
+	_visual = null
 	# Forward+/Mobile have a RenderingDevice and can draw engine Decals; gl_compatibility
 	# (OpenGL) does not, so it falls back to the flat sticker.
 	var supported := RenderingServer.get_rendering_device() != null
 	_visual = _build_projector() if supported else _build_sticker()
 	add_child(_visual)
+	_visual.scale = Vector3.ONE * _highlight_scale  # preserve any active highlight on rebuild
 	_apply_tint()
 
 
@@ -83,6 +105,8 @@ func _build_projector() -> Decal:
 	decal.albedo_mix = 1.0
 	decal.upper_fade = 0.0
 	decal.lower_fade = 0.0
+	# Project ONLY onto the artifact's meshes (which sit on this layer), never the table.
+	decal.cull_mask = ARTIFACT_DECAL_LAYER
 	return decal
 
 
@@ -141,6 +165,15 @@ func _set_visual_alpha(alpha: float) -> void:
 		var mat := (_visual as MeshInstance3D).material_override as StandardMaterial3D
 		if mat != null:
 			mat.albedo_color = rgba
+
+
+## Emphasises this decal as a tool-match cue: `intensity` 0..1 throbs the runtime visual a
+## little larger (0 restores normal size). Scales ONLY the built visual child, never the
+## dev-authored decal node transform, so manual placement/scale is never disturbed.
+func set_highlight(intensity: float) -> void:
+	_highlight_scale = 1.0 + 0.3 * clampf(intensity, 0.0, 1.0)
+	if _visual != null and is_instance_valid(_visual):
+		_visual.scale = Vector3.ONE * _highlight_scale
 
 
 ## Pick radius for ray-testing this decal (half the footprint).

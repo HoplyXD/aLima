@@ -423,8 +423,13 @@ func begin_haggle(persona_id: String) -> void:
 		_back_to_market_home()
 		return
 	_market_view = "haggle"
-	# Probe the backend once per haggle entry; skip in headless so tests never make real HTTP calls.
-	if _banter_client == null and DisplayServer.get_name() != "headless":
+	# Probe the backend once per haggle entry (online mode only); skip in headless so tests
+	# never make real HTTP calls, and skip entirely offline since the backend isn't used.
+	if (
+		_banter_client == null
+		and DisplayServer.get_name() != "headless"
+		and SettingsService.ai_mode_is_online()
+	):
 		await NegotiationClient.probe_status()
 	_render_marketplace()
 
@@ -594,13 +599,19 @@ func haggle_chat(text: String) -> void:
 		_ghost_offended()
 		return
 
-	# Move the standing offer to the haggled price (never closes — only Accept sells).
+	# Move the standing offer so the buyer's spoken number and the Accept button always
+	# agree (never closes — only Accept sells).
 	if price > 0:
 		var agreed := bool(resp.get("agreed", false))
 		var counter := int(resp.get("counter", 0))
 		_negotiation.set_offer_from_haggle(agreed, price, counter)
 	else:
 		_negotiation.banter_mood_only(message)
+		# No price on the table, but the buyer volunteered its own number (AI/backend):
+		# follow it so the offer matches what they just said (clamped to their ceiling).
+		var volunteered := int(resp.get("counter", 0))
+		if volunteered > 0:
+			_negotiation.set_buyer_offer(volunteered)
 
 	if not reply.is_empty():
 		_negotiation.add_buyer_line(reply)
@@ -621,8 +632,9 @@ func _show_typing() -> void:
 ## counter}. Coroutine — await it.
 func _buyer_response(message: String, price: int) -> Dictionary:
 	var persona := DataRepository.singleton().get_buyer(_buyer_id)
-	# Tier 1: on-device (unchanged behavior)
-	if LocalAI.is_ready() and _negotiation != null:
+	var online := SettingsService.ai_mode_is_online()
+	# Offline mode → on-device Godot LLM (NobodyWho) first. The model states its own number.
+	if not online and LocalAI.is_ready() and _negotiation != null:
 		var llm := await LocalAI.chat(
 			persona,
 			_negotiation.current_offer,
@@ -639,9 +651,9 @@ func _buyer_response(message: String, price: int) -> Dictionary:
 				"agreed": price > 0 and bool(llm.get("accept", false)),
 				"counter": int(llm.get("counter", 0)),
 			}
-	# Tier 2 (NEW): backend live banter; the NUMBER stays deterministic
+	# Online mode → backend live banter; the NUMBER stays deterministic (engine-owned).
 	var client := _get_banter_client()
-	if client != null and client.is_live() and _negotiation != null and persona != null:
+	if online and client != null and client.is_live() and _negotiation != null and persona != null:
 		var b: Dictionary = await client.fetch_banter(
 			persona, _negotiation.current_offer, price, message, _negotiation.history
 		)
@@ -653,7 +665,7 @@ func _buyer_response(message: String, price: int) -> Dictionary:
 				"agreed": price > 0 and bool(d.get("agreed", false)),
 				"counter": int(d.get("counter", 0)),
 			}
-	# Tier 3: offline (unchanged)
+	# Both modes fall back to the deterministic offline bot when their AI is unavailable.
 	var decision := {"agreed": false, "counter": 0}
 	if price > 0 and _negotiation != null:
 		decision = _negotiation.propose_price(price)
@@ -670,15 +682,20 @@ func _refresh_ai_label() -> void:
 	if not is_instance_valid(_ai_label):
 		return
 	var client := _get_banter_client()
-	if LocalAI.is_ready():
-		_ai_label.text = "AI banter: on-device"
-		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.5))
+	if not SettingsService.ai_mode_is_online():
+		# Offline: prefer the on-device Godot LLM, else the deterministic bot.
+		if LocalAI.is_ready():
+			_ai_label.text = "AI banter: on-device (offline)"
+			_ai_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.5))
+		else:
+			_ai_label.text = "AI banter: offline bot"
+			_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
 	elif client != null and client.is_live():
 		var m := str(client.model_name())
 		_ai_label.text = "AI banter: live" + ((" (%s)" % m) if not m.is_empty() else "")
 		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.75, 0.9))
 	else:
-		_ai_label.text = "AI banter: offline"
+		_ai_label.text = "AI banter: offline bot"
 		_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
 
 

@@ -11,6 +11,7 @@
 
 [node name="AuntiePhotoFaded" type="Node3D"]
 script = ExtResource("1_obj")
+customization = "Max Decals: 3"
 randomized_decal_count = 3
 
 [node name="FadingDecal" parent="." instance=ExtResource("2_decal")]

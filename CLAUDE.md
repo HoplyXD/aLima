@@ -120,6 +120,8 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 
 **Q. Production and cultural review are part of done.** Final art, UI, animation, lighting, audio, voices, subtitles, artifact replica, lore video, provenance records, verified historical citations, native-speaker review, AI disclosure, exports, and submission materials belong to the phase checklist. A system-complete build with placeholder assets or unreviewed cultural content is not 100% complete.
 
+**R. DO NOT touch the hand-authored decals on artifact scenes.** The `ArtifactConditionDecal` children inside `scenes/restoration/artifacts/**/*.tscn` — their **count, names, positions, rotations, scale, `box_size`, and which textures they use** — are placed BY HAND by the dev/artist for each artifact. Never add, remove, reposition, rescale, or reset them, and never wholesale-rewrite an artifact `.tscn` (use targeted edits that leave the decal nodes byte-for-byte intact). The randomiser already picks which authored decals appear at runtime (`Max Decals: N`); the engine must adapt to wherever the dev placed them, not the reverse. Fixing the decal *component* script (`artifact_condition_decal.gd`) or *adding* a brand-new artifact scene is fine — editing an existing artifact's placed decals is not. If a task seems to require moving them, stop and flag it.
+
 ---
 
 ## 5. The Core Loop (what the code serves)

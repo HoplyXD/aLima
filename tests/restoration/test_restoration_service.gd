@@ -66,6 +66,26 @@ func _make_tin(uid: String, contents: int = ModelEnums.OpenResult.EMPTY) -> Obje
 	return inst
 
 
+## The shared-inventory rule: a non-openable artifact whose conditions are authored in its
+## scene (no data decals) — like the Oton Death Mask — must still be a bench object, so an
+## item delivered into storage can actually be restored. Regression for it showing in
+## storage but missing from the restoration bench.
+func test_authored_scene_artifact_is_restorable_without_data_decals() -> void:
+	var inst := ObjectInstance.new()
+	inst.template_id = "oton_death_mask"  # is_openable=false, no data decals; scene-authored
+	inst.uid = "oton_test"
+	inst.condition = 0.0
+	inst.state = ModelEnums.ObjState.DIRTY
+	inst.storage_cost = 2
+	inst.value = 800
+	_add_instance(inst)
+
+	var ids: Array[String] = []
+	for restorable in _service.get_restorable_instances():
+		ids.append(restorable.uid)
+	assert_has(ids, "oton_test", "an authored-scene artifact appears on the bench, not just storage")
+
+
 func test_instance_with_spawned_conditions_cleans_to_clean() -> void:
 	GameState.save_state.loop.tool_items.append("soft_brush")  # treats dust
 	var inst := _make_pendant("cond_pendant")

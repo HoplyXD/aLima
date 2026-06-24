@@ -58,6 +58,11 @@ class AuthoredResult:
 	var value_after: int = 0
 
 
+## Per-template authored scenes. A non-openable artifact whose scene carries hand-placed
+## condition decals (e.g. the Oton mask) has nothing in its DATA decals, so we consult this
+## to keep it a bench object — otherwise it would show in storage but not on the bench.
+const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+
 var _game_state: GameState
 var _repo: DataRepository
 
@@ -364,9 +369,14 @@ func _can_restore_instance(inst: ObjectInstance) -> bool:
 	if template == null:
 		return false
 	# Openable objects clean toward a clasp; decal-based objects (photos/frames, or
-	# any instance carrying random conditions) clean by removing marks. Anything else
-	# is not a bench object.
-	if not template.is_openable and effective_decals(inst, template).is_empty():
+	# any instance carrying random conditions) clean by removing marks. A non-openable
+	# artifact with no DATA decals can still be a bench object if its authored scene
+	# carries hand-placed condition decals (resolved only when the scene is instanced).
+	if (
+		not template.is_openable
+		and effective_decals(inst, template).is_empty()
+		and not _ArtifactScenes.has_scene(template.id)
+	):
 		return false
 	if inst.state == ModelEnums.ObjState.OPEN:
 		return false

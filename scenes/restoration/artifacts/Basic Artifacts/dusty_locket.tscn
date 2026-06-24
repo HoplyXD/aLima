@@ -15,11 +15,15 @@ roughness = 0.35
 [node name="DustyLocket" type="Node3D" unique_id=1252588796]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-customization = null
+customization = "Max Decals: 2"
 randomized_decal_count = 2
 model_mesh = ExtResource("5_locket")
 model_material = SubResource("locket_gold")
 model_scale = 0.1
+
+[node name="DustDecal2" parent="." unique_id=853499082 instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.095586926, 0.27256322, -0.2680996)
+texture = ExtResource("3_dust")
 
 [node name="DustDecal" parent="." unique_id=1955187762 instance=ExtResource("2_decal")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.047793463, -0.32079, 0.1687588)

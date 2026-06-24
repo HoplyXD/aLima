@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://daqrr12xpexhs"
-path="res://.godot/imported/Tools Lash Brush.glb-90ef9494942baf336d9d6061fa71c0c1.scn"
+path="res://.godot/imported/Tools Lash Brush.glb-0cd62d0f72cef3db781302a78d028efd.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Tools/Tools Lash Brush.glb"
-dest_files=["res://.godot/imported/Tools Lash Brush.glb-90ef9494942baf336d9d6061fa71c0c1.scn"]
+source_file="res://assets/3d Assets/Tools/Lash Brush/Tools Lash Brush.glb"
+dest_files=["res://.godot/imported/Tools Lash Brush.glb-0cd62d0f72cef3db781302a78d028efd.scn"]
 
 [params]
 

@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://d0833ued0ysbq"]
+
+; Placeholder geometry for the Archival Tape tool. Swap in a real model when authored.
+
+[sub_resource type="StandardMaterial3D" id="mat_block"]
+albedo_color = Color(0.72, 0.72, 0.74, 1)
+metallic = 0.2
+roughness = 0.7
+emission = Color(0.846, 0.846, 0.857, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="BoxMesh" id="mesh_block"]
+size = Vector3(0.2, 0.1, 0.2)
+
+[node name="archival_tape" type="Node3D"]
+
+[node name="Block" type="MeshInstance3D" parent="."]
+material_override = SubResource("mat_block")
+mesh = SubResource("mesh_block")

@@ -5,9 +5,10 @@ extends Node3D
 ## Per-artifact customisation — one directive per line, in the Inspector. Supported now:
 ##   Max Decals: N    -> only N of the placed ArtifactConditionDecal children appear,
 ##                       chosen at random (seeded per save + loop). Place as many decals
-##                       as you like; N show in game. 0 / omitted = show ALL.
-## Unknown lines are ignored, so more directives can be added later.
-@export_multiline var customization: String = "Max Decals: 0"
+##                       as you like; N show in game. 0 = show ALL.
+## When NO "Max Decals" line is present the legacy randomized_decal_count below is used
+## instead. Unknown lines are ignored, so more directives can be added later.
+@export_multiline var customization: String = ""
 ## Legacy fallback for the decal limit (use the "Max Decals" line above instead). Only
 ## consulted when the customisation text has no "Max Decals" directive.
 @export var randomized_decal_count: int = 0
@@ -60,6 +61,11 @@ extends Node3D
 
 const DIRT_SHADER := preload("res://scenes/restoration/restoration_dirt.gdshader")
 
+## Render layer (20) the artifact's meshes are placed on so condition Decals — restricted to
+## this same layer — project ONLY onto the artifact, never the bench table. Must match
+## ArtifactConditionDecal.ARTIFACT_DECAL_LAYER.
+const ARTIFACT_DECAL_LAYER: int = 1 << 19
+
 const MASK_SIZE: int = 64  ## Dirt mask resolution; small so coverage scans stay cheap.
 const BRUSH_RADIUS_UV: float = 0.16  ## Cleaning brush radius in UV space.
 const CLEAN_THRESHOLD: float = 0.5  ## Mask R below this counts a texel as cleaned.
@@ -93,6 +99,11 @@ var _built: bool = false
 var _radius: float = 0.55
 var _clasp_radius: float = 0.18
 var _clasp_interactive: bool = false
+## When an authored model is shown, the procedural placeholder clasp box is a floating
+## eyesore that doesn't match the model — so its mesh is hidden. The clasp stays
+## interactive (ray_test_clasp still hits it), so the clean->open click works unchanged;
+## the on-screen "click the clasp to open" prompt guides the player.
+var _suppress_clasp_visual: bool = false
 var _model_instance: Node3D = null  ## Authored model_scene instance, when set.
 
 var _medallion: MeshInstance3D
@@ -105,6 +116,11 @@ var _dirt_texture: ImageTexture
 var _yaw: float = AUTHORED_YAW
 var _pitch: float = AUTHORED_PITCH
 var _authored_basis: Basis = Basis.IDENTITY
+## Uniform scale the dev set on the artifact scene's ROOT node. Captured before the
+## orientation system (which rebuilds `basis` as a pure rotation) can wipe it, and folded
+## back into every orientation + hit-test so scaling an artifact in the editor actually
+## enlarges it on the bench. 1.0 = no scaling.
+var _authored_scale: float = 1.0
 var _clasp_closed_position: Vector3 = Vector3(0.0, 0.62, 0.0)
 
 ## Photo/blemish mode (decal-based templates: photos, frames, paper). Instead of a
@@ -139,6 +155,9 @@ var _layout_phase: float = 0.0
 
 func _ready() -> void:
 	_authored_basis = Basis.from_euler(Vector3(AUTHORED_PITCH, AUTHORED_YAW, 0.0))
+	# Capture the dev's root-node scale BEFORE reset_orientation() rebuilds basis (which
+	# would otherwise discard it), so an artifact scaled in the editor renders that big here.
+	_authored_scale = maxf(0.001, transform.basis.get_scale().x)
 	if not _built:
 		_build()
 	reset_orientation()
@@ -200,7 +219,8 @@ func get_authored_basis() -> Basis:
 
 
 func _apply_orientation() -> void:
-	basis = Basis.from_euler(Vector3(_pitch, _yaw, 0.0))
+	# Rotation from the orbit controls, with the dev's authored root scale folded back in.
+	basis = Basis.from_euler(Vector3(_pitch, _yaw, 0.0)).scaled(Vector3.ONE * _authored_scale)
 
 
 # --- Surface cleaning --------------------------------------------------------
@@ -307,18 +327,19 @@ func is_uv_cleaned(uv: Vector2) -> bool:
 func set_clasp_revealed(value: bool) -> void:
 	_clasp_interactive = value
 	if _clasp != null:
-		_clasp.visible = value
+		# Stay interactive even when the placeholder box is hidden under an authored model.
+		_clasp.visible = value and not _suppress_clasp_visual
 		var mat := _clasp.material_override as StandardMaterial3D
 		if mat != null:
 			# Subtle highlight invites interaction; not a carrier tell (every clean
 			# openable shows the same prompt regardless of contents).
-			mat.emission_enabled = value
+			mat.emission_enabled = value and not _suppress_clasp_visual
 
 
 func set_clasp_open(value: bool) -> void:
 	if _clasp == null:
 		return
-	_clasp.visible = value or _clasp_interactive
+	_clasp.visible = (value or _clasp_interactive) and not _suppress_clasp_visual
 	if value:
 		_clasp_interactive = false
 		_clasp.position = _clasp_closed_position + Vector3(0.0, 0.18, 0.12)
@@ -344,7 +365,9 @@ func is_clasp_interactive() -> bool:
 func ray_test_surface(origin: Vector3, direction: Vector3) -> Dictionary:
 	if not _built or _medallion == null:
 		return {"hit": false}
-	var hit := _ray_sphere(origin, direction, _medallion.global_position, _radius)
+	var hit := _ray_sphere(
+		origin, direction, _medallion.global_position, _radius * _authored_scale
+	)
 	if not hit.get("hit", false):
 		return {"hit": false}
 	var local: Vector3 = _medallion.to_local(hit["point"])
@@ -355,7 +378,7 @@ func ray_test_surface(origin: Vector3, direction: Vector3) -> Dictionary:
 func ray_test_clasp(origin: Vector3, direction: Vector3) -> Dictionary:
 	if not _clasp_interactive or _clasp == null:
 		return {"hit": false}
-	return _ray_sphere(origin, direction, _clasp.global_position, _clasp_radius)
+	return _ray_sphere(origin, direction, _clasp.global_position, _clasp_radius * _authored_scale)
 
 
 ## Converts a point on the medallion (object-local space) to the same spherical UV
@@ -462,7 +485,9 @@ func _spawn_decals(
 		add_child(node)
 		var removed: bool = removed_ids.has(decal.id)
 		node.visible = not removed
-		_blemishes[decal.id] = {"node": node, "center": center, "removed": removed}
+		_blemishes[decal.id] = {
+			"node": node, "center": center, "removed": removed, "required_tool": decal.required_tool
+		}
 		index += 1
 
 
@@ -532,7 +557,7 @@ func ray_test_blemish(origin: Vector3, direction: Vector3) -> Dictionary:
 		if entry.get("removed", false):
 			continue
 		var center: Vector3 = to_global(entry["center"])
-		var hit := _ray_sphere(origin, direction, center, BLEMISH_RADIUS)
+		var hit := _ray_sphere(origin, direction, center, BLEMISH_RADIUS * _authored_scale)
 		if hit.get("hit", false) and hit["t"] < best_t:
 			best_t = hit["t"]
 			best = {"hit": true, "blemish_id": blemish_id, "point": hit["point"]}
@@ -670,7 +695,7 @@ func ray_test_authored(origin: Vector3, direction: Vector3) -> Dictionary:
 		var decal: Variant = entry["node"]
 		if decal == null:
 			continue
-		var radius: float = decal.pick_radius()
+		var radius: float = decal.pick_radius() * _authored_scale
 		var center: Vector3 = decal.global_position
 		var hit := _ray_sphere(origin, direction, center, radius)
 		if hit.get("hit", false) and hit["t"] < best_t:
@@ -713,6 +738,26 @@ func apply_authored_clean(condition_id: String, power: int) -> bool:
 	return cleaned
 
 
+## Optional learning cue: throbs the conditions (authored OR data-driven) that `tool_id`
+## can clean, at the given pulse `intensity` (0..1); every other condition goes quiet. Pass
+## tool_id "" or intensity 0 to clear. Presentation only — never moves the dev-placed decals.
+func highlight_for_tool(tool_id: String, intensity: float) -> void:
+	if _authored.is_empty() and _blemishes.is_empty():
+		return
+	for condition_id in _authored.keys():
+		var entry: Dictionary = _authored[condition_id]
+		var decal: Variant = entry["node"]
+		if decal != null and decal.has_method("set_highlight"):
+			var matched := tool_id != "" and str(entry.get("required_tool", "")) == tool_id
+			decal.set_highlight(intensity if matched else 0.0)
+	for blemish_id in _blemishes.keys():
+		var b: Dictionary = _blemishes[blemish_id]
+		var node: Variant = b["node"]
+		if node != null and node.has_method("set_highlight"):
+			var hit := tool_id != "" and str(b.get("required_tool", "")) == tool_id
+			node.set_highlight(intensity if hit else 0.0)
+
+
 func has_authored_conditions() -> bool:
 	return not _authored.is_empty()
 
@@ -722,11 +767,37 @@ func authored_active_count() -> int:
 	return _authored.size()
 
 
-## Chooses which placed decals are live this run. With randomized_decal_count <= 0 or
-## >= the number placed, every decal is used; otherwise a seeded shuffle picks that many,
-## so the same relic shows a different subset each loop / save.
+## The active-decal limit: the "Max Decals: N" directive from `customization` when present
+## (authoritative — author it per artifact), otherwise the legacy randomized_decal_count.
+## <= 0 means "show all".
+func _active_decal_limit() -> int:
+	var directive := _max_decals_directive()
+	return directive if directive >= 0 else randomized_decal_count
+
+
+## Parses the "Max Decals: N" line out of `customization` (case-insensitive). Returns the
+## integer N, or -1 when no such directive is present so callers fall back to the legacy
+## field. More directives can be added here later (the rest of `customization` is ignored).
+func _max_decals_directive() -> int:
+	for raw_line in customization.split("\n", false):
+		var line := raw_line.strip_edges()
+		if not line.to_lower().begins_with("max decals"):
+			continue
+		var colon := line.find(":")
+		if colon == -1:
+			continue
+		var value := line.substr(colon + 1).strip_edges()
+		if value.is_valid_int():
+			return value.to_int()
+	return -1
+
+
+## Chooses which placed decals are live this run. With the limit <= 0 or >= the number
+## placed, every decal is used; otherwise a seeded shuffle picks that many, so the same
+## relic shows a different subset each loop / save.
 func _choose_active_decals(all: Array, rng: RandomNumberGenerator) -> Array:
-	if randomized_decal_count <= 0 or randomized_decal_count >= all.size():
+	var limit := _active_decal_limit()
+	if limit <= 0 or limit >= all.size():
 		return all
 	var pool := all.duplicate()
 	for i in range(pool.size() - 1, 0, -1):
@@ -734,7 +805,7 @@ func _choose_active_decals(all: Array, rng: RandomNumberGenerator) -> Array:
 		var tmp: Variant = pool[i]
 		pool[i] = pool[j]
 		pool[j] = tmp
-	return pool.slice(0, randomized_decal_count)
+	return pool.slice(0, limit)
 
 
 ## Test/integration seam: ids of authored conditions not yet cleaned.
@@ -756,8 +827,9 @@ func get_authored_global_center(condition_id: String) -> Vector3:
 func _find_authored_decals(root: Node) -> Array:
 	# Identified by behaviour (a Node3D exposing condition_slug) rather than the
 	# ArtifactConditionDecal class, so this @tool script carries no class dependency.
-	# Skip the data-driven blemish decals (named "GrimeDecal*") — those are the same
-	# scene but managed via `_blemishes`, not as author-placed conditions.
+	# Runtime data-driven decals are excluded purely by the `data_blemish` meta tag
+	# (set in _make_decal), so authored nodes can be named anything ending in "Decal" —
+	# including names that collide with the runtime decal — without being skipped.
 	var found: Array = []
 	for child in root.get_children():
 		if (
@@ -765,7 +837,6 @@ func _find_authored_decals(root: Node) -> Array:
 			and child.has_method("condition_slug")
 			and not child.has_meta("data_blemish")  # runtime data-driven blemish, not authored
 			and not child.is_queued_for_deletion()  # a blemish being cleared this frame
-			and not String(child.name).begins_with("GrimeDecal")
 		):
 			found.append(child)
 		found.append_array(_find_authored_decals(child))
@@ -816,9 +887,10 @@ static func decals_supported() -> bool:
 ## it faces. Tinted to the condition's journal colour. Returns the instanced node.
 func _make_decal(center: Vector3, color: Color, normal: Vector3, texture: Texture2D) -> Node3D:
 	var node: Variant = CONDITION_DECAL_SCENE.instantiate()
-	node.name = "GrimeDecal"
-	# Tagged so register_authored_conditions never mistakes a runtime data-driven blemish
-	# for an author-placed condition (name-matching alone is fragile across reloads).
+	# In game we call these "conditions"; authored scene nodes are named "*Decal".
+	node.name = "RuntimeCondition"
+	# Tagged so register_authored_conditions never mistakes a runtime data-driven condition
+	# for an author-placed decal (this meta tag — not the node name — is the discriminator).
 	node.set_meta("data_blemish", true)
 	node.align_to_surface = false  # we orient it explicitly below
 	node.box_size = BLEMISH_RADIUS * 2.6
@@ -855,6 +927,7 @@ func _build_photo() -> void:
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_photo.material_override = mat
 	add_child(_photo)
+	_tag_decal_target(_photo)  # photo-mode blemish Decals project onto the photo, not the table
 
 
 # --- Geometry construction ---------------------------------------------------
@@ -908,6 +981,7 @@ func _build() -> void:
 
 	_built = true
 	_apply_authored_model()
+	_tag_decal_target(self)  # medallion/bail/model all project-target the artifact layer
 
 
 ## Instances `model_scene` (if set) as the visible artifact and hides the placeholder
@@ -918,6 +992,10 @@ func _apply_authored_model() -> void:
 		_model_instance.queue_free()
 		_model_instance = null
 	var has_model := model_scene != null or model_mesh != null
+	# Hide the placeholder clasp box when a real model is shown (it floats and clashes).
+	_suppress_clasp_visual = has_model
+	if _clasp != null and has_model:
+		_clasp.visible = false
 	if _medallion != null:
 		_medallion.visible = not has_model
 	if _bail != null:
@@ -941,6 +1019,18 @@ func _apply_authored_model() -> void:
 	_model_instance.name = "Model"
 	_model_instance.scale = Vector3.ONE * model_scale
 	add_child(_model_instance)
+	_tag_decal_target(self)  # so condition Decals project onto the model, not the table
+
+
+## Adds the artifact-decal render layer to every MeshInstance3D under `root` so projected
+## condition Decals (whose cull_mask is limited to that layer) land on the artifact's own
+## surfaces and not on the bench table behind them. Keeps the default layer too, so normal
+## rendering is unaffected. Idempotent.
+func _tag_decal_target(root: Node) -> void:
+	if root is MeshInstance3D:
+		(root as MeshInstance3D).layers |= ARTIFACT_DECAL_LAYER
+	for child in root.get_children():
+		_tag_decal_target(child)
 
 
 func _apply_preset(preset: Dictionary) -> void:

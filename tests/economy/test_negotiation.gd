@@ -101,6 +101,25 @@ func test_offer_never_exceeds_a_cash_capped_ceiling() -> void:
 	assert_true(n.current_offer <= 90, "an unaffordable ask is capped to what the buyer can pay")
 
 
+func test_ceiling_cap_factor_keeps_a_lowballer_below_value() -> void:
+	# A lowballer with ceiling_cap_factor 0.85 can never value a ₱120 piece above ₱102,
+	# even at full condition + a preferred category that would otherwise push it higher.
+	var n := Negotiation.open(_persona({"ceiling_cap_factor": 0.85}), 120, 100, "jewelry")
+	assert_true(n.ceiling <= 102, "the cap holds the ceiling below the item's value")
+	# Warming the buyer with banter still cannot push the ceiling past the cap.
+	n.banter("history")
+	assert_true(n.ceiling <= 102, "even favourable banter stays under the value cap")
+
+
+func test_set_buyer_offer_binds_a_volunteered_number_clamped_to_ceiling() -> void:
+	var n := Negotiation.open(_persona(), 200, 100, "metal")
+	n.set_buyer_offer(n.ceiling + 50)
+	assert_eq(n.current_offer, n.ceiling, "a number above the ceiling is clamped to it")
+	assert_false(n.is_closed(), "binding the offer never closes the sale")
+	n.set_buyer_offer(0)
+	assert_eq(n.current_offer, n.ceiling, "a non-positive number is ignored")
+
+
 func test_all_business_buyer_ignores_flattery_but_responds_to_substance() -> void:
 	var n := Negotiation.open(_persona({"ignores_banter": true}), 200, 100, "metal")
 	var before := n.ceiling

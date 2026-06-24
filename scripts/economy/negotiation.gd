@@ -169,9 +169,13 @@ func _raw_ceiling() -> float:
 
 
 ## Applies mood to the raw ceiling and clamps to the persona's budget AND their remaining
-## cash — a buyer simply cannot offer more than they can afford.
+## cash — a buyer simply cannot offer more than they can afford. A lowballer (persona
+## ceiling_cap_factor > 0) is additionally capped to a fraction of the item's value, so its
+## maximum can never rise above what the piece is worth.
 func _recompute_ceiling() -> void:
 	var cap := mini(maxi(1, persona.budget_range.y), maxi(1, cash_cap))
+	if persona.ceiling_cap_factor > 0.0:
+		cap = mini(cap, maxi(1, int(round(float(base_value) * persona.ceiling_cap_factor))))
 	ceiling = clampi(int(round(_raw_ceiling() * (1.0 + mood))), 1, cap)
 
 
@@ -304,6 +308,16 @@ func set_offer_from_haggle(agreed: bool, seller_price: int, counter_price: int) 
 		current_offer = clampi(seller_price, 1, ceiling)
 	elif counter_price > 0:
 		current_offer = clampi(counter_price, 1, mini(maxi(1, seller_price), ceiling))
+
+
+## Moves the buyer's standing offer to a number the buyer itself named (e.g. an AI reply
+## that volunteers "I'll give you ₱X" with no price on the table). Clamped to [1, ceiling]
+## so a model's stray figure can never exceed what the buyer would actually pay, keeping the
+## spoken number and the Accept button in agreement. Never closes the sale.
+func set_buyer_offer(amount: int) -> void:
+	if closed or amount <= 0:
+		return
+	current_offer = clampi(amount, 1, maxi(1, ceiling))
 
 
 ## Mood-only banter (no price): warms/cools the buyer and may nudge the standing offer.

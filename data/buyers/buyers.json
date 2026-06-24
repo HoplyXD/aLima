@@ -235,6 +235,7 @@
       "patience": 3,
       "category_bonus": 0.1,
       "condition_weight": 0.2,
+      "ceiling_cap_factor": 0.85,
       "unlimited_cash": true,
       "ignores_banter": true,
       "lines": {

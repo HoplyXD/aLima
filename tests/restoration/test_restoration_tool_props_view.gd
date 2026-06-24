@@ -69,6 +69,29 @@ func _ray_to_prop(view: RestorationView, tool_id: String) -> Dictionary:
 	return {"origin": Vector3(center.x, center.y, center.z + 3.0), "dir": Vector3(0.0, 0.0, -1.0)}
 
 
+func _has_mesh_instance(node: Node) -> bool:
+	if node is MeshInstance3D:
+		return true
+	for child in node.get_children():
+		if _has_mesh_instance(child):
+			return true
+	return false
+
+
+## A tool WITH an authored per-tool scene (scenes/restoration/tools/<id>.tscn) builds the
+## real model; one WITHOUT a scene falls back to the procedural placeholder. Both render a
+## mesh, so the bench and Storage previews always show something for every tool.
+func test_build_tool_model_uses_authored_scene_or_falls_back() -> void:
+	var modeled := RestorationTool.build_tool_model("rust_brush")
+	add_child_autofree(modeled)
+	assert_eq(modeled.name, &"rust_brush", "the authored per-tool scene root is used")
+	assert_true(_has_mesh_instance(modeled), "the authored model has visible geometry")
+
+	var fallback := RestorationTool.build_tool_model("nonexistent_tool")  # no per-tool scene
+	add_child_autofree(fallback)
+	assert_true(_has_mesh_instance(fallback), "a tool without a scene still gets placeholder geometry")
+
+
 func test_tool_tray_builds_props_for_owned_tools() -> void:
 	_add_pendant("pendant_props")
 	_view = await _make_view()

@@ -8,11 +8,16 @@ extends PanelContainer
 signal clicked
 
 const SPIN_SPEED: float = 0.7  ## Radians/sec auto-spin so all sides/decals show.
+## The on-screen size a previewed model is auto-scaled to: its largest visible dimension is
+## mapped to this many world units so a tiny 0.1-scaled mask and a big bottle both read at a
+## consistent, clearly-visible size in the card. The `fill` arg tunes it.
+const FIT_SIZE: float = 1.15
 
 @onready var _holder: Node3D = %MeshHolder
 @onready var _name_label: Label = %NameLabel
 
 var _object: Node3D
+var _fill: float = 1.0
 
 
 func _ready() -> void:
@@ -20,17 +25,55 @@ func _ready() -> void:
 	set_process(false)
 
 
-## Embeds `obj` (scaled by `scale`) for the rotating preview and sets the name label.
-func set_preview(obj: Node3D, display_name: String, name_color: Color, scale: float) -> void:
+## Embeds `obj` for the rotating preview and sets the name label. The model is auto-scaled
+## to a consistent size from its visible bounding box (so small models are zoomed up to be
+## readable); `fill` is a 0..1 multiplier on that target size.
+func set_preview(obj: Node3D, display_name: String, name_color: Color, fill: float) -> void:
 	for child in _holder.get_children():
 		child.queue_free()
-	_holder.scale = Vector3.ONE * scale
+	_fill = fill
+	_holder.scale = Vector3.ONE
 	_holder.add_child(obj)
 	_object = obj
 	_name_label.text = display_name
 	_name_label.add_theme_color_override("font_color", name_color)
 	tooltip_text = display_name
 	set_process(true)
+	# The authored model builds in its own _ready (next frame), so fit once it has geometry.
+	call_deferred("_fit_object")
+
+
+## Scales the holder so the object's largest visible dimension fills FIT_SIZE * fill, so
+## models of any authored scale read at a uniform, clear size.
+func _fit_object() -> void:
+	if not is_instance_valid(_object):
+		return
+	var box := _visible_aabb(_object)
+	var max_extent := maxf(box.size.x, maxf(box.size.y, box.size.z))
+	if max_extent <= 0.0001:
+		_holder.scale = Vector3.ONE * _fill
+		return
+	_holder.scale = Vector3.ONE * (FIT_SIZE / max_extent) * _fill
+
+
+## Merged AABB of the visible MeshInstance3D descendants, in `root`'s local space (so the
+## invisible hit-proxy sphere and decal projectors don't bloat the fit).
+func _visible_aabb(root: Node3D) -> AABB:
+	var acc := AABB()
+	var has := false
+	var inv := root.global_transform.affine_inverse()
+	var stack: Array = [root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is MeshInstance3D:
+			var mi := node as MeshInstance3D
+			if mi.visible and mi.mesh != null:
+				var local: AABB = (inv * mi.global_transform) * mi.mesh.get_aabb()
+				acc = local if not has else acc.merge(local)
+				has = true
+		for child in node.get_children():
+			stack.append(child)
+	return acc if has else AABB()
 
 
 func _process(delta: float) -> void:

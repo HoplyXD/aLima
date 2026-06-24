@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bkic100spnmbb"
-path="res://.godot/imported/Folded Towels.glb-9435652468ca35afe00436e0160a9e82.scn"
+path="res://.godot/imported/Folded Towels.glb-6c8d77bcd521b9082596df48409307af.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Tools/Folded Towels.glb"
-dest_files=["res://.godot/imported/Folded Towels.glb-9435652468ca35afe00436e0160a9e82.scn"]
+source_file="res://assets/3d Assets/Tools/Folded Towels/Folded Towels.glb"
+dest_files=["res://.godot/imported/Folded Towels.glb-6c8d77bcd521b9082596df48409307af.scn"]
 
 [params]
 

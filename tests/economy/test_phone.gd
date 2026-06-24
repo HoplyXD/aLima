@@ -24,6 +24,7 @@ func before_each() -> void:
 
 func after_each() -> void:
 	DayClock.reset()
+	SettingsService.ai_mode = SettingsService.DEFAULT_AI_MODE  # don't leak mode into other suites
 	MarketplaceService._on_loop_reset(0)  # clear any buyer ghosts so tests don't pollute
 	EventDirector.disable_debug_force()
 	SaveService.delete_save_files()
@@ -274,6 +275,9 @@ class _FakeBanter:
 
 
 func _haggle_with_fake() -> Phone:
+	# The backend-fake tests exercise the ONLINE path, so select online mode (set the field
+	# directly to avoid writing the real settings.cfg).
+	SettingsService.ai_mode = SettingsService.AI_ONLINE
 	_add_clean_item("c1", 200)
 	var phone := await _open_phone()
 	phone.open_app("marketplace")
@@ -305,6 +309,24 @@ func test_offline_banter_fallback_when_backend_not_live() -> void:
 	var reply: String = str(resp.get("reply", ""))
 	assert_false(reply.is_empty(), "offline fallback returns a line")
 	assert_ne(reply, "Backend says hello.", "offline reply is not the backend string")
+
+
+## In OFFLINE AI mode the backend is never consulted even when it reports live — the
+## on-device LLM (absent in headless) is preferred, so banter falls to the deterministic bot.
+func test_offline_mode_skips_a_live_backend() -> void:
+	var phone := await _haggle_with_fake()
+	SettingsService.ai_mode = SettingsService.AI_OFFLINE
+	var fake := _FakeBanter.new()
+	fake.live = true
+	phone.set_banter_client(fake)
+
+	var resp := await phone._buyer_response("hi", 0)
+
+	assert_ne(
+		str(resp.get("reply", "")),
+		"Backend says hello.",
+		"offline mode ignores the live backend and uses the offline bot"
+	)
 
 
 func test_backend_offended_flag_propagates() -> void:

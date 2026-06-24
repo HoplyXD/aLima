@@ -135,7 +135,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
-text = "Live buyer banter"
+text = "Online AI (on = server, off = on-device)"
 
 [node name="OnlineCheck" type="CheckButton" parent="Root/Center/Panel/Margin/VBox/OnlineRow" unique_id=2004962502]
 unique_name_in_owner = true
@@ -167,6 +167,20 @@ theme_override_font_sizes/font_size = 30
 text = "Artifact 3D previews"
 
 [node name="PreviewsCheck" type="CheckButton" parent="Root/Center/Panel/Margin/VBox/PreviewsRow" unique_id=1999199477]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DecalHighlightRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox" unique_id=1393413827]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/DecalHighlightRow" unique_id=1207059436]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "Highlight what a tool can clean"
+
+[node name="DecalHighlightCheck" type="CheckButton" parent="Root/Center/Panel/Margin/VBox/DecalHighlightRow" unique_id=1999199478]
 unique_name_in_owner = true
 layout_mode = 2
 

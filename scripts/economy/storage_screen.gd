@@ -31,7 +31,12 @@ const DRAG_KIND: String = "storage_tool"
 ## Rotating 3D preview card + the artifact model, shared with the restoration bench.
 const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
 const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
-const PREVIEW_SCALE: float = 0.46
+## Maps a template id to its authored model scene, so Storage previews the SAME real model
+## the bench shows (not the bare placeholder). Falls back to ARTIFACT_OBJECT_SCENE.
+const ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+## Fraction of the preview card the model fills (Preview3DCard auto-scales each model to a
+## uniform size from its bounding box, so this is just a margin, not a raw model scale).
+const PREVIEW_SCALE: float = 0.9
 
 var _owns_pause: bool = false
 var _tools: ToolService
@@ -170,7 +175,9 @@ func refresh() -> void:
 
 func _build_artifacts_tab() -> void:
 	var panes := _make_master_detail(_tab("Artifacts"))
-	var grid := _make_grid(3)
+	# Five across, like the Tools tab, so a full delivery's worth of artifacts reads as a
+	# grid of rows and columns instead of a narrow three-wide strip.
+	var grid := _make_grid(5)
 	(panes["content"] as VBoxContainer).add_child(grid)
 	var detail_host: VBoxContainer = panes["detail"]
 	var repo := DataRepository.singleton()
@@ -197,7 +204,8 @@ func _add_artifact_card(
 ) -> void:
 	var card: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
 	grid.add_child(card)  # in the tree first, so the preview builds in the card's world
-	var obj: RestorationObject3D = ARTIFACT_OBJECT_SCENE.instantiate()
+	var scene: PackedScene = ArtifactScenes.scene_for(template.id, ARTIFACT_OBJECT_SCENE)
+	var obj: RestorationObject3D = scene.instantiate()
 	var name_text := template.display_name + ("  ◆" if is_target else "")
 	card.set_preview(obj, name_text, _rarity_color(template.base_rarity), PREVIEW_SCALE)
 	_restoration.present_object(obj, inst, template, inst.uid.hash())
@@ -763,7 +771,7 @@ class ToolChip:
 		# Tools are small meshes, so they need a bigger scale than artifacts to fill the
 		# card and read clearly.
 		card.set_preview(
-			RestorationTool.build_geometry(preview_tool_id), preview_label, preview_color, 1.6
+			RestorationTool.build_tool_model(preview_tool_id), preview_label, preview_color, 0.9
 		)
 		StorageScreen.ignore_mouse_recursive(card)
 		text = ""  # the card shows the name now
@@ -778,7 +786,7 @@ class ToolChip:
 			holder.add_child(card)
 			set_drag_preview(holder)  # in the tree now → the card's viewport renders
 			card.set_preview(
-				RestorationTool.build_geometry(preview_tool_id), preview_label, preview_color, 1.6
+				RestorationTool.build_tool_model(preview_tool_id), preview_label, preview_color, 0.9
 			)
 		else:
 			var preview := Label.new()

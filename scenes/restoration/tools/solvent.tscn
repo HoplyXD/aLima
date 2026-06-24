@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://btoolsolvent000"]
+
+[ext_resource type="PackedScene" uid="uid://dugq78skyga6k" path="res://assets/3d Assets/Tools/Solvent/Solvent.glb" id="1_model"]
+
+[node name="solvent" type="Node3D"]
+
+[node name="Solvent" parent="." instance=ExtResource("1_model")]
+transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0, -0.136, 0)

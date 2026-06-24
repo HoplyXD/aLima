@@ -91,6 +91,27 @@ func _clean_until_clean(view: RestorationView, uid: String) -> void:
 			break
 
 
+func test_zoom_moves_the_artifact_within_clamped_range_and_resets() -> void:
+	_add_pendant("zoom_a")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("zoom_a")
+	var rest := _view.zoom_offset()
+
+	# Zooming in moves the artifact toward the camera (larger position.z) than the rest pose.
+	_view.zoom_by(0.5)
+	assert_gt(_view.zoom_offset(), rest, "zooming in brings the artifact closer")
+	# A huge zoom-in is clamped at the front limit, never past it.
+	_view.zoom_by(100.0)
+	assert_almost_eq(_view.zoom_offset(), RestorationView.ZOOM_FRONT, 0.001)
+	# A huge zoom-out is clamped at the back limit.
+	_view.zoom_by(-100.0)
+	assert_almost_eq(_view.zoom_offset(), RestorationView.ZOOM_BACK, 0.001)
+	# Reset returns the artifact to its authored rest position.
+	_view.reset_view()
+	assert_almost_eq(_view.zoom_offset(), rest, 0.001)
+
+
 func test_switching_artifacts_preserves_exact_cleaned_spots() -> void:
 	_add_pendant("p_a")
 	_add_pendant("p_b")

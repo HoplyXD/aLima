@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://btoolsoftbrush0"]
+
+[ext_resource type="PackedScene" uid="uid://cqpljt8ve1co8" path="res://assets/3d Assets/Tools/Fan Brush/Fan Brush.glb" id="1_model"]
+
+[node name="soft_brush" type="Node3D"]
+
+[node name="FanBrush" parent="." instance=ExtResource("1_model")]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)

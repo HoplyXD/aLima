@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://d08506pjpnu86"]
+
+; Placeholder geometry for the Consolidant tool. Swap in a real model when authored.
+
+[sub_resource type="StandardMaterial3D" id="mat_body"]
+albedo_color = Color(0.7, 0.62, 0.82, 1)
+metallic = 0.2
+roughness = 0.4
+emission = Color(0.835, 0.791, 0.901, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="CylinderMesh" id="mesh_body"]
+top_radius = 0.08
+bottom_radius = 0.09
+height = 0.22
+
+[sub_resource type="StandardMaterial3D" id="mat_cap"]
+albedo_color = Color(0.455, 0.403, 0.533, 1)
+metallic = 0.2
+roughness = 0.6
+emission = Color(0.7, 0.671, 0.743, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="CylinderMesh" id="mesh_cap"]
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.06
+
+[node name="consolidant" type="Node3D"]
+
+[node name="Body" type="MeshInstance3D" parent="."]
+material_override = SubResource("mat_body")
+mesh = SubResource("mesh_body")
+
+[node name="Cap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+material_override = SubResource("mat_cap")
+mesh = SubResource("mesh_cap")

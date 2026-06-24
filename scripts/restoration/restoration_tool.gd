@@ -4,12 +4,11 @@ extends Node3D
 ## MeshInstance3D quad "layer") showing the tool's durability bar and small labelled
 ## image boxes of the conditions it can clean, with each condition's cleaning power.
 ##
-## Both the info layer (InfoPanel) and the per-tool props are authored in
-## restoration_tool.tscn so they are visible/editable in the editor — each tool's
-## geometry is a Node3D under Geometry named after its tool id (soft_cloth, rust_brush,
-## solvent, ...), which artists can replace with real models. configure() reveals the
-## matching prop; any tool id without authored geometry falls back to the procedural
-## placeholder built by build_geometry() below.
+## The info layer (InfoPanel) is authored in restoration_tool.tscn. Each tool's MODEL
+## lives in its own scene at scenes/restoration/tools/<tool_id>.tscn (like the artifacts),
+## which artists open and iterate directly. configure() instances the matching per-tool
+## scene into the Geometry holder; any tool id without an authored scene falls back to the
+## procedural placeholder built by build_geometry() below.
 ##
 ## Presentation only: the durability/condition data is handed in by the tool tray —
 ## this node never reads GameState/SaveService.
@@ -171,44 +170,49 @@ func _condition_texture(display_name: String) -> Texture2D:
 # --- Geometry (distinct placeholder development props) ------------------------
 
 
-## Reveals the authored prop whose node name matches `tool_id` (so artists model each
-## tool directly in restoration_tool.tscn) and hides the rest, collecting its materials
-## for the selection highlight. A tool id without authored geometry falls back to the
-## procedural placeholder so it still appears on the bench.
+## Directory of per-tool model scenes (one .tscn per tool id, like the artifacts).
+const TOOL_SCENE_DIR := "res://scenes/restoration/tools/"
+
+
+## Swaps the Geometry holder to show `tool_id`'s model: its authored per-tool scene
+## (scenes/restoration/tools/<id>.tscn) when one exists, otherwise the procedural
+## placeholder. Collects the model's materials so set_selected() can highlight it.
 func _show_tool(tool_id: String) -> void:
 	_materials.clear()
-	# Drop any procedural fallback built for a previous configure() call.
-	var prior := _geometry.get_node_or_null("_fallback")
-	if prior != null:
-		prior.free()
-	var matched: Node3D = null
 	for child in _geometry.get_children():
-		var is_match: bool = String(child.name) == tool_id
-		(child as Node3D).visible = is_match
-		if is_match:
-			matched = child as Node3D
-	if matched != null:
-		_collect_materials(matched)
-		return
-	# No authored prop for this id yet — build it procedurally (also keeps the static
-	# build_geometry() path that storage previews rely on).
-	var holder := build_geometry(tool_id, _materials)
-	holder.name = "_fallback"
-	_geometry.add_child(holder)
+		child.free()
+	var model := build_tool_model(tool_id, _materials)
+	_geometry.add_child(model)
+
+
+## The visible 3D model for `tool_id`: its authored per-tool scene when one exists,
+## otherwise the procedural placeholder. Static so previews elsewhere (e.g. Storage) show
+## the SAME model the bench does. `materials_out` collects the StandardMaterial3D overrides
+## the caller can toggle for the selection highlight.
+static func build_tool_model(tool_id: String, materials_out: Array = []) -> Node3D:
+	var path := TOOL_SCENE_DIR + tool_id + ".tscn"
+	if ResourceLoader.exists(path):
+		var packed := load(path) as PackedScene
+		if packed != null:
+			var inst: Node = packed.instantiate()
+			if inst is Node3D:
+				_gather_materials(inst, materials_out)
+				return inst as Node3D
+	# No authored scene for this id yet — build the procedural placeholder.
+	return build_geometry(tool_id, materials_out)
 
 
 ## Gathers the StandardMaterial3D overrides under `root` so set_selected() can toggle
-## their emission. Authored placeholders set surface_material_override/0; imported
-## models may not, in which case the selection glow is simply a no-op for that tool.
-func _collect_materials(root: Node) -> void:
+## their emission. Authored placeholders set material_override; imported GLB models store
+## materials on the mesh surfaces instead — both are collected, so the selection glow works
+## for either (a tool whose model exposes none simply doesn't glow).
+static func _gather_materials(root: Node, out: Array) -> void:
 	if root is MeshInstance3D:
 		var mi := root as MeshInstance3D
 		var mat: Material = mi.get_surface_override_material(0)
 		if mat == null:
 			mat = mi.material_override
 		if mat == null and mi.mesh != null:
-			# Imported authored props (GLB/GLTF) often store materials on the mesh
-			# surfaces rather than as overrides; collect those for selection glow.
 			var mesh: Mesh = mi.mesh
 			for surface_i in mesh.get_surface_count():
 				var surface_mat: Material = mesh.surface_get_material(surface_i)
@@ -216,9 +220,9 @@ func _collect_materials(root: Node) -> void:
 					mat = surface_mat
 					break
 		if mat is StandardMaterial3D:
-			_materials.append(mat)
+			out.append(mat)
 	for child in root.get_children():
-		_collect_materials(child)
+		_gather_materials(child, out)
 
 
 ## Builds a tool's distinct prop geometry under a fresh Node3D. Static so previews

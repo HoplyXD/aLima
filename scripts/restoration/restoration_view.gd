@@ -26,6 +26,16 @@ const MOUSE_ROTATE_SENSITIVITY: float = 0.0065
 const KEY_ROTATE_SPEED: float = 2.2
 const STROKE_PIXEL_THRESHOLD: float = 64.0  ## Drag distance that commits one stroke.
 
+## Artifact zoom — the ARTIFACT moves toward (zoom in) or away from (zoom out) the camera
+## along its view axis, so the player can lean a piece in to inspect fine grime or push it
+## back for the whole shape. The camera never moves. Presentation only; never touches game
+## state. ZOOM_FRONT/BACK are the object's nearest/farthest position.z; the authored rest
+## position is the starting point and what reset returns to.
+const ZOOM_FRONT: float = 1.3  ## Closest the artifact comes to the camera (camera sits at z≈2.6).
+const ZOOM_BACK: float = -0.7  ## Farthest the artifact pulls back.
+const ZOOM_WHEEL_STEP: float = 0.2  ## Distance one mouse-wheel notch moves the artifact.
+const ZOOM_KEY_SPEED: float = 2.2  ## Distance/second for held keyboard/controller zoom.
+
 ## Temporary diagnostic logging for the restoration interaction. Flip to false
 ## (or remove) once the on-screen flow is confirmed working.
 const DEBUG_LOG: bool = true
@@ -59,6 +69,11 @@ var _storage_screen: StorageScreen
 var _prop_base_scales: Dictionary = {}
 ## Resource path of the scene `_object` currently uses, so we only swap when it changes.
 var _object_scene_path: String = "res://scenes/restoration/restoration_artifact.tscn"
+## Artifact zoom: the authored rest position.z (captured on ready) and the current position.z.
+## Clamped to [ZOOM_BACK, ZOOM_FRONT]; reset returns to the rest position.
+var _zoom_rest_z: float = 0.0
+var _zoom_z: float = 0.0
+var _highlight_time: float = 0.0  ## Drives the optional decal-highlight throb.
 
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
@@ -94,6 +109,9 @@ var _object_scene_path: String = "res://scenes/restoration/restoration_artifact.
 
 func _ready() -> void:
 	_service = RestorationService.new()
+	# Remember the artifact's authored distance so zoom is relative to it and reset returns here.
+	_zoom_rest_z = _object.position.z
+	_zoom_z = _zoom_rest_z
 	_scanner_screen = SCANNER_SCREEN_SCENE.instantiate()
 	add_child(_scanner_screen)
 	_scanner_screen.closed.connect(_on_scanner_closed)
@@ -370,13 +388,16 @@ func _ensure_object_for(template_id: String) -> void:
 	if scene.resource_path == _object_scene_path:
 		return
 	var world := _object.get_parent()
-	var xform := _object.transform
+	var pivot_origin := _object.transform.origin
 	world.remove_child(_object)
 	_object.queue_free()
 	var fresh: RestorationObject3D = scene.instantiate()
 	fresh.name = "ObjectPivot"
 	world.add_child(fresh)
-	fresh.transform = xform
+	# Keep the bench pivot POSITION but preserve the artifact scene's own authored basis
+	# (which carries the dev's root scale) instead of overwriting the whole transform — the
+	# orientation system folds that scale back in on every rotate/reset.
+	fresh.position = pivot_origin
 	_object = fresh
 	_object_scene_path = scene.resource_path
 
@@ -386,6 +407,7 @@ func load_instance(uid: String) -> void:
 	_cache_current_dirt()
 	_selected_uid = uid
 	_selected_tool_id = ""
+	_reset_zoom()  # each artifact starts at the authored rest distance
 	var inst := _service.find_instance_by_id(uid)
 	var template: ScrapObjectTemplate = (
 		_service.get_repository().get_template(inst.template_id) if inst != null else null
@@ -907,11 +929,31 @@ func _log(msg: String) -> void:
 
 func reset_view() -> void:
 	_object.reset_orientation()
+	_reset_zoom()
 
 
 ## Orbits the displayed object. Presentation only — never mutates game state.
 func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
 	_object.rotate_view(delta_yaw, delta_pitch)
+
+
+## Moves the artifact toward the camera (amount > 0 = zoom in) or away (amount < 0),
+## clamped to [ZOOM_BACK, ZOOM_FRONT]. The camera never moves — only the artifact.
+func zoom_by(amount: float) -> void:
+	_zoom_z = clampf(_zoom_z + amount, ZOOM_BACK, ZOOM_FRONT)
+	_object.position.z = _zoom_z
+
+
+## Current artifact zoom position.z (test/integration seam).
+func zoom_offset() -> float:
+	return _zoom_z
+
+
+## Returns the artifact to its authored rest position (on reset and artifact swap).
+func _reset_zoom() -> void:
+	_zoom_z = _zoom_rest_z
+	if is_instance_valid(_object):
+		_object.position.z = _zoom_z
 
 
 # --- Input -------------------------------------------------------------------
@@ -932,6 +974,27 @@ func _process(delta: float) -> void:
 	)
 	if rx != 0.0 or ry != 0.0:
 		_object.rotate_view(-rx * KEY_ROTATE_SPEED * delta, -ry * KEY_ROTATE_SPEED * delta)
+	# Keyboard/controller zoom (held): in pulls the camera closer, out pushes it back.
+	var zoom := (
+		Input.get_action_strength("restoration_zoom_in")
+		- Input.get_action_strength("restoration_zoom_out")
+	)
+	if zoom != 0.0:
+		zoom_by(zoom * ZOOM_KEY_SPEED * delta)
+	_update_decal_highlight(delta)
+
+
+## Optional learning aid (settings, default off): throbs the conditions the selected tool
+## can clean. When the setting is off or no tool is held, conditions are left calm.
+func _update_decal_highlight(delta: float) -> void:
+	if not is_instance_valid(_object) or not _object.has_method("highlight_for_tool"):
+		return
+	if not SettingsService.decal_highlight_enabled() or _selected_tool_id.is_empty():
+		_object.highlight_for_tool("", 0.0)
+		return
+	_highlight_time += delta
+	var pulse := 0.5 + 0.5 * sin(_highlight_time * 5.0)
+	_object.highlight_for_tool(_selected_tool_id, pulse)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -971,11 +1034,37 @@ func _handle_action_event(event: InputEvent) -> bool:
 		if event.is_action_pressed(action):
 			(handlers[action] as Callable).call()
 			return true
+	# Number keys 1-5 select the tool sitting in that bench slot.
+	for slot in RestorationToolTray.SLOT_COUNT:
+		if event.is_action_pressed("restoration_tool_slot_%d" % (slot + 1)):
+			_select_tool_slot(slot)
+			return true
 	return false
+
+
+## Selects the bench tool in slot `slot` (0-based), bound to number keys 1-5. A no-op for
+## an empty or unowned slot, so a stray keypress can't clear the current tool.
+func _select_tool_slot(slot: int) -> void:
+	var slots := _service.get_workbench_slots()
+	if slot < 0 or slot >= slots.size():
+		return
+	var tool_id := String(slots[slot])
+	if tool_id.is_empty() or not _service.is_tool_owned(tool_id):
+		return
+	select_tool(tool_id)
 
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	var pos := event.position
+	# Mouse wheel zooms the artifact in/out. Fires as a pressed button event.
+	if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		if event.pressed:
+			zoom_by(ZOOM_WHEEL_STEP)  # wheel up → artifact comes closer
+		return
+	if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		if event.pressed:
+			zoom_by(-ZOOM_WHEEL_STEP)  # wheel down → artifact pulls back
+		return
 	if event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			var hit := _ray_at_pointer(pos)
@@ -1306,6 +1395,20 @@ func _ensure_input_actions() -> void:
 	_add_action("restoration_reset_view", [_key(KEY_R)], [_joy_button(JOY_BUTTON_Y)])
 	_add_action("restoration_toggle_mode", [_key(KEY_TAB)], [_joy_button(JOY_BUTTON_LEFT_SHOULDER)])
 	_add_action("restoration_cycle_tool", [_key(KEY_Q)], [_joy_button(JOY_BUTTON_RIGHT_SHOULDER)])
+	# Zoom the artifact in/out: +/- (and numpad) on keyboard, the triggers on a controller.
+	_add_action(
+		"restoration_zoom_in",
+		[_key(KEY_EQUAL), _key(KEY_KP_ADD)],
+		[_joy_axis(JOY_AXIS_TRIGGER_RIGHT, 1.0)]
+	)
+	_add_action(
+		"restoration_zoom_out",
+		[_key(KEY_MINUS), _key(KEY_KP_SUBTRACT)],
+		[_joy_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)]
+	)
+	# Number keys 1-5 select bench tool slots 1-5 (KEY_1..KEY_5 are consecutive keycodes).
+	for slot in RestorationToolTray.SLOT_COUNT:
+		_add_action("restoration_tool_slot_%d" % (slot + 1), [_key((KEY_1 + slot) as Key)], [])
 	# Esc closes the bench; Space is the pause menu (both registered by PauseMenu).
 	_add_action("back", [_key(KEY_ESCAPE)], [])
 

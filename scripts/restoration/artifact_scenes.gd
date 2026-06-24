@@ -11,6 +11,10 @@ extends RefCounted
 const _SCENES := {
 	"dusty_locket":
 	preload("res://scenes/restoration/artifacts/Basic Artifacts/dusty_locket.tscn"),
+	"tarnished_pendant":
+	preload("res://scenes/restoration/artifacts/Basic Artifacts/tarnished_pendant.tscn"),
+	"oton_death_mask":
+	preload("res://scenes/restoration/artifacts/Historical Artifacts/oton_death_mask.tscn"),
 }
 
 

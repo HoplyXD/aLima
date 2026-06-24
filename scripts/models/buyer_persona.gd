@@ -23,6 +23,10 @@ var concession_rate: float = 0.34  ## How far toward the ceiling the buyer moves
 var patience: int = 3  ## Greedy rounds (player asking above the ceiling) tolerated before walking.
 var category_bonus: float = 0.15  ## Ceiling bump when the item is a preferred category.
 var condition_weight: float = 0.4  ## How strongly restoration condition moves the ceiling (0..1).
+## Hard lid on the ceiling as a fraction of the item's base value (0 = no lid). A lowballer
+## like Mr. Maverick uses < 1.0 so his maximum can never exceed the piece's worth — he always
+## offers below value, no matter how warm the banter or how strong the condition.
+var ceiling_cap_factor: float = 0.0
 var fallback_lines: Dictionary = {}  ## phase ("open"/"counter"/"accept"/"walk") -> Array[String].
 
 ## Per-loop wallet (MKT-R economy): a buyer can never pay more than the cash they have.
@@ -57,6 +61,7 @@ static func from_dictionary(data: Dictionary) -> BuyerPersona:
 	b.patience = ModelUtils.as_int(data.get("patience"), 3)
 	b.category_bonus = ModelUtils.as_float(data.get("category_bonus"), 0.15)
 	b.condition_weight = ModelUtils.as_float(data.get("condition_weight"), 0.4)
+	b.ceiling_cap_factor = ModelUtils.as_float(data.get("ceiling_cap_factor"), 0.0)
 	b.starting_cash = ModelUtils.as_int(data.get("starting_cash"), 0)
 	b.daily_allowance = ModelUtils.as_int(data.get("daily_allowance"), 0)
 	b.unlimited_cash = bool(data.get("unlimited_cash", false))
@@ -82,6 +87,7 @@ func to_dictionary() -> Dictionary:
 		"patience": patience,
 		"category_bonus": category_bonus,
 		"condition_weight": condition_weight,
+		"ceiling_cap_factor": ceiling_cap_factor,
 		"starting_cash": starting_cash,
 		"daily_allowance": daily_allowance,
 		"unlimited_cash": unlimited_cash,

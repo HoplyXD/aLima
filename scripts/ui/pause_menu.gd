@@ -17,6 +17,7 @@ const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 @onready var _fullscreen_check: CheckButton = %FullscreenCheck
 @onready var _online_check: CheckButton = %OnlineCheck
 @onready var _previews_check: CheckButton = %PreviewsCheck
+@onready var _decal_highlight_check: CheckButton = %DecalHighlightCheck
 @onready var _renderer_option: OptionButton = %RendererOption
 @onready var _apply_renderer_button: Button = %ApplyRendererButton
 @onready var _status_label: Label = %StatusLabel
@@ -71,6 +72,7 @@ func _connect_signals() -> void:
 	_fullscreen_check.toggled.connect(_on_fullscreen_toggled)
 	_online_check.toggled.connect(_on_online_toggled)
 	_previews_check.toggled.connect(_on_previews_toggled)
+	_decal_highlight_check.toggled.connect(_on_decal_highlight_toggled)
 	_apply_renderer_button.pressed.connect(_on_apply_renderer)
 
 
@@ -121,8 +123,9 @@ func _on_return_to_title() -> void:
 func _refresh() -> void:
 	_res_option.select(SettingsService.resolution_index())
 	_fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
-	_online_check.set_pressed_no_signal(SettingsService.online_services)
+	_online_check.set_pressed_no_signal(SettingsService.ai_mode_is_online())
 	_previews_check.set_pressed_no_signal(SettingsService.artifact_previews)
+	_decal_highlight_check.set_pressed_no_signal(SettingsService.decal_highlight)
 
 	var mobile_ok: bool = SettingsService.mobile_supported()
 	_renderer_option.set_item_disabled(0, not mobile_ok)
@@ -145,12 +148,18 @@ func _on_fullscreen_toggled(pressed: bool) -> void:
 	SettingsService.set_fullscreen(pressed)
 
 
+## Toggles the marketplace AI source: on → backend server, off → on-device Godot LLM.
 func _on_online_toggled(pressed: bool) -> void:
-	SettingsService.set_online_services(pressed)
+	SettingsService.set_ai_mode(SettingsService.AI_ONLINE if pressed else SettingsService.AI_OFFLINE)
 
 
 func _on_previews_toggled(pressed: bool) -> void:
 	SettingsService.set_artifact_previews(pressed)
+
+
+## Toggles the optional "highlight the conditions a selected tool can clean" learning aid.
+func _on_decal_highlight_toggled(pressed: bool) -> void:
+	SettingsService.set_decal_highlight(pressed)
 
 
 func _on_apply_renderer() -> void:

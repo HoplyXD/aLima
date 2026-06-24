@@ -11,6 +11,7 @@
 
 [node name="AuntieFramePortrait" type="Node3D"]
 script = ExtResource("1_obj")
+customization = "Max Decals: 2"
 randomized_decal_count = 2
 
 [node name="DustDecal" parent="." instance=ExtResource("2_decal")]

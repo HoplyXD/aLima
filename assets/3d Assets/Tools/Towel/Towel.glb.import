@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://hxoh31ngsuao"
-path="res://.godot/imported/Towel.glb-35db2210aa8738d2d4e2f184381a4753.scn"
+path="res://.godot/imported/Towel.glb-eb03fcd1556477d6a9a10be3a245c4ba.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Tools/Towel.glb"
-dest_files=["res://.godot/imported/Towel.glb-35db2210aa8738d2d4e2f184381a4753.scn"]
+source_file="res://assets/3d Assets/Tools/Towel/Towel.glb"
+dest_files=["res://.godot/imported/Towel.glb-eb03fcd1556477d6a9a10be3a245c4ba.scn"]
 
 [params]
 

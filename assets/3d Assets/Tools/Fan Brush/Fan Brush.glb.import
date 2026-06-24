@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dugq78skyga6k"
-path="res://.godot/imported/Solvent.glb-cb7d59535bea52cf1474496a5f03c0a8.scn"
+uid="uid://cqpljt8ve1co8"
+path="res://.godot/imported/Fan Brush.glb-7ec245d3caecf13c81a864f08be70563.scn"
 
 [deps]
 
-source_file="res://assets/3d Assets/Tools/Solvent.glb"
-dest_files=["res://.godot/imported/Solvent.glb-cb7d59535bea52cf1474496a5f03c0a8.scn"]
+source_file="res://assets/3d Assets/Tools/Fan Brush/Fan Brush.glb"
+dest_files=["res://.godot/imported/Fan Brush.glb-7ec245d3caecf13c81a864f08be70563.scn"]
 
 [params]
 

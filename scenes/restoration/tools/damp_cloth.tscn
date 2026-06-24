@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://btooldampcloth0"]
+
+[ext_resource type="PackedScene" uid="uid://hxoh31ngsuao" path="res://assets/3d Assets/Tools/Towel/Towel.glb" id="1_model"]
+
+[node name="damp_cloth" type="Node3D"]
+
+[node name="Towel" parent="." instance=ExtResource("1_model")]
+transform = Transform3D(1.335, 0, 0, 0, 1.335, 0, 0, 0, 1.335, 0.255, 0, 0)

@@ -12,6 +12,7 @@
 
 [node name="RustedTin" type="Node3D"]
 script = ExtResource("1_obj")
+customization = "Max Decals: 2"
 randomized_decal_count = 2
 
 [node name="RustDecal" parent="." instance=ExtResource("2_decal")]
