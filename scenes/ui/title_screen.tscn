@@ -2,6 +2,18 @@
 
 [ext_resource type="Theme" uid="uid://ctwdpy3fslv3e" path="res://Themes/title_screen.tres" id="1_aqpy5"]
 [ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="1_eb34j"]
+[ext_resource type="Script" uid="uid://o7w3n24s2ptb" path="res://scripts/ui/title_screen.gd" id="3_title"]
+[ext_resource type="PackedScene" uid="uid://47qvo41mr44l" path="res://scenes/Antique Shop.tscn" id="4_backdrop"]
+
+[sub_resource type="Environment" id="Env_title"]
+background_mode = 1
+background_color = Color(0.06, 0.045, 0.035, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.5, 0.45, 1)
+ambient_light_energy = 1.2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b3ncd"]
+bg_color = Color(0, 0, 0, 0.63529414)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_aqpy5"]
 
@@ -13,6 +25,41 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_aqpy5")
+script = ExtResource("3_title")
+
+[node name="Backdrop" type="SubViewportContainer" parent="." unique_id=1020806543]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Backdrop" unique_id=457745174]
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(1920, 1080)
+render_target_update_mode = 4
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Backdrop/SubViewport" unique_id=1502787857]
+environment = SubResource("Env_title")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Backdrop/SubViewport" unique_id=711144288]
+transform = Transform3D(0.86, -0.25, 0.44, 0, 0.87, 0.5, -0.5, -0.43, 0.75, 0, 8, 0)
+light_energy = 1.1
+
+[node name="AntiqueShop" parent="Backdrop/SubViewport" unique_id=223506131 instance=ExtResource("4_backdrop")]
+
+[node name="Panel" type="Panel" parent="." unique_id=1351648753]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_b3ncd")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1082419696]
 clip_contents = true
@@ -37,16 +84,16 @@ custom_minimum_size = Vector2(0, 109.67)
 layout_mode = 2
 
 [node name="Play" type="Button" parent="VBoxContainer" unique_id=769956769]
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 130)
 layout_mode = 2
 text = "Play"
 
 [node name="Options" type="Button" parent="VBoxContainer" unique_id=926703686]
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 130)
 layout_mode = 2
 text = "Options"
 
 [node name="Quit" type="Button" parent="VBoxContainer" unique_id=2001389161]
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 130)
 layout_mode = 2
 text = "Quit"
