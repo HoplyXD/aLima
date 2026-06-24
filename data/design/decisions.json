@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "id": "D1_master_artifact",
+      "title": "Master Artifact selection and five natural components",
+      "status": "PENDING_TEAM_DECISION",
+      "value": "",
+      "rationale": "Frontrunner is the Heirloom Timepiece (escapement / dial / hands / gear-train / pendulum), but the artifact is locked only after the regional workshop and cultural consultation. The agent must not invent the final choice; this stays PENDING until the team records it in data/artifacts/packets/artifact_lock.json.",
+      "references": ["artifact_lock"]
+    },
+    {
+      "id": "D2_carrier_compatibility",
+      "title": "Carrier compatibility policy (>=3 compatible candidates per fragment)",
+      "status": "PENDING_TEAM_DECISION",
+      "value": "",
+      "rationale": "How openable templates map to fragments so every fragment has at least three compatible carrier candidates (CLAUDE.md §4-C, §4-M). Tuning is a team call after the full openable catalog is scoped in Phase 13-14.",
+      "references": []
+    },
+    {
+      "id": "D3_decoy_density",
+      "title": "Decoy density (ordinary flickering openables per loop)",
+      "status": "PENDING_TEAM_DECISION",
+      "value": "",
+      "rationale": "Number of ordinary openable decoys placed alongside the promoted carrier each loop, so the carrier is found by the heartbeat band rather than by being the only openable (§4-I). Awaiting playtest tuning.",
+      "references": []
+    },
+    {
+      "id": "D4_pile_cap",
+      "title": "Pile size cap (max openables per pile)",
+      "status": "PENDING_TEAM_DECISION",
+      "value": "",
+      "rationale": "Maximum openables a single pile/container may hold during triage and discovery. Awaiting triage/spawn tuning.",
+      "references": []
+    },
+    {
+      "id": "D5_fullscreen_clock_policy",
+      "title": "Full-screen UI clock policy",
+      "status": "RESOLVED",
+      "value": "pause_via_ownership",
+      "rationale": "The day clock pauses while a full-screen/blocking UI is open, using the existing ref-counted pause-ownership API on DayClock (CLAUDE.md §4-J). This was resolved in-fiction and in code; recorded here as the versioned design decision.",
+      "references": []
+    },
+    {
+      "id": "D6_lock_policy",
+      "title": "Locked-container gating for fragments",
+      "status": "PENDING_TEAM_DECISION",
+      "value": "",
+      "rationale": "Whether and how locked crates / the Safe gate fragment access, while keeping every placement winnable that run (§4-H). A known Safe code may make the Safe eligible as an outer container, but the fragment still sits in a promoted ordinary carrier. Final policy is a team call.",
+      "references": []
+    },
+    {
+      "id": "D7_buyer_fifth_release",
+      "title": "Buyer fifth-fragment release behavior",
+      "status": "RESOLVED",
+      "value": "deterministic_special_delivery",
+      "rationale": "The Buyer's qualifying Day 5 encounter releases the fifth fragment into a guaranteed special delivery; no character hands a fragment over directly (CLAUDE.md §4-B). Resolved in-fiction; recorded here as versioned design data.",
+      "references": []
+    }
+  ]
+}

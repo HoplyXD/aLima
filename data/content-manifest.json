@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "id": "content_manifest",
+  "_note": "P12.3 full-game content manifest. Lives at the data/ root (NOT inside a DataRepository-loaded subdir). Committed in a deliberately FAILING state: blocking decisions (D1-D4, D6) and the artifact lock are still PENDING_TEAM_DECISION, so ContentManifestValidator.validate() reports errors until the team fills them in. Counts for content authored in Phase 13+ are marked deferred_to_phase; buyer_personas and named_events already exist and are validated against DataRepository.",
+  "requirements": {
+    "object_templates": { "min": 30, "deferred_to_phase": "13" },
+    "restoration_interactions": { "min": 9, "deferred_to_phase": "13" },
+    "carrier_candidates": { "min": 15, "deferred_to_phase": "14" },
+    "compatible_candidates_per_fragment": { "min": 3, "deferred_to_phase": "14" },
+    "counterfeits": { "min": 6, "deferred_to_phase": "13" },
+    "temporal_echoes": { "min": 15, "deferred_to_phase": "15" },
+    "mystery_pages": { "min": 10, "deferred_to_phase": "15" },
+    "route_beats_per_route": { "min": 3, "deferred_to_phase": "16" },
+    "buyer_personas": { "min": 6, "deferred_to_phase": "" },
+    "named_events": { "min": 8, "deferred_to_phase": "" },
+    "fragment_fact_cards": { "min": 5, "deferred_to_phase": "17" },
+    "assembled_records": { "min": 1, "deferred_to_phase": "17" },
+    "gold_discoveries": { "min": 5, "deferred_to_phase": "17" }
+  },
+  "content": {
+    "object_templates": [],
+    "restoration_interactions": [],
+    "carrier_candidates": [],
+    "compatible_candidates_per_fragment": [],
+    "counterfeits": [],
+    "temporal_echoes": [],
+    "mystery_pages": [],
+    "route_beats_per_route": [],
+    "buyer_personas": [
+      "collector",
+      "reseller",
+      "student",
+      "gift",
+      "hobbyist",
+      "appraiser",
+      "tourist",
+      "lola",
+      "suspicious"
+    ],
+    "named_events": [
+      "rush_delivery",
+      "sudden_brownout",
+      "community_request",
+      "suspicious_antique",
+      "rare_buyer_alert",
+      "mystery_box",
+      "rainy_day_leak",
+      "tool_breakdown"
+    ],
+    "fragment_fact_cards": [],
+    "assembled_records": [],
+    "gold_discoveries": []
+  },
+  "artifact_packet_ref": "artifact_lock",
+  "decision_refs": [
+    "D1_master_artifact",
+    "D2_carrier_compatibility",
+    "D3_decoy_density",
+    "D4_pile_cap",
+    "D5_fullscreen_clock_policy",
+    "D6_lock_policy",
+    "D7_buyer_fifth_release"
+  ],
+  "provenance_refs": [],
+  "source_refs": [],
+  "review_refs": []
+}
