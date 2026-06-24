@@ -61,11 +61,6 @@ extends Node3D
 
 const DIRT_SHADER := preload("res://scenes/restoration/restoration_dirt.gdshader")
 
-## Render layer (20) the artifact's meshes are placed on so condition Decals — restricted to
-## this same layer — project ONLY onto the artifact, never the bench table. Must match
-## ArtifactConditionDecal.ARTIFACT_DECAL_LAYER.
-const ARTIFACT_DECAL_LAYER: int = 1 << 19
-
 const MASK_SIZE: int = 64  ## Dirt mask resolution; small so coverage scans stay cheap.
 const BRUSH_RADIUS_UV: float = 0.16  ## Cleaning brush radius in UV space.
 const CLEAN_THRESHOLD: float = 0.5  ## Mask R below this counts a texel as cleaned.
@@ -927,7 +922,6 @@ func _build_photo() -> void:
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_photo.material_override = mat
 	add_child(_photo)
-	_tag_decal_target(_photo)  # photo-mode blemish Decals project onto the photo, not the table
 
 
 # --- Geometry construction ---------------------------------------------------
@@ -981,7 +975,6 @@ func _build() -> void:
 
 	_built = true
 	_apply_authored_model()
-	_tag_decal_target(self)  # medallion/bail/model all project-target the artifact layer
 
 
 ## Instances `model_scene` (if set) as the visible artifact and hides the placeholder
@@ -1019,18 +1012,6 @@ func _apply_authored_model() -> void:
 	_model_instance.name = "Model"
 	_model_instance.scale = Vector3.ONE * model_scale
 	add_child(_model_instance)
-	_tag_decal_target(self)  # so condition Decals project onto the model, not the table
-
-
-## Adds the artifact-decal render layer to every MeshInstance3D under `root` so projected
-## condition Decals (whose cull_mask is limited to that layer) land on the artifact's own
-## surfaces and not on the bench table behind them. Keeps the default layer too, so normal
-## rendering is unaffected. Idempotent.
-func _tag_decal_target(root: Node) -> void:
-	if root is MeshInstance3D:
-		(root as MeshInstance3D).layers |= ARTIFACT_DECAL_LAYER
-	for child in root.get_children():
-		_tag_decal_target(child)
 
 
 func _apply_preset(preset: Dictionary) -> void:

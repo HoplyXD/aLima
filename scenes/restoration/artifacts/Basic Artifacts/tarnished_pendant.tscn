@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://cvks8qrdrk441"]
+[gd_scene format=3 uid="uid://cvks8qrdrk441"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
 [ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_decal"]
@@ -22,9 +22,9 @@ model_material = SubResource("pendant_gold")
 model_scale = 0.1
 
 [node name="TarnishDecal" parent="." unique_id=570643899 instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.12, 0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.19018202, 0.11431995)
 texture = ExtResource("3_tarnish")
 
 [node name="DustDecal" parent="." unique_id=1730432025 instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, -0.04, 0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.026413664, -0.31637046, 0.092920914)
 texture = ExtResource("4_dust")
