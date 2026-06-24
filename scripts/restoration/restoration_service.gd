@@ -646,7 +646,11 @@ func register_authored_clean(
 	if inst == null:
 		return result
 	var template := _repo.get_template(inst.template_id)
-	_consume_tool_durability(tool_id)
+	# Wear the tool ONCE PER CONDITION REMOVED (like the data-driven decals), NOT per stroke.
+	# Authored conditions take several strokes each, so per-stroke wear blew through a 12-use
+	# tool inside a single artifact and it vanished from the bench AND storage mid-clean.
+	if finished_one:
+		_consume_tool_durability(tool_id)
 	var threshold := template.clean_completion_threshold if template != null else 100
 	if total_active > 0:
 		var fraction := float(cleaned_active) / float(total_active)

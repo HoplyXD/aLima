@@ -1,7 +1,7 @@
 extends GutTest
 
-## Phase 0 smoke test for the production Shop entry point and the
-## controller <-> presentation-HUD boundary. Runs headless under Godot 4.6.3.
+## Phase 0 smoke test for the production Shop entry point (the gameplay shop scene the
+## game now loads) and the controller <-> presentation-HUD boundary. Runs headless.
 ##
 ## Covers: the HUD is visible, the stray test button is gone, the five action
 ## buttons exist, the HUD formats clock/day text, and the dialogue lifecycle
