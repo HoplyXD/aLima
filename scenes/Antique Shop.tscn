@@ -84,7 +84,7 @@ transform = Transform3D(0.79547346, 0, 0.60598844, 0, 1, 0, -0.60598844, 0, 0.79
 transform = Transform3D(-2.7144772e-08, 0, 0.563, 0, 1.5, 0, -0.62099993, 0, -2.460951e-08, -2.691657, -0.6017785, 0.23551762)
 
 [node name="trn_Apple" parent="Interactables/WorkbenchInteractable" unique_id=1348214792 instance=ExtResource("6_xhn4e")]
-transform = Transform3D(2, 0, 0, 0, 4.83, 0, 0, 0, 1.812, -0.9137814, 0.97620773, 0.9089751)
+transform = Transform3D(2, 0, 0, 0, 4.83, 0, 0, 0, 1.812, -0.9137814, 0.97620773, 0.9033278)
 
 [node name="JournalInteractable" type="Area3D" parent="Interactables" unique_id=1322107692]
 transform = Transform3D(-1.7778864, 0.12120413, -0.90798116, 0.13603058, 1.9953686, 0, 0.90587854, -0.061756603, -1.7820129, -0.6766157, 3.0787203, 0.8369968)
@@ -245,6 +245,10 @@ transform = Transform3D(0.014603272, 0, 0.0067193354, 0, 0.016, 0, -0.00674766, 
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2823787, 5.275242, -1.9094129)
 size = Vector3(15.918457, 0.17272949, 12.956543)
 material = ExtResource("14_xto8d")
+
+[node name="Title Screen cam" type="Camera3D" parent="." unique_id=49432357]
+transform = Transform3D(0.9570506, 0, -0.28992084, 0.02642019, 0.9958391, 0.08721505, 0.2887145, -0.09112898, 0.95306844, -3.3254514, 2.0743158, 0.63791275)
+fov = 71.5
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=550347164]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0848688, 2.7500036, 2.400869)
