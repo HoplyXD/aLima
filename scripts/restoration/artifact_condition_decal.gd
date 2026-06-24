@@ -46,6 +46,7 @@ const SPARKLE_PARTICLES_NAME := "SparkleParticles"  ## The success sparkle.
 var _removed: bool = false
 var _dirt: float = START_DIRT
 var _tint_color: Color = Color.WHITE
+var _highlight: float = 0.0  ## 0 = normal; up to 1 brightens the decal as a tool-match cue.
 var _visual: Node3D  ## A Decal (Forward+/Mobile) or a sticker MeshInstance3D (compat).
 var _particles: GPUParticles3D  ## Grime puff (every clean).
 var _sparkle: GPUParticles3D  ## Success sparkle (when fully cleaned).
@@ -62,13 +63,23 @@ func _ready() -> void:
 
 ## (Re)builds the visual for the current renderer from the current texture / box_size.
 func _apply() -> void:
+	# Free the previously built visual (tracked, added internally below) plus any NON-internal
+	# "Visual" a duplicate or an old save left as a real child — without this they stack and
+	# the decal renders at double opacity (hiding the artifact texture) or the wrong size.
 	if _visual != null and is_instance_valid(_visual):
-		_visual.queue_free()
+		_visual.free()
+	for child in get_children():
+		if child is Decal or (child is MeshInstance3D and String(child.name).begins_with("Visual")):
+			child.free()
+	_visual = null
 	# Forward+/Mobile have a RenderingDevice and can draw engine Decals; gl_compatibility
 	# (OpenGL) does not, so it falls back to the flat sticker.
 	var supported := RenderingServer.get_rendering_device() != null
 	_visual = _build_projector() if supported else _build_sticker()
-	add_child(_visual)
+	# INTERNAL child: Godot never copies internal children when this decal is duplicated in
+	# the editor, and never saves them to the .tscn — so a pasted decal can't inherit a stale
+	# visual and stack it. (Internal children are also hidden from the editor scene tree.)
+	add_child(_visual, false, Node.INTERNAL_MODE_BACK)
 	_apply_tint()
 
 
@@ -132,9 +143,24 @@ func _apply_tint() -> void:
 	_set_visual_alpha(clampf(_dirt / 255.0, 0.0, 1.0))
 
 
-## Sets the decal's opacity, keeping its tint colour.
+## Emphasises this decal as a tool-match cue, WITHOUT touching its transform (so the dev's
+## placement/scale is never disturbed and no singular-basis errors can occur): `intensity`
+## 0..1 brightens the projected colour and pushes opacity toward full so the player sees
+## which marks the selected tool can clean. 0 restores the normal look.
+func set_highlight(intensity: float) -> void:
+	_highlight = clampf(intensity, 0.0, 1.0)
+	_set_visual_alpha(clampf(_dirt / 255.0, 0.0, 1.0))
+
+
+## Sets the decal's opacity, keeping its tint colour (and folding in any active highlight).
 func _set_visual_alpha(alpha: float) -> void:
-	var rgba := Color(_tint_color.r, _tint_color.g, _tint_color.b, alpha)
+	var rgb := _tint_color
+	var a := alpha
+	if _highlight > 0.0:
+		# Brighten toward white and toward full opacity so a matching tool makes the mark pop.
+		rgb = _tint_color.lerp(Color(1.0, 1.0, 1.0), 0.55 * _highlight)
+		a = lerpf(alpha, 1.0, 0.55 * _highlight)
+	var rgba := Color(rgb.r, rgb.g, rgb.b, a)
 	if _visual is Decal:
 		(_visual as Decal).modulate = rgba
 	elif _visual is MeshInstance3D:
