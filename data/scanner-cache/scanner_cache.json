@@ -120,6 +120,30 @@
         ]
       },
       "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "oton_death_mask",
+      "template_id": "oton_death_mask",
+      "response": {
+        "type": "gold burial mask",
+        "period": "pre-colonial (c. 14th-15th century, attributed)",
+        "materials": ["gold"],
+        "markings": ["repoussé facial features", "eye and mouth cutouts", "thin hammered sheet"],
+        "condition_note": "Thin gold sheet with surface tarnish, dust, and grime in the recessed features; fragile at the edges.",
+        "cultural_relevance": "Gold death masks of this form are associated with pre-colonial burial practice in the Oton area of Iloilo, Panay. Such pieces are treated as historically significant; this is framed as folklore-adjacent context pending verified records, not an authenticated provenance.",
+        "price_range": [800, 1500],
+        "modification_signs": [],
+        "confidence": "low",
+        "uncertainty_notes": "Attribution and dating are tentative; a genuine piece of this kind would require expert authentication and is excluded from any folklore-as-fact claim.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review and verified local sources; the Code of Kalantiaw and similar disputed sources are not used."
+          }
+        ]
+      },
+      "fallback": true
     }
   ]
 }

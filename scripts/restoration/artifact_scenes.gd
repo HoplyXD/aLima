@@ -15,6 +15,10 @@ const _SCENES := {
 	preload("res://scenes/restoration/artifacts/Basic Artifacts/tarnished_pendant.tscn"),
 	"oton_death_mask":
 	preload("res://scenes/restoration/artifacts/Historical Artifacts/oton_death_mask.tscn"),
+	"silver_locket":
+	preload("res://scenes/restoration/artifacts/Basic Artifacts/silver_locket.tscn"),
+	"silver_pendant":
+	preload("res://scenes/restoration/artifacts/Basic Artifacts/silver_pendant.tscn"),
 }
 
 

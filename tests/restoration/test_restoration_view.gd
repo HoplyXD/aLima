@@ -221,7 +221,7 @@ func test_open_loads_selected_inventory_instance() -> void:
 	_view.open()
 	assert_eq(_view.get_selected_uid(), "pendant_load", "First restorable instance is loaded")
 	var title: Label = _view.get_node("HUD/TopBar/Margin/Bar/Title")
-	assert_eq(title.text, "Tarnished Pendant", "Loads the instance's template name")
+	assert_eq(title.text, "Gold Pendant", "Loads the instance's template name")
 
 
 # --- Rotation ----------------------------------------------------------------
