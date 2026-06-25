@@ -62,6 +62,7 @@ extends Node3D
 const DIRT_SHADER := preload("res://scenes/restoration/restoration_dirt.gdshader")
 
 const MASK_SIZE: int = 64  ## Dirt mask resolution; small so coverage scans stay cheap.
+const PAINT_SIZE: int = 512  ## Runtime paint-layer (DrawableTexture2D) resolution; crisp, GPU-side.
 const BRUSH_RADIUS_UV: float = 0.16  ## Cleaning brush radius in UV space.
 const CLEAN_THRESHOLD: float = 0.5  ## Mask R below this counts a texel as cleaned.
 
@@ -107,6 +108,9 @@ var _clasp: MeshInstance3D
 var _material: ShaderMaterial
 var _dirt_image: Image
 var _dirt_texture: ImageTexture
+## Runtime-only drawn grime/damage layer composited by the dirt shader. Null in the editor
+## (created at runtime) so the @tool geometry build never depends on the experimental texture.
+var _paint_texture: DrawableTexture2D
 
 var _yaw: float = AUTHORED_YAW
 var _pitch: float = AUTHORED_PITCH
@@ -280,6 +284,61 @@ func set_fully_clean() -> void:
 		return
 	_dirt_image.fill(Color(0.0, 0.0, 0.0, 1.0))
 	_dirt_texture.update(_dirt_image)
+
+
+# --- Runtime paint layer (DrawableTexture2D) ---------------------------------
+# A drawable grime/damage layer the player can draw onto via the dirt shader's paint_layer
+# sampler, at the SAME analytic surface UV ray_test_surface returns — so a drawn stamp lands
+# exactly where the tool is worked. Presentation only; created at runtime (not in the editor).
+
+
+## Creates the transparent paint layer and wires it into the dirt material (runtime only).
+func _ensure_paint_layer() -> void:
+	if Engine.is_editor_hint() or _material == null or _paint_texture != null:
+		return
+	_paint_texture = DrawableTexture2D.new()
+	_paint_texture.setup(
+		PAINT_SIZE, PAINT_SIZE, DrawableTexture2D.DRAWABLE_FORMAT_RGBA8, Color(0, 0, 0, 0), false
+	)
+	_material.set_shader_parameter("paint_layer", _paint_texture)
+	_material.set_shader_parameter("paint_enabled", 1.0)
+
+
+## Draws a brush stamp onto the paint layer at the given surface UV. `size_px` is the stamp's
+## half-extent in texels; `material` is the blit material (null = default blend_mix to ADD grime;
+## a blend_sub material to ERASE). No-op in the editor or before the layer exists (e.g. an authored
+## model that hides the medallion). Also stamps a wrapped copy across the u=0/1 seam so a brush
+## straddling the analytic-UV seam isn't sliced into a hard line there.
+func paint_at_uv(uv: Vector2, brush: Texture2D, size_px: int, material: Material = null) -> void:
+	if _paint_texture == null or brush == null:
+		return
+	var cx := int(uv.x * PAINT_SIZE)
+	var cy := int(uv.y * PAINT_SIZE)
+	var r := maxi(1, size_px)
+	_blit_paint(cx, cy, r, brush, material)
+	if cx - r < 0:
+		_blit_paint(cx + PAINT_SIZE, cy, r, brush, material)
+	elif cx + r > PAINT_SIZE:
+		_blit_paint(cx - PAINT_SIZE, cy, r, brush, material)
+
+
+func _blit_paint(cx: int, cy: int, r: int, brush: Texture2D, material: Material) -> void:
+	_paint_texture.blit_rect(Rect2i(cx - r, cy - r, r * 2, r * 2), brush, Color.WHITE, 0, material)
+
+
+## Clears all drawn paint (re-fills the layer transparent) so drawn damage doesn't carry
+## between artifacts when the bench loads a new instance.
+func clear_paint() -> void:
+	if _paint_texture == null:
+		return
+	_paint_texture.setup(
+		PAINT_SIZE, PAINT_SIZE, DrawableTexture2D.DRAWABLE_FORMAT_RGBA8, Color(0, 0, 0, 0), false
+	)
+
+
+## True when a runtime paint layer exists (not the editor / not yet built).
+func has_paint_layer() -> bool:
+	return _paint_texture != null
 
 
 ## Returns the exact dirt mask as a (small, lossless) PNG so the view can preserve
@@ -947,6 +1006,7 @@ func _build() -> void:
 	_medallion.mesh = sphere
 	_medallion.material_override = _material
 	add_child(_medallion)
+	_ensure_paint_layer()
 
 	var bail_mesh := TorusMesh.new()
 	bail_mesh.inner_radius = 0.07

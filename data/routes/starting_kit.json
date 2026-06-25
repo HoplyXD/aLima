@@ -10,7 +10,9 @@
     "stain_lifter",
     "photo_kit",
     "consolidant",
-    "archival_tape"
+    "archival_tape",
+    "debug_brush",
+    "debug_eraser"
   ],
   "technique_ids": ["pendant_cleaning"]
 }

@@ -25,6 +25,24 @@ enum Mode { ROTATE, CLEAN }
 const MOUSE_ROTATE_SENSITIVITY: float = 0.0065
 const KEY_ROTATE_SPEED: float = 2.2
 const STROKE_PIXEL_THRESHOLD: float = 64.0  ## Drag distance that commits one stroke.
+## Drag distance between decal scrub steps. Smaller than the surface threshold so scrubbing
+## discrete marks feels responsive; purely an ergonomics knob — it changes how far you drag
+## per cleaning step, NOT how many steps (or how much tool wear) a decal costs.
+const DECAL_STROKE_PIXEL_THRESHOLD: float = 40.0
+## Debug tool ids (data/objects/tools.json) that operate on the DrawableTexture2D paint layer
+## instead of cleaning: DRAW stamps grime, ERASE paints the clean surface back. Both use a
+## circular, radius-sized brush (the PNG fills the disc for draw; a clean disc for erase).
+const DRAW_TOOL_ID: String = "debug_brush"
+const ERASE_TOOL_ID: String = "debug_eraser"
+## Drag distance between drawn stamps while painting with a debug brush.
+const PAINT_BRUSH_THROTTLE: float = 22.0
+## Brush radius in paint-layer texels (the disc the PNG fills). The whole radius is textured by the
+## brush image, not a pasted rectangle.
+const PAINT_RADIUS: int = 48
+## texture_blit shader that SUBTRACTS the brush alpha from the paint layer, so the eraser removes
+## the drawn overlay (revealing the artifact's own texture) rather than painting a colour over it.
+## (shader_type texture_blit / COLOR0 / hint_blit_source0 verified against the local 4.7 compiler.)
+const ERASE_BLIT_SHADER := "shader_type texture_blit;\nrender_mode blend_sub;\nuniform sampler2D src : hint_blit_source0;\nvoid blit() {\n\tCOLOR0 = texture(src, UV);\n}\n"
 
 ## Artifact zoom — the ARTIFACT moves toward (zoom in) or away from (zoom out) the camera
 ## along its view axis, so the player can lean a piece in to inspect fine grime or push it
@@ -52,6 +70,18 @@ var _mode: int = Mode.ROTATE
 var _left_down: bool = false
 var _right_down: bool = false
 var _stroke_active: bool = false
+## True while the current press-drag is a decal scrub (photos / conditions) rather than a
+## surface dirt-mask stroke, so motion routes to per-decal cleaning instead of mask painting.
+var _decal_stroke: bool = false
+## True while the current press-drag is a debug paint brush (draw or erase) on the paint layer.
+var _paint_stroke: bool = false
+## Circular condition-PNG brushes for the debug draw tool, the erase disc, and the blend_sub blit
+## material the eraser uses. Built lazily on first debug-paint use (_ensure_paint_brushes).
+var _draw_brushes: Array[Texture2D] = []
+var _erase_brush: Texture2D
+var _erase_material: ShaderMaterial
+var _brushes_ready: bool = false
+var _paint_rng := RandomNumberGenerator.new()
 var _stroke_pixels: float = 0.0
 var _last_pointer: Vector2 = Vector2.ZERO
 var _stroke_uvs: PackedVector2Array = PackedVector2Array()
@@ -120,6 +150,9 @@ var _cursor_tilt: float = 0.0
 
 func _ready() -> void:
 	_service = RestorationService.new()
+	_paint_rng.randomize()
+	# Circular brushes are built lazily on first debug-paint use (see _ensure_paint_brushes) so
+	# the per-pixel brush construction never burdens normal play or the test suite.
 	# Remember the artifact's authored distance so zoom is relative to it and reset returns here.
 	_zoom_rest_z = _object.position.z
 	_zoom_z = _zoom_rest_z
@@ -445,6 +478,8 @@ func load_instance(uid: String) -> void:
 	# artifact; folding in the loop index re-rolls which random conditions appear each loop.
 	var instance_seed := _artifact_seed(uid)
 	_object.visible = true
+	if _object.has_method("clear_paint"):
+		_object.clear_paint()  # drawn debug grime doesn't carry between artifacts
 	if not _present_object(_object, inst, template, instance_seed):
 		# No condition decals: restore the cleaned spots from this session or the save.
 		if _dirt_cache.has(uid):
@@ -680,6 +715,12 @@ func select_tool(tool_id: String) -> void:
 	# Selecting a tool moves the player into cleaning; they can switch back to
 	# Rotate (mode toggle / right-drag / rotate keys) to inspect again.
 	_set_mode(Mode.CLEAN)
+	if tool_id == DRAW_TOOL_ID:
+		_caption_label.text = "Debug draw brush — drag across the surface to draw grime."
+		return
+	if tool_id == ERASE_TOOL_ID:
+		_caption_label.text = "Debug eraser — drag across the surface to wipe it clean."
+		return
 	var inst := _service.find_instance_by_id(_selected_uid)
 	if inst != null and inst.state == ModelEnums.ObjState.DIRTY:
 		_caption_label.text = (
@@ -1297,19 +1338,20 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			# HUD buttons are now hidden accessibility fallbacks).
 			if _try_bench_object_at_pointer(pos):
 				return
-			# Author-placed condition decals (event artifacts) clean on a direct click
-			# with the right tool, before a surface stroke begins.
-			if _mode == Mode.CLEAN and _try_authored_condition_at_pointer(pos):
-				return
 			_last_pointer = pos
 			_left_down = true
-			if _object.is_decal_mode():
-				# Decal-based artifacts (photos or random conditions) clean by clicking
-				# discrete marks, not by stroking a dirt mask.
-				if _mode == Mode.CLEAN and _try_photo_action_at_pointer(pos):
-					_left_down = false
+			if _mode != Mode.CLEAN:
 				return
-			if _mode == Mode.CLEAN:
+			# The debug brushes PAINT the surface paint layer (draw grime / erase) instead of cleaning.
+			if _is_paint_tool(_selected_tool_id):
+				_begin_paint_stroke(pos)
+			# Decal-based artifacts (photos, random conditions, author-placed event
+			# conditions) now clean by DRAGGING the tool across the grime (Trash-Goblin
+			# style) rather than single clicks; a pure dirt-mask object keeps its surface
+			# stroke (also drag-based). Either way a quick click still cleans one step.
+			elif _object.is_decal_mode() or _object.has_authored_conditions():
+				_begin_decal_stroke(pos)
+			else:
 				_begin_stroke(pos)
 		else:
 			if _stroke_active:
@@ -1328,7 +1370,12 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	var pos := event.position
 	if _left_down and _mode == Mode.CLEAN and _stroke_active:
-		_accumulate_stroke(pos)
+		if _paint_stroke:
+			_accumulate_paint_stroke(pos)
+		elif _decal_stroke:
+			_accumulate_decal_stroke(pos)
+		else:
+			_accumulate_stroke(pos)
 	elif _right_down or (_left_down and _mode == Mode.ROTATE):
 		_object.rotate_view(
 			-event.relative.x * MOUSE_ROTATE_SENSITIVITY,
@@ -1403,11 +1450,136 @@ func _open_or_join() -> void:
 
 
 func _begin_stroke(pos: Vector2) -> void:
+	_decal_stroke = false
+	_paint_stroke = false
 	_stroke_active = true
 	_stroke_pixels = 0.0
 	_stroke_uvs.clear()
 	_last_pointer = pos
 	_add_stroke_sample(pos)
+
+
+# --- Debug draw brush (texture drawing via the DrawableTexture2D paint layer) -------------
+
+
+## Begins a press-drag that DRAWS grime onto the surface with the debug brush. Dragging stamps
+## a random condition PNG at a random size along the path, so the drawn grime varies in size and
+## shape — the texture-drawing test. Painting targets the surface UV, so it works on the
+## dirt-mask medallion (artifacts without an authored model covering it).
+func _begin_paint_stroke(pos: Vector2) -> void:
+	_paint_stroke = true
+	_stroke_active = true
+	_stroke_pixels = 0.0
+	_last_pointer = pos
+	_paint_at_pointer(pos)
+
+
+func _accumulate_paint_stroke(pos: Vector2) -> void:
+	_stroke_pixels += pos.distance_to(_last_pointer)
+	_last_pointer = pos
+	if _stroke_pixels >= PAINT_BRUSH_THROTTLE:
+		_stroke_pixels = 0.0
+		_paint_at_pointer(pos)
+
+
+## True for the debug paint tools (draw / erase), which work the paint layer not the cleaning rules.
+func _is_paint_tool(tool_id: String) -> bool:
+	return tool_id == DRAW_TOOL_ID or tool_id == ERASE_TOOL_ID
+
+
+## Builds the circular brushes + erase material the first time a debug paint tool is used (lazy).
+func _ensure_paint_brushes() -> void:
+	if _brushes_ready:
+		return
+	_brushes_ready = true
+	_draw_brushes = ConditionBrushes.load_circular()
+	_erase_brush = ConditionBrushes.make_erase_disc()
+	var shader := Shader.new()
+	shader.code = ERASE_BLIT_SHADER
+	_erase_material = ShaderMaterial.new()
+	_erase_material.shader = shader
+
+
+## Stamps the current paint brush onto the surface under the pointer as a radius-sized circle:
+## a random condition disc when drawing, the clean disc when erasing. No-op on a ray miss or when
+## the object has no runtime paint layer (e.g. a photo or an authored model hiding the medallion).
+func _paint_at_pointer(pos: Vector2) -> void:
+	if not _object.has_method("paint_at_uv"):
+		return
+	_ensure_paint_brushes()
+	# Draw ADDS grime (random condition disc, default blend_mix); erase SUBTRACTS the overlay
+	# (erase disc + blend_sub material) so the artifact's own texture shows through.
+	var brush: Texture2D = _erase_brush
+	var material: Material = _erase_material
+	if _selected_tool_id == DRAW_TOOL_ID:
+		if _draw_brushes.is_empty():
+			return
+		brush = _draw_brushes[_paint_rng.randi_range(0, _draw_brushes.size() - 1)]
+		material = null
+	if brush == null:
+		return
+	var hit := _ray_at_pointer(pos)
+	if not hit.get("hit", false):
+		return
+	_object.paint_at_uv(hit["uv"], brush, PAINT_RADIUS, material)
+
+
+## Begins a press-drag "scrub" over a decal-based artifact (photos, random conditions, or
+## author-placed event conditions). Dragging the tool applies repeated cleaning steps at a
+## steady cadence so grime wears away as you work across it — the Trash-Goblin feel — instead
+## of one click per mark. A clean photo awaiting reassembly joins on the press instead.
+func _begin_decal_stroke(pos: Vector2) -> void:
+	if _photo_join_at_pointer():
+		return
+	_decal_stroke = true
+	_paint_stroke = false
+	_stroke_active = true
+	_stroke_pixels = 0.0
+	_stroke_uvs.clear()
+	_last_pointer = pos
+	# A single click still cleans one step (accessibility + parity with the old tap).
+	_clean_decal_under_pointer(pos)
+
+
+## One drag-step of decal scrubbing: every DECAL_STROKE_PIXEL_THRESHOLD pixels of travel,
+## clean whatever decal sits under the pointer once. A miss (empty space / already-clean
+## mark) cleans nothing and wears nothing, so only contact with grime costs durability.
+func _accumulate_decal_stroke(pos: Vector2) -> void:
+	_stroke_pixels += pos.distance_to(_last_pointer)
+	_last_pointer = pos
+	if _stroke_pixels >= DECAL_STROKE_PIXEL_THRESHOLD:
+		_stroke_pixels = 0.0
+		_clean_decal_under_pointer(pos)
+
+
+## Cleans the author-placed condition or photo/random blemish under the pointer (authored
+## first, then blemish). Returns true when a decal was targeted. Reuses the existing per-decal
+## clean paths, so all service rules, wear, and tests are unchanged — only the input is a drag.
+func _clean_decal_under_pointer(pos: Vector2) -> bool:
+	if _try_authored_condition_at_pointer(pos):
+		return true
+	var origin := _camera.project_ray_origin(_to_viewport(pos))
+	var dir := _camera.project_ray_normal(_to_viewport(pos))
+	return attempt_clean_blemish_with_ray(origin, dir)
+
+
+## True (and performs the join) when the loaded artifact is a clean photo awaiting
+## reassembly — a join is a deliberate click, not a scrub, so it never starts a stroke.
+func _photo_join_at_pointer() -> bool:
+	if not _object.is_photo_mode():
+		return false
+	var inst := _service.find_instance_by_id(_selected_uid)
+	var template := (
+		_service.get_repository().get_template(inst.template_id) if inst != null else null
+	)
+	return (
+		inst != null
+		and template != null
+		and template.requires_join
+		and not inst.is_joined
+		and inst.state == ModelEnums.ObjState.CLEAN
+		and try_join().joined
+	)
 
 
 func _accumulate_stroke(pos: Vector2) -> void:
@@ -1425,6 +1597,8 @@ func _end_stroke() -> void:
 	if _stroke_active and not _stroke_uvs.is_empty():
 		commit_stroke(_stroke_uvs)
 	_stroke_active = false
+	_decal_stroke = false
+	_paint_stroke = false
 	_stroke_uvs.clear()
 	_stroke_pixels = 0.0
 
@@ -1442,28 +1616,6 @@ func _try_clasp_at_pointer(pos: Vector2) -> bool:
 		try_open_clasp()
 		return true
 	return false
-
-
-## In photo mode, a click either joins the cleaned halves (when the photo is clean
-## and needs joining) or cleans the blemish under the pointer. Returns true when it
-## acted, so a click on bare photo falls through to a rotate drag.
-func _try_photo_action_at_pointer(pos: Vector2) -> bool:
-	var inst := _service.find_instance_by_id(_selected_uid)
-	var template := (
-		_service.get_repository().get_template(inst.template_id) if inst != null else null
-	)
-	if (
-		inst != null
-		and template != null
-		and template.requires_join
-		and not inst.is_joined
-		and inst.state == ModelEnums.ObjState.CLEAN
-	):
-		try_join()
-		return true
-	var origin := _camera.project_ray_origin(_to_viewport(pos))
-	var dir := _camera.project_ray_normal(_to_viewport(pos))
-	return attempt_clean_blemish_with_ray(origin, dir)
 
 
 func _try_tool_pick_at_pointer(pos: Vector2) -> bool:
