@@ -24,6 +24,7 @@
 [ext_resource type="Material" uid="uid://bsw4qlo6eig1s" path="res://assets/3d Assets/Walls and Floors/Ceiling.tres" id="14_xto8d"]
 [ext_resource type="PackedScene" uid="uid://c2grr1ds06ewm" path="res://assets/3d Assets/Fireplace/trn_Fireplace.fbx" id="15_2y6xu"]
 [ext_resource type="PackedScene" uid="uid://b4mxplnagjpw0" path="res://assets/3d Assets/Fireplace/trn_Fireplace_Tube.fbx" id="16_1har4"]
+[ext_resource type="PackedScene" uid="uid://b2o2upvt71le3" path="res://assets/3d Assets/Light Chandelier.glb" id="16_cxprb"]
 [ext_resource type="PackedScene" uid="uid://by2nidw1p7qwf" path="res://assets/3d Assets/Walls and Floors/Floating Shelf.glb" id="19_16mbf"]
 [ext_resource type="PackedScene" uid="uid://32xn2r7g3h3x" path="res://assets/3d Assets/Paper/Debris Papers.glb" id="22_xto8d"]
 [ext_resource type="PackedScene" uid="uid://b1mi44jnsk07v" path="res://assets/3d Assets/Paper/Envelopes.glb" id="23_2y6xu"]
@@ -216,6 +217,9 @@ transform = Transform3D(-8.742278e-08, 0, 2, 0, 2, 0, -2, 0, -8.742278e-08, 0.44
 
 [node name="Bookcase2" parent="." unique_id=72161348 instance=ExtResource("7_cet3k")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -7.0222726, 0.20925331, -6.86525)
+
+[node name="Light Chandelier" parent="." unique_id=1022501464 instance=ExtResource("16_cxprb")]
+transform = Transform3D(2.56, 0, 0, 0, 2.56, 0, 0, 0, 2.56, -1.1641165, 5.1955, -2.1917472)
 
 [node name="Bookcase" parent="." unique_id=1628741937 instance=ExtResource("7_cet3k")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -4.3539805, 0.21895194, -6.862382)
