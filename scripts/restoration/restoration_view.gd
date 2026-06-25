@@ -74,6 +74,17 @@ var _object_scene_path: String = "res://scenes/restoration/restoration_artifact.
 var _zoom_rest_z: float = 0.0
 var _zoom_z: float = 0.0
 var _highlight_time: float = 0.0  ## Drives the optional decal-highlight throb.
+## Left-edge 2D tool rack (replaces the 3D bench tool props; see CLAUDE.md REST-R9). Built
+## in code and added to the HUD on ready.
+var _tool_sidebar: ToolSidebar
+## The held tool's 3D model, floating at the cursor while a tool is selected (Trash-Goblin
+## style). Lives on its own high CanvasLayer + SubViewport (via Preview3DCard) so it always
+## draws in front and never clips with the bench artifacts. Presentation only.
+var _cursor_tool: Preview3DCard
+var _cursor_layer: CanvasLayer
+## Cursor-lean state: last pointer position (for velocity) and the current eased lean angle.
+var _prev_cursor_pos: Vector2 = Vector2.ZERO
+var _cursor_tilt: float = 0.0
 
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/World/Camera3D
@@ -128,6 +139,14 @@ func _ready() -> void:
 	_journal_button.pressed.connect(_on_journal_pressed)
 	_phone_button.pressed.connect(_on_phone_pressed)
 	_storage_button.pressed.connect(_on_storage_pressed)
+	_build_tool_sidebar()
+	_build_cursor_tool()
+	# Tools now live in the 2D sidebar: hide the 3D bench tray and the old fallback-button
+	# row, but keep building them (off-screen) so existing selection plumbing/tests are intact.
+	_tool_tray.visible = false
+	var tool_row := _tool_container.get_parent()
+	if tool_row is CanvasItem:
+		(tool_row as CanvasItem).visible = false
 	# A worn-out tool vanishes from the bench mid-session.
 	EventBus.tool_broke.connect(_on_tool_broke)
 	# Keep the day/time readout current (the clock is paused at the bench, so this only
@@ -176,6 +195,9 @@ func close() -> void:
 		_is_open = false
 		visible = false
 		set_process(false)
+		if _cursor_tool != null:
+			_cursor_tool.visible = false  # its CanvasLayer is independent of this view's visibility
+		_set_os_cursor_hidden(false)  # restore the pointer the bench may have hidden
 		_release_pause_if_owned()
 	closed.emit()
 
@@ -263,6 +285,7 @@ func _on_tool_broke(_tool_id: String, _uid: String) -> void:
 		_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()
 	_tool_tray.build_slots(_service.get_workbench_slots(), _service.get_workbench_durability())
+	_rebuild_tool_sidebar()
 	_tool_tray.set_selected(_selected_tool_id)
 
 
@@ -270,6 +293,7 @@ func _on_storage_closed_from_bench() -> void:
 	_rebuild_tool_palette()
 	var tools := _service.get_workbench_tools()
 	_tool_tray.build_slots(_service.get_workbench_slots(), _service.get_workbench_durability())
+	_rebuild_tool_sidebar()
 	# If the tool the player was holding is no longer equipped, put it down.
 	var still_equipped := false
 	for tool in tools:
@@ -431,6 +455,7 @@ func load_instance(uid: String) -> void:
 	_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()
 	_tool_tray.build_slots(_service.get_workbench_slots(), _service.get_workbench_durability())
+	_rebuild_tool_sidebar()
 	reset_view()
 	_refresh(inst, template)
 	_caption_label.text = "Rotate to inspect, then pick up a tool from the bench and work the surface."
@@ -468,13 +493,187 @@ func _rebuild_tool_palette() -> void:
 		_tool_container.add_child(button)
 
 
+# --- 2D tool sidebar (REST-R9: tools as numbered rows, not 3D bench props) ----
+
+
+func _build_tool_sidebar() -> void:
+	# The sidebar is an authored node under HUD (see restoration_view.tscn) so its placement is
+	# editable. Accept either the "LeftSideBar" or legacy "ToolSidebar" unique name.
+	for unique_name in ["%LeftSideBar", "%ToolSidebar"]:
+		var node := get_node_or_null(unique_name)
+		if node is ToolSidebar:
+			_tool_sidebar = node
+			_tool_sidebar.tool_clicked.connect(toggle_tool)
+			return
+
+
+## Rebuilds the sidebar rows from the current bench loadout, durability, and each tool's
+## cleaning conditions. Mirrors the (now hidden) 3D tray so both stay in lockstep.
+func _rebuild_tool_sidebar() -> void:
+	if _tool_sidebar == null:
+		return
+	var repo := _service.get_repository()
+	var provider := func(tool_id: String) -> Array: return CleaningPower.conditions_for(repo, tool_id)
+	_tool_sidebar.build_slots(
+		_service.get_workbench_slots(), _service.get_workbench_durability(), provider
+	)
+	_tool_sidebar.set_selected(_selected_tool_id)
+
+
+# --- Cursor-following held tool (Trash-Goblin style) -------------------------
+
+
+const CURSOR_TOOL_SIZE: int = 100
+## Velocity-based lean: the held tool tilts toward the direction of horizontal mouse movement
+## (more the faster it moves) and eases back to upright when the cursor stops. Flip the sign of
+## CURSOR_TILT_SENSITIVITY if the lean direction feels reversed.
+const CURSOR_TILT_MAX_DEG: float = 18.0
+const CURSOR_TILT_SENSITIVITY: float = 0.00022  ## radians of lean per (pixel/second) of speed
+const CURSOR_TILT_RETURN: float = 12.0  ## how fast the lean eases toward its target
+## Screen-pixel nudge of the held tool relative to the cursor (negative x = left), to correct
+## models whose visible centre sits off the card centre.
+const CURSOR_OFFSET: Vector2 = Vector2(-16.0, 0.0)
+
+
+func _build_cursor_tool() -> void:
+	# Its own high CanvasLayer so the held tool always draws in front of the bench + HUD and,
+	# rendering in the Preview3DCard's separate 3D world, never clips with the bench artifact.
+	_cursor_layer = CanvasLayer.new()
+	_cursor_layer.name = "CursorToolLayer"
+	_cursor_layer.layer = 128
+	add_child(_cursor_layer)
+
+	_cursor_tool = preload("res://scenes/restoration/preview_3d_card.tscn").instantiate()
+	_cursor_tool.name = "CursorTool"
+	_cursor_tool.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_cursor_tool.visible = false
+	_cursor_layer.add_child(_cursor_tool)
+	# Trim the big-card min sizes down to a tight square, hide the name, and make the whole
+	# subtree mouse-transparent so clicks fall through to the bench props (phone/journal/box).
+	_cursor_tool.custom_minimum_size = Vector2.ZERO
+	_cursor_tool.size = Vector2(CURSOR_TOOL_SIZE, CURSOR_TOOL_SIZE)
+	var preview_container := _cursor_tool.find_child("PreviewContainer", true, false)
+	if preview_container is Control:
+		(preview_container as Control).custom_minimum_size = Vector2(CURSOR_TOOL_SIZE, CURSOR_TOOL_SIZE)
+	var name_label := _cursor_tool.find_child("NameLabel", true, false)
+	if name_label is Control:
+		(name_label as Control).visible = false
+		(name_label as Control).custom_minimum_size = Vector2.ZERO
+	_set_subtree_ignore_mouse(_cursor_tool)
+	_cursor_tool.set_spin(false)  # the held tool holds still and orients to the artifact
+
+
+## Loads the held tool's model into the cursor follower (or hides it when none is held).
+func _set_cursor_tool(tool_id: String) -> void:
+	if _cursor_tool == null:
+		return
+	if tool_id.is_empty():
+		_cursor_tool.visible = false
+		return
+	_cursor_tool.set_preview(
+		RestorationTool.build_tool_model(tool_id), "", Color.WHITE, RestorationTool.display_fill(tool_id)
+	)
+	_cursor_tool.set_spin(false)
+
+
+## Each frame: centre the held-tool model on the cursor while the pointer is inside the
+## artifact area (not over the top/bottom bars or side panels), and orient it toward the
+## artifact (clamped so it never flips upside down). It stops following — and hides — the
+## moment the pointer leaves that area.
+func _update_cursor_tool(delta: float) -> void:
+	if _cursor_tool == null:
+		return
+	var pos := get_viewport().get_mouse_position()
+	var show := (
+		not _selected_tool_id.is_empty()
+		and _pointer_in_artifact_area(pos)
+		and not _cursor_blocked_by_overlay()
+	)
+	if show != _cursor_tool.visible:
+		_cursor_tool.visible = show
+		# The held 3D tool becomes the cursor, so hide the OS pointer while it is shown.
+		_set_os_cursor_hidden(show)
+	if not show:
+		_prev_cursor_pos = pos  # avoid a velocity spike when it reappears
+		return
+	# The held tool zooms with the artifact: scale the cursor card by the same distance ratio
+	# the artifact gains/loses when the player zooms it in or out.
+	var mult := _cursor_zoom_multiplier()
+	_cursor_tool.scale = Vector2(mult, mult)
+	var eff := float(CURSOR_TOOL_SIZE) * mult
+	_cursor_tool.position = pos - Vector2(eff, eff) * 0.5 + CURSOR_OFFSET  # centred (+ nudge)
+	# Lean toward the direction of horizontal motion (scaled by speed), easing back to upright
+	# when the cursor stops.
+	var velocity_x := (pos.x - _prev_cursor_pos.x) / maxf(delta, 0.0001)
+	var limit := deg_to_rad(CURSOR_TILT_MAX_DEG)
+	var target := clampf(-velocity_x * CURSOR_TILT_SENSITIVITY, -limit, limit)
+	_cursor_tilt = lerpf(_cursor_tilt, target, clampf(CURSOR_TILT_RETURN * delta, 0.0, 1.0))
+	_cursor_tool.set_facing_angle(_cursor_tilt)
+	_prev_cursor_pos = pos
+
+
+## How much bigger/smaller the held tool should render than its rest size, tracking the
+## artifact's zoom: closer artifact (zoomed in) -> larger tool, and vice versa.
+func _cursor_zoom_multiplier() -> float:
+	if not is_instance_valid(_camera):
+		return 1.0
+	var cam_z := _camera.position.z
+	var dist_now := maxf(cam_z - _zoom_z, 0.1)
+	var dist_rest := maxf(cam_z - _zoom_rest_z, 0.1)
+	return clampf(dist_rest / dist_now, 0.6, 2.4)
+
+
+func _set_os_cursor_hidden(hidden: bool) -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN if hidden else Input.MOUSE_MODE_VISIBLE)
+
+
+## True when a full-screen overlay opened from the bench (scanner, phone, storage, journal)
+## is up — the held tool must not float over it (its CanvasLayer sits above everything).
+func _cursor_blocked_by_overlay() -> bool:
+	if _scanner_screen != null and _scanner_screen.visible:
+		return true
+	if _phone != null and _phone.visible:
+		return true
+	if _storage_screen != null and _storage_screen.visible:
+		return true
+	if _journal_viewport != null and _journal_viewport.is_open():
+		return true
+	return false
+
+
+## Recursively makes a subtree mouse-transparent so it never intercepts pointer input.
+func _set_subtree_ignore_mouse(node: Node) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in node.get_children():
+		_set_subtree_ignore_mouse(child)
+
+
+## True when `pos` is over the central 3D artifact area: inside the viewport but NOT over the
+## top bar, bottom panel, condition meters, artifact strip, or the tool sidebar.
+func _pointer_in_artifact_area(pos: Vector2) -> bool:
+	if not _pointer_over_viewport(pos):
+		return false
+	for path in ["HUD/TopBar", "HUD/BottomPanel", "HUD/RightSideBar", "HUD/ArtifactBar"]:
+		var node := get_node_or_null(path)
+		if node is Control and (node as Control).visible:
+			if (node as Control).get_global_rect().has_point(pos):
+				return false
+	if _tool_sidebar != null and _tool_sidebar.visible:
+		if _tool_sidebar.get_global_rect().has_point(pos):
+			return false
+	return true
+
+
 ## Selects an owned tool to clean with. Public so the Shop/tests can drive it.
 func select_tool(tool_id: String) -> void:
 	_selected_tool_id = tool_id
 	_log("select_tool(%s) -> mode CLEAN" % tool_id)
-	# The bench tool prop is the primary selection surface; the HUD buttons are a
-	# labelled accessibility/fallback that we keep visually in sync.
+	# The sidebar is the primary selection surface; the (hidden) 3D tray + HUD buttons
+	# stay in sync as accessibility/fallback. The held tool also floats at the cursor.
 	_tool_tray.set_selected(tool_id)
+	_tool_sidebar.set_selected(tool_id)
+	_set_cursor_tool(tool_id)
 	for child in _tool_container.get_children():
 		if child is Button:
 			child.button_pressed = (child as Button).text == _tool_display_name(tool_id)
@@ -786,6 +985,8 @@ func _apply_action_feedback(result: RestorationService.ToolResult) -> void:
 func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	# Keep the bench durability bars current after any action that may have worn a tool.
 	_tool_tray.update_durability(_service.get_workbench_durability())
+	if _tool_sidebar != null:
+		_tool_sidebar.update_durability(_service.get_workbench_durability())
 	var threshold := template.clean_completion_threshold if template != null else 100
 	_state_label.text = "State: %s" % ModelEnums.obj_state_name(inst.state).capitalize()
 	_condition_bar.max_value = threshold
@@ -862,6 +1063,7 @@ func _show_empty_state() -> void:
 	# artifact on the bench, so the player can inspect their kit.
 	_rebuild_tool_palette()
 	_tool_tray.build_slots(_service.get_workbench_slots(), _service.get_workbench_durability())
+	_rebuild_tool_sidebar()
 
 
 func _show_invalid_state() -> void:
@@ -890,6 +1092,9 @@ func _set_mode(mode: int) -> void:
 func _deselect_tool() -> void:
 	_selected_tool_id = ""
 	_tool_tray.set_selected("")
+	if _tool_sidebar != null:
+		_tool_sidebar.set_selected("")
+	_set_cursor_tool("")
 	for child in _tool_container.get_children():
 		if child is Button:
 			(child as Button).button_pressed = false
@@ -982,6 +1187,7 @@ func _process(delta: float) -> void:
 	if zoom != 0.0:
 		zoom_by(zoom * ZOOM_KEY_SPEED * delta)
 	_update_decal_highlight(delta)
+	_update_cursor_tool(delta)
 
 
 ## Optional learning aid (settings, default off): throbs the conditions the selected tool
@@ -1140,7 +1346,8 @@ func _update_hover(pos: Vector2) -> void:
 		return
 	var origin := _camera.project_ray_origin(_to_viewport(pos))
 	var dir := _camera.project_ray_normal(_to_viewport(pos))
-	var tool_id := _tool_tray.ray_pick(origin, dir)
+	# The 3D tray is hidden (tools live in the sidebar); don't hover/pick its bench props.
+	var tool_id := _tool_tray.ray_pick(origin, dir) if _tool_tray.visible else ""
 	if not tool_id.is_empty():
 		_tool_tray.set_hovered(tool_id)
 		_set_bench_hover("")
@@ -1260,6 +1467,10 @@ func _try_photo_action_at_pointer(pos: Vector2) -> bool:
 
 
 func _try_tool_pick_at_pointer(pos: Vector2) -> bool:
+	# Tools are selected from the 2D sidebar now; the 3D tray is hidden. Its props still sit on
+	# the bench, so picking them would steal clicks meant for cleaning the artifact.
+	if not _tool_tray.visible:
+		return false
 	var origin := _camera.project_ray_origin(_to_viewport(pos))
 	var dir := _camera.project_ray_normal(_to_viewport(pos))
 	var tool_id := _tool_tray.ray_pick(origin, dir)

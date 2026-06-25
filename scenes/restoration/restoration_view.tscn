@@ -13,6 +13,8 @@
 [ext_resource type="PackedScene" uid="uid://ccw18fb4d26lu" path="res://assets/3d Assets/Table.glb" id="11_table"]
 [ext_resource type="Texture2D" uid="uid://2ni4wolm4vun" path="res://assets/UI assets/game/gui/ProgressBar/BackgroundBar.png" id="12_4edn4"]
 [ext_resource type="Texture2D" uid="uid://cxt72gfq0usdm" path="res://assets/UI assets/game/gui/ProgressBar/Bar.png" id="13_b7lon"]
+[ext_resource type="Script" uid="uid://dgl5g0t2b2dkq" path="res://scripts/restoration/tool_sidebar.gd" id="14_sidebar"]
+[ext_resource type="PackedScene" uid="uid://b7tlr0wc6n2ax" path="res://scenes/restoration/tool_row.tscn" id="15_toolrow"]
 
 [sub_resource type="Environment" id="Environment_rest"]
 background_mode = 1
@@ -93,10 +95,10 @@ transform = Transform3D(-7.969736e-08, 3.4796617e-09, 1.825, 0.079605386, 1.8232
 script = ExtResource("3_tray")
 
 [node name="Phone" parent="ViewportContainer/SubViewport/World" unique_id=302565970 instance=ExtResource("4_phone")]
-transform = Transform3D(0.28005928, -0.052524693, -0.0057402328, 0.0076706875, 0.00978279, 0.28472874, -0.052277666, -0.27994722, 0.0110268835, -2.095, -0.746, 0.075)
+transform = Transform3D(0.28005928, -0.052524693, -0.0057402328, 0.0076706875, 0.00978279, 0.28472874, -0.052277666, -0.27994722, 0.0110268835, -1.4065036, -0.746, 0.49079472)
 
 [node name="Journal" parent="ViewportContainer/SubViewport/World" unique_id=1228215568 instance=ExtResource("5_book")]
-transform = Transform3D(0.019272838, 0.36774755, 0.6128746, -0.7140201, 0.03742022, 0, -0.03207539, -0.6120347, 0.36825222, -2.105, -0.655, -0.555)
+transform = Transform3D(0.019272838, 0.36774755, 0.6128746, -0.7140201, 0.03742022, 0, -0.03207539, -0.6120347, 0.36825222, -1.7128932, -0.655, -0.555)
 
 [node name="StorageBox" parent="ViewportContainer/SubViewport/World" unique_id=1481444188 instance=ExtResource("6_box")]
 transform = Transform3D(2.5701823, 0.003924379, 0.22482756, 0, 2.579607, -0.045027204, -0.2248618, 0.044855867, 2.5697908, 1.92, -0.75, -0.9)
@@ -188,7 +190,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Close (Esc)"
 
-[node name="LeftMeters" type="Panel" parent="HUD" unique_id=550286697]
+[node name="RightSideBar" type="Panel" parent="HUD" unique_id=550286697]
 layout_mode = 1
 anchors_preset = 11
 anchor_left = 1.0
@@ -201,7 +203,7 @@ grow_horizontal = 0
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_b7lon")
 
-[node name="Margin" type="MarginContainer" parent="HUD/LeftMeters" unique_id=147531990]
+[node name="Margin" type="MarginContainer" parent="HUD/RightSideBar" unique_id=147531990]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -213,23 +215,23 @@ theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 14
 
-[node name="VBox" type="VBoxContainer" parent="HUD/LeftMeters/Margin" unique_id=1887918457]
+[node name="VBox" type="VBoxContainer" parent="HUD/RightSideBar/Margin" unique_id=1887918457]
 layout_mode = 2
 theme_override_constants/separation = 29
 
-[node name="StateLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=1866239708]
+[node name="StateLabel" type="Label" parent="HUD/RightSideBar/Margin/VBox" unique_id=1866239708]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "State: Dirty"
 
-[node name="ConditionLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=1191571793]
+[node name="ConditionLabel" type="Label" parent="HUD/RightSideBar/Margin/VBox" unique_id=1191571793]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Condition 0 / 100"
 
-[node name="ConditionBar" type="ProgressBar" parent="HUD/LeftMeters/Margin/VBox" unique_id=1186969987]
+[node name="ConditionBar" type="ProgressBar" parent="HUD/RightSideBar/Margin/VBox" unique_id=1186969987]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
@@ -237,30 +239,30 @@ theme_override_styles/background = SubResource("StyleBoxTexture_j1aef")
 theme_override_styles/fill = SubResource("StyleBoxTexture_0op7g")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=594556757]
+[node name="ValueLabel" type="Label" parent="HUD/RightSideBar/Margin/VBox" unique_id=594556757]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Value: P0"
 
-[node name="DamageLabel" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=410083370]
+[node name="DamageLabel" type="Label" parent="HUD/RightSideBar/Margin/VBox" unique_id=410083370]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Recorded damage: 0"
 
-[node name="SurfaceCaption" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=969480184]
+[node name="SurfaceCaption" type="Label" parent="HUD/RightSideBar/Margin/VBox" unique_id=969480184]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Surface cleaned"
 
-[node name="SurfaceBar" type="ProgressBar" parent="HUD/LeftMeters/Margin/VBox" unique_id=677679685]
+[node name="SurfaceBar" type="ProgressBar" parent="HUD/RightSideBar/Margin/VBox" unique_id=677679685]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 show_percentage = false
 
-[node name="ClaspPrompt" type="Label" parent="HUD/LeftMeters/Margin/VBox" unique_id=106910885]
+[node name="ClaspPrompt" type="Label" parent="HUD/RightSideBar/Margin/VBox" unique_id=106910885]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.85, 0.45, 1)
@@ -354,7 +356,8 @@ offset_bottom = 196.0
 grow_horizontal = 2
 
 [node name="Margin" type="MarginContainer" parent="HUD/ArtifactBar" unique_id=2019770744]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -373,3 +376,66 @@ vertical_scroll_mode = 0
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
+
+[node name="LeftSideBar" type="Panel" parent="." unique_id=830279276]
+unique_name_in_owner = true
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1919.0
+offset_top = 205.0
+offset_right = -1619.0
+offset_bottom = -135.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_b7lon")
+script = ExtResource("14_sidebar")
+
+[node name="Margin" type="MarginContainer" parent="LeftSideBar" unique_id=549270375]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="LeftSideBar/Margin" unique_id=632991572]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ToolRow" parent="LeftSideBar/Margin/VBox" unique_id=1170192607 instance=ExtResource("15_toolrow")]
+custom_maximum_size = Vector2(-1, 85)
+layout_mode = 2
+
+[node name="ToolRow2" parent="LeftSideBar/Margin/VBox" unique_id=383567420 instance=ExtResource("15_toolrow")]
+custom_maximum_size = Vector2(-1, 85)
+layout_mode = 2
+
+[node name="ToolRow3" parent="LeftSideBar/Margin/VBox" unique_id=152370274 instance=ExtResource("15_toolrow")]
+custom_maximum_size = Vector2(-1, 85)
+layout_mode = 2
+
+[node name="ToolRow4" parent="LeftSideBar/Margin/VBox" unique_id=235462 instance=ExtResource("15_toolrow")]
+custom_maximum_size = Vector2(-1, 85)
+layout_mode = 2
+
+[node name="ToolRow5" parent="LeftSideBar/Margin/VBox" unique_id=1230342447 instance=ExtResource("15_toolrow")]
+custom_maximum_size = Vector2(-1, 85)
+layout_mode = 2
+
+[node name="ToolRow6" parent="LeftSideBar/Margin/VBox" unique_id=1907381007 instance=ExtResource("15_toolrow")]
+custom_maximum_size = Vector2(-1, 85)
+layout_mode = 2
+
+[node name="ToolRow7" parent="LeftSideBar/Margin/VBox" unique_id=1105885903 instance=ExtResource("15_toolrow")]
+custom_maximum_size = Vector2(-1, 85)
+layout_mode = 2
+
+[node name="ToolRow8" parent="LeftSideBar/Margin/VBox" unique_id=452416141 instance=ExtResource("15_toolrow")]
+custom_maximum_size = Vector2(-1, 85)
+layout_mode = 2

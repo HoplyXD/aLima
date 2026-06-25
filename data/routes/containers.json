@@ -14,7 +14,7 @@
       "record_type": "container",
       "id": "pile_center",
       "display_name": "Center Delivery Pile",
-      "compatibility_tags": ["jewelry", "ceramic", "paper", "small"],
+      "compatibility_tags": ["jewelry", "ceramic", "paper", "small", "shell"],
       "capacity": 6,
       "is_locked_by_default": false,
       "unlock_requirement": ""

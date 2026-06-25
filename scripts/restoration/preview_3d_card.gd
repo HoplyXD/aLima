@@ -18,11 +18,26 @@ const FIT_SIZE: float = 1.15
 
 var _object: Node3D
 var _fill: float = 1.0
+## When false the preview holds a fixed orientation instead of auto-spinning (used by the
+## tool sidebar and the cursor-following held tool, which should not tumble).
+var _spin: bool = true
 
 
 func _ready() -> void:
 	gui_input.connect(_on_gui_input)
 	set_process(false)
+
+
+## Enables/disables the idle auto-spin. Disable for a still, readable model.
+func set_spin(on: bool) -> void:
+	_spin = on
+
+
+## Orients the model to a fixed in-view angle (radians, about the camera axis) so it can be
+## made to "face" a target. Only meaningful while spin is off.
+func set_facing_angle(angle: float) -> void:
+	if is_instance_valid(_object):
+		_object.rotation = Vector3(0.0, 0.0, angle)
 
 
 ## Embeds `obj` for the rotating preview and sets the name label. The model is auto-scaled
@@ -77,7 +92,7 @@ func _visible_aabb(root: Node3D) -> AABB:
 
 
 func _process(delta: float) -> void:
-	if _object != null and is_instance_valid(_object):
+	if _spin and _object != null and is_instance_valid(_object):
 		_object.rotate_y(SPIN_SPEED * delta)
 
 

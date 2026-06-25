@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://b2r0pnd7k0lxa"]
+
+[ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
+[ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_decal"]
+[ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="3_tarnish"]
+[ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
+[ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Pendant.obj" id="5_pendant"]
+
+[sub_resource type="StandardMaterial3D" id="pendant_bronze"]
+albedo_color = Color(0.6, 0.4, 0.2, 1)
+metallic = 0.9
+metallic_specular = 0.55
+roughness = 0.38
+
+[node name="BronzePendant" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
+script = ExtResource("1_obj")
+customization = "Max Decals: 2"
+randomized_decal_count = 2
+model_mesh = ExtResource("5_pendant")
+model_material = SubResource("pendant_bronze")
+model_scale = 0.1
+
+[node name="TarnishDecal" parent="." instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.12, 0.5)
+texture = ExtResource("3_tarnish")
+
+[node name="DustDecal" parent="." instance=ExtResource("2_decal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, -0.04, 0.5)
+texture = ExtResource("4_dust")

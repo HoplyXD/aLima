@@ -18,6 +18,9 @@ const ZOOM_MIN: float = 1.0
 const ZOOM_MAX: float = 4.0
 const ZOOM_STEP: float = 1.2
 const PAGE_HALF_WIDTH: float = 0.8  ## book-local x within which a click counts as on a page
+## Extra clickable margin past the right edge of the book, so clicks just to the right of the
+## page turn it (or do nothing) instead of falling through and closing the journal.
+const PAGE_RIGHT_EXTRA: float = 0.28
 const PAGE_HALF_HEIGHT: float = 0.95
 
 var _zoom: float = 1.0
@@ -190,5 +193,5 @@ func _handle_page_click(screen_pos: Vector2) -> void:
 ## clicking it should close the journal rather than register as a giant page hitbox.
 func _on_clickable_page(local_x: float) -> bool:
 	if _book.is_open():
-		return absf(local_x) <= PAGE_HALF_WIDTH
-	return local_x >= 0.0 and local_x <= PAGE_HALF_WIDTH
+		return local_x >= -PAGE_HALF_WIDTH and local_x <= PAGE_HALF_WIDTH + PAGE_RIGHT_EXTRA
+	return local_x >= 0.0 and local_x <= PAGE_HALF_WIDTH + PAGE_RIGHT_EXTRA

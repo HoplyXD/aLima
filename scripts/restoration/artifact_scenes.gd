@@ -19,6 +19,10 @@ const _SCENES := {
 	preload("res://scenes/restoration/artifacts/Basic Artifacts/silver_locket.tscn"),
 	"silver_pendant":
 	preload("res://scenes/restoration/artifacts/Basic Artifacts/silver_pendant.tscn"),
+	"bronze_locket":
+	preload("res://scenes/restoration/artifacts/Basic Artifacts/bronze_locket.tscn"),
+	"bronze_pendant":
+	preload("res://scenes/restoration/artifacts/Basic Artifacts/bronze_pendant.tscn"),
 }
 
 

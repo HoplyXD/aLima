@@ -92,6 +92,8 @@ func test_rainy_day_leak_slows_restoration() -> void:
 func test_tool_breakdown_emits_tool_broke() -> void:
 	var tools := ToolService.new(GameState, _repo)
 	tools.grant_tool("photo_kit")
+	# The breakdown only consumes a SPARE (unequipped) tool, so take it off the bench.
+	GameState.save_state.loop.workbench_tools.clear()
 	watch_signals(EventBus)
 	EventDirector.force_event("tool_breakdown")
 	assert_signal_emitted(EventBus, "tool_broke")

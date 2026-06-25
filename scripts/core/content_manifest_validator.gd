@@ -154,7 +154,7 @@ func _validate_artifact_packet(manifest: ContentManifest, result: ValidationResu
 		result.add_field_error(
 			packet_path, manifest.artifact_packet_ref, "artifact.id", "locked artifact has no id"
 		)
-	var components := packet.get("natural_components", [])
+	var components: Variant = packet.get("natural_components", [])
 	if not components is Array or components.size() != 5:
 		result.add_field_error(
 			packet_path,
@@ -244,7 +244,7 @@ func _load_decision_statuses(result: ValidationResult) -> Dictionary:
 	var doc: Variant = _read_json(decisions_path, result)
 	if doc == null:
 		return statuses
-	var items := doc.get("items", [])
+	var items: Variant = doc.get("items", [])
 	if not items is Array:
 		result.add_field_error(decisions_path, "", "items", "expected an array")
 		return statuses

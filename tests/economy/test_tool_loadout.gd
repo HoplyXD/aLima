@@ -31,21 +31,21 @@ func _grant(n: int) -> Array[String]:
 	return uids
 
 
-func test_add_to_workbench_enforces_max_five() -> void:
-	var uids := _grant(7)
+func test_add_to_workbench_enforces_max_eight() -> void:
+	var uids := _grant(10)
 	var loaded := 0
 	for uid in uids:
 		if _tools.add_to_workbench(uid):
 			loaded += 1
-	assert_eq(loaded, 5, "only five tools fit on the bench")
-	assert_eq(GameState.save_state.loop.workbench_tools.size(), 5)
+	assert_eq(loaded, 8, "only eight tools fit on the bench")
+	assert_eq(GameState.save_state.loop.workbench_tools.size(), 8)
 
 
-func test_set_workbench_keeps_at_most_five_owned() -> void:
-	var uids := _grant(7)
+func test_set_workbench_keeps_at_most_eight_owned() -> void:
+	var uids := _grant(10)
 	var ok := _tools.set_workbench(uids)
 	assert_false(ok, "set returns false when it had to drop overflow")
-	assert_eq(GameState.save_state.loop.workbench_tools.size(), 5)
+	assert_eq(GameState.save_state.loop.workbench_tools.size(), 8)
 
 
 func test_cannot_load_unowned_tool() -> void:
@@ -94,13 +94,13 @@ func test_equip_to_occupied_slot_replaces_only_that_tool() -> void:
 
 
 func test_replacing_on_a_full_bench_keeps_it_full() -> void:
-	var uids := _grant(5)
+	var uids := _grant(8)
 	var replacement := _tools.grant_tool("solvent").uid
 	_set_bench(uids)  # bench full; replacement owned but unequipped
 
 	assert_true(_tools.equip_to_slot(replacement, 2), "dropping onto an occupied slot replaces it")
 	var wb: Array = GameState.save_state.loop.workbench_tools
-	assert_eq(wb.size(), 5, "bench stays full, nothing else dropped off")
+	assert_eq(wb.size(), 8, "bench stays full, nothing else dropped off")
 	assert_eq(wb[2], replacement)
 	assert_false(wb.has(uids[2]), "the displaced tool left the bench")
 

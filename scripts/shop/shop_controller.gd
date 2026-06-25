@@ -69,8 +69,19 @@ const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
 @onready var _phone_interactable: Interactable3D = $Interactables/PhoneInteractable
 @onready var _delivery_interactable: Interactable3D = $Interactables/DeliveryInteractable
 
+## Set true ONLY on the title-screen's backdrop instance (see Antique Shop.tscn
+## embedded in title_screen.tscn). The same shop scene serves as both the live game
+## and the menu backdrop; in backdrop mode it presents the room only — no clock,
+## delivery, HUD, or interactable wiring runs, so the live autoload state is never
+## touched behind the menu. Defaults false, so the gameplay scene and tests run live.
+@export var backdrop_mode: bool = false
+
 
 func _ready() -> void:
+	if backdrop_mode:
+		_enter_backdrop_mode()
+		return
+
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	# Required for the diegetic Interactable3D props to receive mouse clicks/hover.
 	get_viewport().physics_object_picking = true
@@ -114,6 +125,19 @@ func _ready() -> void:
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
 
 
+## Presents the room as the static title-screen backdrop: hide all gameplay UI,
+## stop the clock driver, and frame the room with the dedicated menu camera. The
+## @onready overlay children still instantiate (hidden) but stay inert.
+func _enter_backdrop_mode() -> void:
+	set_process(false)
+	_hud.visible = false
+	_visitor.visible = false
+	_visitor2.visible = false
+	var menu_cam := get_node_or_null("Title Screen cam")
+	if menu_cam is Camera3D:
+		(menu_cam as Camera3D).make_current()
+
+
 func _process(delta: float) -> void:
 	# `running` is the auto-driver gate; tick() itself still no-ops while paused or
 	# closed. Tests set running=false to drive the clock deterministically.
@@ -123,6 +147,10 @@ func _process(delta: float) -> void:
 
 
 func _exit_tree() -> void:
+	# The backdrop never started the clock or any gameplay, so it must not reset
+	# shared autoload state when the menu is torn down to enter the game.
+	if backdrop_mode:
+		return
 	# Stop the autoload clock so its state does not bleed into later scenes/tests.
 	DayClock.reset()
 	if _triage_screen != null:

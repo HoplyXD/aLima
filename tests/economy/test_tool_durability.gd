@@ -57,7 +57,37 @@ func test_using_a_tool_consumes_one_durability() -> void:
 	assert_eq(after, before - 1, "one use should cost one durability")
 
 
-func test_tool_breaks_and_is_removed_at_zero() -> void:
+## Authored scene-conditions take several strokes each; the tool must wear ONCE PER
+## CONDITION removed, not per stroke — otherwise a 12-use tool burned out and vanished
+## from the bench AND storage in the middle of a single artifact.
+func test_authored_clean_wears_per_condition_not_per_stroke() -> void:
+	var uid := "auth_artifact"
+	var inst := ObjectInstance.new()
+	inst.template_id = "oton_death_mask"
+	inst.uid = uid
+	inst.state = ModelEnums.ObjState.DIRTY
+	inst.storage_cost = 1
+	GameState.save_state.loop.inventory.append(inst.to_dictionary())
+	var tool := _tools.grant_tool("stain_lifter")  # finite durability
+	var before := tool.durability
+
+	# Several partial strokes (finished_one = false) cost NO durability.
+	for _i in range(4):
+		_service.register_authored_clean(uid, "stain_lifter", 2, 0, false)
+	assert_eq(
+		_tools.get_owned_tools()[0].durability, before, "partial strokes don't wear the tool"
+	)
+
+	# The stroke that actually finishes a condition wears it exactly once.
+	_service.register_authored_clean(uid, "stain_lifter", 2, 1, true)
+	assert_eq(
+		_tools.get_owned_tools()[0].durability,
+		before - 1,
+		"finishing a condition costs one use"
+	)
+
+
+func test_tool_breaks_at_zero_stays_in_storage_but_leaves_bench() -> void:
 	_add_photo("photo_1")
 	var inst := _tools.grant_tool("stain_lifter")  # auto-equipped onto the bench
 	_set_durability(inst.uid, 1)
@@ -65,7 +95,11 @@ func test_tool_breaks_and_is_removed_at_zero() -> void:
 
 	_service.clean_decal("photo_1", "water_blotch", "stain_lifter")
 
-	assert_eq(_tools.get_owned_tools().size(), 0, "a broken tool is removed from owned tools")
+	# A broken tool is NOT deleted from player data — it stays owned at 0 durability so it
+	# never "randomly disappears"; it only leaves the bench loadout and becomes unusable.
+	assert_eq(_tools.get_owned_tools().size(), 1, "a broken tool stays in storage")
+	assert_eq(_tools.get_owned_tools()[0].durability, 0, "and reads as broken (0 durability)")
+	assert_false(_service.is_tool_owned("stain_lifter"), "a broken tool is not owned for use")
 	assert_false(
 		GameState.save_state.loop.workbench_tools.has(inst.uid),
 		"a broken tool leaves the bench loadout"

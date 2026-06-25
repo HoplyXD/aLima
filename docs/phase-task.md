@@ -1703,3 +1703,21 @@ When implementation lands:
 6. Update the full-game coverage table and content manifest when P1 status or counts change.
 7. Update `CLAUDE.md` commands/layout only when architecture actually changes.
 8. Update `docs/PRD.md`, its GDD coverage matrix, and this index together for any explicit design decision; never silently change an invariant or GDD promise.
+
+---
+
+## Backlog — New Gameplay (sourced from team, not yet scheduled)
+
+Captured design intents that are **not** part of any numbered phase above yet. Promote into a
+phase (with a requirement ID + acceptance) before implementing; until then they are direction,
+not committed scope.
+
+- [ ] **Trash-Goblin-style click-drag surface cleaning.** Replace/augment the current
+  stroke-commit cleaning with a continuous *click-and-drag scrub*: the player holds the
+  (cursor-following) tool down and drags it across the grime, which wears away progressively
+  under the drag path — closer to the satisfying "scrub" feel of *Trash Goblin*. Builds on the
+  existing held-tool-follows-cursor presentation (REST-R9) and the `RestorationService`
+  cleaning rules (which stay authoritative); this is an interaction/feel upgrade, not a rules
+  change. Open questions to resolve when scheduling: per-frame vs. accumulated wear, how it
+  reads on touch/controller, and how it composes with the per-condition decal cleaning. Raised
+  by the team 2026-06-25.

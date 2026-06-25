@@ -1,20 +1,29 @@
 [gd_scene format=3 uid="uid://47qvo41mr44l"]
 
 [ext_resource type="Script" uid="uid://cmnncy5e8fmri" path="res://scripts/shop/interactable_3d.gd" id="1_gqv0n"]
+[ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="2_eo1la"]
 [ext_resource type="PackedScene" uid="uid://bfqbkodx08ut5" path="res://assets/3d Assets/Walls and Floors/Door.glb" id="2_v0v2t"]
+[ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="PackedScene" uid="uid://ccw18fb4d26lu" path="res://assets/3d Assets/Table.glb" id="3_y2jnb"]
 [ext_resource type="PackedScene" uid="uid://b1rhanfh2lxe0" path="res://assets/3d Assets/Bookcase/Magic book.glb" id="4_gadlq"]
 [ext_resource type="PackedScene" uid="uid://c3duosgeua5r" path="res://assets/3d Assets/Walls and Floors/Normal Wall.glb" id="4_kif5t"]
+[ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="4_yltc6"]
 [ext_resource type="PackedScene" uid="uid://e81ljsffwcuh" path="res://assets/3d Assets/Sofa/Sofa.glb" id="5_207k4"]
+[ext_resource type="Script" uid="uid://dv20ba7olxrka" path="res://scripts/shop/shop_controller.gd" id="5_ctrl"]
 [ext_resource type="PackedScene" uid="uid://cg1vhgd66d0he" path="res://assets/3d Assets/Walls and Floors/Wood Floor.glb" id="5_dcu3k"]
 [ext_resource type="PackedScene" uid="uid://dre33nw45m7tr" path="res://assets/3d Assets/Bookcase/Book.glb" id="5_ggowf"]
+[ext_resource type="PackedScene" uid="uid://bwmj5triq5qvx" path="res://scenes/ui/triage_screen.tscn" id="6_triage"]
 [ext_resource type="PackedScene" uid="uid://cqnp6tj67rrvv" path="res://assets/3d Assets/Apple/trn_Apple.fbx" id="6_xhn4e"]
 [ext_resource type="PackedScene" uid="uid://bk05oms0otiob" path="res://assets/3d Assets/FireLog/Fire.glb" id="7_1dirw"]
 [ext_resource type="PackedScene" uid="uid://chyonocig3s54" path="res://assets/3d Assets/Box/Box.glb" id="7_16mbf"]
 [ext_resource type="PackedScene" uid="uid://b2kfaoxbcjkdk" path="res://assets/3d Assets/Bookcase/Bookcase with Books.glb" id="7_cet3k"]
+[ext_resource type="PackedScene" uid="uid://b5vdlwu6lrg0" path="res://scenes/ui/echo_hud.tscn" id="7_echo"]
+[ext_resource type="Script" uid="uid://jxyuvepu18pl" path="res://scripts/shop/echo_scene_bridge.gd" id="8_bridge"]
 [ext_resource type="PackedScene" uid="uid://c55yre3k0bgf8" path="res://assets/3d Assets/Phone.glb" id="8_nc6ge"]
 [ext_resource type="PackedScene" uid="uid://cxa6sot7wqvqt" path="res://assets/3d Assets/Plants/Plants - Assorted shelf plants.glb" id="9_3j7l6"]
 [ext_resource type="PackedScene" uid="uid://t1re3go1cyg0" path="res://assets/3d Assets/Candelabra/trn_Candelabra.fbx" id="9_207k4"]
+[ext_resource type="Script" uid="uid://dkwru0jku76m4" path="res://scripts/shop/echo_focus_controller.gd" id="9_focus"]
+[ext_resource type="PackedScene" uid="uid://ccwtajkvqpjyu" path="res://scenes/Book/BookViewport.tscn" id="9_skkvx"]
 [ext_resource type="PackedScene" uid="uid://bwnp3s8rrwdcc" path="res://assets/3d Assets/Candles/trn_Candle.fbx" id="10_3j7l6"]
 [ext_resource type="PackedScene" uid="uid://cqwobrt71dltu" path="res://assets/3d Assets/Bookcase/Book Stack.glb" id="10_u34w5"]
 [ext_resource type="PackedScene" uid="uid://bx37wgssfeq8e" path="res://assets/3d Assets/Candles/trn_Candle_full.fbx" id="11_16mbf"]
@@ -30,12 +39,13 @@
 [ext_resource type="PackedScene" uid="uid://b1mi44jnsk07v" path="res://assets/3d Assets/Paper/Envelopes.glb" id="23_2y6xu"]
 [ext_resource type="PackedScene" uid="uid://c758vciy6cv7n" path="res://assets/3d Assets/Bookcase/books.glb" id="26_6nloe"]
 [ext_resource type="PackedScene" uid="uid://7wc33npp34v8" path="res://assets/3d Assets/FireLog/trn_Log.fbx" id="29_cxprb"]
+[ext_resource type="Texture2D" uid="uid://dx5tdmtsbisw8" path="res://assets/Characters/Archeologist.png" id="31_h8djy"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8dvp"]
 size = Vector3(1.5947266, 2.9886718, 0.15)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_v0v2t"]
-size = Vector3(4.1403074, 0.5, 1.9896729)
+size = Vector3(4.1403074, 0.5, 1.1920121)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_dcu3k"]
 size = Vector3(0.5, 0.15753418, 0.5788184)
@@ -46,7 +56,13 @@ size = Vector3(0.32, 0.05, 0.6)
 [sub_resource type="BoxShape3D" id="BoxShape3D_gadlq"]
 size = Vector3(0.8295288, 0.7, 0.8)
 
+[sub_resource type="Environment" id="Env_antique"]
+ambient_light_source = 2
+ambient_light_color = Color(0.6, 0.55, 0.46, 1)
+ambient_light_energy = 0.95
+
 [node name="Antique Shop" type="Node3D" unique_id=894395]
+script = ExtResource("5_ctrl")
 
 [node name="Interactables" type="Node3D" parent="." unique_id=85964445]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1951499, -1.6482215, -0.96410084)
@@ -69,11 +85,11 @@ script = ExtResource("1_gqv0n")
 prompt_text = "Work at the restoration bench"
 
 [node name="Collision" type="CollisionShape3D" parent="Interactables/WorkbenchInteractable" unique_id=1407457218]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.028649747, 0.4365232, 0.8938211)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.028649747, 0.4768939, 0.92048216)
 shape = SubResource("BoxShape3D_v0v2t")
 
 [node name="Table" parent="Interactables/WorkbenchInteractable" unique_id=2120825407 instance=ExtResource("3_y2jnb")]
-transform = Transform3D(-6.556708e-08, 0, 1.5, 0, 1.5, 0, -1.5, 0, -6.556708e-08, -0.03249967, -0.53056693, 0.9282489)
+transform = Transform3D(-3.6139518e-08, 0, 1.2693282, 0, 1.5, 0, -0.8267759, 0, -5.5484097e-08, -0.03249967, -0.53056693, 0.9282489)
 
 [node name="Miscellanous Books" parent="Interactables/WorkbenchInteractable" unique_id=437643225 instance=ExtResource("4_gadlq")]
 transform = Transform3D(0.1815555, 0, -0.08389042, 0, 0.2, 0, 0.08389042, 0, 0.1815555, 1.3968838, 0.6647072, 0.79540914)
@@ -88,7 +104,7 @@ transform = Transform3D(-2.7144772e-08, 0, 0.563, 0, 1.5, 0, -0.62099993, 0, -2.
 transform = Transform3D(2, 0, 0, 0, 4.83, 0, 0, 0, 1.812, -0.9137814, 0.97620773, 0.9033278)
 
 [node name="JournalInteractable" type="Area3D" parent="Interactables" unique_id=1322107692]
-transform = Transform3D(-1.7778864, 0.12120413, -0.90798116, 0.13603058, 1.9953686, 0, 0.90587854, -0.061756603, -1.7820129, -0.6766157, 3.0787203, 0.8369968)
+transform = Transform3D(-1.7778864, 0.12120413, -0.90798116, 0.13603058, 1.9953686, 0, 0.90587854, -0.061756603, -1.7820129, -0.6766157, 3.0787203, -0.65221405)
 script = ExtResource("1_gqv0n")
 prompt_text = "Open the journal"
 
@@ -100,7 +116,7 @@ shape = SubResource("BoxShape3D_dcu3k")
 transform = Transform3D(-5.4916523e-08, 3.5073406e-08, -0.6666667, -0.66301465, 0.069685675, 5.8281852e-08, 0.069685675, 0.66301465, 2.9140926e-08, 0.017254591, 0.03370732, -0.0018706322)
 
 [node name="PhoneInteractable" type="Area3D" parent="Interactables" unique_id=2100961380]
-transform = Transform3D(1.4182779, 0, -0.4883522, 0, 1.5, 0, 0.4883522, 0, 1.4182779, 0.95, 2.9985766, 0.7625952)
+transform = Transform3D(1.4182779, 0, -0.4883522, 0, 1.5, 0, 0.4883522, 0, 1.4182779, 0.95, 2.9985766, -0.5894978)
 script = ExtResource("1_gqv0n")
 prompt_text = "Check the phone marketplace"
 
@@ -111,9 +127,9 @@ shape = SubResource("BoxShape3D_u5nwe")
 transform = Transform3D(-0.395, -4.4703484e-08, 2.220446e-15, 0, -1.7266e-08, -0.39500007, 4.4703484e-08, -0.395, 1.7266e-08, -0.004625678, -0.0139709115, 0.030020952)
 
 [node name="DeliveryInteractable" type="Area3D" parent="Interactables" unique_id=2071250212]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6243045, 2.45, -2.6346831)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6199918, 2.45, -2.6346831)
 script = ExtResource("1_gqv0n")
-prompt_text = "Open the morning delivery"
+prompt_text = "Open the storage box"
 
 [node name="Box" parent="Interactables/DeliveryInteractable" unique_id=1743670012 instance=ExtResource("7_16mbf")]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -1.0838237, 0.4966128, 1.8188848)
@@ -225,7 +241,7 @@ transform = Transform3D(2.56, 0, 0, 0, 2.56, 0, 0, 0, 2.56, -1.1641165, 5.1955, 
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -4.3539805, 0.21895194, -6.862382)
 
 [node name="trn_Candelabra" parent="." unique_id=1835092964 instance=ExtResource("9_207k4")]
-transform = Transform3D(1.3838073, 0, 0.5788591, 0, 1.5, 0, -0.5788591, 0, 1.3838073, -4.85769, 1.2684827, -2.8963249)
+transform = Transform3D(1.3838073, 0, 0.5788591, 0, 1.5, 0, -0.5788591, 0, 1.3838073, -4.85769, 1.2684827, -2.4227061)
 
 [node name="trn_Candle" parent="trn_Candelabra" unique_id=467392542 instance=ExtResource("10_3j7l6")]
 transform = Transform3D(0.605185, 0, 0.27963477, 0, 0.6666667, 0, -0.27963477, 0, 0.605185, 0.32167274, 0.5899131, 0.008988023)
@@ -255,7 +271,8 @@ transform = Transform3D(0.9570506, 0, -0.28992084, 0.02642019, 0.9958391, 0.0872
 fov = 71.5
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=550347164]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0848688, 2.7500036, 2.400869)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0848688, 2.7500036, 1.1032327)
+current = true
 fov = 71.5
 
 [node name="trn_Fireplace" parent="." unique_id=1384579053 instance=ExtResource("15_2y6xu")]
@@ -305,3 +322,261 @@ transform = Transform3D(0.27429837, 0.07969918, -1.1397514, 0, 1.1721377, 0.0819
 
 [node name="Fire" parent="." unique_id=196894878 instance=ExtResource("7_1dirw")]
 transform = Transform3D(2.586602, 0, -1.4628434, 0, 3.053, 0, 1.7883375, 0, 2.590235, -1.1094544, 0.982775, -6.5365744)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1724092676]
+environment = SubResource("Env_antique")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=131760780]
+transform = Transform3D(0.86, -0.35, 0.37, 0, 0.73, 0.68, -0.51, -0.59, 0.63, 0, 6, 0)
+light_energy = 1.1
+
+[node name="Visitor" type="Sprite3D" parent="." unique_id=1797480473]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.068, -0.9126276, 1.6406353, -2.8524714)
+pixel_size = 0.0015
+billboard = 1
+texture = ExtResource("31_h8djy")
+
+[node name="Visitor2" type="Sprite3D" parent="." unique_id=1673955577]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.051, 3.2593844, 1.6406353, -6.7467704)
+pixel_size = 0.0015
+billboard = 1
+texture = ExtResource("2_eo1la")
+
+[node name="pile_left" type="Marker3D" parent="." unique_id=796138013]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -1.5)
+
+[node name="pile_center" type="Marker3D" parent="." unique_id=1316982798]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+
+[node name="shelf_right" type="Marker3D" parent="." unique_id=1169235159]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1, -2)
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=836123008]
+script = ExtResource("4_yltc6")
+
+[node name="TopPanel" type="Panel" parent="HUD" unique_id=1967166641]
+anchors_preset = 10
+anchor_right = 1.0
+offset_right = -1.0
+offset_bottom = 104.0
+grow_horizontal = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/TopPanel" unique_id=1864189275]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 10
+
+[node name="Bar" type="HBoxContainer" parent="HUD/TopPanel/Margin" unique_id=1311711458]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Unrestored" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=246218398]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=1479397120]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Unrestored"
+
+[node name="UnrestoredCounts" type="RichTextLabel" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=391317591]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 26)
+layout_mode = 2
+bbcode_enabled = true
+text = "W 0   G 0   B 0   P 0   Gd 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Sep1" type="VSeparator" parent="HUD/TopPanel/Margin/Bar" unique_id=886983100]
+layout_mode = 2
+
+[node name="Restored" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=702309761]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=1824528476]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Restored (sell via phone)"
+
+[node name="RestoredCounts" type="RichTextLabel" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=323339879]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 26)
+layout_mode = 2
+bbcode_enabled = true
+text = "W 0   G 0   B 0   P 0   Gd 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Sep2" type="VSeparator" parent="HUD/TopPanel/Margin/Bar" unique_id=1960800933]
+layout_mode = 2
+
+[node name="Quest" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=2079383486]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=1652076586]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Quest"
+
+[node name="QuestCount" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=1360764171]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "0"
+
+[node name="Spacer" type="Control" parent="HUD/TopPanel/Margin/Bar" unique_id=1137674704]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Clock" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=975401912]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="DayLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1239597475]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Day 1 of 5"
+horizontal_alignment = 2
+
+[node name="ClockLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1405431381]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "7:00 AM"
+horizontal_alignment = 2
+
+[node name="MorningDeliveryButton" type="Button" parent="HUD" unique_id=439965786]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -250.0
+offset_right = 120.0
+offset_bottom = -190.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 22
+text = "Alya (Morning Delivery)"
+
+[node name="DoorButton" type="Button" parent="HUD" unique_id=1937340316]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -170.0
+offset_right = 120.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 22
+text = "Door
+
+(Answer Visitor)"
+
+[node name="WorkbenchButton" type="Button" parent="HUD" unique_id=1685080726]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -96.0
+offset_right = 120.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 18
+text = "Workbench"
+
+[node name="JournalButton" type="Button" parent="HUD" unique_id=1367773403]
+visible = false
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 28.0
+offset_top = -50.0
+offset_right = 188.0
+offset_bottom = 50.0
+grow_vertical = 2
+theme_override_font_sizes/font_size = 18
+text = "Journal"
+
+[node name="PhoneButton" type="Button" parent="HUD" unique_id=833472079]
+visible = false
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -188.0
+offset_top = -50.0
+offset_right = -28.0
+offset_bottom = 50.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_font_sizes/font_size = 18
+text = "Phone"
+
+[node name="PromptLabel" type="Label" parent="HUD" unique_id=2124077111]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -150.0
+offset_right = 320.0
+offset_bottom = -116.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.96, 0.88, 0.55, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FallbackHint" type="Label" parent="HUD" unique_id=251105610]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -320.0
+offset_top = 110.0
+offset_right = 320.0
+offset_bottom = 132.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.74, 1)
+theme_override_font_sizes/font_size = 13
+text = "Tip: click the objects in the shop — the door, workbench, storage box, journal, and phone."
+horizontal_alignment = 1
+
+[node name="DialogueBox" parent="HUD" unique_id=1423163374 instance=ExtResource("3_dlgbox")]
+visible = false
+
+[node name="TriageScreen" parent="." unique_id=764838499 instance=ExtResource("6_triage")]
+visible = false
+
+[node name="EchoHud" parent="." unique_id=1335851386 instance=ExtResource("7_echo")]
+
+[node name="EchoSceneBridge" type="Node3D" parent="." unique_id=851169759]
+script = ExtResource("8_bridge")
+
+[node name="EchoFocusController" type="Node" parent="." unique_id=512155884]
+script = ExtResource("9_focus")
+
+[node name="BookViewport" parent="." unique_id=1233613335 instance=ExtResource("9_skkvx")]

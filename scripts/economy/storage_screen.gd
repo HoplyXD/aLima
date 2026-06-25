@@ -285,7 +285,7 @@ func _make_equip_area() -> Control:
 	zone.on_drop = _on_equip_drop
 	_style_zone(zone, Color(0.16, 0.18, 0.22, 0.6))
 	var grid := GridContainer.new()
-	grid.columns = 5
+	grid.columns = ToolService.MAX_WORKBENCH_TOOLS  # one column per bench slot (8)
 	grid.add_theme_constant_override("h_separation", 8)
 	grid.add_theme_constant_override("v_separation", 8)
 	zone.add_child(grid)
@@ -319,7 +319,7 @@ func _make_owned_area() -> Control:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
 	zone.add_child(vbox)
-	var grid := _make_grid(5)
+	var grid := _make_grid(ToolService.MAX_WORKBENCH_TOOLS)  # align with the 8-wide bench grid
 	vbox.add_child(grid)
 
 	var owned := _tools.get_owned_tools()

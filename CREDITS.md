@@ -73,6 +73,26 @@ per pack). Original Team aLima work is marked as such; everything else is **to c
 > naming prefix and are probably from **one asset pack** — confirming that one source covers
 > all of them at once.
 
+### Incoming itch.io packs (sourced by Jorge, 2026-06 — not yet imported into `assets/`)
+
+Planned use: the **tools** packs supply restoration/cleaning tools; the **house-items** packs
+supply ordinary artifacts to clean. Licenses verified against each pack's itch.io page (and
+bundled `Licence.txt` where present).
+
+| Pack | Author | Source | License | Planned use |
+|---|---|---|---|---|
+| Low Poly Tools | sjolle (Squareish Design) | https://sjolle.itch.io/low-poly-tools | **CC0 1.0** — confirmed by bundled `Licence.txt` and itch page | Restoration **tools** (axe, chisel, saw, hammer, drill, wrench, pliers, screwdriver, …) |
+| Low Poly House Items 1 | sjolle (Squareish Design) | https://sjolle.itch.io/low-poly-house-items-1 | **CC0 1.0** — author comment: "CC0. Do as you please with it" | **Artifacts** to clean (books, candlesticks, lamps, vases, cups, picture frames, bell, glasses, compass, …) |
+| Low Poly House Items 02 | sjolle (Squareish Design) | https://sjolle.itch.io/low-poly-house-items-02 | **CC0 1.0** — Squareish Design's blanket license (`Licence.txt`); the pack's own page states only "Free of use" | **Artifacts** to clean (cards, chess set, dice, coins, keys, letters, inkwell, matches, nails, needles, paper, …) |
+
+> **CC0 = no attribution required**, but we credit the sjolle/Squareish Design packs here
+> anyway (good practice + the jam's content rule).
+>
+> **Dropped:** Oxygen3D's *Painting Tools Asset Pack*
+> (https://oxygen3d.itch.io/painting-tools-asset-pack) was considered but **not used** — its
+> itch page states **no license at all** (no CC0/CC-BY), so it fails the jam's "CC0 or credited"
+> rule. Tools are sourced from the CC0 Low Poly Tools pack instead.
+
 ---
 
 ## Audio · Music · SFX

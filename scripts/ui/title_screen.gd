@@ -6,6 +6,9 @@ extends Control
 ## and "Quit" exits. The layout lives in title_screen.tscn; this script only
 ## connects buttons and changes scenes.
 
+# Shop.tscn is the playable gameplay scene; Antique Shop.tscn is the menu backdrop
+# (instanced behind this title screen). Both share the same room + controller, which
+# detects the backdrop role and stays inert there. Play loads the live shop.
 const SHOP_SCENE: String = "res://scenes/Shop.tscn"
 
 @onready var _play_button: Button = $VBoxContainer/Play

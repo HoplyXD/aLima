@@ -177,7 +177,7 @@ func get_workbench_durability() -> Dictionary:
 ## tool_id, or "" for an empty (or broken) slot. A tool stays pinned to the slot it
 ## was equipped into, so a single tool in slot 4 leaves slots 0-3 empty. The legacy
 ## id-set case (no durability instances) packs the available tools from slot 0.
-const WORKBENCH_SLOTS: int = 5
+const WORKBENCH_SLOTS: int = 8  ## Must match ToolService.MAX_WORKBENCH_TOOLS.
 
 
 func get_workbench_slots() -> Array:
@@ -255,7 +255,10 @@ func _consume_tool_durability(tool_id: String) -> void:
 	owned[best] = inst
 	if ModelUtils.as_int(inst.get("durability")) <= 0:
 		var uid := ModelUtils.as_string(inst.get("uid"))
-		owned.remove_at(best)
+		# A broken tool is kept in storage (durability 0, unusable) so it never disappears
+		# from the player's data — it only leaves the bench loadout.
+		inst["durability"] = 0
+		owned[best] = inst
 		_game_state.save_state.loop.workbench_tools.erase(uid)
 		EventBus.tool_broke.emit(tool_id, uid)
 
@@ -325,7 +328,10 @@ func apply_tool(uid: String, tool_id: String) -> ToolResult:
 	result.condition_after = inst.condition
 	result.value_after = inst.value
 	result.recorded_damage = inst.recorded_damage
-	_consume_tool_durability(tool_id)
+	# Only an effective (correct-tool) stroke wears the tool. Scrubbing with the wrong tool
+	# still damages the artifact, but must not silently burn through — and delete — the tool.
+	if compatible:
+		_consume_tool_durability(tool_id)
 	_write_instance_back(inst)
 	SaveService.save_game()
 	result.ok = true
@@ -614,7 +620,9 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 	result.value_after = inst.value
 	result.recorded_damage = inst.recorded_damage
 	result.remaining_decals = _remaining_decals(template, inst)
-	_consume_tool_durability(tool_id)
+	# Wrong-tool strokes punish the artifact but do not wear (and delete) the tool.
+	if result.compatible:
+		_consume_tool_durability(tool_id)
 	_write_instance_back(inst)
 	SaveService.save_game()
 	result.ok = true
@@ -646,7 +654,11 @@ func register_authored_clean(
 	if inst == null:
 		return result
 	var template := _repo.get_template(inst.template_id)
-	_consume_tool_durability(tool_id)
+	# Wear the tool ONCE PER CONDITION REMOVED (like the data-driven decals), NOT per stroke.
+	# Authored conditions take several strokes each, so per-stroke wear blew through a 12-use
+	# tool inside a single artifact and it vanished from the bench AND storage mid-clean.
+	if finished_one:
+		_consume_tool_durability(tool_id)
 	var threshold := template.clean_completion_threshold if template != null else 100
 	if total_active > 0:
 		var fraction := float(cleaned_active) / float(total_active)

@@ -2,13 +2,13 @@ class_name ToolService
 ## Owns the player's concrete tool instances and the bench loadout.
 ##
 ## Tools are owned as durability-tracked instances in `loop.owned_tools`. The
-## bench shows at most MAX_WORKBENCH_TOOLS of them (5 — the workbench rack only fits
-## five so it stays clear of the restoration table) (`loop.workbench_tools`, by uid)
+## bench shows at most MAX_WORKBENCH_TOOLS of them (8 — the tool sidebar holds eight
+## rows) (`loop.workbench_tools`, by uid)
 ## and one selected artifact (`loop.restore_target_uid`). Marketplace purchases and
 ## the starting kit grant instances through here; RestorationService wears them
 ## down as they are used.
 
-const MAX_WORKBENCH_TOOLS: int = 5
+const MAX_WORKBENCH_TOOLS: int = 8
 
 static var _uid_counter: int = 0
 

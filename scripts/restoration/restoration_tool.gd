@@ -202,6 +202,22 @@ static func build_tool_model(tool_id: String, materials_out: Array = []) -> Node
 	return build_geometry(tool_id, materials_out)
 
 
+## Per-tool size multiplier for the 2D previews (sidebar rows + the cursor-held tool). Flat
+## or bulky tools (cloths, bottles, blocks) read as oversized when auto-fit to the same box as
+## a slim brush, so they are scaled down; brushes stay full size.
+static func display_fill(tool_id: String) -> float:
+	var preset: Dictionary = PRESENTATION.get(tool_id, PRESENTATION["_default"])
+	match String(preset.get("shape", "block")):
+		"brush":
+			return 0.85
+		"bottle":
+			return 0.6
+		"cloth":
+			return 0.48
+		_:
+			return 0.55
+
+
 ## Gathers the StandardMaterial3D overrides under `root` so set_selected() can toggle
 ## their emission. Authored placeholders set material_override; imported GLB models store
 ## materials on the mesh surfaces instead — both are collected, so the selection glow works

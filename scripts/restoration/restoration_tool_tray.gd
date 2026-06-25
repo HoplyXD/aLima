@@ -18,7 +18,7 @@ const TOOL_SCENE := preload("res://scenes/restoration/restoration_tool.tscn")
 ## Resting layout (object space, on the bench top in front of the object).
 const BENCH_Y: float = -0.7
 const FRONT_Z: float = 0.55
-const SLOT_COUNT: int = 5  ## The bench has five fixed tool slots.
+const SLOT_COUNT: int = 8  ## The tool sidebar has eight fixed slots (number keys 1-8).
 const SLOT_SPACING: float = 0.62  ## Spacing between the five fixed slot centres.
 
 ## Selection pose: the chosen tool lifts off the bench and leans toward the object.
