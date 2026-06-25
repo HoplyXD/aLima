@@ -624,6 +624,46 @@ func clean_overlays_ray(origin: Vector3, direction: Vector3) -> bool:
 	return false
 
 
+## Cleans overlays with a REAL tool: finds the outermost overlay the ray meets whose condition the
+## tool can clean (`cleans`{condition_id: power 0-100}), and fades it by that power at `radius_frac`.
+## Returns {cleaned, condition_id, fully_cleaned} on success, or {cleaned:false, wrong_tool} when the
+## ray meets overlays but the tool can clean none of them.
+func clean_overlays_with_tool(
+	origin: Vector3, direction: Vector3, cleans: Dictionary, radius_frac: float
+) -> Dictionary:
+	var overlays := _find_overlays(self)
+	overlays.sort_custom(func(a: Node, b: Node) -> bool: return a.layer_order > b.layer_order)
+	var any_hit := false
+	for overlay in overlays:
+		if not overlay.is_built() or not overlay.ray_hits(origin, direction):
+			continue
+		any_hit = true
+		var cond := String(overlay.get_condition_id())
+		var power := int(cleans.get(cond, 0))
+		if power > 0:
+			overlay.clean_ray(origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac)
+			return {
+				"cleaned": true,
+				"condition_id": cond,
+				"fully_cleaned": overlay.cleaned_fraction() >= 0.999,
+			}
+	return {"cleaned": false, "wrong_tool": any_hit}
+
+
+## {total, cleaned}: how many overlay conditions this artifact has and how many are fully cleaned
+## (a condition that never spawned counts as cleaned). Drives condition/value + the clean->open gate.
+func overlay_counts() -> Dictionary:
+	var total := 0
+	var cleaned := 0
+	for overlay in _find_overlays(self):
+		if not overlay.is_built():
+			continue
+		total += 1
+		if overlay.cleaned_fraction() >= 0.999:
+			cleaned += 1
+	return {"total": total, "cleaned": cleaned}
+
+
 func _find_overlays(root: Node) -> Array:
 	# Duck-typed (build_with_fallback + clean_ray) so this @tool script needs no ArtifactOverlay ref.
 	var out: Array = []

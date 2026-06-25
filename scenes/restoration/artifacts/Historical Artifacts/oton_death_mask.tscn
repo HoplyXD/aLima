@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="5_m1vn6"]
 [ext_resource type="ArrayMesh" uid="uid://ct8ji82etev0t" path="res://assets/3d Assets/Artifacts/Oton Death Mask.obj" id="6_mask"]
 [ext_resource type="Texture2D" uid="uid://chkvi47klu3o1" path="res://assets/Artifacts/Oton Death Mask Texture.png" id="7_masktex"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 
 [sub_resource type="StandardMaterial3D" id="mask_gold"]
 albedo_color = Color(0.85, 0.7, 0.3, 1)
@@ -17,27 +18,32 @@ roughness = 0.45
 [node name="OtonDeathMask" type="Node3D" unique_id=1097946537]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-customization = "Max Decals: 4"
-randomized_decal_count = 4
 model_mesh = ExtResource("6_mask")
 model_material = SubResource("mask_gold")
 model_scale = 0.1
 
-[node name="CrackingOverlay" parent="." unique_id=586274539 instance=ExtResource("4_g88vq")]
+[node name="CrackingOverlay" parent="." instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("6_mask")
 condition_texture = ExtResource("5_m1vn6")
 layer_order = 10
 
-[node name="TarnishOverlay" parent="." unique_id=378479027 instance=ExtResource("4_g88vq")]
+[node name="TarnishOverlay" parent="." instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("6_mask")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
 layer_order = 20
 
-[node name="DustOverlay" parent="." unique_id=1631812389 instance=ExtResource("4_g88vq")]
+[node name="RustOverlay" parent="." instance=ExtResource("4_g88vq")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("6_mask")
+condition_texture = ExtResource("8_rust")
+layer_order = 25
+
+[node name="DustOverlay" parent="." instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("6_mask")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
+layer_order = 30

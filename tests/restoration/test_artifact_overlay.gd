@@ -48,6 +48,48 @@ func test_two_instances_get_different_patterns() -> void:
 	assert_ne(a.coverage_fraction(), b.coverage_fraction(), "different instances differ")
 
 
+func _make_object_with_condition(condition: String, seed: int) -> RestorationObject3D:
+	var obj: RestorationObject3D = ARTIFACT_SCENE.instantiate()
+	var overlay: Node3D = OVERLAY_SCENE.instantiate()
+	overlay.condition_texture = DUST_TEX
+	overlay.condition_id = condition
+	overlay.coverage_min = 100.0
+	overlay.coverage_max = 100.0
+	obj.add_child(overlay)
+	add_child_autofree(obj)
+	obj.build_overlays(seed)
+	return obj
+
+
+func test_tool_cleans_only_its_matching_condition() -> void:
+	var obj := _make_object_with_condition("dust", 3)
+	var ray_o := Vector3(0, 0, 3)
+	var ray_d := Vector3(0, 0, -1)
+	var ok := obj.clean_overlays_with_tool(ray_o, ray_d, {"dust": 60}, 0.25)
+	assert_true(ok.get("cleaned", false), "a dust tool cleans the dust overlay")
+	assert_eq(String(ok.get("condition_id", "")), "dust", "and reports the cleaned condition")
+	var wrong := obj.clean_overlays_with_tool(ray_o, ray_d, {"tarnish": 60}, 0.25)
+	assert_false(wrong.get("cleaned", false), "a tool that can't clean dust does not clean it")
+	assert_true(wrong.get("wrong_tool", false), "and reports wrong tool")
+
+
+func test_condition_id_derives_from_texture_name() -> void:
+	var overlay: Node3D = OVERLAY_SCENE.instantiate()
+	overlay.condition_texture = preload("res://assets/artifact_conditions/Cracking.png")
+	add_child_autofree(overlay)
+	assert_eq(String(overlay.get_condition_id()), "crack", "Cracking.png derives the 'crack' condition")
+	overlay.condition_texture = preload("res://assets/artifact_conditions/Rust.png")
+	assert_eq(String(overlay.get_condition_id()), "rust", "Rust.png derives 'rust'")
+	overlay.condition_id = "explicit"
+	assert_eq(String(overlay.get_condition_id()), "explicit", "an explicit condition_id wins")
+
+
+func test_overlay_counts_reflect_cleaning() -> void:
+	var obj := _make_object_with_condition("dust", 4)
+	assert_eq(int(obj.overlay_counts().get("total", 0)), 1, "one overlay condition")
+	assert_eq(int(obj.overlay_counts().get("cleaned", -1)), 0, "starts uncleaned")
+
+
 func test_cleaning_overlay_fades_it_by_3d_position() -> void:
 	var obj := _make_object(100.0, 100.0, 1)
 	var overlay := _overlay(obj)

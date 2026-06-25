@@ -6,6 +6,7 @@
 [ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Pendant.obj" id="5_pendant"]
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="6_overlay"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="7_cracking"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 
 [sub_resource type="StandardMaterial3D" id="pendant_gold"]
 albedo_color = Color(0.82, 0.67, 0.29, 1)
@@ -16,8 +17,6 @@ roughness = 0.38
 [node name="GoldPendant" type="Node3D" unique_id=411763816]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-customization = "Max Decals: 2"
-randomized_decal_count = 2
 model_mesh = ExtResource("5_pendant")
 model_material = SubResource("pendant_gold")
 model_scale = 0.1
@@ -26,6 +25,7 @@ model_scale = 0.1
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("7_cracking")
+condition_id = "crack"
 layer_order = 10
 coverage_min = 0.0
 coverage_max = 40.0
@@ -34,15 +34,26 @@ coverage_max = 40.0
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("3_tarnish")
+condition_id = "tarnish"
 opacity = 1.0
 layer_order = 20
 coverage_min = 20.0
 coverage_max = 60.0
 
+[node name="RustOverlay" parent="." instance=ExtResource("6_overlay")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_pendant")
+condition_texture = ExtResource("8_rust")
+condition_id = "rust"
+layer_order = 25
+coverage_min = 0.0
+coverage_max = 50.0
+
 [node name="DustOverlay" parent="." unique_id=1535283559 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_dust")
+condition_id = "dust"
 opacity = 0.5
 layer_order = 30
 coverage_min = 40.0

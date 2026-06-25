@@ -1,8 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://btoolsoftcloth0"]
+[gd_scene load_steps=3 format=3 uid="uid://btoolsoftcloth0"]
 
 [ext_resource type="PackedScene" uid="uid://bkic100spnmbb" path="res://assets/3d Assets/Tools/Folded Towels/Folded Towels.glb" id="1_model"]
+[ext_resource type="Script" path="res://scripts/restoration/tool_config.gd" id="2_config"]
 
 [node name="soft_cloth" type="Node3D"]
+script = ExtResource("2_config")
+max_durability = 10
+clean_radius = 0.14
+cleans = {
+"dirt": 40,
+"dust": 50
+}
 
 [node name="FoldedTowels" parent="." instance=ExtResource("1_model")]
 transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0, 0)

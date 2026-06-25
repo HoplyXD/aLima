@@ -6,6 +6,7 @@
 [ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Locket.obj" id="5_locket"]
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="6_overlay"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="7_cracking"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 
 [sub_resource type="StandardMaterial3D" id="locket_gold"]
 albedo_color = Color(0.85, 0.7, 0.3, 1)
@@ -16,8 +17,6 @@ roughness = 0.35
 [node name="GoldLocket" type="Node3D" unique_id=1252588796]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-customization = "Max Decals: 2"
-randomized_decal_count = 2
 model_mesh = ExtResource("5_locket")
 model_material = SubResource("locket_gold")
 model_scale = 0.1
@@ -26,6 +25,7 @@ model_scale = 0.1
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("7_cracking")
+condition_id = "crack"
 layer_order = 10
 coverage_min = 0.0
 coverage_max = 40.0
@@ -34,14 +34,22 @@ coverage_max = 40.0
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("4_tarnish")
+condition_id = "tarnish"
 layer_order = 20
-coverage_min = 20.0
-coverage_max = 60.0
+
+[node name="RustOverlay" parent="." unique_id=262178435 instance=ExtResource("6_overlay")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_locket")
+condition_texture = ExtResource("8_rust")
+condition_id = "rust"
+layer_order = 25
+coverage_min = 0.0
+coverage_max = 50.0
 
 [node name="DustOverlay" parent="." unique_id=1016067892 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("3_dust")
-layer_order = 30
+condition_id = "dust"
 coverage_min = 40.0
 coverage_max = 80.0

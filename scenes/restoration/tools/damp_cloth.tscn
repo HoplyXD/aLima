@@ -1,8 +1,15 @@
-[gd_scene load_steps=2 format=3 uid="uid://btooldampcloth0"]
+[gd_scene load_steps=3 format=3 uid="uid://btooldampcloth0"]
 
 [ext_resource type="PackedScene" uid="uid://hxoh31ngsuao" path="res://assets/3d Assets/Tools/Towel/Towel.glb" id="1_model"]
+[ext_resource type="Script" path="res://scripts/restoration/tool_config.gd" id="2_config"]
 
 [node name="damp_cloth" type="Node3D"]
+script = ExtResource("2_config")
+max_durability = 0
+clean_radius = 0.14
+cleans = {
+"dirt": 60
+}
 
 [node name="Towel" parent="." instance=ExtResource("1_model")]
 transform = Transform3D(1.335, 0, 0, 0, 1.335, 0, 0, 0, 1.335, 0.255, 0, 0)

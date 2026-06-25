@@ -18,6 +18,9 @@ extends Node3D
 const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nvoid fragment() {\n\tvec4 c = texture(condition_tex, UV);\n\tALBEDO = c.rgb;\n\tALPHA = c.a * COLOR.a * overlay_opacity;\n}\n"
 const PATTERN_FREQ: float = 2.4  ## Patch size of the random coverage pattern (normalised space).
 const PATTERN_SOFT: float = 0.06  ## Soft edge width of the pattern threshold.
+## Brush radius (fraction of overlay size) used ONLY when no tool radius is supplied — i.e. the debug
+## eraser. Real cleaning passes the TOOL's clean_radius (see ToolConfig); the overlay no longer owns one.
+const DEFAULT_CLEAN_RADIUS: float = 0.12
 ## The mesh to show as the overlay shell. Leave null to fall back to the artifact's own mesh.
 @export var overlay_mesh: Mesh:
 	set(value):
@@ -34,16 +37,18 @@ const PATTERN_SOFT: float = 0.06  ## Soft edge width of the pattern threshold.
 		opacity = value
 		if _material != null:
 			_material.set_shader_parameter("overlay_opacity", value)
+## The condition this overlay represents (e.g. "dust", "tarnish", "crack"). Leave blank to DERIVE it
+## from the condition texture's file name (Rust.png -> rust, "Water Stain.png" -> water_stain,
+## Cracking.png -> crack). A tool cleans this overlay only if its config lists this condition.
+@export var condition_id: String = ""
 ## Higher layers sit outer and are cleaned first (dust 30 > rust 20 > cracking 10).
 @export var layer_order: int = 30
-## Tool clean radius, as a fraction of the overlay's size. Each stroke fades vertices within it.
-@export_range(0.01, 0.5) var clean_radius: float = 0.12
 ## Random coverage range (PERCENT). At spawn each artifact instance rolls a value in [min, max] and
 ## generates a random patchy pattern covering that much of the surface — so two of the same artifact
-## get different amounts/patterns of this condition. 0 = none, 100 = the whole surface. min==max==100
-## (the default) means a full overlay (back-compat). Editor preview always shows full coverage.
-@export_range(0.0, 100.0) var coverage_min: float = 100.0
-@export_range(0.0, 100.0) var coverage_max: float = 100.0
+## get different amounts/patterns of this condition. 0 = none, 100 = the whole surface. Default is a
+## moderate random range so overlays that don't set it still spawn partial/varied (tune per layer).
+@export_range(0.0, 100.0) var coverage_min: float = 20.0
+@export_range(0.0, 100.0) var coverage_max: float = 60.0
 
 var _shell: MeshInstance3D
 var _material: ShaderMaterial
@@ -173,7 +178,9 @@ func _rebuild() -> void:
 ## opacity drops — so cleaning never mutates the mesh shape (robust). `power` scales how much opacity
 ## is removed per stroke (1.0 = a full fade at the centre; a tool's per-condition power maps here, e.g.
 ## 0.5 = remove ~50% opacity). Returns true when anything faded.
-func clean_ray(world_origin: Vector3, world_dir: Vector3, power: float = 1.0) -> bool:
+func clean_ray(
+	world_origin: Vector3, world_dir: Vector3, power: float = 1.0, radius_frac: float = -1.0
+) -> bool:
 	if _runtime_mesh == null or _shell == null:
 		return false
 	var inv := _shell.global_transform.affine_inverse()
@@ -183,7 +190,9 @@ func clean_ray(world_origin: Vector3, world_dir: Vector3, power: float = 1.0) ->
 	if hit == null:
 		return false
 	var center: Vector3 = hit
-	var radius := clean_radius * _extent
+	# The radius comes from the tool (radius_frac); only the debug eraser falls back to a default.
+	var rf := radius_frac if radius_frac >= 0.0 else DEFAULT_CLEAN_RADIUS
+	var radius := rf * _extent
 	var colors: PackedColorArray = _arrays[Mesh.ARRAY_COLOR]
 	var changed := false
 	for i in _verts.size():
@@ -203,6 +212,31 @@ func clean_ray(world_origin: Vector3, world_dir: Vector3, power: float = 1.0) ->
 
 func is_built() -> bool:
 	return _shell != null
+
+
+## The condition id a tool must be able to clean: the explicit `condition_id`, or one derived from the
+## condition texture's file name (Cracking.png -> crack, Rust.png -> rust, Dust(2).png -> dust).
+func get_condition_id() -> String:
+	if not condition_id.is_empty():
+		return condition_id
+	if condition_texture == null:
+		return ""
+	var slug := condition_texture.resource_path.get_file().get_basename().to_lower()
+	slug = slug.replace(" ", "_").replace("-", "_")
+	if slug.begins_with("dust"):
+		return "dust"  # "Dust(2)" and similar variants
+	if slug == "cracking":
+		return "crack"
+	return slug
+
+
+## True when a world-space ray meets this overlay's shell (no cleaning). Used to find which layer the
+## tool is over, for tool/condition matching and wrong-tool feedback.
+func ray_hits(world_origin: Vector3, world_dir: Vector3) -> bool:
+	if _runtime_mesh == null or _shell == null:
+		return false
+	var inv := _shell.global_transform.affine_inverse()
+	return _ray_hit(inv * world_origin, (inv.basis * world_dir).normalized()) != null
 
 
 ## Fraction of the SPAWNED condition that has been cleaned (0 = untouched, 1 = spotless), relative to

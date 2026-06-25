@@ -1,6 +1,8 @@
-[gd_scene format=3 uid="uid://d0833ued0ysbq"]
+[gd_scene load_steps=4 format=3 uid="uid://d0833ued0ysbq"]
 
-; Placeholder geometry for the Archival Tape tool. Swap in a real model when authored.
+; Placeholder geometry for the Archival Tape tool (joins torn photos; cleans no overlay conditions).
+
+[ext_resource type="Script" path="res://scripts/restoration/tool_config.gd" id="1_config"]
 
 [sub_resource type="StandardMaterial3D" id="mat_block"]
 albedo_color = Color(0.72, 0.72, 0.74, 1)
@@ -13,6 +15,10 @@ emission_energy_multiplier = 0.6
 size = Vector3(0.2, 0.1, 0.2)
 
 [node name="archival_tape" type="Node3D"]
+script = ExtResource("1_config")
+max_durability = 12
+clean_radius = 0.12
+cleans = {}
 
 [node name="Block" type="MeshInstance3D" parent="."]
 material_override = SubResource("mat_block")

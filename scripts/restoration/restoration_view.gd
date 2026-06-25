@@ -75,6 +75,8 @@ var _stroke_active: bool = false
 var _decal_stroke: bool = false
 ## True while the current press-drag is a debug paint brush (draw or erase) on the paint layer.
 var _paint_stroke: bool = false
+## True while the current press-drag is a REAL tool cleaning the authored condition overlays.
+var _overlay_stroke: bool = false
 ## Circular condition-PNG brushes for the debug draw tool, the erase disc, and the blend_sub blit
 ## material the eraser uses. Built lazily on first debug-paint use (_ensure_paint_brushes).
 var _draw_brushes: Array[Texture2D] = []
@@ -1369,6 +1371,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			# The debug brushes PAINT the surface paint layer (draw grime / erase) instead of cleaning.
 			if _is_paint_tool(_selected_tool_id):
 				_begin_paint_stroke(pos)
+			# Artifacts with authored condition overlays: a REAL tool cleans the overlay layers it can.
+			elif _object.has_method("has_overlays") and _object.has_overlays():
+				_begin_overlay_stroke(pos)
 			# Decal-based artifacts (photos, random conditions, author-placed event
 			# conditions) now clean by DRAGGING the tool across the grime (Trash-Goblin
 			# style) rather than single clicks; a pure dirt-mask object keeps its surface
@@ -1396,6 +1401,8 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	if _left_down and _mode == Mode.CLEAN and _stroke_active:
 		if _paint_stroke:
 			_accumulate_paint_stroke(pos)
+		elif _overlay_stroke:
+			_accumulate_overlay_stroke(pos)
 		elif _decal_stroke:
 			_accumulate_decal_stroke(pos)
 		else:
@@ -1476,6 +1483,7 @@ func _open_or_join() -> void:
 func _begin_stroke(pos: Vector2) -> void:
 	_decal_stroke = false
 	_paint_stroke = false
+	_overlay_stroke = false
 	_stroke_active = true
 	_stroke_pixels = 0.0
 	_stroke_uvs.clear()
@@ -1492,10 +1500,77 @@ func _begin_stroke(pos: Vector2) -> void:
 ## dirt-mask medallion (artifacts without an authored model covering it).
 func _begin_paint_stroke(pos: Vector2) -> void:
 	_paint_stroke = true
+	_decal_stroke = false
+	_overlay_stroke = false
 	_stroke_active = true
 	_stroke_pixels = 0.0
 	_last_pointer = pos
 	_paint_at_pointer(pos)
+
+
+# --- Real tools cleaning the authored condition overlays ----------------------
+
+
+## Begins a press-drag where the selected REAL tool cleans the artifact's condition overlays. The tool
+## removes only the conditions its config lists (each at its Power), at its clean_radius.
+func _begin_overlay_stroke(pos: Vector2) -> void:
+	_overlay_stroke = true
+	_paint_stroke = false
+	_decal_stroke = false
+	_stroke_active = true
+	_stroke_pixels = 0.0
+	_last_pointer = pos
+	_clean_overlay_with_tool(pos)
+
+
+func _accumulate_overlay_stroke(pos: Vector2) -> void:
+	_stroke_pixels += pos.distance_to(_last_pointer)
+	_last_pointer = pos
+	if _stroke_pixels >= PAINT_BRUSH_THROTTLE:
+		_stroke_pixels = 0.0
+		_clean_overlay_with_tool(pos)
+
+
+## One step of overlay cleaning with the selected tool: cleans the outermost layer under the pointer
+## the tool can fix, then routes durability + condition/value through register_authored_clean (reused
+## from the authored-decal path) so the clean->open gate, tool wear, and value all work unchanged.
+func _clean_overlay_with_tool(pos: Vector2) -> void:
+	if _selected_tool_id.is_empty():
+		_caption_label.text = "Pick up a tool from the bench first."
+		return
+	var params := _tool_clean_params(_selected_tool_id)
+	var origin := _camera.project_ray_origin(_to_viewport(pos))
+	var dir := _camera.project_ray_normal(_to_viewport(pos))
+	var result := _object.clean_overlays_with_tool(origin, dir, params["cleans"], params["radius"])
+	if result.get("cleaned", false):
+		var counts: Dictionary = _object.overlay_counts()
+		_service.register_authored_clean(
+			_selected_uid,
+			_selected_tool_id,
+			int(counts.get("total", 0)),
+			int(counts.get("cleaned", 0)),
+			bool(result.get("fully_cleaned", false))
+		)
+		var label := String(result.get("condition_id", "")).replace("_", " ")
+		_feedback_label.text = "Working off the %s..." % label
+		var inst := _service.find_instance_by_id(_selected_uid)
+		if inst != null:
+			_refresh(inst, _service.get_repository().get_template(inst.template_id))
+	elif result.get("wrong_tool", false):
+		_feedback_label.text = "Wrong tool for that layer — try another."
+
+
+## The selected tool's cleaning params {cleans, radius}: the scene-authored ToolConfig if it lists
+## conditions, otherwise the data-driven cleaning power (tools.json + journal catalog).
+func _tool_clean_params(tool_id: String) -> Dictionary:
+	var cfg := ToolConfig.for_tool(tool_id)
+	var cleans: Dictionary = cfg.get("cleans", {})
+	var radius: float = float(cfg.get("clean_radius", 0.12))
+	if cleans.is_empty():
+		cleans = {}
+		for entry in CleaningPower.conditions_for(_service.get_repository(), tool_id):
+			cleans[String(entry.get("id", ""))] = int(entry.get("power", 0))
+	return {"cleans": cleans, "radius": radius}
 
 
 func _accumulate_paint_stroke(pos: Vector2) -> void:
@@ -1568,6 +1643,7 @@ func _begin_decal_stroke(pos: Vector2) -> void:
 		return
 	_decal_stroke = true
 	_paint_stroke = false
+	_overlay_stroke = false
 	_stroke_active = true
 	_stroke_pixels = 0.0
 	_stroke_uvs.clear()
@@ -1634,6 +1710,7 @@ func _end_stroke() -> void:
 	_stroke_active = false
 	_decal_stroke = false
 	_paint_stroke = false
+	_overlay_stroke = false
 	_stroke_uvs.clear()
 	_stroke_pixels = 0.0
 

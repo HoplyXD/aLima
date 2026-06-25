@@ -1,6 +1,8 @@
-[gd_scene format=3 uid="uid://d1am5sfipnxgd"]
+[gd_scene load_steps=6 format=3 uid="uid://d1am5sfipnxgd"]
 
 ; Placeholder geometry for the Stain Lifter tool. Swap in a real model when authored.
+
+[ext_resource type="Script" path="res://scripts/restoration/tool_config.gd" id="1_config"]
 
 [sub_resource type="StandardMaterial3D" id="mat_body"]
 albedo_color = Color(0.78, 0.7, 0.5, 1)
@@ -27,6 +29,12 @@ bottom_radius = 0.04
 height = 0.06
 
 [node name="stain_lifter" type="Node3D"]
+script = ExtResource("1_config")
+max_durability = 24
+clean_radius = 0.11
+cleans = {
+"water_stain": 60
+}
 
 [node name="Body" type="MeshInstance3D" parent="."]
 material_override = SubResource("mat_body")
