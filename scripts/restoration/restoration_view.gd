@@ -91,6 +91,10 @@ var _instance_uids: Array[String] = []
 ## Decal photos persist their own removed_decals, so only condition-based masks
 ## are cached. Lives for the view's lifetime (survives close/reopen of the bench).
 var _dirt_cache: Dictionary = {}
+## Per-instance overlay cleaning progress (uid -> {overlay_name: keep array}), so switching artifacts
+## and returning keeps how much of each condition the player has cleaned (the spawn pattern itself
+## regenerates deterministically from the instance seed).
+var _overlay_cache: Dictionary = {}
 var _scanner_screen: ScannerScreen
 var _journal_viewport: BookViewport
 var _phone: Phone
@@ -238,6 +242,15 @@ func close() -> void:
 ## Snapshots the loaded condition-based artifact's exact dirt mask into the in-memory
 ## cache and persists it onto the instance (survives save/reload).
 func _cache_current_dirt() -> void:
+	# Cache the outgoing artifact's overlay cleaning progress (works in any mode).
+	if (
+		not _selected_uid.is_empty()
+		and is_instance_valid(_object)
+		and _object.has_method("capture_overlay_keep")
+	):
+		var state: Dictionary = _object.capture_overlay_keep()
+		if not state.is_empty():
+			_overlay_cache[_selected_uid] = state
 	if _selected_uid.is_empty() or _object.is_decal_mode():
 		return
 	var png := _object.snapshot_dirt_png()
@@ -486,6 +499,17 @@ func load_instance(uid: String) -> void:
 			_object.restore_dirt_png(_dirt_cache[uid])
 		elif not inst.dirt_mask.is_empty():
 			_object.restore_dirt_png(inst.dirt_mask)
+	# Authored condition overlays (dust/rust/cracking nodes) take priority; artifacts without them
+	# fall back to the model-agnostic procedural dust shell.
+	if _object.has_method("build_overlays"):
+		_object.build_overlays(instance_seed)
+		# Restore prior cleaning progress for this artifact (the spawn pattern itself is deterministic
+		# from instance_seed, so only the player's cleaning needs caching).
+		if _overlay_cache.has(uid) and _object.has_method("apply_overlay_keep"):
+			_object.apply_overlay_keep(_overlay_cache[uid])
+	if not (_object.has_method("has_overlays") and _object.has_overlays()):
+		if _object.has_method("build_dust_overlay"):
+			_object.build_dust_overlay(instance_seed)
 	_title.text = template.display_name
 	_set_mode(Mode.ROTATE)
 	_rebuild_tool_palette()
@@ -1504,6 +1528,17 @@ func _ensure_paint_brushes() -> void:
 ## a random condition disc when drawing, the clean disc when erasing. No-op on a ray miss or when
 ## the object has no runtime paint layer (e.g. a photo or an authored model hiding the medallion).
 func _paint_at_pointer(pos: Vector2) -> void:
+	# The eraser cleans grime where the tool meets the surface: authored overlays (smooth, per-texel)
+	# first, then the procedural dust shell fallback.
+	if _selected_tool_id == ERASE_TOOL_ID:
+		var ray_origin := _camera.project_ray_origin(_to_viewport(pos))
+		var ray_dir := _camera.project_ray_normal(_to_viewport(pos))
+		if _object.has_method("has_overlays") and _object.has_overlays():
+			_object.clean_overlays_ray(ray_origin, ray_dir)
+			return
+		if _object.has_method("has_dust_overlay") and _object.has_dust_overlay():
+			_object.erase_dust_ray(ray_origin, ray_dir)
+			return
 	if not _object.has_method("paint_at_uv"):
 		return
 	_ensure_paint_brushes()

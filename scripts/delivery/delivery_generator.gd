@@ -8,6 +8,10 @@ class_name DeliveryGenerator
 
 const DELIVERY_STREAM := "delivery_generator"
 const UID_PREFIX := "obj_"
+## DEBUG: the silver artifacts read the same colour as the dust overlay, so guarantee this template
+## (Gold Pendant) in every day-1 delivery while iterating on the condition overlays. Set to "" to
+## disable. Replaces the first delivered slot, so batch size + uids stay unchanged.
+const DEBUG_FIRST_GOLD := "tarnished_pendant"
 
 var _repo: DataRepository
 var _game_state: GameState
@@ -51,6 +55,21 @@ func generate_day_delivery(
 			inst.uid = _make_uid(day)
 		used_uids[inst.uid] = true
 		instances.append(inst)
+
+	# DEBUG: force a Gold artifact into the first slot of day-1 deliveries (see DEBUG_FIRST_GOLD).
+	# Replaces rather than appends so batch size, uids, and determinism are unaffected.
+	if (
+		not DEBUG_FIRST_GOLD.is_empty()
+		and _game_state.debug_first_gold
+		and day == 1
+		and not instances.is_empty()
+	):
+		var gold_template := _repo.get_template(DEBUG_FIRST_GOLD)
+		if gold_template != null and instances[0].template_id != DEBUG_FIRST_GOLD:
+			var replacement := _create_instance(gold_template, day)
+			_assign_random_conditions(replacement, rng)
+			replacement.uid = instances[0].uid
+			instances[0] = replacement
 
 	_inject_carriers(instances, day, used_uids)
 

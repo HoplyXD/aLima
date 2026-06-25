@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b7artovl4lay0"]
+
+[ext_resource type="Script" path="res://scripts/restoration/artifact_overlay.gd" id="1_overlay"]
+
+[node name="ArtifactOverlay" type="Node3D"]
+script = ExtResource("1_overlay")

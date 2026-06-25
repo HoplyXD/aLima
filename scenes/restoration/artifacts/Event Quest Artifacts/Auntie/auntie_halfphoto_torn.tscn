@@ -1,23 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://calimatorn0001"]
-
-; Auntie's Torn Photograph (template id: auntie_halfphoto_torn) — needs reassembly (join
-; step). Swap the model and adjust the ArtifactConditionDecal children. "Randomized Decal
-; Count" picks how many appear per run (re-rolled each loop / new save).
+[gd_scene format=3 uid="uid://cvks8u2h2k441"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
-[ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_decal"]
-[ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="3_dust"]
-[ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="4_tape"]
 
-[node name="AuntieHalfphotoTorn" type="Node3D"]
+[node name="AuntieHalfphotoTorn" type="Node3D" unique_id=735344398]
+transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
 customization = "Max Decals: 2"
 randomized_decal_count = 2
-
-[node name="DustDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.12, 0.5)
-texture = ExtResource("3_dust")
-
-[node name="TapeResidueDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, -0.04, 0.5)
-texture = ExtResource("4_tape")

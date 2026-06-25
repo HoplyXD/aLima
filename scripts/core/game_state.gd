@@ -10,6 +10,9 @@ var player_id: String = "local-player"
 var loop_index: int = 0
 var run_seed: int = 0
 var debug_seed_override: int = -1  ## -1 means use a generated seed.
+## DEBUG: guarantee a Gold artifact in day-1 deliveries (so the dust overlay contrasts with the
+## silver artifacts) — see DeliveryGenerator.DEBUG_FIRST_GOLD. Set false for unbiased deliveries.
+var debug_first_gold: bool = true
 
 var save_state: SaveState = SaveState.new()
 var run_context: RunContext = RunContext.new()

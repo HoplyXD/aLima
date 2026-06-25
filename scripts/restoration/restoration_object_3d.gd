@@ -63,6 +63,22 @@ const DIRT_SHADER := preload("res://scenes/restoration/restoration_dirt.gdshader
 
 const MASK_SIZE: int = 64  ## Dirt mask resolution; small so coverage scans stay cheap.
 const PAINT_SIZE: int = 512  ## Runtime paint-layer (DrawableTexture2D) resolution; crisp, GPU-side.
+
+## --- Dust overlay (model-agnostic grime) ---
+## A duplicate "dust shell" of the artifact mesh, textured with a triplanar dust texture (no UV
+## needed, so it works on any model), thinned to a random ~50% of its triangles for a patchy dust
+## shape, and erased triangle-by-triangle as the player works a tool across it. Replaces per-model
+## UV texture painting for grime.
+const DUST_TEXTURE := preload("res://assets/artifact_conditions/Dust.png")
+const DUST_OPACITY: float = 0.9  ## Strong enough to read clearly; lower toward 0.5 to make it subtler.
+const DUST_INFLATE: float = 1.015  ## Shell sits just proud of the surface (avoids z-fighting).
+const DUST_NOISE_FREQ: float = 2.4  ## Patch size of the random dust shape (in normalised space).
+const DUST_COVERAGE: float = 0.0  ## Noise threshold; 0 ≈ 50% of triangles kept dusty.
+const DUST_ERASE_RADIUS: float = 0.13  ## Object-space radius of dust removed per stroke.
+
+## When true the author-placed / data-driven condition DECALS are hidden (the dust overlay is the
+## grime now). Flip to false to bring the old decal conditions back.
+const HIDE_DECALS: bool = true
 const BRUSH_RADIUS_UV: float = 0.16  ## Cleaning brush radius in UV space.
 const CLEAN_THRESHOLD: float = 0.5  ## Mask R below this counts a texel as cleaned.
 
@@ -111,6 +127,14 @@ var _dirt_texture: ImageTexture
 ## Runtime-only drawn grime/damage layer composited by the dirt shader. Null in the editor
 ## (created at runtime) so the @tool geometry build never depends on the experimental texture.
 var _paint_texture: DrawableTexture2D
+
+## Dust overlay state: the shell node, its per-triangle vertices (3 per triangle, object space),
+## centroids (1 per triangle), and an alive flag per triangle (1 = dusty, 0 = cleaned/absent).
+var _dust_overlay: MeshInstance3D
+var _dust_verts: PackedVector3Array = PackedVector3Array()
+var _dust_centroids: PackedVector3Array = PackedVector3Array()
+var _dust_alive: PackedByteArray = PackedByteArray()
+var _dust_initial: int = 0  ## Triangles that START dusty, so cleaned-fraction is relative to them.
 
 var _yaw: float = AUTHORED_YAW
 var _pitch: float = AUTHORED_PITCH
@@ -341,6 +365,275 @@ func has_paint_layer() -> bool:
 	return _paint_texture != null
 
 
+# --- Dust overlay ------------------------------------------------------------
+
+
+## (Re)builds the dust shell for this artifact: duplicates the visible mesh, keeps a random ~50%
+## of its triangles (seeded, so each artifact/loop gets a different patchy shape), and shows them
+## as a half-transparent, triplanar-dust shell just proud of the surface. Runtime only.
+func build_dust_overlay(seed_value: int) -> void:
+	if Engine.is_editor_hint():
+		return
+	_clear_dust_overlay()
+	var mesh := _dust_source_mesh()
+	if mesh == null:
+		return
+	var scale := _dust_source_scale() * DUST_INFLATE
+	if not _extract_dust_triangles(mesh, scale):
+		return
+	_seed_dust_alive(seed_value)
+	_dust_overlay = MeshInstance3D.new()
+	_dust_overlay.name = "DustOverlay"
+	_dust_overlay.material_override = _make_dust_material()
+	add_child(_dust_overlay)
+	_rebuild_dust_mesh()
+
+
+func has_dust_overlay() -> bool:
+	return _dust_overlay != null and not _dust_verts.is_empty()
+
+
+## Removes dust where a pointer ray meets the shell: finds the nearest dusty triangle the ray hits,
+## then clears every dusty triangle whose centre is within `radius` of that point, and rebuilds the
+## shell. Returns true when anything was erased. `origin`/`direction` are world space.
+func erase_dust_ray(origin: Vector3, direction: Vector3, radius: float = DUST_ERASE_RADIUS) -> bool:
+	if not has_dust_overlay():
+		return false
+	var inv := _dust_overlay.global_transform.affine_inverse()
+	var local_origin := inv * origin
+	var local_dir := (inv.basis * direction).normalized()
+	var hit_point: Variant = _dust_ray_hit(local_origin, local_dir)
+	if hit_point == null:
+		return false
+	var center: Vector3 = hit_point
+	var changed := false
+	for i in _dust_alive.size():
+		if _dust_alive[i] == 1 and _dust_centroids[i].distance_to(center) <= radius:
+			_dust_alive[i] = 0
+			changed = true
+	if changed:
+		_rebuild_dust_mesh()
+	return changed
+
+
+## Fraction of the INITIALLY-dusty triangles that have been cleaned (0 = untouched, 1 = spotless),
+## so it reads 0 on a fresh shell even though only ~half the mesh starts dusty. Test/UI seam.
+func dust_cleaned_fraction() -> float:
+	if _dust_initial == 0:
+		return 1.0
+	var alive := 0
+	for i in _dust_alive.size():
+		alive += _dust_alive[i]
+	return 1.0 - float(alive) / float(_dust_initial)
+
+
+## Nearest local-space point where the ray meets a still-dusty triangle, or null on a miss.
+func _dust_ray_hit(local_origin: Vector3, local_dir: Vector3) -> Variant:
+	var best_t := INF
+	var best: Variant = null
+	for i in _dust_alive.size():
+		if _dust_alive[i] == 0:
+			continue
+		var base := i * 3
+		var p: Variant = Geometry3D.ray_intersects_triangle(
+			local_origin, local_dir, _dust_verts[base], _dust_verts[base + 1], _dust_verts[base + 2]
+		)
+		if p != null:
+			var t: float = local_origin.distance_to(p as Vector3)
+			if t < best_t:
+				best_t = t
+				best = p
+	return best
+
+
+## Extracts every triangle of `mesh` (scaled) into _dust_verts (+ centroids). Returns false when the
+## mesh exposes no usable geometry.
+func _extract_dust_triangles(mesh: Mesh, scale: float) -> bool:
+	_dust_verts = PackedVector3Array()
+	_dust_centroids = PackedVector3Array()
+	for s in mesh.get_surface_count():
+		var arrays := mesh.surface_get_arrays(s)
+		if arrays.size() <= Mesh.ARRAY_VERTEX or arrays[Mesh.ARRAY_VERTEX] == null:
+			continue
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var indices: PackedInt32Array = (
+			arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+		)
+		if indices.is_empty():
+			for i in verts.size():
+				indices.append(i)
+		for i in range(0, indices.size() - 2, 3):
+			var a := verts[indices[i]] * scale
+			var b := verts[indices[i + 1]] * scale
+			var c := verts[indices[i + 2]] * scale
+			_dust_verts.append(a)
+			_dust_verts.append(b)
+			_dust_verts.append(c)
+			_dust_centroids.append((a + b + c) / 3.0)
+	return not _dust_verts.is_empty()
+
+
+## Marks ~half the triangles dusty using value noise over the (normalised) centroid, so the dust
+## lands in coherent patches rather than salt-and-pepper, and differently per seed.
+func _seed_dust_alive(seed_value: int) -> void:
+	var extent := 0.001
+	for c in _dust_centroids:
+		extent = maxf(extent, c.length())
+	var noise := FastNoiseLite.new()
+	noise.seed = seed_value
+	noise.frequency = DUST_NOISE_FREQ
+	_dust_alive = PackedByteArray()
+	_dust_alive.resize(_dust_centroids.size())
+	_dust_initial = 0
+	for i in _dust_centroids.size():
+		var n := noise.get_noise_3dv(_dust_centroids[i] / extent)
+		var dusty := 1 if n > DUST_COVERAGE else 0
+		_dust_alive[i] = dusty
+		_dust_initial += dusty
+
+
+## Rebuilds the shell mesh from the currently-alive triangles (flat-shaded so dust catches light).
+func _rebuild_dust_mesh() -> void:
+	if _dust_overlay == null:
+		return
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var any := false
+	for i in _dust_alive.size():
+		if _dust_alive[i] == 0:
+			continue
+		var base := i * 3
+		var a := _dust_verts[base]
+		var b := _dust_verts[base + 1]
+		var c := _dust_verts[base + 2]
+		var n := (b - a).cross(c - a).normalized()
+		for v in [a, b, c]:
+			st.set_normal(n)
+			st.add_vertex(v)
+		any = true
+	_dust_overlay.mesh = st.commit() if any else null
+
+
+## The dust material: the dust texture projected triplanar (object space, so it rides the artifact
+## as it rotates) at half opacity.
+func _make_dust_material() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = DUST_TEXTURE
+	mat.albedo_color = Color(1.0, 1.0, 1.0, DUST_OPACITY)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.uv1_triplanar = true
+	mat.uv1_world_triplanar = false
+	mat.roughness = 1.0
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return mat
+
+
+## The mesh the dust shell duplicates: the authored model's mesh when present, else the placeholder
+## medallion sphere.
+func _dust_source_mesh() -> Mesh:
+	if model_mesh != null:
+		return model_mesh
+	if _model_instance != null:
+		var mi := _find_mesh_instance(_model_instance)
+		if mi != null:
+			return mi.mesh
+	if _medallion != null:
+		return _medallion.mesh
+	return null
+
+
+## Scale to apply to the source mesh so the shell lines up with what is actually rendered.
+func _dust_source_scale() -> float:
+	if model_mesh != null or _model_instance != null:
+		return model_scale
+	return 1.0
+
+
+func _find_mesh_instance(node: Node) -> MeshInstance3D:
+	if node is MeshInstance3D:
+		return node as MeshInstance3D
+	for child in node.get_children():
+		var found := _find_mesh_instance(child)
+		if found != null:
+			return found
+	return null
+
+
+func _clear_dust_overlay() -> void:
+	if _dust_overlay != null and is_instance_valid(_dust_overlay):
+		_dust_overlay.queue_free()
+	_dust_overlay = null
+	_dust_verts = PackedVector3Array()
+	_dust_centroids = PackedVector3Array()
+	_dust_alive = PackedByteArray()
+	_dust_initial = 0
+
+
+# --- Authored condition overlays (smooth, UV-textured, dev-placed) -----------
+# Dev-placed ArtifactOverlay nodes (dust / rust / cracking). Each is a textured shell of the model
+# the tools erase smoothly via a UV keep-mask. RestorationObject3D builds them from its mesh and
+# turns pointer rays into the model UV so erasing lands per-texel (not blocky per-triangle).
+
+
+## Builds every authored ArtifactOverlay child from the model mesh, and caches the model's
+## triangles+UVs for the ray->UV used to erase them. Runtime only.
+func build_overlays(seed_value: int = 0) -> void:
+	if Engine.is_editor_hint():
+		return
+	var mesh := _dust_source_mesh()
+	var scale := _dust_source_scale()
+	for overlay in _find_overlays(self):
+		# Offset the seed per layer so each condition rolls its OWN coverage/pattern on the same
+		# artifact, while two different instances (different seed_value) differ overall.
+		var s: int = seed_value ^ (int(overlay.layer_order) * 73856093)
+		overlay.build_with_fallback(mesh, scale, s)
+
+
+func has_overlays() -> bool:
+	return not _find_overlays(self).is_empty()
+
+
+## Captures every authored overlay's per-vertex keep (cleaning progress) by node name, so the bench
+## can restore it after switching artifacts. Empty when there are no built overlays.
+func capture_overlay_keep() -> Dictionary:
+	var out := {}
+	for overlay in _find_overlays(self):
+		if overlay.is_built():
+			out[String(overlay.name)] = overlay.get_keep()
+	return out
+
+
+## Restores overlay keep states captured earlier (after build_overlays has rebuilt the shells).
+func apply_overlay_keep(state: Dictionary) -> void:
+	for overlay in _find_overlays(self):
+		var key := String(overlay.name)
+		if state.has(key):
+			overlay.set_keep(state[key])
+
+
+## Cleans authored overlays where a pointer ray meets them, by 3D position (correct area, smooth) —
+## NOT by UV. Tries outer-to-inner (by layer_order) and cleans the first layer the ray actually hits,
+## so once the outer layer is cleaned away there (a hole), the stroke peels the layer below. Returns
+## true when something was cleaned.
+func clean_overlays_ray(origin: Vector3, direction: Vector3) -> bool:
+	var overlays := _find_overlays(self)
+	overlays.sort_custom(func(a: Node, b: Node) -> bool: return a.layer_order > b.layer_order)
+	for overlay in overlays:
+		if overlay.is_built() and overlay.clean_ray(origin, direction):
+			return true
+	return false
+
+
+func _find_overlays(root: Node) -> Array:
+	# Duck-typed (build_with_fallback + clean_ray) so this @tool script needs no ArtifactOverlay ref.
+	var out: Array = []
+	for child in root.get_children():
+		if child is Node3D and child.has_method("build_with_fallback") and child.has_method("clean_ray"):
+			out.append(child)
+		out.append_array(_find_overlays(child))
+	return out
+
+
 ## Returns the exact dirt mask as a (small, lossless) PNG so the view can preserve
 ## where the player cleaned when switching artifacts and persist it to the save.
 ## Empty in photo mode (decal removal is already persisted on the instance).
@@ -538,7 +831,7 @@ func _spawn_decals(
 		)
 		add_child(node)
 		var removed: bool = removed_ids.has(decal.id)
-		node.visible = not removed
+		node.visible = not removed and not HIDE_DECALS
 		_blemishes[decal.id] = {
 			"node": node, "center": center, "removed": removed, "required_tool": decal.required_tool
 		}
@@ -711,7 +1004,10 @@ func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> 
 		if not active.has(decal):
 			decal.visible = false
 			continue
-		decal.visible = true
+		# Registered + cleanable as before, but hidden while HIDE_DECALS is on (the dust shell
+		# is the visible grime now). The clean/condition LOGIC is unchanged, so gameplay + tests
+		# that drive cleaning through the service still hold.
+		decal.visible = not HIDE_DECALS
 		# Duck-typed (no static ArtifactConditionDecal reference) so this @tool script
 		# always compiles in the editor and the artifact geometry still builds there.
 		if decal.has_method("reset"):
