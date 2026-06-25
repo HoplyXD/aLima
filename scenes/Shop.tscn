@@ -128,7 +128,7 @@ transform = Transform3D(-0.395, -4.4703484e-08, 2.220446e-15, 0, -1.7266e-08, -0
 [node name="DeliveryInteractable" type="Area3D" parent="Interactables" unique_id=1378405872]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6199918, 2.45, -2.6346831)
 script = ExtResource("10_inter")
-prompt_text = "Open the morning delivery"
+prompt_text = "Open the storage box"
 
 [node name="Box" parent="Interactables/DeliveryInteractable" unique_id=198290751 instance=ExtResource("10_vyrhs")]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -1.0838237, 0.4966128, 1.8188848)

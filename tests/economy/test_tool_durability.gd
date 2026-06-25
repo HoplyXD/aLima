@@ -87,7 +87,7 @@ func test_authored_clean_wears_per_condition_not_per_stroke() -> void:
 	)
 
 
-func test_tool_breaks_and_is_removed_at_zero() -> void:
+func test_tool_breaks_at_zero_stays_in_storage_but_leaves_bench() -> void:
 	_add_photo("photo_1")
 	var inst := _tools.grant_tool("stain_lifter")  # auto-equipped onto the bench
 	_set_durability(inst.uid, 1)
@@ -95,7 +95,11 @@ func test_tool_breaks_and_is_removed_at_zero() -> void:
 
 	_service.clean_decal("photo_1", "water_blotch", "stain_lifter")
 
-	assert_eq(_tools.get_owned_tools().size(), 0, "a broken tool is removed from owned tools")
+	# A broken tool is NOT deleted from player data — it stays owned at 0 durability so it
+	# never "randomly disappears"; it only leaves the bench loadout and becomes unusable.
+	assert_eq(_tools.get_owned_tools().size(), 1, "a broken tool stays in storage")
+	assert_eq(_tools.get_owned_tools()[0].durability, 0, "and reads as broken (0 durability)")
+	assert_false(_service.is_tool_owned("stain_lifter"), "a broken tool is not owned for use")
 	assert_false(
 		GameState.save_state.loop.workbench_tools.has(inst.uid),
 		"a broken tool leaves the bench loadout"

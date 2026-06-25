@@ -439,9 +439,9 @@ func _presentation_signature(view: RestorationView) -> Dictionary:
 func _hud_text_reveals_carrier(view: RestorationView) -> bool:
 	var paths := [
 		"HUD/TopBar/Margin/Bar/Title",
-		"HUD/LeftMeters/Margin/VBox/StateLabel",
-		"HUD/LeftMeters/Margin/VBox/ConditionLabel",
-		"HUD/LeftMeters/Margin/VBox/ClaspPrompt",
+		"HUD/RightSideBar/Margin/VBox/StateLabel",
+		"HUD/RightSideBar/Margin/VBox/ConditionLabel",
+		"HUD/RightSideBar/Margin/VBox/ClaspPrompt",
 		"HUD/BottomPanel/Margin/VBox/CaptionLabel",
 		"HUD/BottomPanel/Margin/VBox/FeedbackLabel",
 	]

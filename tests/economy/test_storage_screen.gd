@@ -92,12 +92,12 @@ func test_toggle_tool_loads_and_unloads_bench() -> void:
 	)
 
 
-func test_auto_equip_never_loads_more_than_five() -> void:
-	for i in range(6):
+func test_auto_equip_never_loads_more_than_eight() -> void:
+	for i in range(10):
 		_tools.grant_tool("solvent")
 	await _open_screen()
 	assert_eq(
-		GameState.save_state.loop.workbench_tools.size(), 5, "auto-equip caps the bench at five"
+		GameState.save_state.loop.workbench_tools.size(), 8, "auto-equip caps the bench at eight"
 	)
 
 

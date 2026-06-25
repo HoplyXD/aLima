@@ -495,11 +495,16 @@ func _apply_tool_breakdown() -> void:
 	)
 	excluded.append_array(_required_tools_for_released_fragments())
 
+	# Never break a tool the player has loaded on the bench — that reads as a random,
+	# unfair loss. The breakdown only ever consumes a spare (owned-but-unequipped) tool.
+	var equipped: Array = _game_state.save_state.loop.workbench_tools
 	var candidates: Array[ToolInstance] = []
 	for inst in owned:
 		if inst.is_infinite() or inst.is_broken():
 			continue
 		if excluded.has(inst.tool_id):
+			continue
+		if equipped.has(inst.uid):
 			continue
 		candidates.append(inst)
 
@@ -519,7 +524,10 @@ func _break_tool_instance(inst: ToolInstance) -> void:
 	for i in range(owned.size()):
 		var raw = owned[i]
 		if raw is Dictionary and ModelUtils.as_string(raw.get("uid")) == inst.uid:
-			owned.remove_at(i)
+			# Break the tool but keep it in storage (durability 0) so it does not vanish from
+			# the player's data; it only leaves the bench loadout.
+			raw["durability"] = 0
+			owned[i] = raw
 			_game_state.save_state.loop.workbench_tools.erase(inst.uid)
 			EventBus.tool_broke.emit(inst.tool_id, inst.uid)
 			_record_outcome(
