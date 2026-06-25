@@ -7,12 +7,205 @@ Canonical step-by-step build tracker for the Godot 4.7 game, backend, live/mock 
 | Last audited | 2026-06-23 |
 | Current milestone | June 30, 2026 vertical slice |
 | Engine target | Godot 4.7 |
-| Presentation | Hybrid 3D shop with 2D gameplay interfaces |
+| Presentation | Hybrid 3D: seated shop interior + walkable scrapyard, with 2D gameplay interfaces (see Design Reform v2 below) |
 | Project root | Repository root (`project.godot` stays here) |
 | Build authority | `CLAUDE.md` §4 -> `README.md` full-game promises -> `docs/PRD.md` requirements -> this checklist |
 | Discovery specification | `docs/PRD.md` §12 |
 
 Toolchain references: [Godot 4.7 stable release](https://godotengine.org/article/godot-4-7-stable-released/) and [Godot 4.7 documentation](https://docs.godotengine.org/en/4.7/).
+
+## Design Reform v2 — Inside/Outside, Forage Delivery, Scrapyard Discovery (2026-06-26)
+
+A design decision reshaped the shell, the delivery loop, and discovery. It is recorded in `README.md`
+(GDD), `docs/PRD.md` (SHELL-R3, DLV-R1, DISC-R1, ROUTE-R2, D10/D11), `CLAUDE.md` (STACK CONTRACT, §4-I,
+§5), and `docs/route-dialogue-compendium.md`. **The v1 systems tracked below are genuinely built and
+tested — those `[x]`/`[-]` evidence records stand as accurate history of v1 work — but their design
+target has moved.** The v2 tasks reopen or extend them; until they land, the docs describe v2 while the
+code still runs v1, and that gap is expected, not a bug.
+
+The reform:
+
+- **Two connected spaces:** a **seated shop interior** (existing scene) entered through the door, and a
+  **walkable 3D scrapyard** stepped out through it. The clock runs in both.
+- **Delivery is earned by foraging:** gather rarity-tiered scrap in the yard, hand chosen scrap to
+  **Ayla**, who sorts it (~1 in-game hour) and knocks with a batch of restorables. No free morning drop;
+  richer scrap biases the haul (D10).
+- **Ayla = permanent scrapyard delivery NPC** (not a gated route); the **Lave↔Ayla mutual exclusion is
+  removed** (Lave is still Auntie-gated).
+- **Discovery is a spatial echo-walk in the yard:** the carrier hides there; on pickup the heartbeat
+  resolves to a soft carried-aura that persists until the fragment is seated (README §9.9 / §4-I).
+- **Maverick releases** the 5th fragment into the yard; he never hands it over (ROUTE-R5).
+
+Affected phases (target shift — rework/extend, do not delete the v1 evidence):
+
+- **Phase 3 (Delivery & Triage):** replace the auto morning delivery with forage → hand-off → sort →
+  knock; scrap as a rarity-tiered resource (D10). Triage of the returned batch is otherwise unchanged.
+- **Phase 4 (Shop shell / interactables):** the door also transitions inside↔outside; drop the "morning
+  delivery" prop; restoration/scanner/journal/phone stay inside.
+- **Phases 5–6 (Spawn Director / Echoes):** placement space + echo proximity move to the walkable yard;
+  never-twice keyed to yard hiding spots; carried-aura post-pickup state.
+- **Phases 10 / 15 (Routes):** Ayla becomes the always-present delivery NPC with milestone beats (her
+  father's lunchbox foraged from the yard); remove the temporal mutual exclusion; apply the Maverick
+  release fix.
+
+The work is broken into the five followable reform phases below (**do them before recording the July 11
+slice video** — they reshape what the video shows). Each reopens/extends the built v1 phase noted in its
+dependencies; sequence is RV2-A → RV2-B → RV2-C → RV2-D → RV2-E.
+
+---
+
+## Phase RV2-A - Two-Space Shell & Walking
+
+**Goal:** the player can step through the front door from the seated shop into a walkable 3D scrapyard and back; the clock runs in both; only one space is loaded at a time.
+
+**Requirements:** SHELL-R3, INPUT-R1, INPUT-R5, PLAT-R4
+**Dependencies:** Phase 4 (shop shell / interactables), Phase 2 (clock)
+**Subsystems:** scrapyard scene, space/door transition manager, player movement controller
+
+### Tasks
+
+- `[ ]` **RV2-A.1 Walkable scrapyard scene + door transition.**
+  - New `scenes/scrapyard/Scrapyard.tscn` with placeholder dev geometry (ground, fence, scrap heaps, delivery bay, an Ayla anchor).
+  - A `SpaceManager` loads/unloads shop ↔ yard when the door is activated; reuse the existing `Interactable3D` door. Unload the inactive space to hold perf (only one active/loaded at a time).
+  - The clock keeps running across the transition (no pause on stepping outside).
+- `[ ]` **RV2-A.2 Player movement controller.**
+  - Walk in the yard via Input Map movement actions; mouse/keyboard, controller stick, and touch joystick parity (INPUT-R5). No free-walk inside the seated shop.
+
+### Acceptance
+
+- `[ ]` Door out → walkable yard; door in → seated shop; state survives repeated back-and-forth; the clock advances throughout.
+- `[ ]` Walking works on mouse/keyboard, controller, and touch; only one space is loaded at a time.
+- `[ ]` GUT covers the space-transition state machine; the on-screen walk is a manual gate.
+
+### Verification
+
+```powershell
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
+& $godot --headless --editor --path . --quit
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/scrapyard -ginclude_subdirs -gexit
+```
+Manual: walk out, around, and back in on each input family at 1920x1080 and 1280x720.
+
+---
+
+## Phase RV2-B - Scrap Foraging & Ayla Delivery
+
+**Goal:** the day's restorable batch is earned — forage rarity-tiered scrap in the yard, hand chosen scrap to Ayla, she sorts (~1 in-game hour), then knocks with the batch to triage. No free morning drop.
+
+**Requirements:** DLV-R1, DLV-R2, ROUTE-R2, D10
+**Dependencies:** RV2-A, Phase 3 (delivery / triage)
+**Subsystems:** scrap resource + yard scatter, Ayla NPC, sort timer, delivery hand-off
+
+### Tasks
+
+- `[ ]` **RV2-B.1 Scrap as a foraged resource.**
+  - A `ScrapItem` (rarity-tiered, white→up) scattered in the yard; pick-up adds to a loop-scoped scrap pool; data-driven spawn density per day.
+- `[ ]` **RV2-B.2 Ayla hand-off + sort + knock.**
+  - Ayla anchor in the yard; the player submits chosen scrap; a sort timer (~1 in-game hour, clock running) then fires a door-knock that opens the existing triage screen with a batch whose rarity draw is **biased** by the submitted scrap (D10), never guaranteed. Replaces the auto "Morning Delivery" trigger.
+
+### Acceptance
+
+- `[ ]` No free delivery; the only path to restorables is forage → hand to Ayla → sorted batch.
+- `[ ]` Across seeded runs, richer scrap measurably raises higher-rarity odds without guaranteeing them.
+- `[ ]` Sort consumes ~1 in-game hour; the knock opens triage; keep/recycle behaves as Phase 3.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/delivery -ginclude_subdirs -gexit
+```
+Manual: a full forage → hand-off → sort → knock → triage run.
+
+---
+
+## Phase RV2-C - Scrapyard Discovery (relocate the headline mechanic)
+
+**Goal:** a released carrier hides in the walkable yard; the four-band Cultural Echo intensifies as the player walks toward it; pickup resolves the heartbeat into a carried-aura that persists until seated.
+
+**Requirements:** DISC-R1, DISC-R7..R11, CLAUDE.md §4-I
+**Dependencies:** RV2-A, Phase 5 (Spawn Director), Phase 6 (Cultural Echoes)
+**Subsystems:** spawn placement (yard spots), spatial echo proximity, carried-aura state
+
+### Tasks
+
+- `[ ]` **RV2-C.1 Relocate placement + echo proximity to the yard.**
+  - Spawn Director places the carrier at a yard hiding spot; never-twice keyed to yard spots.
+  - Echo proximity is driven by the player's walking distance to the carrier; flicker reveals only at proximity (`GLOW_REVEAL_AT`); heartbeat stays gated to `is_carrier == true`.
+  - On pickup the hunt bands resolve and a soft carried-aura plays until the fragment is cleaned/opened/seated, then silence (§4-I).
+
+### Acceptance
+
+- `[ ]` Three seeded runs hide the carrier at visibly different yard spots; never a repeat (carrier, spot) for the player.
+- `[ ]` Walking toward the carrier raises the bands; the heartbeat never fires on a decoy; flicker only at proximity.
+- `[ ]` Pickup → carried-aura → carry inside → clean → open → seat → aura goes silent.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/discovery -ginclude_subdirs -gexit
+```
+Manual: a complete echo-walk to the carrier with captions/resonance meter.
+
+---
+
+## Phase RV2-D - Route Reconciliation (Ayla, Lave, Maverick)
+
+**Goal:** routes match v2 — Ayla is the permanent delivery NPC with milestone beats, the Lave↔Ayla exclusion is gone, and Maverick releases (never hands over) the 5th fragment.
+
+**Requirements:** ROUTE-R2, ROUTE-R3, ROUTE-R5, CLAUDE.md §4-B/§4-C
+**Dependencies:** RV2-B, RV2-C, Phase 10 (Auntie/route integration), Phase 15 (full routes)
+**Subsystems:** RouteService, route data, fragment release
+
+### Tasks
+
+- `[ ]` **RV2-D.1 Reauthor Ayla + remove the exclusion.**
+  - Ayla present every open day (delivery NPC); her deep beat triggers when the player forages her late father's lunchbox from the yard; completing it releases her fragment and banks the Sam lead.
+  - Remove the temporal Artisan/Scavenger mutual exclusion in `RouteService`; Lave stays Auntie-gated. Update `data/routes/routes.json`.
+- `[ ]` **RV2-D.2 Maverick release fix.**
+  - His qualifying Day-5 encounter **releases** the 5th fragment into a Spawn-Director yard carrier (echo-hunt) with no hand-over. Update his flow/dialogue per `docs/route-dialogue-compendium.md`.
+
+### Acceptance
+
+- `[ ]` Both the Artisan's and Scavenger's fragments can release within one loop; Ayla never disappears.
+- `[ ]` Maverick's Day-5 path produces a yard carrier the player must find/clean/open/seat — never a directly handed fragment.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core -gexit
+```
+Manual: a route playthrough confirming Ayla persistence, Lave unlock, and the Maverick release.
+
+---
+
+## Phase RV2-E - Perf, Data & Reconciliation Close-out
+
+**Goal:** the reform holds the perf targets, the data/tests agree with v2, and the milestone-video plan reflects the yard hunt.
+
+**Requirements:** PLAT-R4, D11, REST/DISC test parity
+**Dependencies:** RV2-A..D
+**Subsystems:** performance, data, tests, milestone evidence
+
+### Tasks
+
+- `[ ]` **RV2-E.1 Scrapyard perf pass + data migration.**
+  - Profile the yard on the web reference (30 FPS @ 1280x720); zone/cull as needed; migrate `data/routes/containers.json` (piles → yard spots) and any pile-based fixtures.
+- `[ ]` **RV2-E.2 Test + evidence reconciliation.**
+  - Update/extend GUT suites that assumed v1 delivery/discovery; revise the milestone-video shot list (echo hunt now in the yard); re-run full GUT + lint + import; record evidence; append `docs/ai-disclosure.md`.
+
+### Acceptance
+
+- `[ ]` Full GUT / lint / import green under 4.7; the web build holds 30 FPS in the yard stress scenario.
+- `[ ]` No remaining v1 delivery/discovery contradiction in `data/` or tests.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
+& $godot --headless --path . --export-release "Web" "build/web/aLima.html"
+```
 
 ## Status Markers
 

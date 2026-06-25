@@ -4,7 +4,7 @@
 
 **aLima** — a cozy AI-powered historical-restoration roguelite set in a Western Visayas junk shop. Built for the *AI Game On!* jam (AI Fest 2026, Iloilo City). Theme: *"Giving Our History a New Heartbeat through the Intelligence of Tomorrow."*
 
-> **STACK CONTRACT:** The project targets **Godot 4.7 (GDScript) + a Node/Express backend**. The presentation is hybrid and trends **diegetic**: a 3D shop scene whose major actions (door, workbench, journal, phone, delivery) are **physical 3D interactables** the player hovers and clicks — not flat HUD buttons (SHELL-R1; HUD buttons survive only as labelled accessibility/fallback). **Restoration is a focused 3D object-manipulation interaction** (a manipulable 3D model the player orbits/rotates and cleans by working the tool across its surface), and its **cleaning tools are chosen from a 2D left-edge tool sidebar** (REST-R9) — up to eight numbered rows, each a rotating 3D model of the tool plus the surface conditions it cleans (with cleaning-power numbers) and a durability bar; the **selected tool's 3D model then follows the cursor** while the player works the surface, so the cleaning itself stays a tactile 3D act. The surrounding 2D background + HUD overlay is supportive only (meters, feedback, captions, accessibility); the **journal is hybrid 2D/3D** (a 2D book/paper UI that embeds 3D viewers for the Fragment Case and restored objects); **triage, scanner, dialogue, and Portal** flows are 2D `Control`/`CanvasLayer` screens. If the project moves to another engine or stack, stop and update §2, §3, §6, the PRD, and the phase tracker together.
+> **STACK CONTRACT:** The project targets **Godot 4.7 (GDScript) + a Node/Express backend**. The presentation is hybrid and trends **diegetic**, and the game runs in **two connected spaces**: a **seated 3D shop interior** (entered through the front door) and a **walkable outdoor scrapyard** (stepped out through that same door) where the player forages rarity-tiered scrap to hand to Ayla — the permanent scrap-hauler/delivery NPC — and tracks hidden fragment carriers by Cultural Echoes. The seated-shop major actions (door, workbench, journal, phone) are **physical 3D interactables** the player hovers and clicks — not flat HUD buttons (SHELL-R1/R3; HUD buttons survive only as labelled accessibility/fallback). **Restoration is a focused 3D object-manipulation interaction** (a manipulable 3D model the player orbits/rotates and cleans by working the tool across its surface), and its **cleaning tools are chosen from a 2D left-edge tool sidebar** (REST-R9) — up to eight numbered rows, each a rotating 3D model of the tool plus the surface conditions it cleans (with cleaning-power numbers) and a durability bar; the **selected tool's 3D model then follows the cursor** while the player works the surface, so the cleaning itself stays a tactile 3D act. The surrounding 2D background + HUD overlay is supportive only (meters, feedback, captions, accessibility); the **journal is hybrid 2D/3D** (a 2D book/paper UI that embeds 3D viewers for the Fragment Case and restored objects); **triage, scanner, dialogue, and Portal** flows are 2D `Control`/`CanvasLayer` screens. If the project moves to another engine or stack, stop and update §2, §3, §6, the PRD, and the phase tracker together.
 
 ---
 
@@ -110,7 +110,7 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 
 **H. Spawn Director guarantees:** never place the same `(carrier, container)` twice for a player (per-player history, soft-reset to avoid deadlock); never place a fragment behind a tool the player can't obtain that run (must stay winnable). A known Safe code can make the Safe eligible as an outer container, but the fragment still sits inside a promoted ordinary carrier. See PRD §12.
 
-**I. Echoes run only for a `RELEASED`, unfound carrier in the current scene.** Silence otherwise. The **Heartbeat band is gated to `is_carrier == true`** — it must be physically impossible for it to sound on a decoy.
+**I. Echoes run only for a `RELEASED` carrier in the current scene (the scrapyard).** The four-band proximity hunt plays only while that carrier is **unfound**; on pickup the heartbeat resolves into a soft carried-resonance that persists until the fragment is seated, then silence. Otherwise, silence. The **Heartbeat band is gated to `is_carrier == true`** — it must be physically impossible for it to sound on a decoy.
 
 **J. Daily clock:** 1 real minute = 1 in-game hour; shop day 07:00–20:00 (~13 min real); ~1 hour per loop. NPCs knock only in fixed windows (per-character in GDD §9.7); an unanswered visitor moves on and may open/close a route.
 
@@ -137,10 +137,10 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 
 ## 5. The Core Loop (what the code serves)
 
-**Daily:** morning delivery → triage (limited storage/time/money) → restore (**3D clean mini-game** — rotate and clean the actual 3D object) → scan & judge (AI suggests, player decides) → decide (sell / return / museum) → evening (journal, upkeep).
+**Daily:** forage scrap in the walkable scrapyard → hand chosen scrap to Ayla, who sorts it into a delivery → triage the batch she knocks in with (limited storage/time/money) → restore (**3D clean mini-game** — rotate and clean the actual 3D object) → scan & judge (AI suggests, player decides) → decide (sell / return / museum) → evening (journal, upkeep). The clock runs in both spaces.
 
 **Discovery (the headline mechanic):**
-> Hum (far) → Melody (area) → Voice (pile) → carrier flickers + Heartbeat spikes → pick up → **clean** → **open** → fragment inside → **Artifact Found** screen → **Portal API** → **Portal Unlock** fact → fragment **seats in journal case** (permanent).
+> [in the scrapyard] Hum (far) → Melody (area) → Voice (close) → carrier flickers + Heartbeat spikes → pick up (heartbeat resolves into a soft carried aura) → carry inside → **clean** → **open** → fragment inside → **Artifact Found** screen → **Portal API** → **Portal Unlock** fact → fragment **seats in journal case** (permanent; aura goes quiet).
 
 Full detail: `docs/PRD.md` §12.
 

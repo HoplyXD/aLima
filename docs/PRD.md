@@ -127,6 +127,7 @@ flowchart LR
 **Shop shell & diegetic interaction**
 - **SHELL-R1 (P1).** The major shop actions are **diegetic 3D interactables** in the shop scene — at minimum the door, restoration workbench, journal, phone, and morning-delivery pile are physical props the player hovers (prompt + highlight) and clicks/confirms, rather than abstract HUD buttons. A reusable `Interactable3D` component owns hover/highlight/activation and emits an `activated` signal; the `ShopController` connects it to the existing action handler, so the diegetic prop and any fallback button trigger identical behavior. Interactables expose hover and pressed states; keyboard/controller/touch parity is provided by the labelled fallback controls (3D nodes cannot hold Control focus). Props are disabled while a full-screen overlay is open so input cannot fall through. *(Presentation contract; CLAUDE.md §0 / §4-N.)*
 - **SHELL-R2 (P1, dev).** HUD action buttons may remain as **clearly-labelled accessibility/fallback/debug** controls during development, but the production direction is physical 3D interaction with clear prompts. A flat-button-only shop does not satisfy SHELL-R1. Final art and in-frame composition of the props are a production/manual gate (§29); placeholder dev geometry is acceptable in the interim if disclosed.
+- **SHELL-R3 (P1).** The game presents **two connected spaces**: a **seated shop interior** (the existing diegetic-prop scene) entered through the front door, and a **walkable 3D scrapyard** stepped into through that same door, where the player roams on foot to forage rarity-tiered scrap, hand chosen scrap to Ayla (who sorts it into the day's delivery, §7), and track hidden fragment carriers by Cultural Echo proximity (§12). The clock runs in both; the door transitions between them and only one space is active/loaded at a time. Walking uses Input Map movement actions with mouse/controller/touch parity (§27) and must hold the performance targets in both spaces (§28).
 
 **Full-game event contract**
 
@@ -424,7 +425,7 @@ class SaveState:
 
 ## 7. Delivery & Triage  · P0
 
-- **DLV-R1 (P0).** Each morning, generate a delivery: a set of `ObjectInstance`s drawn from templates, weighted by rarity. Includes the carrier(s) placed by the Spawn Director for any `RELEASED` fragment due that day (§12).
+- **DLV-R1 (P0).** Each day's delivery is **earned by foraging**: the player gathers rarity-tiered **scrap** in the walkable scrapyard (SHELL-R3) and hands chosen scrap to Ayla, who sorts it into a set of `ObjectInstance`s. Richer scrap **biases** the draw toward higher rarity without guaranteeing it; there is no free automatic morning drop. Fragment **carriers** for any `RELEASED` fragment are placed by the Spawn Director in the scrapyard (§12), not injected into this sorted delivery.
 - **DLV-R2 (P0).** Storage, time, and money are limited; the player selects which objects to keep before the rest is bulk-recycled (discarded).
 - **DLV-R3 (P0).** Each instance shows its **apparent** rarity glow per the fixed legend (§4.1 / Invariant §4-E). The glow reflects *appearance*, not truth — counterfeits can over-glow, treasures can under-glow.
 - **DLV-R4 (P1).** Delivery composition responds to mini-events (§17) (e.g., Rush Delivery = larger batch, less time).
@@ -432,7 +433,7 @@ class SaveState:
 
 **Acceptance**
 - [ ] Player can keep N and recycle the rest under a storage cap.
-- [ ] A Spawn-Director carrier reliably appears in the correct day's delivery/shelf.
+- [ ] A Spawn-Director carrier reliably appears at its assigned scrapyard hiding spot on the correct day.
 
 ---
 
@@ -509,7 +510,7 @@ class SaveState:
 > This section is the complete discovery specification. **Carrier is a role, not an object type** (§4-C); echoes guide, heartbeat disambiguates; clean→open gate applies.
 
 ### 12.1 Spawn Director
-- **DISC-R1 (P0).** At loop start, for each `RELEASED` fragment, output a placement `{carrier_instance, outer_container, day}`. (Outer container → carrier → fragment; fragment is always nested in a carrier, never loose.)
+- **DISC-R1 (P0).** At loop start, for each `RELEASED` fragment, output a placement `{carrier_instance, scrapyard_location (and/or outer_container), day}`. The carrier hides in the walkable scrapyard and the player tracks it by Cultural Echo proximity (DISC-R7). (Location/container → carrier → fragment; the fragment is always nested in a carrier, never loose.)
 - **DISC-R2 (P0).** **Promote** an ordinary openable instance to carrier (set `is_carrier`, `fragment_id`); do not spawn a special object. *(Invariant §4-C.)*
 - **DISC-R3 (P0).** **Never-twice:** exclude any `(carrier, container)` pair in `spawn_history[fragment]`; soft-reset (forbidding only the most-recent pair) if exhausted, to avoid deadlock. *(SAVE-R3.)*
 - **DISC-R4 (P0).** **Winnable:** never place a fragment behind a tool the player can't obtain that run (hard filter). *(Invariant §4-H.)*
@@ -571,24 +572,24 @@ Five fragment-holders (Auntie, Artisan, Scavenger, Archeologist, Buyer); the unc
 | Route | ID | Window(s) | Gate | Holds | Reward |
 |---|---|---|---|---|---|
 | Elderly Auntie (Shine) | `auntie` | 12:00–14:00 on Days 1,3,5 | — | frag | Safe code · drawer clue |
-| Local Artisan (Lave) | `artisan` | 13:00–14:00 on Days 2,4,5 | **Auntie completed** (replaces Scavenger) | frag | delicate (legacy) tool · fragile-object access |
-| Trash Scavenger (Ayla) | `scavenger` | 13:00–14:00 on Days 2,4,5 | **Auntie NOT yet completed** | frag | lead → Archeologist (persists) |
+| Local Artisan (Lave) | `artisan` | 13:00–14:00 on Days 2,4,5 | **Auntie helped** (her grandson; no longer excludes Ayla) | frag | delicate (legacy) tool · fragile-object access |
+| Trash Scavenger (Ayla) | `scavenger` | present in the scrapyard every open day (delivery NPC) | — | frag | lead → Archeologist (persists) |
 | Archeologist (Sam) | `archeologist` | 15:00–17:00 Day 1; 08:00–11:00 Days 3,5 | **Scavenger's lead known** (persists; so available from Day 1 on later loops) | frag | excavation tools · sturdy-object access |
 | Mysterious Buyer (Mr. Maverick) | `buyer` | daily 17:00–18:00 (+ 07:00–09:00 Day 5) | deal on Days 1–4 ≥ once | releases frag (5th) | guaranteed special delivery · encoded ledger · investigation evidence |
 | Uncle's Legacy (Yuyu) | `yuyu` | — | all 5 fragments seated | — (finale) | Master Artifact whole · Perfect Loop |
 
 **Requirements**
 - **ROUTE-R1 (P1).** A route is offered only inside its window AND when prerequisites/exclusions pass, evaluated **at window-open time**.
-- **ROUTE-R2 (P1).** **Artisan/Scavenger mutual exclusion is temporal:** at each window, if `auntie` is completed → offer Artisan; else → offer Scavenger. This lets the Perfect-Loop order (Scavenger Day 2 → Auntie Day 3 → Artisan Day 4) thread **both** in one loop. *(GDD 9.14 — preserve this exactly.)*
+- **ROUTE-R2 (P1).** **Ayla is the permanent scrapyard delivery NPC, not a gated visitor.** She is present every open day, sorts foraged scrap into the delivery (§7), and her route advances through daily hand-offs and milestone beats (notably foraging her late father's lunchbox) independent of the Auntie. The **Artisan** is unlocked when the Auntie is helped (he is her grandson) and offered in his Days 2/4/5 window; he no longer replaces or excludes Ayla. Both fragment-holders can be pursued in one loop. *(Supersedes the former same-slot mutual exclusion; see `docs/route-dialogue-compendium.md`.)*
 - **ROUTE-R3 (P1).** Completing a route **releases** its fragment (`LOCKED→RELEASED`) into the scrap stream (§12), with in-fiction justification — never handed directly. *(Invariant §4-B / §12.)*
 - **ROUTE-R4 (P1).** Route completion + leads persist (§5); a known lead makes gated content available earlier on later loops (e.g., Archeologist from Day 1).
 - **ROUTE-R5 (P1).** The Buyer has no ending; after qualifying deals, his Day 5 encounter deterministically releases the fifth fragment into a guaranteed special delivery. The Spawn Director still promotes an ordinary carrier and places it; the Buyer never hands over the fragment directly.
 - **ROUTE-R6 (P1).** An unanswered visit within a window is consumed (CLOCK-R4) and may close that route for the loop.
 
 **Acceptance**
-- [ ] Helping Auntie on Day 1 yields Artisan (not Scavenger) on Days 2/4/5.
-- [ ] Not helping Auntie yields Scavenger on Days 2/4/5.
-- [ ] Helping Auntie on Day 3 yields Scavenger on Day 2 and Artisan on Day 4 in the same loop.
+- [ ] Ayla is present in the scrapyard every open day and sorts foraged scrap into the delivery regardless of the Auntie's state.
+- [ ] Helping the Auntie unlocks the Artisan in his Days 2/4/5 window; he does not remove Ayla.
+- [ ] Both the Artisan's and the Scavenger's fragments can be released within a single loop.
 
 ---
 
@@ -767,6 +768,8 @@ Full-game completion additionally requires every P1 requirement, every content-m
 | D7 | **Buyer 5th-fragment release** | deterministic special delivery once Perfect-Loop conditions are met (ROUTE-R5 / END-R4) |
 | D8 | **3D dirt/cleaning representation** (REST-R8) | shader dirt-mask cleared by tool strokes (alternatives: decals / vertex paint); keep the restoration logic presentation-agnostic |
 | D9 | **Restoration view framing** (REST-R8) | resolved: focused 3D restoration view (3D object + 2D background/HUD overlay) |
+| D10 | **Scrap → delivery rarity bias** (DLV-R1) | richer scrap raises the odds of green / low-blue results; never a guarantee; tune the curve and per-day scrap availability |
+| D11 | **Scrapyard size, zoning & perf** (SHELL-R3) | compact, zoned outdoor lot loaded only while outside; sized so the echo gradient is a real walk yet holds 30 FPS on the web reference (PLAT-R4) |
 
 All decisions above may remain open during the slice only. `CONTENT-R1` blocks full content production until the artifact, source packet, carrier compatibility, decoy tuning, pile cap, time policy, and Buyer release behavior are recorded as accepted decisions.
 
