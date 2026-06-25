@@ -198,7 +198,7 @@ func _populate_response(response: ScannerResponse) -> void:
 	var note := Label.new()
 	note.text = "— Scanner annotations end here. Your judgment belongs below. —"
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_font_size_override("font_size", 40)
 	_content.add_child(note)
 
 
@@ -207,12 +207,12 @@ func _add_field(label: String, value: String) -> void:
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var name_label := Label.new()
 	name_label.text = "%s:" % label
-	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_font_size_override("font_size", 40)
 	name_label.custom_minimum_size = Vector2(200, 0)
 	row.add_child(name_label)
 	var value_label := Label.new()
 	value_label.text = value
-	value_label.add_theme_font_size_override("font_size", 16)
+	value_label.add_theme_font_size_override("font_size", 40)
 	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(value_label)
@@ -245,6 +245,7 @@ func _add_sources(refs: Array[Dictionary]) -> void:
 func _add_line(text: String) -> void:
 	var label := Label.new()
 	label.text = text
+	label.add_theme_font_size_override("font_size", 40)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_content.add_child(label)
