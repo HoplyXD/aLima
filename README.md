@@ -124,7 +124,7 @@ Daily Loop (one in-game day)
 
 The shop is two connected spaces. Stepping **through the front door** sits the player down at the restoration corner (the seated shop); stepping **out the door** drops them into the **scrapyard**, a small walkable 3D lot. The clock keeps running in both.
 
-1\.  Forage & hand-off (outside). In the scrapyard the player gathers loose **scrap** — each piece carrying a faint apparent-rarity glow (white, green, and up) — and hands the scrap they choose to **Ayla**, the scrap-hauler who works the yard. She sorts it; richer scrap tilts the odds toward a better haul (a green, a touch of blue) but never guarantees it.
+1\.  Forage & hand-off (outside). In the scrapyard the player gathers loose **scrap** — each piece carrying a faint apparent-rarity glow (white, green, and up) — and hands the scrap they choose to **Ayla**, the scrap-hauler who works the yard. She sorts it; the haul skews to the tier of scrap you hand in and only rarely climbs higher, so good pieces stay scarce.
 
 2\.  Delivery & triage (inside). About an in-game hour later Ayla knocks at the shop door with a batch of restorable objects sorted from that scrap. Limited storage, time, and money force the player to choose which to rescue before the rest is bulk-recycled. A faint glow hints at rarity — but the glow can lie.
 
@@ -185,7 +185,7 @@ Exclusions. The Code of Kalantiaw is excluded as a documented 20th-century hoax 
 
 ## **9.1 Scrap Foraging, Sorting & Triage**
 
-The player no longer waits on a free morning drop — they **earn** each day's batch. Out in the scrapyard the player forages loose scrap and hands what they choose to **Ayla**, the scrap-hauler, who sorts it into a delivery of restorable objects (richer scrap improves the odds of a better-rarity haul without ever guaranteeing it). Storage, time, and money are limited, so every rescued object is a bet. Each object carries a faint glow indicating apparent rarity — apparent, because the glow reflects how an object looks, not what it is. Counterfeits can shine; treasures can look like trash.
+The player no longer waits on a free morning drop — they **earn** each day's batch. Out in the scrapyard the player forages loose scrap and hands what they choose to **Ayla**, the scrap-hauler, who sorts it into a delivery of restorable objects (the sort skews to the scrap's own tier and only rarely climbs higher, so high-rarity finds stay scarce). Storage, time, and money are limited, so every rescued object is a bet. Each object carries a faint glow indicating apparent rarity — apparent, because the glow reflects how an object looks, not what it is. Counterfeits can shine; treasures can look like trash.
 
 | Glow | Apparent Meaning |
 | :---- | :---- |

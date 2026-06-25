@@ -425,7 +425,7 @@ class SaveState:
 
 ## 7. Delivery & Triage  · P0
 
-- **DLV-R1 (P0).** Each day's delivery is **earned by foraging**: the player gathers rarity-tiered **scrap** in the walkable scrapyard (SHELL-R3) and hands chosen scrap to Ayla, who sorts it into a set of `ObjectInstance`s. Richer scrap **biases** the draw toward higher rarity without guaranteeing it; there is no free automatic morning drop. Fragment **carriers** for any `RELEASED` fragment are placed by the Spawn Director in the scrapyard (§12), not injected into this sorted delivery.
+- **DLV-R1 (P0).** Each day's delivery is **earned by foraging**: the player gathers rarity-tiered **scrap** in the walkable scrapyard (SHELL-R3) and hands chosen scrap to Ayla, who sorts it into a set of `ObjectInstance`s. The sort is **weighted toward the scrap's own tier** with only a slim chance (~5%) of climbing one rarity higher (rarer-leaning; see D10), so high-rarity restorables stay scarce; there is no free automatic morning drop. Fragment **carriers** for any `RELEASED` fragment are placed by the Spawn Director in the scrapyard (§12), not injected into this sorted delivery.
 - **DLV-R2 (P0).** Storage, time, and money are limited; the player selects which objects to keep before the rest is bulk-recycled (discarded).
 - **DLV-R3 (P0).** Each instance shows its **apparent** rarity glow per the fixed legend (§4.1 / Invariant §4-E). The glow reflects *appearance*, not truth — counterfeits can over-glow, treasures can under-glow.
 - **DLV-R4 (P1).** Delivery composition responds to mini-events (§17) (e.g., Rush Delivery = larger batch, less time).
@@ -768,8 +768,20 @@ Full-game completion additionally requires every P1 requirement, every content-m
 | D7 | **Buyer 5th-fragment release** | deterministic special delivery once Perfect-Loop conditions are met (ROUTE-R5 / END-R4) |
 | D8 | **3D dirt/cleaning representation** (REST-R8) | shader dirt-mask cleared by tool strokes (alternatives: decals / vertex paint); keep the restoration logic presentation-agnostic |
 | D9 | **Restoration view framing** (REST-R8) | resolved: focused 3D restoration view (3D object + 2D background/HUD overlay) |
-| D10 | **Scrap → delivery rarity bias** (DLV-R1) | richer scrap raises the odds of green / low-blue results; never a guarantee; tune the curve and per-day scrap availability |
+| D10 | **Scrap → delivery rarity bias** (DLV-R1) | rarer-leaning: the sort skews to the scrap's own tier, ~5% chance one tier up, ~35–40% one tier down (white floor ~95/5, gold ceiling ~65/35); full table below the decisions table; numbers tunable |
 | D11 | **Scrapyard size, zoning & perf** (SHELL-R3) | compact, zoned outdoor lot loaded only while outside; sized so the echo gradient is a real walk yet holds 30 FPS on the web reference (PLAT-R4) |
+
+**D10 — scrap → sort rarity bias (tuned default, rarer-leaning; numbers are placeholders for tuning):**
+
+| Scrap handed in | Same tier | One tier down | One tier up |
+|---|---|---|---|
+| White (common) | ~95% white | — | ~5% green |
+| Green (uncommon) | ~55% green | ~40% white | ~5% blue |
+| Blue (antique) | ~55% blue | ~40% green | ~5% purple |
+| Purple (rare) | ~55% purple | ~40% blue | ~5% gold |
+| Gold (significant) | ~65% gold | ~35% purple | — |
+
+The sort skews toward the tier you hand in, with only a slim (~5%) chance of climbing one rarity higher and a real (~35–40%) chance of dropping one — so high-rarity restorables stay genuinely rare. Foraged scrap is itself mostly low-tier, which compounds the scarcity. `Gold` is the practical ceiling of this path; `flickering` (carrier) is never produced by the sort. The honest scrap→tier odds here are distinct from the apparent-glow-can-mislead mechanic on restored objects (`SCAN-R3` counterfeits), which the player resolves by scanner/journal cross-reference.
 
 All decisions above may remain open during the slice only. `CONTENT-R1` blocks full content production until the artifact, source packet, carrier compatibility, decoy tuning, pile cap, time policy, and Buyer release behavior are recorded as accepted decisions.
 
