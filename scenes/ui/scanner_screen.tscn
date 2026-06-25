@@ -102,7 +102,7 @@ horizontal_alignment = 1
 [node name="StatusLabel" type="Label" parent="Panel/Margin/VBox" unique_id=134753127]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 30
 horizontal_alignment = 1
 
 [node name="TextureRect" type="TextureRect" parent="Panel/Margin/VBox" unique_id=454945875]
@@ -146,7 +146,7 @@ text = "Choose one. The scanner cannot decide for you."
 [node name="VerdictButtons" type="HBoxContainer" parent="Panel/Margin/VBox/VerdictSection" unique_id=2005578175]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 21
 
 [node name="HSeparator2" type="HSeparator" parent="Panel/Margin/VBox" unique_id=754260945]
 layout_mode = 2
