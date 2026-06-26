@@ -34,6 +34,13 @@ const GRAB_LERP_SPEED: float = 18.0
 const RETURN_LERP_SPEED: float = 8.0
 const GLOW_EMISSION_ENERGY: float = 1.6
 
+const HELD_SCALE: float = 1.2
+const ZONE_HOVER_RADIUS: float = 1.5
+const ZONE_MAGNET_RADIUS: float = 1.0
+const ZONE_MAGNET_STRENGTH: float = 0.65
+const ZONE_RING_BASE_ENERGY: float = 0.25
+const ZONE_RING_HOVER_ENERGY: float = 2.5
+
 enum InputMode { MODE_3D, MODE_LIST }
 
 var _state: TriageState
@@ -52,6 +59,11 @@ var _input_mode: int = InputMode.MODE_3D
 var _force_fallback: bool = false
 var _bodies: Dictionary = {}  ## uid -> RigidBody3D.
 var _pending_release: bool = false
+
+var _keep_zone_pos: Vector3 = Vector3.ZERO
+var _recycle_zone_pos: Vector3 = Vector3.ZERO
+var _keep_ring: MeshInstance3D = null
+var _recycle_ring: MeshInstance3D = null
 
 @onready var _viewport_container: SubViewportContainer = $ViewportContainer
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
@@ -89,6 +101,51 @@ func _ready() -> void:
 	visible = false
 	_hud_layer.visible = false
 	_set_input_mode(InputMode.MODE_3D)
+	_cache_zone_visuals()
+
+
+func _cache_zone_visuals() -> void:
+	_keep_ring = _find_zone_ring(_keep_zone)
+	_recycle_ring = _find_zone_ring(_recycle_zone)
+	if _keep_zone != null:
+		_keep_zone_pos = _keep_zone.global_position
+	if _recycle_zone != null:
+		_recycle_zone_pos = _recycle_zone.global_position
+	_set_ring_energy(_keep_ring, ZONE_RING_BASE_ENERGY)
+	_set_ring_energy(_recycle_ring, ZONE_RING_BASE_ENERGY)
+
+
+func _find_zone_ring(zone: Area3D) -> MeshInstance3D:
+	if zone == null:
+		return null
+	var parent := zone.get_parent()
+	if parent == null:
+		return null
+	return parent.get_node_or_null("Ring") as MeshInstance3D
+
+
+func _set_ring_energy(ring: MeshInstance3D, energy: float) -> void:
+	if ring == null:
+		return
+	var mat := ring.material_override as StandardMaterial3D
+	if mat == null:
+		return
+	mat.emission_energy_multiplier = energy
+
+
+func _update_zone_highlights() -> void:
+	var keep_dist := _held_target.distance_to(_keep_zone_pos)
+	var recycle_dist := _held_target.distance_to(_recycle_zone_pos)
+	if minf(keep_dist, recycle_dist) > ZONE_HOVER_RADIUS:
+		_set_ring_energy(_keep_ring, ZONE_RING_BASE_ENERGY)
+		_set_ring_energy(_recycle_ring, ZONE_RING_BASE_ENERGY)
+		return
+	if keep_dist < recycle_dist:
+		_set_ring_energy(_keep_ring, ZONE_RING_HOVER_ENERGY)
+		_set_ring_energy(_recycle_ring, ZONE_RING_BASE_ENERGY)
+	else:
+		_set_ring_energy(_keep_ring, ZONE_RING_BASE_ENERGY)
+		_set_ring_energy(_recycle_ring, ZONE_RING_HOVER_ENERGY)
 
 
 func _process(delta: float) -> void:
@@ -99,6 +156,7 @@ func _process(delta: float) -> void:
 		_held_body.global_position = _held_body.global_position.lerp(
 			target, clampf(GRAB_LERP_SPEED * delta, 0.0, 1.0)
 		)
+		_update_zone_highlights()
 	elif _returning_body != null and is_instance_valid(_returning_body):
 		_returning_body.global_position = _returning_body.global_position.lerp(
 			_return_target, clampf(RETURN_LERP_SPEED * delta, 0.0, 1.0)
@@ -347,6 +405,9 @@ func _try_pick(screen_pos: Vector2) -> void:
 	_held_body.angular_velocity = Vector3.ZERO
 	var hit_point: Vector3 = result["position"]
 	_held_offset = _held_body.global_position - hit_point
+	if not body.has_meta("original_scale"):
+		body.set_meta("original_scale", body.scale)
+	body.scale = body.get_meta("original_scale") * HELD_SCALE
 	_update_held_target(screen_pos)
 	get_viewport().set_input_as_handled()
 
@@ -354,7 +415,19 @@ func _try_pick(screen_pos: Vector2) -> void:
 func _update_held_target(screen_pos: Vector2) -> void:
 	var plane_hit := _raycast_plane(screen_pos, TABLE_Y + DRAG_HEIGHT)
 	if plane_hit != Vector3.ZERO:
-		_held_target = plane_hit
+		_held_target = _apply_zone_magnet(plane_hit)
+
+
+func _apply_zone_magnet(point: Vector3) -> Vector3:
+	var keep_dist := point.distance_to(_keep_zone_pos)
+	var recycle_dist := point.distance_to(_recycle_zone_pos)
+	if keep_dist < ZONE_MAGNET_RADIUS:
+		var t := 1.0 - clampf(keep_dist / ZONE_MAGNET_RADIUS, 0.0, 1.0)
+		return point.lerp(_keep_zone_pos + Vector3.UP * DRAG_HEIGHT, t * ZONE_MAGNET_STRENGTH)
+	if recycle_dist < ZONE_MAGNET_RADIUS:
+		var t := 1.0 - clampf(recycle_dist / ZONE_MAGNET_RADIUS, 0.0, 1.0)
+		return point.lerp(_recycle_zone_pos + Vector3.UP * DRAG_HEIGHT, t * ZONE_MAGNET_STRENGTH)
+	return point
 
 
 func _release_held() -> void:
@@ -365,10 +438,14 @@ func _release_held() -> void:
 	_held_body.freeze = false
 	_held_body.linear_velocity = Vector3.ZERO
 	_held_body.angular_velocity = Vector3.ZERO
+	if _held_body.has_meta("original_scale"):
+		_held_body.scale = _held_body.get_meta("original_scale")
 	_pending_release = true
 	_resolve_drop_after_physics.call_deferred()
 	_held_body = null
 	_held_uid = ""
+	_set_ring_energy(_keep_ring, ZONE_RING_BASE_ENERGY)
+	_set_ring_energy(_recycle_ring, ZONE_RING_BASE_ENERGY)
 
 
 func _resolve_drop_after_physics() -> void:
@@ -386,6 +463,12 @@ func _resolve_drop_after_physics() -> void:
 			_return_to_pile(body)
 		else:
 			_set_decision(uid, decision)
+			if decision == TriageState.Decision.KEEP:
+				_snap_to_zone(body, _keep_zone_pos)
+			elif decision == TriageState.Decision.RECYCLE:
+				_snap_to_zone(body, _recycle_zone_pos)
+			else:
+				_return_to_pile(body)
 	_update_ui()
 
 
@@ -415,10 +498,20 @@ func _return_to_pile(body: RigidBody3D) -> void:
 	if not is_instance_valid(body):
 		return
 	body.freeze = true
+	if body.has_meta("original_scale"):
+		body.scale = body.get_meta("original_scale")
 	_returning_body = body
 	_return_target = (
 		_pile_spawn.global_position + Vector3(randf() - 0.5, 0.5, randf() - 0.5) * PILE_RADIUS
 	)
+
+
+func _snap_to_zone(body: RigidBody3D, zone_pos: Vector3) -> void:
+	if not is_instance_valid(body):
+		return
+	body.freeze = true
+	body.global_position = zone_pos + Vector3.UP * 0.35
+	body.rotation = Vector3.ZERO
 
 
 func _raycast_item(screen_pos: Vector2) -> Dictionary:
