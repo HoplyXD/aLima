@@ -3,13 +3,12 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://caydrpob22kgf"
-path="res://.godot/imported/chesspiecerook02.fbx-2b52934721ba8530e22f0c4533c3aab0.scn"
+uid="uid://hoy72lbogesk"
+valid=false
 
 [deps]
 
 source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/fbx/chesspiecerook02.fbx"
-dest_files=["res://.godot/imported/chesspiecerook02.fbx-2b52934721ba8530e22f0c4533c3aab0.scn"]
 
 [params]
 
@@ -40,7 +39,7 @@ materials/extract=0
 materials/extract_format=0
 materials/extract_path=""
 _subresources={}
-fbx/importer=0
+fbx/importer=1
 fbx/allow_geometry_helper_nodes=false
 fbx/embedded_image_handling=1
 fbx/naming_version=2
