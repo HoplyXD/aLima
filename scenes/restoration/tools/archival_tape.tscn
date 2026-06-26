@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d0833ued0ysbq"]
 
-; Placeholder geometry for the Archival Tape tool. Swap in a real model when authored.
+[ext_resource type="Script" uid="uid://d80c57n5yr6v" path="res://scripts/restoration/tool_config.gd" id="1_config"]
 
 [sub_resource type="StandardMaterial3D" id="mat_block"]
 albedo_color = Color(0.72, 0.72, 0.74, 1)
@@ -12,8 +12,13 @@ emission_energy_multiplier = 0.6
 [sub_resource type="BoxMesh" id="mesh_block"]
 size = Vector3(0.2, 0.1, 0.2)
 
-[node name="archival_tape" type="Node3D"]
+[node name="archival_tape" type="Node3D" unique_id=1208430579]
+script = ExtResource("1_config")
+max_durability = 200
 
-[node name="Block" type="MeshInstance3D" parent="."]
+[node name="CleanPoint" type="Marker3D" parent="." unique_id=1287243352]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.099355325, 0.05017469, -0.0989551)
+
+[node name="Block" type="MeshInstance3D" parent="." unique_id=66275264]
 material_override = SubResource("mat_block")
 mesh = SubResource("mesh_block")

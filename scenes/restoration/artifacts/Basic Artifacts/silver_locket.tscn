@@ -1,10 +1,12 @@
 [gd_scene format=3 uid="uid://cynpmsxeg4fme"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
-[ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_decal"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="3_dust"]
+[ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="3_jrqtf"]
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="4_tarnish"]
+[ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="4_vnjfm"]
 [ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Locket.obj" id="5_locket"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
 
 [sub_resource type="StandardMaterial3D" id="locket_silver"]
 albedo_color = Color(0.9, 0.91, 0.93, 1)
@@ -12,19 +14,33 @@ metallic = 0.9
 metallic_specular = 0.6
 roughness = 0.3
 
-[node name="SilverLocket" type="Node3D"]
+[node name="SilverLocket" type="Node3D" unique_id=1780852344]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-customization = "Max Decals: 2"
-randomized_decal_count = 2
 model_mesh = ExtResource("5_locket")
 model_material = SubResource("locket_silver")
 model_scale = 0.1
 
-[node name="DustDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.047793463, -0.32079, 0.1687588)
-texture = ExtResource("3_dust")
+[node name="CrackingOverlay" parent="." instance=ExtResource("3_jrqtf")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_locket")
+condition_texture = ExtResource("4_vnjfm")
+layer_order = 10
 
-[node name="TarnishDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.09133574, -0.30595186, -0.12932926)
-texture = ExtResource("4_tarnish")
+[node name="TarnishOverlay" parent="." instance=ExtResource("3_jrqtf")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_locket")
+condition_texture = ExtResource("4_tarnish")
+layer_order = 20
+
+[node name="RustOverlay" parent="." instance=ExtResource("3_jrqtf")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_locket")
+condition_texture = ExtResource("6_rust")
+layer_order = 25
+
+[node name="DustOverlay" parent="." instance=ExtResource("3_jrqtf")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_locket")
+condition_texture = ExtResource("3_dust")
+layer_order = 30

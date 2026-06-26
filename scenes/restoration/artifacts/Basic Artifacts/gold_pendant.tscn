@@ -1,57 +1,60 @@
-[gd_scene format=3 uid="uid://b2r0pnd7k0lxa"]
+[gd_scene format=3 uid="uid://cvks8qrdrk441"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
-[ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="3_67bof"]
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="3_tarnish"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
-[ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="4_mastu"]
 [ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Pendant.obj" id="5_pendant"]
-[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
+[ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="6_overlay"]
+[ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="7_cracking"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 
-[sub_resource type="StandardMaterial3D" id="pendant_bronze"]
-albedo_color = Color(0.6, 0.4, 0.2, 1)
-metallic = 0.9
-metallic_specular = 0.55
+[sub_resource type="StandardMaterial3D" id="pendant_gold"]
+albedo_color = Color(0.82, 0.67, 0.29, 1)
+metallic = 0.85
+metallic_specular = 0.6
 roughness = 0.38
 
-[node name="BronzePendant" type="Node3D" unique_id=1338701552]
+[node name="GoldPendant" type="Node3D" unique_id=411763816]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
 model_mesh = ExtResource("5_pendant")
-model_material = SubResource("pendant_bronze")
+model_material = SubResource("pendant_gold")
 model_scale = 0.1
 
-[node name="CrackingOverlay" parent="." instance=ExtResource("3_67bof")]
+[node name="CrackingOverlay" parent="." unique_id=1182004891 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
-condition_texture = ExtResource("4_mastu")
+condition_texture = ExtResource("7_cracking")
+condition_id = "crack"
 layer_order = 10
+coverage_min = 0.0
+coverage_max = 40.0
 
-[node name="TarnishOverlay" parent="." instance=ExtResource("3_67bof")]
+[node name="TarnishOverlay" parent="." unique_id=1976026360 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("3_tarnish")
 condition_id = "tarnish"
 opacity = 1.0
 layer_order = 20
-coverage_min = 0.0
-coverage_max = 0.0
+coverage_min = 20.0
+coverage_max = 60.0
 
-[node name="RustOverlay" parent="." instance=ExtResource("3_67bof")]
+[node name="RustOverlay" parent="." instance=ExtResource("6_overlay")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
-condition_texture = ExtResource("6_rust")
+condition_texture = ExtResource("8_rust")
 condition_id = "rust"
 layer_order = 25
 coverage_min = 0.0
-coverage_max = 0.0
+coverage_max = 50.0
 
-[node name="DustOverlay" parent="." instance=ExtResource("3_67bof")]
+[node name="DustOverlay" parent="." unique_id=1535283559 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_dust")
 condition_id = "dust"
 opacity = 0.5
 layer_order = 30
-coverage_min = 100.0
-coverage_max = 100.0
+coverage_min = 40.0
+coverage_max = 80.0

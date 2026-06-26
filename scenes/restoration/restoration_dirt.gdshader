@@ -17,6 +17,13 @@ uniform vec4 grime_color : source_color = vec4(0.18, 0.15, 0.09, 1.0);
 uniform float base_metallic : hint_range(0.0, 1.0) = 0.55;
 uniform float base_roughness : hint_range(0.0, 1.0) = 0.45;
 
+// Optional runtime "paint layer" (DrawableTexture2D): grime/damage the player draws onto the
+// surface, sampled at the SAME analytic sphere UV so a stamp lands exactly where the tool is
+// worked. Inert by default — paint_enabled is 0 until gameplay assigns a paint texture and
+// turns it on, so an unset (white) sampler can never wash the surface out.
+uniform sampler2D paint_layer : source_color, filter_linear, repeat_disable;
+uniform float paint_enabled : hint_range(0.0, 1.0) = 0.0;
+
 varying vec3 v_local_normal;
 
 vec2 sphere_uv(vec3 n) {
@@ -34,6 +41,12 @@ void fragment() {
 	vec2 uv = sphere_uv(normalize(v_local_normal));
 	float dirt = texture(dirt_mask, uv).r;
 	ALBEDO = mix(clean_color.rgb, grime_color.rgb, dirt);
+	// Composite the drawn paint layer over the grime (gated by paint_enabled so it is a no-op
+	// until gameplay supplies a real texture). Painted spots read as fresh grime: dull + rough.
+	vec4 paint = texture(paint_layer, uv);
+	float pa = paint.a * paint_enabled;
+	ALBEDO = mix(ALBEDO, paint.rgb, pa);
+	dirt = max(dirt, pa);
 	// Grime reads as dull and non-metallic; cleaned silver reads bright and shiny.
 	METALLIC = base_metallic * (1.0 - dirt * 0.8);
 	ROUGHNESS = mix(base_roughness, 0.95, dirt);

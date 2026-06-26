@@ -1,8 +1,17 @@
-[gd_scene load_steps=2 format=3 uid="uid://btoolsolvent000"]
+[gd_scene format=3 uid="uid://d1am04r8r0jmd"]
 
 [ext_resource type="PackedScene" uid="uid://dugq78skyga6k" path="res://assets/3d Assets/Tools/Solvent/Solvent.glb" id="1_model"]
+[ext_resource type="Script" uid="uid://d80c57n5yr6v" path="res://scripts/restoration/tool_config.gd" id="2_config"]
 
-[node name="solvent" type="Node3D"]
+[node name="solvent" type="Node3D" unique_id=1369360710]
+script = ExtResource("2_config")
+max_durability = 200
+cleans = {
+"tape_residue": 60
+}
 
-[node name="Solvent" parent="." instance=ExtResource("1_model")]
+[node name="CleanPoint" type="Marker3D" parent="." unique_id=38848549]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.31459016, 0)
+
+[node name="Solvent" parent="." unique_id=155369286 instance=ExtResource("1_model")]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0, -0.136, 0)
