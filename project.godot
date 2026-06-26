@@ -38,6 +38,7 @@ EventDirector="*res://scripts/core/event_director.gd"
 SettingsService="*res://scripts/core/settings_service.gd"
 PauseMenu="*res://scenes/ui/pause_menu.tscn"
 LocalAI="*res://scripts/economy/local_ai.gd"
+SpaceManager="*res://scripts/core/space_manager.gd"
 
 [display]
 

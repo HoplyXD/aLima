@@ -23,7 +23,13 @@ func _ready() -> void:
 
 ## Initializes and starts the live clock for a play session. Called by the Shop
 ## controller on ready; safe to call from tests to drive a real session.
+##
+## Guarded by DayClock.running so the clock keeps ticking when the player returns
+## from the scrapyard: the first shop entry resets and starts the session, while
+## subsequent entries reuse the running clock.
 func begin_session() -> void:
+	if DayClock.running:
+		return
 	DayClock.reset()
 	DayClock.loop_index = GameState.loop_index
 	DayClock.running = true

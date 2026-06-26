@@ -1,0 +1,165 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/scrapyard/scrapyard.gd" id="1_scrapyard"]
+[ext_resource type="PackedScene" path="res://scenes/scrapyard/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/shop/interactable_3d.gd" id="3_interactable"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+albedo_color = Color(0.35, 0.32, 0.28, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(30, 30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(30, 0.1, 30)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fence"]
+albedo_color = Color(0.5, 0.42, 0.35, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fence_x"]
+size = Vector3(0.2, 2, 30)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fence_z"]
+size = Vector3(30, 2, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fence_x"]
+size = Vector3(0.2, 2, 30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fence_z"]
+size = Vector3(30, 2, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_scrap"]
+albedo_color = Color(0.6, 0.35, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_scrap_heap"]
+size = Vector3(2, 1, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_delivery_bay"]
+albedo_color = Color(0.35, 0.4, 0.45, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_delivery_bay"]
+size = Vector3(3, 1.2, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
+albedo_color = Color(0.45, 0.3, 0.25, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_door_frame"]
+size = Vector3(2, 2.5, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door_return"]
+size = Vector3(2, 2.5, 0.2)
+
+[sub_resource type="Environment" id="Environment_yard"]
+background_mode = 2
+background_color = Color(0.6, 0.7, 0.8, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.5, 0.5, 0.45, 1)
+ambient_light_energy = 0.8
+
+[node name="Scrapyard" type="Node3D"]
+script = ExtResource("1_scrapyard")
+
+[node name="MapRoot" type="Node3D" parent="."]
+
+[node name="Ground" type="MeshInstance3D" parent="MapRoot"]
+mesh = SubResource("PlaneMesh_ground")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="FenceLeft" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1, 0)
+mesh = SubResource("BoxMesh_fence_x")
+surface_material_override/0 = SubResource("StandardMaterial3D_fence")
+
+[node name="FenceRight" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1, 0)
+mesh = SubResource("BoxMesh_fence_x")
+surface_material_override/0 = SubResource("StandardMaterial3D_fence")
+
+[node name="FenceFar" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -15)
+mesh = SubResource("BoxMesh_fence_z")
+surface_material_override/0 = SubResource("StandardMaterial3D_fence")
+
+[node name="FenceNear" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 15)
+mesh = SubResource("BoxMesh_fence_z")
+surface_material_override/0 = SubResource("StandardMaterial3D_fence")
+
+[node name="ScrapHeap1" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, 5)
+mesh = SubResource("BoxMesh_scrap_heap")
+surface_material_override/0 = SubResource("StandardMaterial3D_scrap")
+
+[node name="ScrapHeap2" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.5, -4)
+mesh = SubResource("BoxMesh_scrap_heap")
+surface_material_override/0 = SubResource("StandardMaterial3D_scrap")
+
+[node name="ScrapHeap3" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, -8)
+mesh = SubResource("BoxMesh_scrap_heap")
+surface_material_override/0 = SubResource("StandardMaterial3D_scrap")
+
+[node name="DeliveryBayShell" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.6, -8)
+mesh = SubResource("BoxMesh_delivery_bay")
+surface_material_override/0 = SubResource("StandardMaterial3D_delivery_bay")
+
+[node name="Collision" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="GroundShape" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+shape = SubResource("BoxShape3D_ground")
+
+[node name="WallLeft" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1, 0)
+shape = SubResource("BoxShape3D_fence_x")
+
+[node name="WallRight" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1, 0)
+shape = SubResource("BoxShape3D_fence_x")
+
+[node name="WallFar" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -15)
+shape = SubResource("BoxShape3D_fence_z")
+
+[node name="WallNear" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 15)
+shape = SubResource("BoxShape3D_fence_z")
+
+[node name="Anchors" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 10)
+
+[node name="DoorReturn" type="Area3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -13)
+script = ExtResource("3_interactable")
+prompt_text = "Return to the shop"
+
+[node name="DoorFrame" type="MeshInstance3D" parent="Anchors/DoorReturn"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("BoxMesh_door_frame")
+surface_material_override/0 = SubResource("StandardMaterial3D_door")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Anchors/DoorReturn"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("BoxShape3D_door_return")
+
+[node name="AylaAnchor" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -8)
+
+[node name="DeliveryBay" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -8)
+
+[node name="Bounds" type="Marker3D" parent="Anchors"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8, -0.4, 0.45, 0, 0.75, 0.66, -0.6, -0.53, 0.6, 0, 8, 0)
+light_energy = 1.1
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_yard")

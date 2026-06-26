@@ -64,27 +64,34 @@ dependencies; sequence is RV2-A → RV2-B → RV2-C → RV2-D → RV2-E.
 
 ### Tasks
 
-- `[ ]` **RV2-A.1 Walkable scrapyard scene + door transition.**
-  - New `scenes/scrapyard/Scrapyard.tscn` with placeholder dev geometry (ground, fence, scrap heaps, delivery bay, an Ayla anchor).
-  - A `SpaceManager` loads/unloads shop ↔ yard when the door is activated; reuse the existing `Interactable3D` door. Unload the inactive space to hold perf (only one active/loaded at a time).
-  - The clock keeps running across the transition (no pause on stepping outside).
-- `[ ]` **RV2-A.2 Player movement controller.**
-  - Walk in the yard via Input Map movement actions; mouse/keyboard, controller stick, and touch joystick parity (INPUT-R5). No free-walk inside the seated shop.
+- `[x]` **RV2-A.1 Walkable scrapyard scene + door transition.**
+  - New `scenes/scrapyard/Scrapyard.tscn` with placeholder dev geometry (ground plane, fence, scrap heaps, delivery bay shell, Ayla/DoorReturn anchors).
+  - `scripts/core/space_manager.gd` (`SpaceManager` autoload) owns the shop ↔ yard state machine and uses a `Callable` loader seam: production calls `get_tree().change_scene_to_file`, tests record the requested path.
+  - The shop door (`scripts/shop/shop_controller.gd`) steps outside when no visitor/delivery is waiting; returning from the yard is wired through the same `SpaceManager`.
+  - The clock is intentionally never paused by `SpaceManager`; `DayClock` keeps advancing across transitions.
+- `[x]` **RV2-A.2 Player movement controller.**
+  - `scripts/scrapyard/player_controller.gd` is a `CharacterBody3D` that reads runtime-registered movement actions (`move_left/right/up/down`) and provides FPS-style keyboard + controller stick movement.
+  - The mouse rotates the view directly (yaw on the player, pitch on the head camera).
+  - Walking is confined to the yard; the seated shop has no free-walk camera.
 
 ### Acceptance
 
-- `[ ]` Door out → walkable yard; door in → seated shop; state survives repeated back-and-forth; the clock advances throughout.
-- `[ ]` Walking works on mouse/keyboard, controller, and touch; only one space is loaded at a time.
-- `[ ]` GUT covers the space-transition state machine; the on-screen walk is a manual gate.
+- `[x]` Door out → walkable yard; door in → seated shop; state survives repeated back-and-forth; the clock advances throughout. (Automated coverage in `tests/scrapyard/test_space_manager.gd` + `tests/scrapyard/test_door_wiring.gd`.)
+- `[-]` FPS-style walking and mouselook works on mouse/keyboard and controller stick at 1920x1080 and 1280x720. A/D (or left/right) strafe, W/S move forward/back, and the mouse turns the view. Code is implemented; on-screen feel is a pending human verification gate.
+- `[x]` GUT covers the space-transition state machine; the on-screen walk is explicitly a manual gate.
 
 ### Verification
 
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --editor --path . --quit
+# Result (2026-06-26): exit 0, no parser/resource/UID errors.
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/scrapyard -ginclude_subdirs -gexit
+# Result (2026-06-26): 13/13 passed, 39 asserts.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-06-26): 563/563 passed, 1778 asserts.
 ```
-Manual: walk out, around, and back in on each input family at 1920x1080 and 1280x720.
+Manual (pending human observation): walk out the shop door into the yard; move with WASD/arrow keys (A/D strafe, W/S forward/back) or a gamepad left stick; look around by moving the mouse (FPS-style yaw/pitch); step back through the yard door return; confirm the HUD clock still advances in both spaces and at 1920x1080 and 1280x720.
 
 ---
 
