@@ -1,0 +1,164 @@
+[gd_scene format=3 uid="uid://b8jj3gj4exdek"]
+
+[ext_resource type="Texture2D" uid="uid://dbacvbr5mq1jr" path="res://assets/UI assets/game/spritesheet-logo.png" id="1_1j1cr"]
+[ext_resource type="FontFile" uid="uid://caoi8eihs4qs" path="res://assets/fonts/RomanAntique-Italic.ttf" id="1_fieat"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6otdk"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q3ey1"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(0, 0, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sqiwm"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(240, 0, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a7aee"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(480, 0, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g707a"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(720, 0, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w1r5s"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(0, 240, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s4smy"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(240, 240, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_03ftu"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(480, 240, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b3p0m"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(720, 240, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_quicw"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(0, 480, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ktq14"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(240, 480, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5mhc1"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(480, 480, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ohyoe"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(720, 480, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bemgk"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(0, 720, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2feml"]
+atlas = ExtResource("1_1j1cr")
+region = Rect2(240, 720, 240, 240)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_b3ncd"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q3ey1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sqiwm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a7aee")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g707a")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w1r5s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s4smy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_03ftu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b3p0m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_quicw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ktq14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5mhc1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ohyoe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bemgk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2feml")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="LoadingScreen" type="Control" unique_id=780604155]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="." unique_id=1225191572]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_6otdk")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=201189137]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 37
+theme_override_constants/margin_bottom = 42
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1034286772]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+theme_override_constants/separation = 23
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer" unique_id=913501445]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_fieat")
+theme_override_font_sizes/font_size = 66
+text = "Tips:"
+
+[node name="Label2" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1562534305]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_fieat")
+theme_override_font_sizes/font_size = 48
+text = "tips show up here....."
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="MarginContainer" unique_id=518422069]
+position = Vector2(1813.9999, 966.00006)
+scale = Vector2(0.55, 0.55)
+sprite_frames = SubResource("SpriteFrames_b3ncd")
+frame_progress = 0.2911314
