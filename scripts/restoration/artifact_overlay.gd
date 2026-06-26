@@ -52,6 +52,16 @@ const DEFAULT_CLEAN_RADIUS: float = 0.12
 ## moderate random range so overlays that don't set it still spawn partial/varied (tune per layer).
 @export_range(0.0, 100.0) var coverage_min: float = 20.0
 @export_range(0.0, 100.0) var coverage_max: float = 60.0
+## Sample the condition texture by TRIPLANAR projection (object axes) instead of the mesh UV. Turn ON
+## for artifacts whose UVs are broken/stretched (e.g. the death mask) so the grime doesn't streak;
+## leave OFF for clean-UV models (pendant/locket) which look perfect on their own UVs.
+@export var triplanar: bool = false:
+	set(value):
+		triplanar = value
+		if _material != null:
+			_material.set_shader_parameter("use_triplanar", value)
+## Triplanar texture tiling (only when `triplanar` is on); higher = more, smaller patches.
+@export var triplanar_tiling: float = 3.0
 
 var _shell: MeshInstance3D
 var _material: ShaderMaterial
@@ -173,6 +183,10 @@ func _rebuild() -> void:
 	_material.shader = sh
 	_material.set_shader_parameter("condition_tex", condition_texture)
 	_material.set_shader_parameter("overlay_opacity", opacity)
+	_material.set_shader_parameter("use_triplanar", triplanar)
+	# Tiling is mesh-relative (divided by the mesh extent) so the same triplanar_tiling reads the same
+	# on a big or small artifact. VERTEX in the shader is object-space (raw mesh units).
+	_material.set_shader_parameter("triplanar_scale", triplanar_tiling / maxf(0.001, _extent))
 	_shell = MeshInstance3D.new()
 	_shell.name = "OverlayShell"
 	_shell.mesh = _runtime_mesh
