@@ -1,15 +1,18 @@
-[gd_scene load_steps=3 format=3 uid="uid://btoolrustbrush0"]
+[gd_scene format=3 uid="uid://d1al7cp5v1b3d"]
 
 [ext_resource type="PackedScene" uid="uid://daqrr12xpexhs" path="res://assets/3d Assets/Tools/Lash Brush/Tools Lash Brush.glb" id="1_model"]
-[ext_resource type="Script" path="res://scripts/restoration/tool_config.gd" id="2_config"]
+[ext_resource type="Script" uid="uid://d80c57n5yr6v" path="res://scripts/restoration/tool_config.gd" id="2_config"]
 
-[node name="rust_brush" type="Node3D"]
+[node name="rust_brush" type="Node3D" unique_id=994352947]
 script = ExtResource("2_config")
-max_durability = 24
+max_durability = 200
 clean_radius = 0.1
 cleans = {
 "rust": 60
 }
 
-[node name="LashBrush" parent="." instance=ExtResource("1_model")]
+[node name="CleanPoint" type="Marker3D" parent="." unique_id=453249944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.17960024)
+
+[node name="LashBrush" parent="." unique_id=1266010050 instance=ExtResource("1_model")]
 transform = Transform3D(0.035, 0, 0, 0, -1.5298985e-09, 0.035, 0, -0.035, -1.5298985e-09, 0, 0, 0)

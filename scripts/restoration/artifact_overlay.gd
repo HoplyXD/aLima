@@ -15,7 +15,7 @@ extends Node3D
 ## inner OverlayShell is an INTERNAL child (never saved/duplicated into the .tscn).
 
 ## condition_tex * per-vertex keep (COLOR.a) * opacity. No UV is used for cleaning, only for the look.
-const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nvoid fragment() {\n\tvec4 c = texture(condition_tex, UV);\n\tALBEDO = c.rgb;\n\tALPHA = c.a * COLOR.a * overlay_opacity;\n}\n"
+const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nuniform float highlight = 0.0;\nuniform vec4 highlight_color : source_color = vec4(1.0, 0.85, 0.3, 1.0);\nvoid fragment() {\n\tvec4 c = texture(condition_tex, UV);\n\tfloat base = c.a * COLOR.a;\n\tALBEDO = c.rgb;\n\tEMISSION = highlight_color.rgb * highlight * base;\n\tALPHA = clamp(base * overlay_opacity + highlight * base * 0.6, 0.0, 1.0);\n}\n"
 const PATTERN_FREQ: float = 2.4  ## Patch size of the random coverage pattern (normalised space).
 const PATTERN_SOFT: float = 0.06  ## Soft edge width of the pattern threshold.
 ## Brush radius (fraction of overlay size) used ONLY when no tool radius is supplied — i.e. the debug
@@ -89,6 +89,10 @@ func _apply_pattern(seed: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
 	var coverage := clampf(rng.randf_range(coverage_min, coverage_max) / 100.0, 0.0, 1.0)
+	# Crack is disabled for now (it will only appear in DAMAGED areas once the durability/damage
+	# system exists), so it never spawns regardless of its configured range.
+	if get_condition_id() == "crack":
+		coverage = 0.0
 	var sum := 0.0
 	if coverage >= 0.999:
 		sum = float(colors.size())  # keep all (already white)
@@ -239,6 +243,17 @@ func ray_hits(world_origin: Vector3, world_dir: Vector3) -> bool:
 	return _ray_hit(inv * world_origin, (inv.basis * world_dir).normalized()) != null
 
 
+## The WORLD-space point where the ray meets this overlay (for spawning a clean puff there), or null.
+func ray_hit_point(world_origin: Vector3, world_dir: Vector3) -> Variant:
+	if _runtime_mesh == null or _shell == null:
+		return null
+	var inv := _shell.global_transform.affine_inverse()
+	var hit: Variant = _ray_hit(inv * world_origin, (inv.basis * world_dir).normalized())
+	if hit == null:
+		return null
+	return _shell.global_transform * (hit as Vector3)
+
+
 ## Fraction of the SPAWNED condition that has been cleaned (0 = untouched, 1 = spotless), relative to
 ## the random coverage this instance rolled — so a fresh overlay reads 0 regardless of coverage.
 func cleaned_fraction() -> float:
@@ -259,6 +274,42 @@ func coverage_fraction() -> float:
 		return 0.0
 	var colors: PackedColorArray = _arrays[Mesh.ARRAY_COLOR]
 	return _initial_keep / float(maxi(1, colors.size()))
+
+
+## How much condition this overlay STARTED with (the spawn amount), for a weighted overall clean %.
+func initial_keep_amount() -> float:
+	return _initial_keep
+
+
+## How much of the spawned condition has been cleaned off so far.
+func cleaned_amount() -> float:
+	if _arrays.is_empty():
+		return 0.0
+	var colors: PackedColorArray = _arrays[Mesh.ARRAY_COLOR]
+	var sum := 0.0
+	for c in colors:
+		sum += c.a
+	return maxf(0.0, _initial_keep - sum)
+
+
+## Glows the overlay (its dirt pulses brighter + a touch more opaque) as a learning cue that the
+## held tool can clean this condition. 0 = off. Presentation only.
+func set_highlight(intensity: float) -> void:
+	if _material != null:
+		_material.set_shader_parameter("highlight", clampf(intensity, 0.0, 1.0))
+
+
+## Instantly clears this condition (used by the auto-finish at 99%).
+func clear_condition() -> void:
+	if _arrays.is_empty():
+		return
+	var colors: PackedColorArray = _arrays[Mesh.ARRAY_COLOR]
+	for i in colors.size():
+		colors[i].a = 0.0
+	_arrays[Mesh.ARRAY_COLOR] = colors
+	if _runtime_mesh != null:
+		_runtime_mesh.clear_surfaces()
+		_runtime_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _arrays)
 
 
 ## Nearest local-space point where the ray meets a triangle, or null on a miss.

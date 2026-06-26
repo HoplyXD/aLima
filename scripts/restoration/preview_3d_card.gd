@@ -15,6 +15,15 @@ const FIT_SIZE: float = 1.15
 
 @onready var _holder: Node3D = %MeshHolder
 @onready var _name_label: Label = %NameLabel
+@onready var _camera: Camera3D = $VBox/PreviewContainer/Preview/Camera3D
+
+
+## Card-local 2D position where a point in the preview's 3D world projects to (used to line a tool's
+## authored CleanPoint up with the mouse). Falls back to the card centre.
+func project_to_card(world_pos: Vector3) -> Vector2:
+	if _camera == null or not is_instance_valid(_camera):
+		return size * 0.5
+	return _camera.unproject_position(world_pos)
 
 var _object: Node3D
 var _fill: float = 1.0

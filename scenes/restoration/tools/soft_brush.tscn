@@ -1,15 +1,18 @@
-[gd_scene load_steps=3 format=3 uid="uid://btoolsoftbrush0"]
+[gd_scene format=3 uid="uid://d1am0xp5v1b3d"]
 
 [ext_resource type="PackedScene" uid="uid://cqpljt8ve1co8" path="res://assets/3d Assets/Tools/Fan Brush/Fan Brush.glb" id="1_model"]
-[ext_resource type="Script" path="res://scripts/restoration/tool_config.gd" id="2_config"]
+[ext_resource type="Script" uid="uid://d80c57n5yr6v" path="res://scripts/restoration/tool_config.gd" id="2_config"]
 
-[node name="soft_brush" type="Node3D"]
+[node name="soft_brush" type="Node3D" unique_id=1268880325]
 script = ExtResource("2_config")
-max_durability = 0
+max_durability = 200
 clean_radius = 0.1
 cleans = {
 "dust": 60
 }
 
-[node name="FanBrush" parent="." instance=ExtResource("1_model")]
+[node name="CleanPoint" type="Marker3D" parent="." unique_id=333240041]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.13875201)
+
+[node name="FanBrush" parent="." unique_id=1327360673 instance=ExtResource("1_model")]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)

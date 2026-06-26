@@ -135,6 +135,7 @@ var _dust_verts: PackedVector3Array = PackedVector3Array()
 var _dust_centroids: PackedVector3Array = PackedVector3Array()
 var _dust_alive: PackedByteArray = PackedByteArray()
 var _dust_initial: int = 0  ## Triangles that START dusty, so cleaned-fraction is relative to them.
+var _clean_puff: GPUParticles3D  ## Dust burst spawned on the artifact where a tool cleans (runtime).
 
 var _yaw: float = AUTHORED_YAW
 var _pitch: float = AUTHORED_PITCH
@@ -641,13 +642,88 @@ func clean_overlays_with_tool(
 		var cond := String(overlay.get_condition_id())
 		var power := int(cleans.get(cond, 0))
 		if power > 0:
-			overlay.clean_ray(origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac)
+			# Only counts as a clean (puff + wear) if dirt actually came off here — scrubbing an
+			# already-clean spot does nothing.
+			var changed: bool = overlay.clean_ray(origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac)
 			return {
-				"cleaned": true,
+				"cleaned": changed,
 				"condition_id": cond,
 				"fully_cleaned": overlay.cleaned_fraction() >= 0.999,
+				"point": overlay.ray_hit_point(origin, direction),
 			}
 	return {"cleaned": false, "wrong_tool": any_hit}
+
+
+## A small dust puff burst at a WORLD point on the artifact (the spot the tool just cleaned).
+func clean_burst_at_world(world_point: Vector3) -> void:
+	if Engine.is_editor_hint():
+		return
+	if _clean_puff == null or not is_instance_valid(_clean_puff):
+		_clean_puff = GPUParticles3D.new()
+		_clean_puff.name = "CleanPuff"
+		_clean_puff.emitting = false
+		_clean_puff.one_shot = true
+		_clean_puff.amount = 16
+		_clean_puff.lifetime = 0.6
+		_clean_puff.explosiveness = 0.9
+		_clean_puff.local_coords = false  # particles fly in world space, not with the rotating artifact
+		var mat := ParticleProcessMaterial.new()
+		mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+		mat.emission_sphere_radius = 0.03
+		mat.direction = Vector3(0.0, 1.0, 0.0)
+		mat.spread = 65.0
+		mat.initial_velocity_min = 0.3
+		mat.initial_velocity_max = 0.85
+		mat.gravity = Vector3(0.0, -0.5, 0.0)
+		mat.scale_min = 0.4
+		mat.scale_max = 1.0
+		mat.color = Color(0.6, 0.55, 0.45, 1.0)
+		_clean_puff.process_material = mat
+		var fleck := SphereMesh.new()
+		fleck.radius = 0.012
+		fleck.height = 0.024
+		fleck.radial_segments = 6
+		fleck.rings = 3
+		_clean_puff.draw_pass_1 = fleck
+		add_child(_clean_puff)
+	_clean_puff.global_position = world_point
+	_clean_puff.restart()
+	_clean_puff.emitting = true
+
+
+## Overall clean progress 0..1 across ALL spawned overlay conditions, weighted by how much each one
+## spawned (so the sidebar can show a smooth ??% rather than per-condition steps). 1.0 when nothing
+## spawned. Crack/never-spawned overlays contribute nothing.
+func overlay_clean_percent() -> float:
+	var total := 0.0
+	var cleaned := 0.0
+	for overlay in _find_overlays(self):
+		if not overlay.is_built():
+			continue
+		total += overlay.initial_keep_amount()
+		cleaned += overlay.cleaned_amount()
+	if total <= 0.0:
+		return 1.0
+	return clampf(cleaned / total, 0.0, 1.0)
+
+
+## Pulses the overlays the held tool can clean (condition in `cleans` with power > 0) at `intensity`,
+## leaving the others dark — a learning cue so the player can spot e.g. dust on a same-coloured silver
+## artifact when a dust tool is equipped.
+func highlight_overlays(cleans: Dictionary, intensity: float) -> void:
+	for overlay in _find_overlays(self):
+		if not overlay.is_built():
+			continue
+		var on := int(cleans.get(String(overlay.get_condition_id()), 0)) > 0
+		overlay.set_highlight(intensity if on else 0.0)
+
+
+## Instantly clears every overlay whose condition is NOT in `except_conditions` (the auto-finish at
+## 99% wipes dust/tarnish/rust but leaves crack, which represents damage).
+func force_clean_overlays(except_conditions: Array) -> void:
+	for overlay in _find_overlays(self):
+		if overlay.is_built() and not except_conditions.has(String(overlay.get_condition_id())):
+			overlay.clear_condition()
 
 
 ## {total, cleaned}: how many overlay conditions this artifact has and how many are fully cleaned

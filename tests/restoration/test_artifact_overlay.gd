@@ -90,6 +90,19 @@ func test_overlay_counts_reflect_cleaning() -> void:
 	assert_eq(int(obj.overlay_counts().get("cleaned", -1)), 0, "starts uncleaned")
 
 
+func test_clean_percent_and_force_clean() -> void:
+	var obj := _make_object_with_condition("dust", 5)
+	assert_almost_eq(obj.overlay_clean_percent(), 0.0, 0.02, "a fresh overlay reads 0% cleaned")
+	obj.force_clean_overlays([])  # wipe everything
+	assert_almost_eq(obj.overlay_clean_percent(), 1.0, 0.02, "force-cleaning reaches 100%")
+
+
+func test_crack_never_spawns() -> void:
+	var obj := _make_object_with_condition("crack", 6)
+	# Crack is disabled for now, so even at 100/100 coverage it spawns nothing.
+	assert_almost_eq(obj.overlay_clean_percent(), 1.0, 0.02, "crack contributes no dirt to clean")
+
+
 func test_cleaning_overlay_fades_it_by_3d_position() -> void:
 	var obj := _make_object(100.0, 100.0, 1)
 	var overlay := _overlay(obj)

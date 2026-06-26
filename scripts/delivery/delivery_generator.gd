@@ -8,10 +8,9 @@ class_name DeliveryGenerator
 
 const DELIVERY_STREAM := "delivery_generator"
 const UID_PREFIX := "obj_"
-## DEBUG: the silver artifacts read the same colour as the dust overlay, so guarantee this template
-## (Gold Pendant) in every day-1 delivery while iterating on the condition overlays. Set to "" to
-## disable. Replaces the first delivered slot, so batch size + uids stay unchanged.
-const DEBUG_FIRST_GOLD := "tarnished_pendant"
+## DEBUG: guarantee this template in every day-1 delivery while iterating on the condition overlays.
+## Set to "" to disable. Replaces the first delivered slot, so batch size + uids stay unchanged.
+const DEBUG_FIRST_GOLD := "bronze_pendant"
 
 var _repo: DataRepository
 var _game_state: GameState

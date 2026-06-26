@@ -31,18 +31,27 @@ layer_order = 10
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("3_tarnish")
+condition_id = "tarnish"
 opacity = 1.0
 layer_order = 20
+coverage_min = 0.0
+coverage_max = 0.0
 
 [node name="RustOverlay" parent="." instance=ExtResource("3_67bof")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("6_rust")
+condition_id = "rust"
 layer_order = 25
+coverage_min = 0.0
+coverage_max = 0.0
 
 [node name="DustOverlay" parent="." instance=ExtResource("3_67bof")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_dust")
+condition_id = "dust"
 opacity = 0.5
 layer_order = 30
+coverage_min = 100.0
+coverage_max = 100.0

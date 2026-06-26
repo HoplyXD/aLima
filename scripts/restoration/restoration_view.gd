@@ -110,6 +110,7 @@ var _object_scene_path: String = "res://scenes/restoration/restoration_artifact.
 var _zoom_rest_z: float = 0.0
 var _zoom_z: float = 0.0
 var _highlight_time: float = 0.0  ## Drives the optional decal-highlight throb.
+var _overlay_highlight_time: float = 0.0  ## Drives the 3-second overlay glow pulse.
 ## Left-edge 2D tool rack (replaces the 3D bench tool props; see CLAUDE.md REST-R9). Built
 ## in code and added to the HUD on ready.
 var _tool_sidebar: ToolSidebar
@@ -117,6 +118,8 @@ var _tool_sidebar: ToolSidebar
 ## style). Lives on its own high CanvasLayer + SubViewport (via Preview3DCard) so it always
 ## draws in front and never clips with the bench artifacts. Presentation only.
 var _cursor_tool: Preview3DCard
+## The held tool's authored CleanPoint marker (its working tip), aligned to the mouse each frame.
+var _cursor_clean_point: Node3D
 var _cursor_layer: CanvasLayer
 ## Cursor-lean state: last pointer position (for velocity) and the current eased lean angle.
 var _prev_cursor_pos: Vector2 = Vector2.ZERO
@@ -630,11 +633,13 @@ func _set_cursor_tool(tool_id: String) -> void:
 		return
 	if tool_id.is_empty():
 		_cursor_tool.visible = false
+		_cursor_clean_point = null
 		return
-	_cursor_tool.set_preview(
-		RestorationTool.build_tool_model(tool_id), "", Color.WHITE, RestorationTool.display_fill(tool_id)
-	)
+	var model := RestorationTool.build_tool_model(tool_id)
+	_cursor_tool.set_preview(model, "", Color.WHITE, RestorationTool.display_fill(tool_id))
 	_cursor_tool.set_spin(false)
+	# The dev-placed CleanPoint marks the tool's working tip; we line it up with the mouse each frame.
+	_cursor_clean_point = model.find_child("CleanPoint", true, false)
 
 
 ## Each frame: centre the held-tool model on the cursor while the pointer is inside the
@@ -652,7 +657,7 @@ func _update_cursor_tool(delta: float) -> void:
 	)
 	if show != _cursor_tool.visible:
 		_cursor_tool.visible = show
-		# The held 3D tool becomes the cursor, so hide the OS pointer while it is shown.
+		# The tool's CleanPoint tip now sits at the cursor, so hide the OS pointer while it shows.
 		_set_os_cursor_hidden(show)
 	if not show:
 		_prev_cursor_pos = pos  # avoid a velocity spike when it reappears
@@ -661,8 +666,12 @@ func _update_cursor_tool(delta: float) -> void:
 	# the artifact gains/loses when the player zooms it in or out.
 	var mult := _cursor_zoom_multiplier()
 	_cursor_tool.scale = Vector2(mult, mult)
-	var eff := float(CURSOR_TOOL_SIZE) * mult
-	_cursor_tool.position = pos - Vector2(eff, eff) * 0.5 + CURSOR_OFFSET  # centred (+ nudge)
+	# Line the tool's authored CleanPoint (its working tip) up with the mouse, so the cleaning — which
+	# happens at the mouse — visually comes from the tip. Falls back to the card centre if none.
+	var marker_local := Vector2(CURSOR_TOOL_SIZE, CURSOR_TOOL_SIZE) * 0.5
+	if _cursor_clean_point != null and is_instance_valid(_cursor_clean_point):
+		marker_local = _cursor_tool.project_to_card(_cursor_clean_point.global_position)
+	_cursor_tool.position = pos - marker_local * mult
 	# Lean toward the direction of horizontal motion (scaled by speed), easing back to upright
 	# when the cursor stops.
 	var velocity_x := (pos.x - _prev_cursor_pos.x) / maxf(delta, 0.0001)
@@ -1066,7 +1075,10 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_refresh_photo(inst, template)
 		return
 
-	if _object.has_authored_conditions():
+	if _object.has_method("has_overlays") and _object.has_overlays():
+		# Live overall clean %, weighted across the spawned condition overlays (smooth, not stepwise).
+		_surface_bar.value = _object.overlay_clean_percent() * 100.0
+	elif _object.has_authored_conditions():
 		var total := _object.authored_active_count()
 		var cleaned := total - _object.uncleaned_authored_ids().size()
 		_surface_bar.value = (float(cleaned) / float(total) * 100.0) if total > 0 else 0.0
@@ -1254,6 +1266,7 @@ func _process(delta: float) -> void:
 	if zoom != 0.0:
 		zoom_by(zoom * ZOOM_KEY_SPEED * delta)
 	_update_decal_highlight(delta)
+	_update_overlay_highlight(delta)
 	_update_cursor_tool(delta)
 
 
@@ -1268,6 +1281,21 @@ func _update_decal_highlight(delta: float) -> void:
 	_highlight_time += delta
 	var pulse := 0.5 + 0.5 * sin(_highlight_time * 5.0)
 	_object.highlight_for_tool(_selected_tool_id, pulse)
+
+
+## Pulses the artifact's condition overlays the held tool can clean — a brief glow every ~3 seconds
+## so the player can spot, say, dust on a silver artifact (same colour) when a dust tool is equipped.
+func _update_overlay_highlight(delta: float) -> void:
+	if not is_instance_valid(_object) or not _object.has_method("highlight_overlays"):
+		return
+	if _selected_tool_id.is_empty() or _is_paint_tool(_selected_tool_id):
+		_object.highlight_overlays({}, 0.0)
+		return
+	_overlay_highlight_time += delta
+	# A sharp glow that peaks once every 3 seconds, near-dark in between.
+	var phase := fposmod(_overlay_highlight_time, 3.0) / 3.0
+	var pulse := pow(maxf(0.0, sin(phase * PI)), 3.0)
+	_object.highlight_overlays(_tool_clean_params(_selected_tool_id)["cleans"], pulse)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -1543,19 +1571,34 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 	var dir := _camera.project_ray_normal(_to_viewport(pos))
 	var result := _object.clean_overlays_with_tool(origin, dir, params["cleans"], params["radius"])
 	if result.get("cleaned", false):
-		var counts: Dictionary = _object.overlay_counts()
-		_service.register_authored_clean(
-			_selected_uid,
-			_selected_tool_id,
-			int(counts.get("total", 0)),
-			int(counts.get("cleaned", 0)),
-			bool(result.get("fully_cleaned", false))
-		)
-		var label := String(result.get("condition_id", "")).replace("_", " ")
-		_feedback_label.text = "Working off the %s..." % label
+		# Dust puffs off the artifact at the spot the tool meets it (a 3D burst on the model itself).
+		var hit_pt: Variant = result.get("point", null)
+		if hit_pt != null and _object.has_method("clean_burst_at_world"):
+			_object.clean_burst_at_world(hit_pt)
 		var inst := _service.find_instance_by_id(_selected_uid)
-		if inst != null:
-			_refresh(inst, _service.get_repository().get_template(inst.template_id))
+		var pct: float = _object.overlay_clean_percent()
+		# Auto-finish: once the surface is ~spotless, snap to 100% and wipe every condition except
+		# crack/damage, so the player never has to chase the last few specks.
+		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and pct >= 0.99:
+			_object.force_clean_overlays(["crack"])
+			var fc: Dictionary = _object.overlay_counts()
+			_service.register_authored_clean(
+				_selected_uid, _selected_tool_id, int(fc.get("total", 0)), int(fc.get("total", 0)), true
+			)
+			_feedback_label.text = "Spotless!"
+		else:
+			var counts: Dictionary = _object.overlay_counts()
+			_service.register_authored_clean(
+				_selected_uid,
+				_selected_tool_id,
+				int(counts.get("total", 0)),
+				int(counts.get("cleaned", 0)),
+				bool(result.get("fully_cleaned", false))
+			)
+			_feedback_label.text = "Working off the %s..." % String(result.get("condition_id", "")).replace("_", " ")
+		var inst2 := _service.find_instance_by_id(_selected_uid)
+		if inst2 != null:
+			_refresh(inst2, _service.get_repository().get_template(inst2.template_id))
 	elif result.get("wrong_tool", false):
 		_feedback_label.text = "Wrong tool for that layer — try another."
 

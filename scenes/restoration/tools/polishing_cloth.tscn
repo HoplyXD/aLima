@@ -1,9 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://p3bnkcauge6r"]
+[gd_scene format=3 uid="uid://p3bnkcauge6r"]
 
-; Placeholder geometry for the Polishing Cloth tool. Swap in a real model when authored —
-; this scene is what the bench and Storage instance for this tool id.
-
-[ext_resource type="Script" path="res://scripts/restoration/tool_config.gd" id="1_config"]
+[ext_resource type="Script" uid="uid://d80c57n5yr6v" path="res://scripts/restoration/tool_config.gd" id="1_config"]
 
 [sub_resource type="StandardMaterial3D" id="mat_pad"]
 albedo_color = Color(0.8, 0.78, 0.6, 1)
@@ -14,14 +11,17 @@ emission_energy_multiplier = 0.6
 [sub_resource type="BoxMesh" id="mesh_pad"]
 size = Vector3(0.32, 0.05, 0.24)
 
-[node name="polishing_cloth" type="Node3D"]
+[node name="polishing_cloth" type="Node3D" unique_id=536160748]
 script = ExtResource("1_config")
-max_durability = 30
+max_durability = 200
 clean_radius = 0.13
 cleans = {
 "tarnish": 60
 }
 
-[node name="Cloth" type="MeshInstance3D" parent="."]
+[node name="CleanPoint" type="Marker3D" parent="." unique_id=893569288]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.024909414, -0.11975719)
+
+[node name="Cloth" type="MeshInstance3D" parent="." unique_id=1555655064]
 material_override = SubResource("mat_pad")
 mesh = SubResource("mesh_pad")
