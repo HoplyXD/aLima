@@ -56,7 +56,6 @@ script = ExtResource("1_scrapyard")
 [node name="MapRoot" type="Node3D" parent="." unique_id=2052798434]
 
 [node name="ScrapyardMap" parent="MapRoot" unique_id=1771809705 instance=ExtResource("4_map")]
-transform = Transform3D(0.6853297, 0, -0.728233, 0, 1, 0, 0.728233, 0, 0.6853297, 0, 0, 0)
 
 [node name="Collision" type="StaticBody3D" parent="." unique_id=317714501]
 collision_mask = 0
