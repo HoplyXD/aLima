@@ -264,6 +264,17 @@ func test_no_free_auto_delivery_path() -> void:
 	assert_signal_not_emitted(svc, "sort_ready")
 
 
+func test_scrap_sort_batch_size_is_small() -> void:
+	_add_scrap(GameState.save_state.loop.scrap_pool, "green", 1)
+	var svc := _make_service()
+	assert_true(svc.submit_scrap({"green": 1}))
+
+	var base_cfg := _repo.get_delivery_config()
+	var biased_cfg: DeliveryConfig = svc.get_biased_delivery_config(base_cfg)
+	assert_eq(biased_cfg.batch_min, 1, "scrap-sort batches start at 1")
+	assert_eq(biased_cfg.batch_max, 3, "scrap-sort batches cap at 3")
+
+
 func _clone_config(base_cfg: DeliveryConfig, rarity_weights: Dictionary) -> DeliveryConfig:
 	var cfg := DeliveryConfig.new()
 	cfg.schema_version = base_cfg.schema_version

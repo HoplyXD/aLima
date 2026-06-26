@@ -44,6 +44,7 @@ const INTERACTABLE_SCRIPT := preload("res://scripts/shop/interactable_3d.gd")
 @onready var _player_spawn: Marker3D = $Anchors/PlayerSpawn
 @onready var _door_return: Interactable3D = $Anchors/DoorReturn
 @onready var _ayla_anchor: Marker3D = $Anchors/AylaAnchor
+@onready var _ayla_sprite: Sprite3D = $Anchors/AylaAnchor/Ayla
 @onready var _map_root: Node3D = $MapRoot
 @onready var _hud: ScrapyardHud = $ScrapyardHud
 @onready var _sun: DirectionalLight3D = $DirectionalLight3D
@@ -82,6 +83,8 @@ func _ready() -> void:
 	_setup_handoff_screen()
 	_setup_dialogue_box()
 	_setup_ayla_interaction()
+	_refresh_ayla_presence()
+	AylaService.sort_ready.connect(_on_ayla_sort_ready_yard)
 	_setup_scrap_items_root()
 	_spawn_scrap_items()
 	EventBus.day_changed.connect(_on_yard_day_changed)
@@ -170,29 +173,42 @@ func _setup_scrap_items_root() -> void:
 
 
 func _open_handoff() -> void:
-	if AylaService.is_sort_active() and not AylaService.is_sort_ready():
-		var route := DataRepository.singleton().get_route("scavenger")
-		var lines: Array = []
-		if route != null:
-			lines = route.dialogue_for("yard_sorting")
-		if lines.is_empty():
-			lines = ["Ayla: Busy pa ko ga-sort sang imo scrap. Balik lang after a while, ha?"]
-		_dialogue_box.start(lines)
+	if AylaService.is_sort_ready():
+		_dialogue_box.start(
+			_ayla_lines(
+				"yard_sort_ready",
+				"Ayla: Tapos na ko ga-sort. Ginbutang ko na ang baskit sa imo puertahan."
+			)
+		)
+		_enter_overlay()
+		return
+	if AylaService.is_sort_active():
+		_dialogue_box.start(
+			_ayla_lines(
+				"yard_sorting",
+				"Ayla: Busy pa ko ga-sort sang imo scrap. Balik lang after a while, ha?"
+			)
+		)
 		_enter_overlay()
 		return
 	if _total_scrap_count() == 0:
-		var route := DataRepository.singleton().get_route("scavenger")
-		var lines: Array = []
-		if route != null:
-			lines = route.dialogue_for("yard_empty")
-		if lines.is_empty():
-			lines = ["Ayla shrugs. 'Balik kon may dala ka, ha?'"]
-		_dialogue_box.start(lines)
+		_dialogue_box.start(_ayla_lines("yard_empty", "Ayla shrugs. 'Balik kon may dala ka, ha?'"))
 		_enter_overlay()
 	else:
 		if _handoff_screen != null:
 			_handoff_screen.open()
 		_enter_overlay()
+
+
+## Loads an authored Ayla dialogue block from the scavenger route, falling back to
+## a single-line string if the route or key is missing.
+func _ayla_lines(dialogue_key: String, fallback: String) -> Array:
+	var route := DataRepository.singleton().get_route("scavenger")
+	if route != null:
+		var lines: Array = route.dialogue_for(dialogue_key)
+		if not lines.is_empty():
+			return lines
+	return [fallback]
 
 
 func _spawn_scrap_items() -> void:
@@ -223,13 +239,10 @@ func _spawn_scrap_items() -> void:
 	var size_x := float(bounds.get("size_x", 40.0))
 	var size_z := float(bounds.get("size_z", 34.0))
 
+	var space := get_world_3d().direct_space_state
 	for i in count:
 		var rarity := _pick_rarity(rng, rarity_names, weights)
-		var pos := Vector3(
-			center_x + rng.randf_range(-size_x * 0.5, size_x * 0.5),
-			0.3,
-			center_z + rng.randf_range(-size_z * 0.5, size_z * 0.5)
-		)
+		var pos := _find_scrap_spawn_position(rng, bounds, space)
 		var item: ScrapItem = SCRAP_ITEM_SCENE.instantiate()
 		item.set_rarity(rarity)
 		item.position = pos
@@ -251,6 +264,41 @@ func _pick_rarity(
 		if roll <= 0.0:
 			return names[i]
 	return names[names.size() - 1]
+
+
+## Raycasts downward to place scrap on the actual yard geometry instead of a flat
+## y=0.3 plane, so items don't spawn buried under uneven ground or inside debris.
+## Falls back to the old flat position if no collision is hit after a few tries.
+func _find_scrap_spawn_position(
+	rng: RandomNumberGenerator, bounds: Dictionary, space: PhysicsDirectSpaceState3D
+) -> Vector3:
+	var center_x := float(bounds.get("center_x", 0.0))
+	var center_z := float(bounds.get("center_z", -7.0))
+	var size_x := float(bounds.get("size_x", 40.0))
+	var size_z := float(bounds.get("size_z", 34.0))
+
+	var max_attempts := 10
+	for attempt in max_attempts:
+		var x := center_x + rng.randf_range(-size_x * 0.5, size_x * 0.5)
+		var z := center_z + rng.randf_range(-size_z * 0.5, size_z * 0.5)
+		var query := PhysicsRayQueryParameters3D.new()
+		query.from = Vector3(x, 50.0, z)
+		query.to = Vector3(x, -10.0, z)
+		query.collision_mask = 1
+		var result := space.intersect_ray(query)
+		if result.is_empty():
+			continue
+		var pos: Vector3 = result.position
+		pos.y += 0.1
+		if pos.y < 0.0:
+			continue
+		return pos
+
+	return Vector3(
+		center_x + rng.randf_range(-size_x * 0.5, size_x * 0.5),
+		0.3,
+		center_z + rng.randf_range(-size_z * 0.5, size_z * 0.5)
+	)
 
 
 func _update_hud() -> void:
@@ -394,6 +442,22 @@ func _total_scrap_count() -> int:
 	for count in pool.values():
 		total += int(count)
 	return total
+
+
+func _on_ayla_sort_ready_yard(_day: int, _hour: int) -> void:
+	_refresh_ayla_presence()
+
+
+## Hides/disables yard Ayla when her sorted batch is ready at the shop door;
+## she reappears once the player returns to the yard after the sort is consumed.
+func _refresh_ayla_presence() -> void:
+	var present := not AylaService.is_sort_ready()
+	if _ayla_sprite != null:
+		_ayla_sprite.visible = present
+	if _ayla_interactable != null:
+		_ayla_interactable.set_enabled(present)
+		if not present and _hud != null:
+			_hud.set_prompt("")
 
 
 func _on_yard_day_changed(_day: int) -> void:

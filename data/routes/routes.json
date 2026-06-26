@@ -264,6 +264,20 @@
             "name": "Ayla",
             "text": "Mga isa ka oras pa. Kilid lang ko diri kon may maayo ako makita. [i]She waves you toward the heaps without lifting her eyes.[/i] Samari ka lang kon handa na."
           }
+        ],
+        "yard_sort_ready": [
+          {
+            "name": "Ayla",
+            "text": "[i]She wipes her hands on her shirt and jerks a thumb toward the shop.[/i] Hala, tapos na ko ga-sort sang imo scrap. Ginbutang ko na ang baskit sa imo puertahan."
+          },
+          {
+            "name": "You",
+            "text": "You left it at the door?"
+          },
+          {
+            "name": "Ayla",
+            "text": "Oo. Balik ka na sa shop, makita mo na dira. Indi na ko magdugang until ma-kuha mo ina. [i]She turns back to her own pile.[/i] Sige, lakatan ko pa ni."
+          }
         ]
       }
     },

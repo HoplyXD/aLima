@@ -67,14 +67,15 @@ func consume_sort() -> void:
 
 
 ## Returns a delivery config whose rarity weights are biased by the submitted scrap.
-## If no sort is pending, returns `base_cfg` unchanged. Event modifiers should be
-## applied to `base_cfg` BEFORE calling this method; scrap bias is layered on top
-## of the event-adjusted weights and only touches rarity weights.
+## Scrap-sort batches are intentionally smaller than the daily free drop: 1-2 items,
+## occasionally 3. If no sort is pending, returns `base_cfg` unchanged. Event modifiers
+## should be applied to `base_cfg` BEFORE calling this method; scrap bias is layered on
+## top of the event-adjusted weights and only touches rarity weights.
 func get_biased_delivery_config(base_cfg: DeliveryConfig) -> DeliveryConfig:
 	var cfg := DeliveryConfig.new()
 	cfg.schema_version = base_cfg.schema_version
-	cfg.batch_min = base_cfg.batch_min
-	cfg.batch_max = base_cfg.batch_max
+	cfg.batch_min = 1
+	cfg.batch_max = 3
 	cfg.storage_cap = base_cfg.storage_cap
 	var submitted := get_pending_submitted()
 	var scrap_cfg := DataRepository.singleton().get_scrap_config()

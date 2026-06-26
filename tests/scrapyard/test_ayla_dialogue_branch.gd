@@ -79,3 +79,31 @@ func test_sort_active_dialogue_uses_authored_yard_sorting_lines() -> void:
 	assert_gt(lines.size(), 0, "yard_sorting should contain at least one line")
 	var first: Variant = lines[0]
 	assert_true(first is Dictionary or first is String, "authored line should be a dict or string")
+
+
+func test_sort_ready_opens_dialogue_not_handoff() -> void:
+	GameState.save_state.loop.scrap_pool = {"green": 2}
+	assert_true(AylaService.submit_scrap({"green": 2}), "sort should start")
+	GameState.save_state.loop.current_hour = 8
+	EventBus.hour_changed.emit(1, 8)
+	assert_true(AylaService.is_sort_ready(), "sort should be ready")
+
+	_yard._open_handoff()
+
+	assert_true(_yard._dialogue_box.visible, "dialogue should open when sort is ready")
+	assert_false(_yard._handoff_screen.visible, "hand-off should stay closed when sort is ready")
+	assert_true(_yard._overlay_open, "overlay mode should be active")
+
+
+func test_sort_ready_dialogue_uses_authored_yard_sort_ready_lines() -> void:
+	GameState.save_state.loop.scrap_pool = {"white": 1}
+	assert_true(AylaService.submit_scrap({"white": 1}), "sort should start")
+	GameState.save_state.loop.current_hour = 8
+	EventBus.hour_changed.emit(1, 8)
+
+	_yard._open_handoff()
+
+	var lines: Array = _yard._dialogue_box._lines
+	assert_gt(lines.size(), 0, "yard_sort_ready should contain at least one line")
+	var first: Variant = lines[0]
+	assert_true(first is Dictionary or first is String, "authored line should be a dict or string")
