@@ -15,7 +15,7 @@ extends Node3D
 ## inner OverlayShell is an INTERNAL child (never saved/duplicated into the .tscn).
 
 ## condition_tex * per-vertex keep (COLOR.a) * opacity. No UV is used for cleaning, only for the look.
-const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nuniform float highlight = 0.0;\nuniform vec4 highlight_color : source_color = vec4(1.0, 0.85, 0.3, 1.0);\nuniform bool use_triplanar = false;\nuniform float triplanar_scale = 0.5;\nvarying vec3 v_pos;\nvarying vec3 v_norm;\nvoid vertex() {\n\tv_pos = VERTEX;\n\tv_norm = NORMAL;\n}\nvec4 sample_tri(vec3 p, vec3 n) {\n\tvec3 b = abs(normalize(n));\n\tb /= (b.x + b.y + b.z + 1e-5);\n\tvec4 cx = texture(condition_tex, p.zy * triplanar_scale);\n\tvec4 cy = texture(condition_tex, p.xz * triplanar_scale);\n\tvec4 cz = texture(condition_tex, p.xy * triplanar_scale);\n\treturn cx * b.x + cy * b.y + cz * b.z;\n}\nvoid fragment() {\n\tvec4 c = use_triplanar ? sample_tri(v_pos, v_norm) : texture(condition_tex, UV);\n\tfloat base = c.a * COLOR.a;\n\tALBEDO = c.rgb;\n\tEMISSION = highlight_color.rgb * highlight * base;\n\tALPHA = clamp(base * overlay_opacity + highlight * base * 0.6, 0.0, 1.0);\n}\n"
+const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nuniform float highlight = 0.0;\nuniform vec4 highlight_color : source_color = vec4(1.0, 0.85, 0.3, 1.0);\nuniform int uv_mode = 0;\nuniform float uv2_tiling = 2.0;\nuniform float triplanar_scale = 0.5;\nvarying vec3 v_pos;\nvarying vec3 v_norm;\nvoid vertex() {\n\tv_pos = VERTEX;\n\tv_norm = NORMAL;\n}\nvec4 sample_tri(vec3 p, vec3 n) {\n\tvec3 b = abs(normalize(n));\n\tb /= (b.x + b.y + b.z + 1e-5);\n\tvec4 cx = texture(condition_tex, p.zy * triplanar_scale);\n\tvec4 cy = texture(condition_tex, p.xz * triplanar_scale);\n\tvec4 cz = texture(condition_tex, p.xy * triplanar_scale);\n\treturn cx * b.x + cy * b.y + cz * b.z;\n}\nvoid fragment() {\n\tvec4 c = (uv_mode == 2) ? sample_tri(v_pos, v_norm) : ((uv_mode == 1) ? texture(condition_tex, UV2 * uv2_tiling) : texture(condition_tex, UV));\n\tfloat base = c.a * COLOR.a;\n\tALBEDO = c.rgb;\n\tEMISSION = highlight_color.rgb * highlight * base;\n\tALPHA = clamp(base * overlay_opacity + highlight * base * 0.6, 0.0, 1.0);\n}\n"
 const PATTERN_BLOB_RADIUS: float = 0.16  ## Dirt-blob radius as a fraction of the mesh extent.
 const PATTERN_BLOB_CORE: float = 0.35  ## Solid-core fraction of each blob; the rest is a soft edge.
 const MAX_BLOBS: int = 8000  ## Safety cap on blob stamps while filling toward the target coverage.
@@ -25,6 +25,11 @@ const MIN_VERTS: int = 2000
 ## Brush radius (fraction of overlay size) used ONLY when no tool radius is supplied — i.e. the debug
 ## eraser. Real cleaning passes the TOOL's clean_radius (see ToolConfig); the overlay no longer owns one.
 const DEFAULT_CLEAN_RADIUS: float = 0.12
+## In-engine UV repair: when a mesh's own UVs are broken (collapsed/overlapping — common in free packs),
+## we lightmap_unwrap() a fresh non-overlapping UV2 so the grime maps cleanly without touching Blender.
+const UNWRAP_TEXEL: float = 0.05  ## World texel size handed to lightmap_unwrap().
+const UV1_MIN_BBOX_AREA: float = 0.05  ## UV1 whose bounding box is smaller than this is "crammed" (unusable).
+const UV1_MAX_DEGEN: float = 0.4  ## UV1 with more than this fraction of zero-area triangles is unusable.
 ## The mesh to show as the overlay shell. Leave null to fall back to the artifact's own mesh.
 @export var overlay_mesh: Mesh:
 	set(value):
@@ -53,18 +58,22 @@ const DEFAULT_CLEAN_RADIUS: float = 0.12
 ## moderate random range so overlays that don't set it still spawn partial/varied (tune per layer).
 @export_range(0.0, 100.0) var coverage_min: float = 20.0
 @export_range(0.0, 100.0) var coverage_max: float = 60.0
-## Sample the condition texture by TRIPLANAR projection (object axes) instead of the mesh UV. Turn ON
-## for artifacts whose UVs are broken/stretched (e.g. the death mask) so the grime doesn't streak;
-## leave OFF for clean-UV models (pendant/locket) which look perfect on their own UVs.
+## FORCE triplanar (object-axis projection) sampling. Normally leave OFF: the overlay auto-detects
+## broken UVs and repairs them in-engine (lightmap_unwrap → UV2). Turn ON only to override that with a
+## projected look. Clean-UV models (pendant/locket) keep their own UVs either way.
 @export var triplanar: bool = false:
 	set(value):
 		triplanar = value
-		if _material != null:
-			_material.set_shader_parameter("use_triplanar", value)
+		if is_inside_tree() and _shell != null:
+			_rebuild()  # uv mode is resolved at build; re-resolve so the toggle previews live
 ## Triplanar texture tiling (only when `triplanar` is on); higher = more, smaller patches.
 @export var triplanar_tiling: float = 3.0
+## Tiling of the grime when sampled through the in-engine generated UV2 (broken-UV meshes). Higher =
+## smaller, denser grain. Tune per artifact if the auto-repaired grime looks too big/small.
+@export var uv2_tiling: float = 2.0
 
 var _shell: MeshInstance3D
+var _uv_mode: int = 0  ## 0 = mesh UV1, 1 = generated UV2 (UV repair), 2 = triplanar.
 var _material: ShaderMaterial
 var _runtime_mesh: ArrayMesh
 var _arrays: Array = []
@@ -176,6 +185,7 @@ func _rebuild() -> void:
 		return
 	if not _build_merged_arrays():
 		return
+	_resolve_uv_mode()  # pick UV1 / repaired-UV2 / triplanar; repairs broken UVs in-engine (no Blender)
 	_subdivide_if_sparse()  # densify low-poly meshes so cleaning reads as smooth circles
 	var colors := PackedColorArray()
 	colors.resize(_verts.size())
@@ -190,7 +200,8 @@ func _rebuild() -> void:
 	_material.shader = sh
 	_material.set_shader_parameter("condition_tex", condition_texture)
 	_material.set_shader_parameter("overlay_opacity", opacity)
-	_material.set_shader_parameter("use_triplanar", triplanar)
+	_material.set_shader_parameter("uv_mode", _uv_mode)
+	_material.set_shader_parameter("uv2_tiling", uv2_tiling)
 	# Tiling is mesh-relative (divided by the mesh extent) so the same triplanar_tiling reads the same
 	# on a big or small artifact. VERTEX in the shader is object-space (raw mesh units).
 	_material.set_shader_parameter("triplanar_scale", triplanar_tiling / maxf(0.001, _extent))
@@ -408,6 +419,92 @@ func _build_merged_arrays() -> bool:
 	return true
 
 
+## Picks how the condition texture is sampled, and for meshes with broken UVs generates clean
+## non-overlapping UV2 IN-ENGINE (lightmap_unwrap) so any mesh maps grime like the well-UV'd
+## pendant/locket — no Blender re-unwrap needed. Sets _uv_mode: 0 = mesh UV1, 1 = generated UV2,
+## 2 = triplanar. Runs on the merged (shared-topology) mesh BEFORE subdivision so the unwrap sees
+## real shared edges (a subdivided mesh has split verts and would unwrap into per-triangle islands).
+func _resolve_uv_mode() -> void:
+	if triplanar:
+		_uv_mode = 2  # explicit override
+		return
+	if _uv1_usable():
+		_uv_mode = 0  # the mesh's own UVs are good (pendant/locket) — use them, untouched
+		return
+	if _unwrap_to_uv2():
+		_uv_mode = 1  # broken UVs repaired in-engine
+	else:
+		_uv_mode = 2  # unwrap unavailable (e.g. no normals) — fall back to projection
+
+
+## True when the mesh's own UV1 is good enough to map the grime without streaking: it must exist, fill
+## a reasonable area of the texture, and not be mostly zero-area (collapsed/overlapping) triangles.
+func _uv1_usable() -> bool:
+	var raw_u: Variant = _arrays[Mesh.ARRAY_TEX_UV]
+	if not (raw_u is PackedVector2Array):
+		return false
+	var uv: PackedVector2Array = raw_u
+	if uv.is_empty() or uv.size() != _verts.size():
+		return false
+	var mn := Vector2(INF, INF)
+	var mx := Vector2(-INF, -INF)
+	for u in uv:
+		mn = mn.min(u)
+		mx = mx.max(u)
+	if (mx.x - mn.x) * (mx.y - mn.y) < UV1_MIN_BBOX_AREA:
+		return false  # all UVs crammed into a tiny patch -> texture is hugely magnified/streaked
+	var idx := _tris
+	var tri := 0
+	var degen := 0
+	for i in range(0, idx.size() - 2, 3):
+		tri += 1
+		var a := uv[idx[i]]
+		var b := uv[idx[i + 1]]
+		var c := uv[idx[i + 2]]
+		if absf((b - a).cross(c - a)) * 0.5 < 1e-7:
+			degen += 1
+	if tri == 0:
+		return false
+	return float(degen) / float(tri) < UV1_MAX_DEGEN
+
+
+## Generates fresh non-overlapping UV2 for the current merged geometry via ArrayMesh.lightmap_unwrap.
+## The unwrap may split verts at seams, so we re-read the POST-unwrap geometry into _verts/_tris/_arrays
+## (the per-vertex keep + raycast are rebuilt from these afterwards). Returns false if unwrap failed.
+func _unwrap_to_uv2() -> bool:
+	var src: Array = []
+	src.resize(Mesh.ARRAY_MAX)
+	src[Mesh.ARRAY_VERTEX] = _verts
+	var raw_n: Variant = _arrays[Mesh.ARRAY_NORMAL]
+	if raw_n is PackedVector3Array and (raw_n as PackedVector3Array).size() == _verts.size():
+		src[Mesh.ARRAY_NORMAL] = raw_n
+	src[Mesh.ARRAY_INDEX] = _tris
+	var am := ArrayMesh.new()
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, src)
+	if am.lightmap_unwrap(Transform3D.IDENTITY, UNWRAP_TEXEL) != OK:
+		return false
+	var out := am.surface_get_arrays(0)
+	var ov: Variant = out[Mesh.ARRAY_VERTEX]
+	var ouv2: Variant = out[Mesh.ARRAY_TEX_UV2]
+	if not (ov is PackedVector3Array) or not (ouv2 is PackedVector2Array):
+		return false
+	_verts = ov
+	var oi: Variant = out[Mesh.ARRAY_INDEX]
+	_tris = oi if oi is PackedInt32Array else PackedInt32Array()
+	if _tris.is_empty():
+		for i in _verts.size():
+			_tris.append(i)
+	_arrays = []
+	_arrays.resize(Mesh.ARRAY_MAX)
+	_arrays[Mesh.ARRAY_VERTEX] = _verts
+	var on: Variant = out[Mesh.ARRAY_NORMAL]
+	if on is PackedVector3Array and (on as PackedVector3Array).size() == _verts.size():
+		_arrays[Mesh.ARRAY_NORMAL] = on
+	_arrays[Mesh.ARRAY_TEX_UV2] = ouv2
+	_arrays[Mesh.ARRAY_INDEX] = _tris
+	return true
+
+
 ## Splits each triangle into 4 (midpoint subdivision) until the shell has >= MIN_VERTS vertices, so a
 ## coarse mesh cleans/patterns smoothly. Independent per-triangle split (duplicate midpoints) — fine
 ## for the per-vertex shader, and cheap at these sizes.
@@ -422,14 +519,18 @@ func _subdivide_once() -> void:
 	var verts := _verts
 	var raw_n: Variant = _arrays[Mesh.ARRAY_NORMAL]
 	var raw_u: Variant = _arrays[Mesh.ARRAY_TEX_UV]
+	var raw_u2: Variant = _arrays[Mesh.ARRAY_TEX_UV2]
 	var has_n := raw_n is PackedVector3Array and (raw_n as PackedVector3Array).size() == verts.size()
 	var has_u := raw_u is PackedVector2Array and (raw_u as PackedVector2Array).size() == verts.size()
+	var has_u2 := raw_u2 is PackedVector2Array and (raw_u2 as PackedVector2Array).size() == verts.size()
 	var norms: PackedVector3Array = raw_n if has_n else PackedVector3Array()
 	var uvs: PackedVector2Array = raw_u if has_u else PackedVector2Array()
+	var uvs2: PackedVector2Array = raw_u2 if has_u2 else PackedVector2Array()
 	var idx := _tris
 	var nv := PackedVector3Array()
 	var nn := PackedVector3Array()
 	var nu := PackedVector2Array()
+	var nu2 := PackedVector2Array()
 	var ni := PackedInt32Array()
 	for t in range(0, idx.size() - 2, 3):
 		var a := idx[t]
@@ -456,6 +557,13 @@ func _subdivide_once() -> void:
 			nu.append((uvs[a] + uvs[b]) * 0.5)
 			nu.append((uvs[b] + uvs[c]) * 0.5)
 			nu.append((uvs[c] + uvs[a]) * 0.5)
+		if has_u2:
+			nu2.append(uvs2[a])
+			nu2.append(uvs2[b])
+			nu2.append(uvs2[c])
+			nu2.append((uvs2[a] + uvs2[b]) * 0.5)
+			nu2.append((uvs2[b] + uvs2[c]) * 0.5)
+			nu2.append((uvs2[c] + uvs2[a]) * 0.5)
 		# corner verts 0,1,2 ; midpoints ab=3, bc=4, ca=5 -> 4 sub-triangles
 		_add_tri(ni, base, 0, 3, 5)
 		_add_tri(ni, base, 3, 1, 4)
@@ -464,6 +572,7 @@ func _subdivide_once() -> void:
 	_arrays[Mesh.ARRAY_VERTEX] = nv
 	_arrays[Mesh.ARRAY_NORMAL] = nn if has_n else null
 	_arrays[Mesh.ARRAY_TEX_UV] = nu if has_u else null
+	_arrays[Mesh.ARRAY_TEX_UV2] = nu2 if has_u2 else null
 	_arrays[Mesh.ARRAY_INDEX] = ni
 	_verts = nv
 	_tris = ni
