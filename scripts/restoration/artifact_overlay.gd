@@ -16,8 +16,9 @@ extends Node3D
 
 ## condition_tex * per-vertex keep (COLOR.a) * opacity. No UV is used for cleaning, only for the look.
 const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nuniform float highlight = 0.0;\nuniform vec4 highlight_color : source_color = vec4(1.0, 0.85, 0.3, 1.0);\nuniform bool use_triplanar = false;\nuniform float triplanar_scale = 0.5;\nvarying vec3 v_pos;\nvarying vec3 v_norm;\nvoid vertex() {\n\tv_pos = VERTEX;\n\tv_norm = NORMAL;\n}\nvec4 sample_tri(vec3 p, vec3 n) {\n\tvec3 b = abs(normalize(n));\n\tb /= (b.x + b.y + b.z + 1e-5);\n\tvec4 cx = texture(condition_tex, p.zy * triplanar_scale);\n\tvec4 cy = texture(condition_tex, p.xz * triplanar_scale);\n\tvec4 cz = texture(condition_tex, p.xy * triplanar_scale);\n\treturn cx * b.x + cy * b.y + cz * b.z;\n}\nvoid fragment() {\n\tvec4 c = use_triplanar ? sample_tri(v_pos, v_norm) : texture(condition_tex, UV);\n\tfloat base = c.a * COLOR.a;\n\tALBEDO = c.rgb;\n\tEMISSION = highlight_color.rgb * highlight * base;\n\tALPHA = clamp(base * overlay_opacity + highlight * base * 0.6, 0.0, 1.0);\n}\n"
-const PATTERN_FREQ: float = 2.4  ## Patch size of the random coverage pattern (normalised space).
-const PATTERN_SOFT: float = 0.06  ## Soft edge width of the pattern threshold.
+const PATTERN_BLOB_RADIUS: float = 0.16  ## Dirt-blob radius as a fraction of the mesh extent.
+const PATTERN_BLOB_CORE: float = 0.35  ## Solid-core fraction of each blob; the rest is a soft edge.
+const MAX_BLOBS: int = 8000  ## Safety cap on blob stamps while filling toward the target coverage.
 ## Low-poly meshes (e.g. the 260-vert death mask) clean/pattern too coarsely (linear, not round), so
 ## the shell is subdivided at build until it has at least this many vertices (capped at 2 levels).
 const MIN_VERTS: int = 2000
@@ -113,24 +114,30 @@ func _apply_pattern(seed: int) -> void:
 		for i in colors.size():
 			colors[i].a = 0.0
 	else:
-		var noise := FastNoiseLite.new()
-		noise.seed = seed
-		noise.frequency = PATTERN_FREQ
-		var vals := PackedFloat32Array()
-		vals.resize(_verts.size())
-		var ext := maxf(0.001, _extent)
-		for i in _verts.size():
-			vals[i] = noise.get_noise_3dv(_verts[i] / ext)
-		var sorted := vals.duplicate()
-		sorted.sort()
-		var k := clampi(int((1.0 - coverage) * sorted.size()), 0, sorted.size() - 1)
-		var threshold := sorted[k]
+		# Stamp random CIRCULAR dirt blobs (the same smooth radial falloff the cleaning brush makes)
+		# until we hit the target coverage — so spawned grime reads as round patches, not faceted
+		# noise. Overlapping blobs merge by max. Deterministic for a given seed.
 		for i in colors.size():
-			var a := clampf(
-				smoothstep(threshold - PATTERN_SOFT, threshold + PATTERN_SOFT, vals[i]), 0.0, 1.0
-			)
-			colors[i].a = a
-			sum += a
+			colors[i].a = 0.0
+		var ext := maxf(0.001, _extent)
+		var target := coverage * float(colors.size())
+		var guard := 0
+		while sum < target and guard < MAX_BLOBS:
+			guard += 1
+			var center := _verts[rng.randi_range(0, _verts.size() - 1)]
+			var r := ext * PATTERN_BLOB_RADIUS * rng.randf_range(0.6, 1.4)
+			var core := r * PATTERN_BLOB_CORE
+			for i in _verts.size():
+				if colors[i].a >= 0.999:
+					continue
+				var d := center.distance_to(_verts[i])
+				if d > r:
+					continue
+				var add := 1.0 - smoothstep(core, r, d)
+				if add <= colors[i].a:
+					continue
+				sum += add - colors[i].a
+				colors[i].a = add
 	_initial_keep = sum
 	_arrays[Mesh.ARRAY_COLOR] = colors
 	_runtime_mesh.clear_surfaces()

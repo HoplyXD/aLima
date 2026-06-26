@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://bgoquitnfgw5v"
+path="res://.godot/imported/chesspiecerook01.obj-8df7bd732cd243d99739eb0912d6e334.mesh"
+
+[deps]
+
+files=["res://.godot/imported/chesspiecerook01.obj-8df7bd732cd243d99739eb0912d6e334.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/obj/chesspiecerook01.obj"
+dest_files=["res://.godot/imported/chesspiecerook01.obj-8df7bd732cd243d99739eb0912d6e334.mesh", "res://.godot/imported/chesspiecerook01.obj-8df7bd732cd243d99739eb0912d6e334.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

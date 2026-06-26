@@ -4,9 +4,9 @@
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="3_tarnish"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="4_g88vq"]
-[ext_resource type="ArrayMesh" uid="uid://bn6egpeuc3n2o" path="res://assets/3d Assets/Artifacts/Oton Death Mask Overlay.obj" id="5_8umpv"]
+[ext_resource type="ArrayMesh" uid="uid://bn6egpeuc3n2o" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask Overlay.obj" id="5_8umpv"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="5_m1vn6"]
-[ext_resource type="ArrayMesh" uid="uid://ct8ji82etev0t" path="res://assets/3d Assets/Artifacts/Oton Death Mask.obj" id="6_mask"]
+[ext_resource type="ArrayMesh" uid="uid://ct8ji82etev0t" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask.obj" id="6_mask"]
 [ext_resource type="Texture2D" uid="uid://chkvi47klu3o1" path="res://assets/Artifacts/Oton Death Mask Texture.png" id="7_masktex"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 

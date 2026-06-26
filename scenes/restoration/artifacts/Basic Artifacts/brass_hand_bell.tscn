@@ -1,0 +1,105 @@
+[gd_scene format=3 uid="uid://c7ag2vpcajbbp"]
+
+[ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
+[ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="3_dust"]
+[ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="4_tarnish"]
+[ext_resource type="ArrayMesh" uid="uid://btw6an23w7hn1" path="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets (1)/squareishdesignassets/obj/bell01.obj" id="5_mesh"]
+[ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="6_overlay"]
+[ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="7_cracking"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
+
+[sub_resource type="StandardMaterial3D" id="bell_brass"]
+albedo_color = Color(0.71, 0.55, 0.25, 1)
+metallic = 0.8
+roughness = 0.4
+
+[node name="BrassHandBell" type="Node3D" unique_id=229666069]
+transform = Transform3D(0.2, 0, 0, 0, 0.19676875, 0.03580592, 0, -0.03580592, 0.19676875, 0, 0, 0)
+script = ExtResource("1_obj")
+model_mesh = ExtResource("5_mesh")
+model_material = SubResource("bell_brass")
+model_scale = 5.267
+
+[node name="CrackingOverlay" parent="." unique_id=751270546 instance=ExtResource("6_overlay")]
+transform = Transform3D(1.05, 0, 0, 0, 1.0330359, 0.18798105, 0, -0.18798105, 1.0330359, 0, 0, 0)
+top_level = true
+overlay_mesh = ExtResource("5_mesh")
+condition_texture = ExtResource("7_cracking")
+condition_id = "crack"
+layer_order = 10
+coverage_min = 0.0
+coverage_max = 0.0
+triplanar = true
+
+[node name="CrackingOverlay" parent="CrackingOverlay" unique_id=1936885691 instance=ExtResource("6_overlay")]
+transform = Transform3D(1.06, 0, 0, 0, 1.0428742, 0.18977135, 0, -0.18977135, 1.0428742, 0, 0, 0)
+top_level = true
+overlay_mesh = ExtResource("5_mesh")
+condition_texture = ExtResource("7_cracking")
+condition_id = "crack"
+layer_order = 10
+coverage_min = 0.0
+coverage_max = 0.0
+triplanar = true
+
+[node name="TarnishOverlay" parent="." unique_id=2092057937 instance=ExtResource("6_overlay")]
+transform = Transform3D(1.05, 0, 0, 0, 1.0330359, 0.18798105, 0, -0.18798105, 1.0330359, 0, 0, 0)
+top_level = true
+overlay_mesh = ExtResource("5_mesh")
+condition_texture = ExtResource("4_tarnish")
+condition_id = "tarnish"
+layer_order = 20
+coverage_max = 55.0
+triplanar = true
+
+[node name="TarnishOverlay" parent="TarnishOverlay" unique_id=1430733888 instance=ExtResource("6_overlay")]
+transform = Transform3D(1.06, 0, 0, 0, 1.0428742, 0.18977135, 0, -0.18977135, 1.0428742, 0, 0, 0)
+top_level = true
+overlay_mesh = ExtResource("5_mesh")
+condition_texture = ExtResource("4_tarnish")
+condition_id = "tarnish"
+layer_order = 20
+coverage_max = 55.0
+triplanar = true
+
+[node name="RustOverlay" parent="." unique_id=1085328661 instance=ExtResource("6_overlay")]
+transform = Transform3D(1.05, 0, 0, 0, 1.0330359, 0.18798105, 0, -0.18798105, 1.0330359, 0, 0, 0)
+top_level = true
+overlay_mesh = ExtResource("5_mesh")
+condition_texture = ExtResource("8_rust")
+condition_id = "rust"
+layer_order = 25
+coverage_min = 0.0
+coverage_max = 35.0
+triplanar = true
+
+[node name="RustOverlay" parent="RustOverlay" unique_id=1403703185 instance=ExtResource("6_overlay")]
+transform = Transform3D(1.06, 0, 0, 0, 1.0428742, 0.18977135, 0, -0.18977135, 1.0428742, 0, 0, 0)
+top_level = true
+overlay_mesh = ExtResource("5_mesh")
+condition_texture = ExtResource("8_rust")
+condition_id = "rust"
+layer_order = 25
+coverage_min = 0.0
+coverage_max = 35.0
+triplanar = true
+
+[node name="DustOverlay" parent="." unique_id=2081585634 instance=ExtResource("6_overlay")]
+transform = Transform3D(1.05, 0, 0, 0, 1.0330359, 0.18798105, 0, -0.18798105, 1.0330359, 0, 0, 0)
+top_level = true
+overlay_mesh = ExtResource("5_mesh")
+condition_texture = ExtResource("3_dust")
+condition_id = "dust"
+coverage_min = 40.0
+coverage_max = 80.0
+triplanar = true
+
+[node name="DustOverlay" parent="DustOverlay" unique_id=1664265070 instance=ExtResource("6_overlay")]
+transform = Transform3D(1.06, 0, 0, 0, 1.0428742, 0.18977135, 0, -0.18977135, 1.0428742, 0, 0, 0)
+top_level = true
+overlay_mesh = ExtResource("5_mesh")
+condition_texture = ExtResource("3_dust")
+condition_id = "dust"
+coverage_min = 40.0
+coverage_max = 80.0
+triplanar = true

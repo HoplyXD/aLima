@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://b714u5osju7co"
+path="res://.godot/imported/tablefork01.obj-f0680fc1eb6957e6e8ab37d964e0bcb9.mesh"
+
+[deps]
+
+files=["res://.godot/imported/tablefork01.obj-f0680fc1eb6957e6e8ab37d964e0bcb9.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets (1)/squareishdesignassets/obj/tablefork01.obj"
+dest_files=["res://.godot/imported/tablefork01.obj-f0680fc1eb6957e6e8ab37d964e0bcb9.mesh", "res://.godot/imported/tablefork01.obj-f0680fc1eb6957e6e8ab37d964e0bcb9.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

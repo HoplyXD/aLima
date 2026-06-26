@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://btw6an23w7hn1"
+path="res://.godot/imported/bell01.obj-c62592a7a155a84bcd619f5fd6bb36aa.mesh"
+
+[deps]
+
+files=["res://.godot/imported/bell01.obj-c62592a7a155a84bcd619f5fd6bb36aa.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets (1)/squareishdesignassets/obj/bell01.obj"
+dest_files=["res://.godot/imported/bell01.obj-c62592a7a155a84bcd619f5fd6bb36aa.mesh", "res://.godot/imported/bell01.obj-c62592a7a155a84bcd619f5fd6bb36aa.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://clftf873cs044"
+path="res://.godot/imported/cardspade02.obj-88e586b4d95043c8e29c43f7c861d09d.mesh"
+
+[deps]
+
+files=["res://.godot/imported/cardspade02.obj-88e586b4d95043c8e29c43f7c861d09d.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/obj/cardspade02.obj"
+dest_files=["res://.godot/imported/cardspade02.obj-88e586b4d95043c8e29c43f7c861d09d.mesh", "res://.godot/imported/cardspade02.obj-88e586b4d95043c8e29c43f7c861d09d.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

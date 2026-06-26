@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://bve4svnhw12k2"
+path="res://.godot/imported/penink01.obj-b2253fde2392bab4a2280ee832c1a75e.mesh"
+
+[deps]
+
+files=["res://.godot/imported/penink01.obj-b2253fde2392bab4a2280ee832c1a75e.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/obj/penink01.obj"
+dest_files=["res://.godot/imported/penink01.obj-b2253fde2392bab4a2280ee832c1a75e.mesh", "res://.godot/imported/penink01.obj-b2253fde2392bab4a2280ee832c1a75e.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

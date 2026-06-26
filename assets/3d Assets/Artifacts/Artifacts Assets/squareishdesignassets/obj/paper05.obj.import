@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://cmqo280l8d1u4"
+path="res://.godot/imported/paper05.obj-4099b2a91172333b432c5599c7c26875.mesh"
+
+[deps]
+
+files=["res://.godot/imported/paper05.obj-4099b2a91172333b432c5599c7c26875.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/obj/paper05.obj"
+dest_files=["res://.godot/imported/paper05.obj-4099b2a91172333b432c5599c7c26875.mesh", "res://.godot/imported/paper05.obj-4099b2a91172333b432c5599c7c26875.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

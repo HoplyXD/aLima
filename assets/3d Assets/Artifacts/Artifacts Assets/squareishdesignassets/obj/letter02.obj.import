@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://408ct544kekw"
+path="res://.godot/imported/letter02.obj-83c9848ed73765af28ff532169b2de08.mesh"
+
+[deps]
+
+files=["res://.godot/imported/letter02.obj-83c9848ed73765af28ff532169b2de08.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/obj/letter02.obj"
+dest_files=["res://.godot/imported/letter02.obj-83c9848ed73765af28ff532169b2de08.mesh", "res://.godot/imported/letter02.obj-83c9848ed73765af28ff532169b2de08.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

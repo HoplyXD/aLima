@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="3_sorb4"]
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="4_tarnish"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="4_ue6o7"]
-[ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Locket.obj" id="5_locket"]
+[ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Locket.obj" id="5_locket"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
 
 [sub_resource type="StandardMaterial3D" id="locket_bronze"]
@@ -21,28 +21,27 @@ model_mesh = ExtResource("5_locket")
 model_material = SubResource("locket_bronze")
 model_scale = 0.1
 
-[node name="CrackingOverlay" parent="." instance=ExtResource("3_sorb4")]
+[node name="CrackingOverlay" parent="." unique_id=1288162450 instance=ExtResource("3_sorb4")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("4_ue6o7")
 layer_order = 10
 
-[node name="TarnishOverlay" parent="." instance=ExtResource("3_sorb4")]
+[node name="TarnishOverlay" parent="." unique_id=232435824 instance=ExtResource("3_sorb4")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("4_tarnish")
 opacity = 1.0
 layer_order = 20
 
-[node name="RustOverlay" parent="." instance=ExtResource("3_sorb4")]
+[node name="RustOverlay" parent="." unique_id=92755118 instance=ExtResource("3_sorb4")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("6_rust")
 layer_order = 25
 
-[node name="DustOverlay" parent="." instance=ExtResource("3_sorb4")]
+[node name="DustOverlay" parent="." unique_id=31414527 instance=ExtResource("3_sorb4")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("3_dust")
 opacity = 0.5
-layer_order = 30
