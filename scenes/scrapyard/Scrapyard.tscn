@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b22c7422onsmh" path="res://scripts/scrapyard/scrapyard.gd" id="1_scrapyard"]
 [ext_resource type="Script" uid="uid://cmnncy5e8fmri" path="res://scripts/shop/interactable_3d.gd" id="3_interactable"]
+[ext_resource type="PackedScene" uid="uid://cjm8k2o6gqmv1" path="res://scenes/ui/scrapyard_hud.tscn" id="3_hud"]
 [ext_resource type="PackedScene" uid="uid://c8g1y868fsx8g" path="res://assets/3d Assets/Scrapyard/scrapyard.glb" id="4_map"]
 [ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="5_ayla"]
 
@@ -20,12 +21,35 @@ size = Vector3(8.4, 3.2, 6.4)
 [sub_resource type="BoxShape3D" id="BoxShape3D_door_return"]
 size = Vector3(2, 2.5, 0.4)
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yard"]
+sky_top_color = Color(0.384, 0.643, 0.906, 1)
+sky_horizon_color = Color(0.624, 0.78, 0.906, 1)
+sky_curve = 0.09
+ground_bottom_color = Color(0.137, 0.118, 0.09, 1)
+ground_horizon_color = Color(0.275, 0.251, 0.204, 1)
+ground_curve = 0.02
+sun_angle_max = 30.0
+sun_curve = 0.15
+
+[sub_resource type="Sky" id="Sky_yard"]
+sky_material = SubResource("ProceduralSkyMaterial_yard")
+process_mode = 3
+
 [sub_resource type="Environment" id="Environment_yard"]
 background_mode = 2
-background_color = Color(0.6, 0.7, 0.8, 1)
+sky = SubResource("Sky_yard")
 ambient_light_source = 3
-ambient_light_color = Color(0.5, 0.5, 0.45, 1)
-ambient_light_energy = 0.8
+ambient_light_color = Color(0.56, 0.6, 0.7, 1)
+ambient_light_energy = 0.6
+reflected_light_source = 1
+tonemap_mode = 2
+tonemap_exposure = 1.1
+tonemap_white = 3.0
+ssao_enabled = true
+ssao_intensity = 1.5
+ssao_power = 1.5
+glow_enabled = true
+glow_intensity = 0.25
 
 [node name="Scrapyard" type="Node3D" unique_id=1552477199]
 script = ExtResource("1_scrapyard")
@@ -70,6 +94,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 1.5)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.9)
 script = ExtResource("3_interactable")
 prompt_text = "Return to the shop"
+proximity_prompt_text = "Press E to enter"
+use_proximity = true
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Anchors/DoorReturn" unique_id=2013270549]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
@@ -92,10 +118,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 2.6)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=825483703]
-transform = Transform3D(-0.23957762, -0.93871695, 0.24781664, 0.015939295, 0.25141287, 0.9677487, -0.9707464, 0.23580094, -0.04527041, 0.6674628, 28.750814, -8.912044)
-light_color = Color(0.9906973, 0.90649647, 0.77666205, 1)
-light_energy = 2.813
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 28.75, -8.91)
+light_color = Color(1.0, 0.95, 0.82, 1)
+light_energy = 3.0
 shadow_enabled = true
+shadow_bias = 0.05
+shadow_normal_bias = 2.0
+directional_shadow_mode = 1
+directional_shadow_split_1 = 0.15
+directional_shadow_split_2 = 0.35
+directional_shadow_split_3 = 0.65
+directional_shadow_max_distance = 80.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1724588853]
 environment = SubResource("Environment_yard")
+
+[node name="ScrapyardHud" parent="." instance=ExtResource("3_hud")]

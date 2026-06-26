@@ -28,6 +28,7 @@ var _max_pitch: float = 0.0
 
 func _ready() -> void:
 	_ensure_input_actions()
+	add_to_group("player")
 	if DisplayServer.get_name() != "headless":
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
@@ -87,6 +88,8 @@ func _ensure_input_actions() -> void:
 	_add_action("move_right", [KEY_D, KEY_RIGHT], [JOY_BUTTON_DPAD_RIGHT], JOY_AXIS_LEFT_X, 1.0)
 	_add_action("move_forward", [KEY_W, KEY_UP], [JOY_BUTTON_DPAD_UP], JOY_AXIS_LEFT_Y, -1.0)
 	_add_action("move_back", [KEY_S, KEY_DOWN], [JOY_BUTTON_DPAD_DOWN], JOY_AXIS_LEFT_Y, 1.0)
+	# Interaction: keyboard E, gamepad A/cross.
+	_add_action("interact", [KEY_E], [JOY_BUTTON_A], JOY_AXIS_INVALID, 0.0)
 
 
 func _add_action(
