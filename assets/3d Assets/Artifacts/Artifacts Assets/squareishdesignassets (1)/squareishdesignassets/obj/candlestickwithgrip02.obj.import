@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://rhj3a7ur1gvd"
+path="res://.godot/imported/candlestickwithgrip02.obj-e60e601e61b4503d96c7634e9895c92e.mesh"
+
+[deps]
+
+files=["res://.godot/imported/candlestickwithgrip02.obj-e60e601e61b4503d96c7634e9895c92e.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets (1)/squareishdesignassets/obj/candlestickwithgrip02.obj"
+dest_files=["res://.godot/imported/candlestickwithgrip02.obj-e60e601e61b4503d96c7634e9895c92e.mesh", "res://.godot/imported/candlestickwithgrip02.obj-e60e601e61b4503d96c7634e9895c92e.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

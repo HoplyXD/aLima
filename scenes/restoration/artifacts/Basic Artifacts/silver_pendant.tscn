@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="3_waa2k"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="4_77ino"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
-[ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Pendant.obj" id="5_pendant"]
+[ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Pendant.obj" id="5_pendant"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
 
 [sub_resource type="StandardMaterial3D" id="pendant_silver"]
@@ -21,28 +21,27 @@ model_mesh = ExtResource("5_pendant")
 model_material = SubResource("pendant_silver")
 model_scale = 0.1
 
-[node name="CrackingOverlay" parent="." instance=ExtResource("3_waa2k")]
+[node name="CrackingOverlay" parent="." unique_id=263730433 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_77ino")
 layer_order = 10
 
-[node name="TarnishOverlay" parent="." instance=ExtResource("3_waa2k")]
+[node name="TarnishOverlay" parent="." unique_id=1528200091 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
 layer_order = 20
 
-[node name="RustOverlay" parent="." instance=ExtResource("3_waa2k")]
+[node name="RustOverlay" parent="." unique_id=1380345557 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("6_rust")
 layer_order = 25
 
-[node name="DustOverlay" parent="." instance=ExtResource("3_waa2k")]
+[node name="DustOverlay" parent="." unique_id=720166940 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
-layer_order = 30
