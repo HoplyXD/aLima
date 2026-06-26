@@ -30,10 +30,6 @@ func apply_triage(state: TriageState) -> bool:
 
 	_update_neglect_history(recycled_instances)
 
-	# Only now is the morning delivery "consumed" — exiting triage without confirming
-	# leaves the day un-delivered so the player can reopen it.
-	_game_state.save_state.loop.last_delivery_day = _game_state.save_state.loop.current_day
-
 	state.mark_applied()
 	EventBus.triage_completed.emit(kept, recycled)
 	SaveService.save_game()

@@ -41,7 +41,7 @@
 alima/
 ├── CLAUDE.md                  ← you are here
 ├── README.md                  ← GDD / narrative and design source
-├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService, SettingsService, PauseMenu, LocalAI
+├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService, SettingsService, PauseMenu, LocalAI, AylaService
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
@@ -50,11 +50,12 @@ alima/
 │   ├── sources/               ← verified historical-source records (referenced by the content manifest; Phase 12+)
 │   ├── reviews/               ← cultural / native-speaker review records (Phase 12+)
 │   └── provenance/            ← asset/content provenance records (Phase 12+)
-├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration view: restoration_view.tscn + restoration_dirt.gdshader; the manipulable artifact model lives in its own reusable restoration_artifact.tscn — an @tool RestorationObject3D devs can open standalone to view/iterate models — instanced under restoration_view's World; the old 2D placeholder scenes/ui/restoration_screen.* was retired in P4.7)
+├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration view: restoration_view.tscn + restoration_dirt.gdshader; the manipulable artifact model lives in its own reusable restoration_artifact.tscn — an @tool RestorationObject3D devs can open standalone to view/iterate models — instanced under restoration_view's World; the old 2D placeholder scenes/ui/restoration_screen.* was retired in P4.7), scrapyard/ (Scrapyard.tscn + scrap_item.tscn + ayla_handoff_screen.tscn)
 ├── scripts/                   ← shop, core, models, delivery, discovery, restoration, scanner, journal, portal
-│   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController
+│   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController, SpaceManager
 │   ├── models/                ← typed data contracts + enums + validation
-│   └── delivery/              ← DeliveryGenerator, SpawnDirector v1, glow mapping, triage logic
+│   ├── delivery/              ← DeliveryGenerator, SpawnDirector v1, glow mapping, triage logic, AylaService
+│   └── scrapyard/             ← Scrapyard controller, ScrapItem, AylaHandoffScreen, PlayerController
 ├── dialogue/                  ← reusable dialogue scene and script
 ├── addons/gut/                ← vendored GUT 9.6.0 (Godot Unit Test) runner
 ├── resources/                 ← Godot .tres definitions
@@ -62,13 +63,14 @@ alima/
 ├── tests/                     ← GUT tests (test_*.gd)
 │   ├── models/                ← model round-trip/validation tests
 │   ├── core/                  ← repository, autoload, save, run-context tests
-│   ├── delivery/              ← delivery generation, placement, glow, triage tests
+│   ├── delivery/              ← delivery generation, placement, glow, triage, AylaService tests
+│   ├── scrapyard/             ← space/transition, yard scene, door wiring tests
 │   └── journal/               ← journal entries, fragment case, and BookViewport pause tests
 ├── .github/workflows/ci.yml   ← CI: 4.7 import + GUT + gdformat + gdlint
 ├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
 ├── server/                    ← Express: LLM proxy + portal client (Phase 8; cached `/api/scan`, `/api/portal/discovery` proxy, `.env.example`, Jest tests)
 ├── mock-portal/               ← mock City-Wide Portal API (Phase 8; deterministic fact cards, Jest tests)
-└── data/                      ← objects, artifacts (+ packets/ artifact-lock), echoes, routes (+ beats/), scanner-cache, delivery, journal, buyers, events, design (§23 decisions), content-manifest.json, and full-game contract stubs: marketplace, counterfeits, temporal-echoes, evening, museum (JSON; artifact-agnostic)
+└── data/                      ← objects, artifacts (+ packets/ artifact-lock), echoes, routes (+ beats/), scanner-cache, delivery, journal, buyers, events, scrap, design (§23 decisions), content-manifest.json, and full-game contract stubs: marketplace, counterfeits, temporal-echoes, evening, museum (JSON; artifact-agnostic)
 ```
 
 **Content manifest (Phase 12+, CLAUDE.md §4-M).** `data/content-manifest.json` is the versioned
@@ -174,7 +176,7 @@ npm install
 Copy-Item .env.example .env     # fill in keys locally; NEVER commit .env
 # Required: PORT, PORTAL_BASE_URL, PORTAL_TIMEOUT_MS (see server/.env.example)
 npm run dev                     # run in a dedicated terminal
-npm test                        # 24/24 passing as of 2026-06-23 (uses --forceExit due to open Supertest handles)
+npm test                        # 23/24 passing as of 2026-06-26; one pre-existing negotiate fallback-flag test fails when server/.env has a live API key (uses --forceExit due to open Supertest handles)
 Pop-Location
 
 # --- Mock Portal (Phase 8) ---
@@ -237,7 +239,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev/game design), Om Shanti Limpin (dev/design/narrative/artist/UI), Jorge Maverick Acidre (dev/design/3D modeler/character artist). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.7. Official Godot 4.7 console build is installed at `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` and verified (`--version` → `4.7.stable.official.5b4e0cb0f`). A 4.7 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.7 executable for all verification. The editor import, main-scene startup, complete GUT suite (477/477, 1556 asserts), focused model/core/delivery/restoration/spawn/echo/scanner/portal/journal suites, the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior, and Windows/Web CLI exports pass under 4.7. Backend suites also pass: `server/npm test` → 24/24; `mock-portal/npm test` → 4/4. Runtime tasks (including on-screen/real-time clock observation, restoration mouse/controller/touch flow, journal/case readability, the full Found → Unlock end-to-end observation, and the Web runtime in a browser) still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.7. Official Godot 4.7 console build is installed at `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` and verified (`--version` → `4.7.stable.official.5b4e0cb0f`). A 4.7 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.7 executable for all verification. The editor import, main-scene startup, complete GUT suite (578/578, 1831 asserts as of 2026-06-26), focused model/core/delivery/restoration/spawn/echo/scanner/portal/journal/scrapyard suites, the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior, Phase RV2-A/B two-space shell and scrap-foraging delivery, and Windows/Web CLI exports pass under 4.7. Backend suites: `server/npm test` → 23/24 (one pre-existing negotiate fallback-flag failure when `server/.env` has a live API key); `mock-portal/npm test` → 4/4. Runtime tasks (including the on-screen forage → hand-off → sort → knock → triage flow, real-time clock observation, restoration mouse/controller/touch flow, journal/case readability, the full Found → Unlock end-to-end observation, and the Web runtime in a browser) still require their own acceptance checks before `[x]`.
 
 ---
 

@@ -107,7 +107,7 @@
         }
       ],
       "prerequisites": ["auntie"],
-      "mutual_exclusions": ["scavenger"],
+      "mutual_exclusions": [],
       "holds_fragment_id": "fragment_02",
       "rewards": ["delicate_tool"],
       "has_ending": true,
@@ -178,7 +178,7 @@
         }
       ],
       "prerequisites": [],
-      "mutual_exclusions": ["artisan"],
+      "mutual_exclusions": [],
       "holds_fragment_id": "fragment_03",
       "rewards": ["archeologist_lead"],
       "has_ending": true,
@@ -235,6 +235,48 @@
           },
           {
             "text": "[b]Lead saved:[/b] Sam, the Archeologist — Ayla's contact who digs old things professionally, outside the city."
+          }
+        ],
+        "yard_empty": [
+          {
+            "name": "Ayla",
+            "text": "[i]She glances at your empty hands, then back at the yard.[/i] Wala ka gid nakakuha sang basura? Sige lang — daw sa palibot pa lang may nagahulat. Tan-awa ang duag sang suga kon indi ka makasiguro."
+          },
+          {
+            "name": "You",
+            "text": "I haven't found anything worth handing over yet."
+          },
+          {
+            "name": "Ayla",
+            "text": "Indi pagdali-dali. Pero kon magbawi ka nga wala sang dala, daw sayang lang ang oras mo. [i]She jerks a thumb toward the heaps.[/i] Balik kon may makuha ka na, ha?"
+          }
+        ],
+        "yard_sorting": [
+          {
+            "name": "Ayla",
+            "text": "[i]She doesn't look up from the scrap spread across her cloth.[/i] Hu, busy pa ko ga-sort sang imo dala. Daw indi pa na dayon — balik lang after a while, ha?"
+          },
+          {
+            "name": "You",
+            "text": "How long is it going to take?"
+          },
+          {
+            "name": "Ayla",
+            "text": "Mga isa ka oras pa. Kilid lang ko diri kon may maayo ako makita. [i]She waves you toward the heaps without lifting her eyes.[/i] Samari ka lang kon handa na."
+          }
+        ],
+        "yard_sort_ready": [
+          {
+            "name": "Ayla",
+            "text": "[i]She wipes her hands on her shirt and jerks a thumb toward the shop.[/i] Hala, tapos na ko ga-sort sang imo scrap. Ginbutang ko na ang baskit sa imo puertahan."
+          },
+          {
+            "name": "You",
+            "text": "You left it at the door?"
+          },
+          {
+            "name": "Ayla",
+            "text": "Oo. Balik ka na sa shop, makita mo na dira. Indi na ko magdugang until ma-kuha mo ina. [i]She turns back to her own pile.[/i] Sige, lakatan ko pa ni."
           }
         ]
       }

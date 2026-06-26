@@ -28,15 +28,16 @@ func test_met_and_completed_survive_loop_reset() -> void:
 	assert_true(RouteService.is_completed("scavenger"), "Completion persists across the loop reset")
 
 
-func test_shared_slot_defaults_to_scavenger_until_auntie_completed() -> void:
+func test_shared_slot_allows_scavenger_and_artisan() -> void:
 	# Day 2, 13:00 is the artisan/scavenger shared window.
+	# v2 design removed the Artisan/Scavenger mutual exclusion; both can now appear.
 	var first := RouteService.resolve_visitor(2, 13)
 	assert_not_null(first, "Someone answers the shared afternoon slot")
-	assert_eq(first.id, "scavenger", "Scavenger holds the slot while the auntie route is open")
+	assert_eq(first.id, "scavenger", "Scavenger answers the shared afternoon slot")
 
 	RouteService.mark_completed("auntie")
 	var second := RouteService.resolve_visitor(2, 13)
-	assert_eq(second.id, "artisan", "The artisan displaces the scavenger once auntie is complete")
+	assert_eq(second.id, "scavenger", "Scavenger remains available once auntie is complete")
 
 
 func test_no_visitor_outside_any_window() -> void:

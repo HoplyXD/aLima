@@ -58,6 +58,7 @@ var _returning_body: RigidBody3D = null
 var _return_target: Vector3 = Vector3.ZERO
 var _input_mode: int = InputMode.MODE_3D
 var _force_fallback: bool = false
+var _is_free_daily: bool = false
 var _bodies: Dictionary = {}  ## uid -> RigidBody3D.
 var _pending_release: bool = false
 var _props: Array[RigidBody3D] = []
@@ -210,7 +211,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## Opens the triage interface for the given delivery. Requests clock pause.
-func open(delivery: Array[ObjectInstance], storage_cap: int) -> void:
+## `is_free_daily` marks the daily Morning Delivery so it consumes the daily drop
+## when confirmed; scrap-sort triages do not.
+func open(delivery: Array[ObjectInstance], storage_cap: int, is_free_daily: bool = false) -> void:
+	_is_free_daily = is_free_daily
 	_state = TriageState.new(delivery, storage_cap)
 	_service = TriageService.new(GameState)
 	_restoration = RestorationService.new()
@@ -654,6 +658,9 @@ func _on_confirm() -> void:
 			_show_validation("Over capacity. Recycle more items.")
 		return
 	if _service.apply_triage(_state):
+		if _is_free_daily:
+			GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
+			SaveService.save_game()
 		close()
 
 

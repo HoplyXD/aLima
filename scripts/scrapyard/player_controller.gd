@@ -9,6 +9,8 @@ extends CharacterBody3D
 
 class_name ScrapyardPlayer
 
+signal scrap_prompt_changed(text: String)
+
 @export var walk_speed: float = 3.5
 @export var gravity: float = 9.8
 
@@ -20,10 +22,15 @@ class_name ScrapyardPlayer
 
 @onready var _camera: Camera3D = $Camera3D
 
+const SCRAP_INTERACT_RANGE := 4.0
+const SCRAP_PROMPT := "Press E to grab scrap"
+
 var _target_yaw: float = 0.0
 var _target_pitch: float = 0.0
 var _min_pitch: float = 0.0
 var _max_pitch: float = 0.0
+var _input_enabled: bool = true
+var _scrap_target: ScrapItem = null
 
 
 func _ready() -> void:
@@ -45,15 +52,29 @@ func _exit_tree() -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
+func set_input_enabled(enabled: bool) -> void:
+	_input_enabled = enabled
+
+
 func _input(event: InputEvent) -> void:
+	if not _input_enabled:
+		return
 	if event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
 		_target_yaw -= motion.relative.x * mouse_sensitivity.x
 		_target_pitch -= motion.relative.y * mouse_sensitivity.y
 		_target_pitch = clampf(_target_pitch, _min_pitch, _max_pitch)
+	elif event.is_action_pressed("interact"):
+		_activate_scrap_target()
 
 
 func _physics_process(delta: float) -> void:
+	if not _input_enabled:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		velocity.y -= gravity * delta
+		move_and_slide()
+		return
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	input_dir = input_dir.limit_length(1.0)
 
@@ -80,6 +101,7 @@ func _physics_process(delta: float) -> void:
 	velocity.y -= gravity * delta
 
 	move_and_slide()
+	_update_scrap_target()
 
 
 func _ensure_input_actions() -> void:
@@ -90,6 +112,45 @@ func _ensure_input_actions() -> void:
 	_add_action("move_back", [KEY_S, KEY_DOWN], [JOY_BUTTON_DPAD_DOWN], JOY_AXIS_LEFT_Y, 1.0)
 	# Interaction: keyboard E, gamepad A/cross.
 	_add_action("interact", [KEY_E], [JOY_BUTTON_A], JOY_AXIS_INVALID, 0.0)
+
+
+## Raycasts from the center of the screen and highlights/prompts any ScrapItem
+## the player is looking at, even if it is sitting on or partly inside trash.
+func _update_scrap_target() -> void:
+	if not _input_enabled or _camera == null:
+		_set_scrap_target(null)
+		return
+	var space := get_world_3d().direct_space_state
+	var from := _camera.global_position
+	var to := from - _camera.global_transform.basis.z * SCRAP_INTERACT_RANGE
+	var query := PhysicsRayQueryParameters3D.new()
+	query.from = from
+	query.to = to
+	query.collision_mask = 1
+	var result := space.intersect_ray(query)
+	var item: ScrapItem = null
+	if not result.is_empty():
+		item = result.collider as ScrapItem
+		if item != null and not item.interactable_enabled:
+			item = null
+	_set_scrap_target(item)
+
+
+func _set_scrap_target(item: ScrapItem) -> void:
+	if item == _scrap_target:
+		return
+	var had_target := _scrap_target != null
+	_scrap_target = item
+	if _scrap_target != null:
+		scrap_prompt_changed.emit(SCRAP_PROMPT)
+	elif had_target:
+		scrap_prompt_changed.emit("")
+
+
+func _activate_scrap_target() -> void:
+	if _scrap_target != null and is_instance_valid(_scrap_target):
+		_scrap_target.activate()
+		get_viewport().set_input_as_handled()
 
 
 func _add_action(

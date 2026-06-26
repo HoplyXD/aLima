@@ -9,8 +9,17 @@ extends Node3D
 ## The player is spawned at PlayerSpawn, the return door uses the same
 ## Interactable3D component as the shop door, and the day clock keeps ticking
 ## while the yard is loaded.
+##
+## RV2-B adds scrap pickups and Ayla hand-off: scrap items scatter in the yard
+## under the non-art ScrapItems node; Ayla has a proximity interactable that
+## opens the hand-off UI, which moves scrap into a pending sort. AylaService
+## knocks at the shop door ~1 in-game hour later with the sorted batch.
 
 const PLAYER_SCENE := preload("res://scenes/scrapyard/player.tscn")
+const SCRAP_ITEM_SCENE := preload("res://scenes/scrapyard/scrap_item.tscn")
+const AYLA_HANDOFF_SCENE := preload("res://scenes/scrapyard/ayla_handoff_screen.tscn")
+const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
+const INTERACTABLE_SCRIPT := preload("res://scripts/shop/interactable_3d.gd")
 
 ## Drop a Blender-exported .glb scene here to replace the placeholder MapRoot
 ## geometry. The anchors and collision live outside MapRoot and stay intact.
@@ -34,10 +43,19 @@ const PLAYER_SCENE := preload("res://scenes/scrapyard/player.tscn")
 
 @onready var _player_spawn: Marker3D = $Anchors/PlayerSpawn
 @onready var _door_return: Interactable3D = $Anchors/DoorReturn
+@onready var _ayla_anchor: Marker3D = $Anchors/AylaAnchor
+@onready var _ayla_sprite: Sprite3D = $Anchors/AylaAnchor/Ayla
 @onready var _map_root: Node3D = $MapRoot
 @onready var _hud: ScrapyardHud = $ScrapyardHud
 @onready var _sun: DirectionalLight3D = $DirectionalLight3D
 @onready var _world_env: WorldEnvironment = $WorldEnvironment
+
+var _player: ScrapyardPlayer
+var _handoff_screen: AylaHandoffScreen
+var _ayla_interactable: Interactable3D
+var _scrap_items_root: Node3D
+var _dialogue_box: DialogueBox
+var _overlay_open: bool = false
 
 const SUNRISE_HOUR: float = 6.0
 const SUNSET_HOUR: float = 20.0
@@ -62,6 +80,14 @@ func _ready() -> void:
 	_spawn_player()
 	_connect_return_door()
 	_connect_hud()
+	_setup_handoff_screen()
+	_setup_dialogue_box()
+	_setup_ayla_interaction()
+	_refresh_ayla_presence()
+	AylaService.sort_ready.connect(_on_ayla_sort_ready_yard)
+	_setup_scrap_items_root()
+	_spawn_scrap_items()
+	EventBus.day_changed.connect(_on_yard_day_changed)
 
 	# Keep the day clock running; the shop will resume driving it on return.
 	DayClock.running = true
@@ -85,10 +111,12 @@ func _maybe_swap_map() -> void:
 
 
 func _spawn_player() -> void:
-	var player: ScrapyardPlayer = PLAYER_SCENE.instantiate()
-	add_child(player)
+	_player = PLAYER_SCENE.instantiate()
+	add_child(_player)
+	if _hud != null:
+		_player.scrap_prompt_changed.connect(_hud.set_prompt)
 	if _player_spawn != null:
-		player.global_position = _player_spawn.global_position
+		_player.global_position = _player_spawn.global_position
 
 
 func _connect_return_door() -> void:
@@ -101,6 +129,178 @@ func _connect_hud() -> void:
 	if _hud == null or _door_return == null:
 		return
 	_door_return.prompt_changed.connect(_hud.set_prompt)
+
+
+func _setup_handoff_screen() -> void:
+	_handoff_screen = AYLA_HANDOFF_SCENE.instantiate()
+	_handoff_screen.closed.connect(_on_handoff_closed)
+	add_child(_handoff_screen)
+
+
+func _setup_dialogue_box() -> void:
+	_dialogue_box = DIALOGUE_BOX_SCENE.instantiate()
+	_dialogue_box.finished.connect(_on_dialogue_finished)
+	add_child(_dialogue_box)
+
+
+func _setup_ayla_interaction() -> void:
+	var area := Area3D.new()
+	area.name = "AylaInteractable"
+	area.collision_layer = 1
+	area.collision_mask = 1
+
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(1.2, 2.2, 1.2)
+	shape.shape = box
+	shape.position = Vector3(0, 1.1, 0)
+	area.add_child(shape)
+
+	area.set_script(INTERACTABLE_SCRIPT)
+	_ayla_interactable = area as Interactable3D
+	_ayla_interactable.prompt_text = "Hand scrap to Ayla"
+	_ayla_interactable.proximity_prompt_text = "Press E to hand scrap to Ayla"
+	_ayla_interactable.use_proximity = true
+	_ayla_interactable.activated.connect(_open_handoff)
+	if _hud != null:
+		_ayla_interactable.prompt_changed.connect(_hud.set_prompt)
+
+	_ayla_anchor.add_child(area)
+
+
+func _setup_scrap_items_root() -> void:
+	_scrap_items_root = Node3D.new()
+	_scrap_items_root.name = "ScrapItems"
+	add_child(_scrap_items_root)
+
+
+func _open_handoff() -> void:
+	if AylaService.is_sort_ready():
+		_dialogue_box.start(
+			_ayla_lines(
+				"yard_sort_ready",
+				"Ayla: Tapos na ko ga-sort. Ginbutang ko na ang baskit sa imo puertahan."
+			)
+		)
+		_enter_overlay()
+		return
+	if AylaService.is_sort_active():
+		_dialogue_box.start(
+			_ayla_lines(
+				"yard_sorting",
+				"Ayla: Busy pa ko ga-sort sang imo scrap. Balik lang after a while, ha?"
+			)
+		)
+		_enter_overlay()
+		return
+	if _total_scrap_count() == 0:
+		_dialogue_box.start(_ayla_lines("yard_empty", "Ayla shrugs. 'Balik kon may dala ka, ha?'"))
+		_enter_overlay()
+	else:
+		if _handoff_screen != null:
+			_handoff_screen.open()
+		_enter_overlay()
+
+
+## Loads an authored Ayla dialogue block from the scavenger route, falling back to
+## a single-line string if the route or key is missing.
+func _ayla_lines(dialogue_key: String, fallback: String) -> Array:
+	var route := DataRepository.singleton().get_route("scavenger")
+	if route != null:
+		var lines: Array = route.dialogue_for(dialogue_key)
+		if not lines.is_empty():
+			return lines
+	return [fallback]
+
+
+func _spawn_scrap_items() -> void:
+	var scrap_cfg := DataRepository.singleton().get_scrap_config()
+	var rng := GameState.make_rng("scrap_scatter_day_%d" % DayClock.get_day())
+
+	var desired_count := scrap_cfg.base_scatter_count
+	var bonus_key := str(DayClock.get_day())
+	desired_count += int(scrap_cfg.per_day_scatter_bonus.get(bonus_key, 0))
+	desired_count += rng.randi_range(0, 1)
+
+	var loop := GameState.save_state.loop
+	if loop.yard_scrap_remaining < 0:
+		loop.yard_scrap_remaining = desired_count
+
+	var count := maxi(loop.yard_scrap_remaining, 0)
+	if count <= 0:
+		return
+
+	var rarity_names := ModelEnums.RARITY_NAMES
+	var weights: Array[float] = []
+	for rarity_name in rarity_names:
+		weights.append(float(scrap_cfg.yard_scatter_rarity_weights.get(rarity_name, 0.0)))
+
+	var bounds := scrap_cfg.scatter_bounds
+	var center_x := float(bounds.get("center_x", 0.0))
+	var center_z := float(bounds.get("center_z", -7.0))
+	var size_x := float(bounds.get("size_x", 40.0))
+	var size_z := float(bounds.get("size_z", 34.0))
+
+	var space := get_world_3d().direct_space_state
+	for i in count:
+		var rarity := _pick_rarity(rng, rarity_names, weights)
+		var pos := _find_scrap_spawn_position(rng, bounds, space)
+		var item: ScrapItem = SCRAP_ITEM_SCENE.instantiate()
+		item.set_rarity(rarity)
+		item.position = pos
+		item.collected.connect(_on_scrap_collected)
+		_scrap_items_root.add_child(item)
+
+
+func _pick_rarity(
+	rng: RandomNumberGenerator, names: Array[String], weights: Array[float]
+) -> String:
+	var total := 0.0
+	for w in weights:
+		total += w
+	if total <= 0.0:
+		return names[0]
+	var roll := rng.randf() * total
+	for i in names.size():
+		roll -= weights[i]
+		if roll <= 0.0:
+			return names[i]
+	return names[names.size() - 1]
+
+
+## Raycasts downward to place scrap on the actual yard geometry instead of a flat
+## y=0.3 plane, so items don't spawn buried under uneven ground or inside debris.
+## Falls back to the old flat position if no collision is hit after a few tries.
+func _find_scrap_spawn_position(
+	rng: RandomNumberGenerator, bounds: Dictionary, space: PhysicsDirectSpaceState3D
+) -> Vector3:
+	var center_x := float(bounds.get("center_x", 0.0))
+	var center_z := float(bounds.get("center_z", -7.0))
+	var size_x := float(bounds.get("size_x", 40.0))
+	var size_z := float(bounds.get("size_z", 34.0))
+
+	var max_attempts := 10
+	for attempt in max_attempts:
+		var x := center_x + rng.randf_range(-size_x * 0.5, size_x * 0.5)
+		var z := center_z + rng.randf_range(-size_z * 0.5, size_z * 0.5)
+		var query := PhysicsRayQueryParameters3D.new()
+		query.from = Vector3(x, 50.0, z)
+		query.to = Vector3(x, -10.0, z)
+		query.collision_mask = 1
+		var result := space.intersect_ray(query)
+		if result.is_empty():
+			continue
+		var pos: Vector3 = result.position
+		pos.y += 0.1
+		if pos.y < 0.0:
+			continue
+		return pos
+
+	return Vector3(
+		center_x + rng.randf_range(-size_x * 0.5, size_x * 0.5),
+		0.3,
+		center_z + rng.randf_range(-size_z * 0.5, size_z * 0.5)
+	)
 
 
 func _update_hud() -> void:
@@ -204,7 +404,12 @@ func _generate_map_collision() -> void:
 		$Collision.add_child(body)
 		body.owner = self
 		shape.owner = self
-		print("Scrapyard: merged %d faces into one map collision body (skipped %d small meshes)" % [faces.size() / 3, skipped])
+		print(
+			(
+				"Scrapyard: merged %d faces into one map collision body (skipped %d small meshes)"
+				% [faces.size() / 3, skipped]
+			)
+		)
 	else:
 		print("Scrapyard: generated per-mesh collision (skipped %d small meshes)" % skipped)
 
@@ -218,3 +423,89 @@ func _find_mesh_instances(root: Node) -> Array[MeshInstance3D]:
 		if child.get_child_count() > 0:
 			result.append_array(_find_mesh_instances(child))
 	return result
+
+
+func _on_scrap_collected(_rarity: String) -> void:
+	GameState.save_state.loop.yard_scrap_remaining = maxi(
+		GameState.save_state.loop.yard_scrap_remaining - 1, 0
+	)
+	_refresh_hud_hotbar()
+
+
+func _refresh_hud_hotbar() -> void:
+	if _hud == null:
+		return
+	_hud.set_hotbar(GameState.save_state.loop.scrap_pool)
+
+
+func _total_scrap_count() -> int:
+	var pool: Dictionary = GameState.save_state.loop.scrap_pool
+	var total := 0
+	for count in pool.values():
+		total += int(count)
+	return total
+
+
+func _on_ayla_sort_ready_yard(_day: int, _hour: int) -> void:
+	_refresh_ayla_presence()
+
+
+## Hides/disables yard Ayla when her sorted batch is ready at the shop door;
+## she reappears once the player returns to the yard after the sort is consumed.
+func _refresh_ayla_presence() -> void:
+	var present := not AylaService.is_sort_ready()
+	if _ayla_sprite != null:
+		_ayla_sprite.visible = present
+	if _ayla_interactable != null:
+		_ayla_interactable.set_enabled(present)
+		if not present and _hud != null:
+			_hud.set_prompt("")
+
+
+func _on_yard_day_changed(_day: int) -> void:
+	GameState.save_state.loop.yard_scrap_remaining = -1
+	for child in _scrap_items_root.get_children():
+		child.queue_free()
+	_spawn_scrap_items()
+
+
+func _on_handoff_closed() -> void:
+	_exit_overlay()
+
+
+func _on_dialogue_finished() -> void:
+	_exit_overlay()
+
+
+func _enter_overlay() -> void:
+	if _overlay_open:
+		return
+	_overlay_open = true
+	if _player != null:
+		_player.set_input_enabled(false)
+	if DisplayServer.get_name() != "headless":
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	_set_yard_interactables_enabled(false)
+
+
+func _exit_overlay() -> void:
+	if not _overlay_open:
+		return
+	_overlay_open = false
+	if _player != null:
+		_player.set_input_enabled(true)
+	if DisplayServer.get_name() != "headless":
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	_set_yard_interactables_enabled(true)
+
+
+func _set_yard_interactables_enabled(enabled: bool) -> void:
+	if _door_return != null:
+		_door_return.set_enabled(enabled)
+	if _ayla_interactable != null:
+		_ayla_interactable.set_enabled(enabled)
+	if _scrap_items_root != null:
+		for child in _scrap_items_root.get_children():
+			var interactable := child as Interactable3D
+			if interactable != null:
+				interactable.set_enabled(enabled)

@@ -42,6 +42,10 @@ var _alya_waiting := false
 ## True while Alya's morning-delivery dialogue is up; triage opens when it ends.
 var _alya_delivering := false
 
+## Whether the waiting Ayla knock is the daily free drop or a scrap-sort return.
+enum AylaSource { NONE, DAILY, SCRAP }
+var _ayla_source: AylaSource = AylaSource.NONE
+
 ## Alya (the morning-delivery courier) portrait, shown when she knocks.
 const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
 
@@ -115,13 +119,11 @@ func _ready() -> void:
 	_restoration_view.set_storage_screen(_storage_screen)
 	_book_viewport.closed.connect(_on_journal_closed)
 
-	_refresh_ui()
+	AylaService.sort_ready.connect(_on_ayla_sort_ready)
+	EventBus.day_changed.connect(_on_day_changed)
+	_refresh_ayla_knock()
 
-	# Alya brings the morning delivery automatically each day; the player must triage it
-	# (the triage screen can't be exited until every item is decided). day_changed covers
-	# later days; the deferred call covers the day the session opens on.
-	DayClock.day_changed.connect(func(_day: int) -> void: _auto_morning_delivery())
-	call_deferred("_auto_morning_delivery")
+	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
 
 
@@ -188,13 +190,18 @@ func _on_door_pressed() -> void:
 		_visitor2.visible = false
 		_alya_delivering = true
 		_visitor.texture = ALYA_PORTRAIT
-		_open_dialogue(
-			[
+		var lines: Array = []
+		if _ayla_source == AylaSource.DAILY:
+			lines = [
 				"Alya: Morning! Dragged in today's haul for you.",
 				"Let's sort through what's worth keeping.",
-			],
-			true
-		)
+			]
+		else:
+			lines = [
+				"Alya: Here's what I sorted from your scrap.",
+				"Let's see what's worth keeping.",
+			]
+		_open_dialogue(lines, true)
 		return
 	# Authored dialogue + portraits live in data/routes/routes.json. The door shows
 	# whichever character RouteService schedules for the current in-game day/hour,
@@ -275,7 +282,7 @@ func _open_dialogue(lines: Array, show_visitor: bool) -> void:
 	_hud.start_dialogue(lines)
 
 
-func _generate_and_show_triage() -> void:
+func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	_set_interactables_enabled(false)
 	var repo := DataRepository.singleton()
 
@@ -284,22 +291,30 @@ func _generate_and_show_triage() -> void:
 		var director := SpawnDirector.new(repo, GameState)
 		director.plan_loop_placements()
 
+	# Consume the earned scrap sort unless this is the separate daily free drop.
+	if not is_free_daily:
+		AylaService.consume_sort()
+
 	# Trigger/apply morning mini-events (Rush Delivery, Mystery Box, Community Request,
 	# Suspicious Antique) before generating the batch so their modifiers and injected
-	# instances are included.
+	# instances are included. Scrap bias is layered on top of the event-adjusted weights
+	# and only touches rarity weights, so event batch-size/storage effects remain intact.
 	EventDirector.roll_morning_event(GameState.save_state.loop.current_day)
 	var event_cfg := EventDirector.modify_delivery_config(repo.get_delivery_config())
+	# The daily free drop uses the event-adjusted base config; only scrap-sort
+	# returns get the scrap-bias layer applied.
+	var biased_cfg := event_cfg
+	if not is_free_daily:
+		biased_cfg = AylaService.get_biased_delivery_config(event_cfg)
 	var extras := EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
-	extras.append_array(_first_delivery_showcase(GameState.save_state.loop.current_day))
+	if is_free_daily:
+		extras.append_array(_first_delivery_showcase(GameState.save_state.loop.current_day))
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(
-		GameState.save_state.loop.current_day, event_cfg, extras
+		GameState.save_state.loop.current_day, biased_cfg, extras
 	)
-	# The day is only marked "delivered" once triage is actually applied (see
-	# TriageService.apply_triage), so exiting triage without confirming lets the player
-	# reopen the morning delivery instead of silently losing the whole batch.
-	_triage_screen.open(delivery, event_cfg.storage_cap)
+	_triage_screen.open(delivery, biased_cfg.storage_cap, is_free_daily)
 
 
 ## Guarantees the Oton Death Mask arrives in the very first delivery so the gold
@@ -325,31 +340,53 @@ func _first_delivery_showcase(day: int) -> Array[ObjectInstance]:
 
 
 func _on_morning_delivery_pressed() -> void:
-	if GameState.save_state.loop.current_day == GameState.save_state.loop.last_delivery_day:
-		_open_dialogue(["The morning delivery has already arrived."], false)
+	# Hidden accessibility fallback. If Ayla is already waiting at the door, answer it;
+	# otherwise generate the daily free drop if still due, or a ready scrap sort.
+	if _alya_waiting:
+		_on_door_pressed()
 		return
-	_generate_and_show_triage()
+	if AylaService.is_sort_ready():
+		_generate_and_show_triage(false)
+		return
+	if GameState.save_state.loop.last_delivery_day != GameState.save_state.loop.current_day:
+		_generate_and_show_triage(true)
+		return
+	_open_dialogue(["No deliveries are waiting right now."], false)
 
 
-## Alya's automatic morning delivery: opens triage when this day's delivery has not
-## been handled yet (the screen can't be exited until every item is decided).
-func _auto_morning_delivery() -> void:
-	# Headless test runs drive the shop directly and don't want this auto-firing.
-	if not is_inside_tree() or DisplayServer.get_name() == "headless":
-		return
-	if GameState.save_state.loop.current_day == GameState.save_state.loop.last_delivery_day:
-		return
+## Called when the in-game day advances. Ayla may show up with the free morning drop.
+func _on_day_changed(_day: int) -> void:
+	_refresh_ayla_knock()
+
+
+## Re-arm the door knock for a finished scrap sort (called by signal) or a new day.
+## Sort returns take priority over the daily free drop; the other is queued after
+## the current knock is answered.
+func _refresh_ayla_knock() -> void:
 	if _alya_waiting or _alya_delivering or _triage_screen.visible:
 		return
-	# Alya knocks: she waits at the door (Visitor2) until the player answers it.
-	_alya_waiting = true
-	_visitor2.texture = ALYA_PORTRAIT
-	_visitor2.visible = true
+	if AylaService.is_sort_ready():
+		_ayla_source = AylaSource.SCRAP
+		_alya_waiting = true
+		_visitor2.texture = ALYA_PORTRAIT
+		_visitor2.visible = true
+		return
+	if GameState.save_state.loop.last_delivery_day != GameState.save_state.loop.current_day:
+		_ayla_source = AylaSource.DAILY
+		_alya_waiting = true
+		_visitor2.texture = ALYA_PORTRAIT
+		_visitor2.visible = true
+
+
+## Wrapper for the AylaService sort_ready signal.
+func _on_ayla_sort_ready(_day: int, _hour: int) -> void:
+	_refresh_ayla_knock()
 
 
 func _on_triage_closed() -> void:
 	_set_interactables_enabled(true)
 	_refresh_ui()
+	_refresh_ayla_knock()
 
 
 func _on_restoration_closed() -> void:
@@ -480,7 +517,9 @@ func _on_dialogue_finished() -> void:
 	# Alya's knock is over — now hand the delivery to triage.
 	if _alya_delivering:
 		_alya_delivering = false
-		_generate_and_show_triage()
+		var was_daily := _ayla_source == AylaSource.DAILY
+		_ayla_source = AylaSource.NONE
+		_generate_and_show_triage(was_daily)
 		return
 	# After a route's door conversation, open its scripted showcase if a beat is due.
 	if not finished_route_id.is_empty():

@@ -39,6 +39,7 @@ SettingsService="*res://scripts/core/settings_service.gd"
 PauseMenu="*res://scenes/ui/pause_menu.tscn"
 LocalAI="*res://scripts/economy/local_ai.gd"
 SpaceManager="*res://scripts/core/space_manager.gd"
+AylaService="*res://scripts/delivery/ayla_service.gd"
 
 [display]
 
