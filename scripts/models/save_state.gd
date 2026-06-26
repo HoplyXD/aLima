@@ -155,6 +155,10 @@ class LoopState:
 	var tool_shipments: Array = []  ## Pending purchases: {tool_id, arrival_index}.
 	var restore_target_uid: String = ""  ## Instance selected to restore at the bench.
 	var flashlight_on: bool = false  ## Phone flashlight state; loop-scoped, no battery.
+	## Phase RV2-B scrap-foraging state. Reset on loop_reset; persistent knowledge untouched.
+	var scrap_pool: Dictionary = {}  ## rarity_name -> count foraged this loop.
+	## pending_sort = { "submitted": {}, "ready_index": int, "active": bool }.
+	var pending_sort: Dictionary = {}
 	## Phase 18 mini-event state. All reset on loop_reset; persistent knowledge untouched.
 	var event_active: Array = []  ## Active event states: {event_id, day, hour,
 	## expires_hour, resolved}.
@@ -181,6 +185,8 @@ class LoopState:
 		l.tool_shipments = SaveState._as_array(data.get("tool_shipments", []))
 		l.restore_target_uid = ModelUtils.as_string(data.get("restore_target_uid"))
 		l.flashlight_on = ModelUtils.as_bool(data.get("flashlight_on"))
+		l.scrap_pool = ModelUtils.as_dictionary(data.get("scrap_pool"))
+		l.pending_sort = ModelUtils.as_dictionary(data.get("pending_sort"))
 		l.event_active = SaveState._as_array(data.get("event_active", []))
 		l.event_history = ModelUtils.as_string_array(data.get("event_history"))
 		l.event_caps = data.get("event_caps", {}) as Dictionary
@@ -206,6 +212,8 @@ class LoopState:
 			"tool_shipments": tool_shipments.duplicate(),
 			"restore_target_uid": restore_target_uid,
 			"flashlight_on": flashlight_on,
+			"scrap_pool": scrap_pool.duplicate(),
+			"pending_sort": pending_sort.duplicate(true),
 			"event_active": event_active.duplicate(),
 			"event_history": event_history.duplicate(),
 			"event_caps": event_caps.duplicate(),

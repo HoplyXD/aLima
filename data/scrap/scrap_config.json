@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "base_scatter_count": 10,
+  "per_day_scatter_bonus": {
+    "1": 2,
+    "2": 2,
+    "3": 3,
+    "4": 3,
+    "5": 4
+  },
+  "yard_scatter_rarity_weights": {
+    "white": 50,
+    "green": 30,
+    "blue": 15,
+    "purple": 4,
+    "gold": 1
+  },
+  "bias_impulses": {
+    "white": {
+      "white": 0.95,
+      "green": 0.05
+    },
+    "green": {
+      "white": 0.4,
+      "green": 0.55,
+      "blue": 0.05
+    },
+    "blue": {
+      "green": 0.4,
+      "blue": 0.55,
+      "purple": 0.05
+    },
+    "purple": {
+      "blue": 0.4,
+      "purple": 0.55,
+      "gold": 0.05
+    },
+    "gold": {
+      "purple": 0.35,
+      "gold": 0.65
+    }
+  },
+  "bias_scalar": 30.0,
+  "scatter_bounds": {
+    "center_x": 0.0,
+    "center_z": -7.0,
+    "size_x": 40.0,
+    "size_z": 34.0
+  }
+}

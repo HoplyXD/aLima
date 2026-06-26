@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://bqjvxv1p5t2ca"]
+
+[ext_resource type="Script" path="res://scripts/scrapyard/scrap_item.gd" id="1_scrap_item"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_scrap"]
+radius = 0.25
+
+[sub_resource type="SphereMesh" id="SphereMesh_scrap"]
+radius = 0.2
+height = 0.4
+
+[node name="ScrapItem" type="Area3D" groups=["scrap_item"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_scrap_item")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_scrap")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_scrap")

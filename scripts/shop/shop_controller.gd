@@ -115,13 +115,10 @@ func _ready() -> void:
 	_restoration_view.set_storage_screen(_storage_screen)
 	_book_viewport.closed.connect(_on_journal_closed)
 
-	_refresh_ui()
+	AylaService.sort_ready.connect(_on_ayla_sort_ready)
+	_check_pending_ayla_knock()
 
-	# Alya brings the morning delivery automatically each day; the player must triage it
-	# (the triage screen can't be exited until every item is decided). day_changed covers
-	# later days; the deferred call covers the day the session opens on.
-	DayClock.day_changed.connect(func(_day: int) -> void: _auto_morning_delivery())
-	call_deferred("_auto_morning_delivery")
+	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
 
 
@@ -284,22 +281,26 @@ func _generate_and_show_triage() -> void:
 		var director := SpawnDirector.new(repo, GameState)
 		director.plan_loop_placements()
 
+	# Consume the earned sort so the same scrap cannot be double-spent. The day is now
+	# committed to one sorted batch; exiting triage without confirming loses it.
+	AylaService.consume_sort()
+	GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
+
 	# Trigger/apply morning mini-events (Rush Delivery, Mystery Box, Community Request,
 	# Suspicious Antique) before generating the batch so their modifiers and injected
-	# instances are included.
+	# instances are included. Scrap bias is layered on top of the event-adjusted weights
+	# and only touches rarity weights, so event batch-size/storage effects remain intact.
 	EventDirector.roll_morning_event(GameState.save_state.loop.current_day)
 	var event_cfg := EventDirector.modify_delivery_config(repo.get_delivery_config())
+	var biased_cfg := AylaService.get_biased_delivery_config(event_cfg)
 	var extras := EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
 	extras.append_array(_first_delivery_showcase(GameState.save_state.loop.current_day))
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(
-		GameState.save_state.loop.current_day, event_cfg, extras
+		GameState.save_state.loop.current_day, biased_cfg, extras
 	)
-	# The day is only marked "delivered" once triage is actually applied (see
-	# TriageService.apply_triage), so exiting triage without confirming lets the player
-	# reopen the morning delivery instead of silently losing the whole batch.
-	_triage_screen.open(delivery, event_cfg.storage_cap)
+	_triage_screen.open(delivery, biased_cfg.storage_cap)
 
 
 ## Guarantees the Oton Death Mask arrives in the very first delivery so the gold
@@ -325,26 +326,29 @@ func _first_delivery_showcase(day: int) -> Array[ObjectInstance]:
 
 
 func _on_morning_delivery_pressed() -> void:
-	if GameState.save_state.loop.current_day == GameState.save_state.loop.last_delivery_day:
-		_open_dialogue(["The morning delivery has already arrived."], false)
+	# RV2-B: no free morning drop. The button is hidden in production; this guard
+	# prevents any accidental fallback path from generating a batch.
+	if not AylaService.is_sort_ready():
+		_open_dialogue(["No free morning drop. Forage scrap and hand it to Ayla first."], false)
 		return
 	_generate_and_show_triage()
 
 
-## Alya's automatic morning delivery: opens triage when this day's delivery has not
-## been handled yet (the screen can't be exited until every item is decided).
-func _auto_morning_delivery() -> void:
-	# Headless test runs drive the shop directly and don't want this auto-firing.
-	if not is_inside_tree() or DisplayServer.get_name() == "headless":
-		return
-	if GameState.save_state.loop.current_day == GameState.save_state.loop.last_delivery_day:
-		return
+## Ayla's sort finished while the player was in the shop (or a saved sort was ready
+## when the shop loaded). She waits at the door until answered.
+func _on_ayla_sort_ready(_day: int, _hour: int) -> void:
 	if _alya_waiting or _alya_delivering or _triage_screen.visible:
 		return
-	# Alya knocks: she waits at the door (Visitor2) until the player answers it.
 	_alya_waiting = true
 	_visitor2.texture = ALYA_PORTRAIT
 	_visitor2.visible = true
+
+
+## Re-arm the door knock if a sort completed while the shop scene was unloaded
+## (e.g. the player was in the scrapyard when the hour ticked over).
+func _check_pending_ayla_knock() -> void:
+	if AylaService.is_sort_ready():
+		_on_ayla_sort_ready(DayClock.get_day(), DayClock.get_hour())
 
 
 func _on_triage_closed() -> void:

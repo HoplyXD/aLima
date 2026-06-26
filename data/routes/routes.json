@@ -236,6 +236,20 @@
           {
             "text": "[b]Lead saved:[/b] Sam, the Archeologist — Ayla's contact who digs old things professionally, outside the city."
           }
+        ],
+        "yard_empty": [
+          {
+            "name": "Ayla",
+            "text": "[i]She glances at your empty hands, then back at the yard.[/i] Wala ka gid nakakuha sang basura? Sige lang — daw sa palibot pa lang may nagahulat. Tan-awa ang duag sang suga kon indi ka makasiguro."
+          },
+          {
+            "name": "You",
+            "text": "I haven't found anything worth handing over yet."
+          },
+          {
+            "name": "Ayla",
+            "text": "Indi pagdali-dali. Pero kon magbawi ka nga wala sang dala, daw sayang lang ang oras mo. [i]She jerks a thumb toward the heaps.[/i] Balik kon may makuha ka na, ha?"
+          }
         ]
       }
     },

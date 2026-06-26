@@ -27,6 +27,7 @@ var buyer_personas: Dictionary = {}  ## id -> BuyerPersona
 var event_definitions: Dictionary = {}  ## id -> EventDefinition
 var delivery_config: DeliveryConfig = DeliveryConfig.new()
 var spawn_config: SpawnConfig = SpawnConfig.new()
+var scrap_config: ScrapConfig = ScrapConfig.new()
 var starting_kit: Dictionary = {"tool_ids": [], "technique_ids": []}
 
 var _loaded := false
@@ -62,6 +63,7 @@ func load_from_filesystem() -> ValidationResult:
 	_load_directory("journal", _parse_journal_file)
 	_load_directory("buyers", _parse_buyer_file)
 	_load_directory("events", _parse_event_file)
+	_load_directory("scrap", _parse_scrap_file)
 
 	if not _validation.is_valid():
 		_clear_state()
@@ -162,6 +164,10 @@ func get_spawn_config() -> SpawnConfig:
 	return spawn_config
 
 
+func get_scrap_config() -> ScrapConfig:
+	return scrap_config
+
+
 func _clear_state() -> void:
 	_loaded = false
 	scrap_object_templates.clear()
@@ -179,6 +185,7 @@ func _clear_state() -> void:
 	event_definitions.clear()
 	delivery_config = DeliveryConfig.new()
 	spawn_config = SpawnConfig.new()
+	scrap_config = ScrapConfig.new()
 	starting_kit = {"tool_ids": [], "technique_ids": []}
 
 
@@ -408,6 +415,15 @@ func _parse_event_file(file_path: String) -> void:
 		var event_def := EventDefinition.from_dictionary(item)
 		_add_record(event_definitions, event_def.id, event_def, file_path, "event_definition")
 		event_def.validate(_validation, file_path)
+
+
+func _parse_scrap_file(file_path: String) -> void:
+	var doc: Variant = _read_json_file(file_path)
+	if doc == null:
+		return
+	var scrap_cfg := ScrapConfig.from_dictionary(doc)
+	scrap_cfg.validate(_validation, file_path)
+	scrap_config = scrap_cfg
 
 
 func _get_items(doc: Dictionary, file_path: String) -> Array:

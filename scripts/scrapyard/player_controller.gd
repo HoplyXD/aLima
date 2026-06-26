@@ -24,6 +24,7 @@ var _target_yaw: float = 0.0
 var _target_pitch: float = 0.0
 var _min_pitch: float = 0.0
 var _max_pitch: float = 0.0
+var _input_enabled: bool = true
 
 
 func _ready() -> void:
@@ -45,7 +46,13 @@ func _exit_tree() -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
+func set_input_enabled(enabled: bool) -> void:
+	_input_enabled = enabled
+
+
 func _input(event: InputEvent) -> void:
+	if not _input_enabled:
+		return
 	if event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
 		_target_yaw -= motion.relative.x * mouse_sensitivity.x
@@ -54,6 +61,12 @@ func _input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not _input_enabled:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		velocity.y -= gravity * delta
+		move_and_slide()
+		return
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	input_dir = input_dir.limit_length(1.0)
 

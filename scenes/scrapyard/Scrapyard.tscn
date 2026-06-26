@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://cmnncy5e8fmri" path="res://scripts/shop/interactable_3d.gd" id="3_interactable"]
 [ext_resource type="PackedScene" uid="uid://c8g1y868fsx8g" path="res://assets/3d Assets/Scrapyard/scrapyard.glb" id="4_map"]
 [ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="5_ayla"]
+[ext_resource type="PackedScene" uid="uid://bqjvxv1p5t2cc" path="res://scenes/scrapyard/ayla_handoff_screen.tscn" id="6_handoff"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(46, 0.1, 40)
@@ -20,6 +21,9 @@ size = Vector3(8.4, 3.2, 6.4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_door_return"]
 size = Vector3(2, 2.5, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ayla"]
+size = Vector3(1.2, 2.2, 1.2)
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yard"]
 sky_top_color = Color(0.384, 0.643, 0.906, 1)

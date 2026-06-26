@@ -105,22 +105,56 @@ Manual (pending human observation): walk out the shop door into the yard; move w
 
 ### Tasks
 
-- `[ ]` **RV2-B.1 Scrap as a foraged resource.**
-  - A `ScrapItem` (rarity-tiered, white→up) scattered in the yard; pick-up adds to a loop-scoped scrap pool; data-driven spawn density per day.
-- `[ ]` **RV2-B.2 Ayla hand-off + sort + knock.**
-  - Ayla anchor in the yard; the player submits chosen scrap; a sort timer (~1 in-game hour, clock running) then fires a door-knock that opens the existing triage screen with a batch whose rarity draw is **biased** by the submitted scrap (D10), never guaranteed. Replaces the auto "Morning Delivery" trigger.
+- `[x]` **RV2-B.1 Scrap as a foraged resource.**
+  - `ScrapItem` (`scripts/scrapyard/scrap_item.gd` + `scenes/scrapyard/scrap_item.tscn`, rarity-tiered white→gold) is scattered deterministically in the yard under a non-art `ScrapItems` node; walking into it adds one count of its rarity to `LoopState.scrap_pool`.
+  - Spawn density and yard rarity weights are data-driven via `data/scrap/scrap_config.json` and `scripts/models/scrap_config.gd` (`class_name ScrapConfig`); `DataRepository` loads and validates it.
+- `[x]` **RV2-B.2 Ayla hand-off + sort + knock.**
+  - Ayla anchor in the yard (`AylaAnchor`/`AylaInteractable` in `scenes/scrapyard/Scrapyard.tscn`); the `AylaHandoffScreen` (`scenes/scrapyard/ayla_handoff_screen.tscn` / `scripts/scrapyard/ayla_handoff_screen.gd`) lets the player choose scrap counts and submit.
+  - `AylaService` autoload (`scripts/delivery/ayla_service.gd`) takes the selection, deducts it from `scrap_pool`, starts a sort timer (`ready_index = now + 1` in-game hour), and emits `sort_ready` on the next `EventBus.hour_changed` tick at/after ready.
+  - The shop door now shows Ayla only after `sort_ready`; answering consumes the sort and opens triage with a batch generated through the same `DeliveryGenerator` pipeline but whose rarity weights are biased by the submitted scrap (D10). Richer scrap raises higher-tier odds; no tier is ever guaranteed.
+  - The old free `DayClock.day_changed` auto-delivery trigger is removed from `ShopController`.
+- `[x]` **RV2-B.3 Unified press-E scrap pickup.**
+  - `ScrapItem` extends `Interactable3D` with `use_proximity = true` and `proximity_prompt_text = "Press E to grab scrap"`; the existing player-layer mask and `interact` action handle activation.
+  - On `activated`, the item increments `GameState.save_state.loop.scrap_pool[rarity]`, emits `collected(rarity)`, and `queue_free()`s.
+  - The grab prompt reaches the HUD through the same `prompt_changed → _hud.set_prompt` path used by Ayla and the return door.
+- `[x]` **RV2-B.4 5-slot scrap hotbar.**
+  - `ScrapyardHud` builds five tier slots in `ModelEnums.RARITY_NAMES` order, colored by tier, showing the carried count from `scrap_pool`.
+  - `Scrapyard` connects each scattered `ScrapItem.collected` signal to `_refresh_hud_hotbar()`, so pickups update the HUD immediately.
+- `[x]` **RV2-B.5 Ayla no-scrap dialogue + overlay handling.**
+  - Interacting with Ayla while `scrap_pool` is empty plays the authored `yard_empty` dialogue from the `scavenger` route through the reusable `DialogueBox`.
+  - With scrap in hand, the existing `AylaHandoffScreen` opens.
+  - Both overlays free the mouse, disable player movement/look, and disable yard interactables while open; capture and input restore on close. The clock keeps running.
 
 ### Acceptance
 
-- `[ ]` No free delivery; the only path to restorables is forage → hand to Ayla → sorted batch.
-- `[ ]` Across seeded runs, richer scrap measurably raises higher-rarity odds without guaranteeing them.
-- `[ ]` Sort consumes ~1 in-game hour; the knock opens triage; keep/recycle behaves as Phase 3.
+- `[x]` No free delivery; the only automated path to restorables is forage → hand to Ayla → sorted batch. (`tests/delivery/test_ayla_service.gd::test_no_free_auto_delivery_path`.)
+- `[x]` Across seeded runs, richer scrap measurably raises higher-tier (blue/gold) odds without guaranteeing them. (`test_seeded_distribution_is_biased_by_scrap`.)
+- `[x]` Sort consumes ~1 in-game hour; the knock opens triage; keep/recycle behaves as Phase 3. (`test_sort_timer_knocks_after_one_hour_not_before`, `test_sort_timer_knocks_after_reloading_past_ready`.)
+- `[x]` Automated: press-E pickup increments `scrap_pool` and emits `collected`; hotbar maps `scrap_pool` to five tier slots; Ayla branches to dialogue when empty and hand-off when carrying scrap. (`tests/scrapyard/test_scrap_pickup.gd`, `tests/scrapyard/test_scrapyard_hud_hotbar.gd`, `tests/scrapyard/test_ayla_dialogue_branch.gd`.)
+- `[-]` Manual: a full forage → hand-off → sort → knock → triage run remains a pending human observation gate; do not mark `[x]` until observed.
+- `[-]` Manual: on-screen E-pickup of scrap, hotbar refresh, Ayla empty-scrap dialogue, hand-off overlay mouse/input behavior, and controller/touch parity at 1920×1080 and 1280×720 remain pending human observation.
 
 ### Verification
 
 ```powershell
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
+& $godot --headless --editor --path . --quit
+# Result (2026-06-26): exit 0, no parser/resource/UID errors.
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/delivery -ginclude_subdirs -gexit
+# Result (2026-06-26): 50/50 passed, 273 asserts.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/scrapyard -ginclude_subdirs -gexit
+# Result (2026-06-26): 24/24 passed, 98 asserts.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-06-26): 586/586 passed, 1878 asserts.
+
+# New/changed files are gdformat/gdlint clean. Full-dir check still reports
+# pre-existing formatting drift in ~19 unrelated files from earlier phases.
+.venv/Scripts/gdformat --check scripts/scrapyard/scrapyard.gd scripts/scrapyard/scrap_item.gd scenes/ui/scrapyard_hud.gd tests/scrapyard/test_scrap_pickup.gd tests/scrapyard/test_scrapyard_hud_hotbar.gd tests/scrapyard/test_ayla_dialogue_branch.gd
+.venv/Scripts/gdlint scripts/scrapyard/scrapyard.gd scripts/scrapyard/scrap_item.gd scenes/ui/scrapyard_hud.gd tests/scrapyard/test_scrap_pickup.gd tests/scrapyard/test_scrapyard_hud_hotbar.gd tests/scrapyard/test_ayla_dialogue_branch.gd
+git diff --check
+# Result (2026-06-26): no trailing-whitespace errors.
 ```
+
 Manual: a full forage → hand-off → sort → knock → triage run.
 
 ---
@@ -253,7 +287,8 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[-]` Route progress is tracked in `RouteService` over PersistentState (so it survives the loop reset): a **met** flag (`dialogue_flags`) drives the dialogue branch, and **completion** (`route_completion`) drives mutual-exclusion visit gating — the artisan (prereq: auntie) displaces the scavenger in their shared afternoon slot only once the auntie route completes, and yields to her until then. Completion is wired to `EventBus.fragment_seated` (seating a route's fragment completes it, grants its rewards, and emits `EventBus.route_completed`). Still missing: the archeologist-lead extra-window shift, the scripted multi-day restoration beats themselves, and route expiry on an unanswered visit.
 - `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, atomic seating, buyer-persona marketplace economy (buy/sell/haggle/banter with 3-tier banter: on-device → backend `/api/negotiate` → offline fallback), settings/pause menu, and Windows/Web export presets are implemented and covered by GUT/backend tests or verified CLI export under Godot 4.7 / Node. The full disposition router (return/preserve/journal), evening system, video evidence, final submission package, and live-provider manual gate are not implemented.
 - `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. Cleaning tools are **visible, selectable 3D props on the bench** (`RestorationToolTray`, REST-R9 / task P4.8); the HUD tool buttons are a labelled accessibility/fallback. Author-placed condition decals (`ArtifactConditionDecal`) and per-instance random surface conditions are now supported. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate.
-- `[-]` The major shop actions (door, workbench, journal, phone, morning delivery) are **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
+- `[x]` Phase RV2-B Scrap Foraging & Ayla Delivery is implemented: `ScrapItem` pickups in the scrapyard, loop-scoped `scrap_pool`/`pending_sort` state, `AylaService` sort timer + scrap-biased delivery, `AylaHandoffScreen`, and the ShopController door path that consumes a ready sort and opens triage. Verified by `tests/delivery/test_ayla_service.gd` (12 tests) and the full GUT suite. The on-screen forage → hand-off → sort → knock → triage flow is a pending manual gate.
+- `[-]` The major shop actions (door, workbench, journal, phone) are **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
 
 ## Reconciliation With the Old Tracker
 
@@ -396,12 +431,13 @@ gdlint scripts scenes dialogue tests
 
 Push-Location server
 npm test
-# Result (2026-06-23): 24/24 passed.
+# Result (2026-06-26): 23/24 passed; one pre-existing negotiate fallback-flag test fails
+# because server/.env has a live API key configured. Not caused by RV2-B.
 Pop-Location
 
 Push-Location mock-portal
 npm test
-# Result (2026-06-23): 4/4 passed.
+# Result (2026-06-26): 4/4 passed.
 Pop-Location
 
 & $godot --headless --path . --export-release "Windows Desktop" "build/aLima.exe"
