@@ -21,28 +21,46 @@ texture = ExtResource("6_7h80y")
 texture = ExtResource("7_3m4ny")
 
 [sub_resource type="BoxMesh" id="BoxMesh_table"]
-size = Vector3(6, 0.2, 4)
+size = Vector3(20, 0.2, 20)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_table"]
-size = Vector3(6, 0.2, 4)
+size = Vector3(20, 0.2, 20)
 
-[sub_resource type="BoxMesh" id="BoxMesh_keep"]
-size = Vector3(2, 0.8, 2)
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_x"]
+size = Vector3(0.2, 2, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_z"]
+size = Vector3(10.8, 2, 0.2)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_keep"]
+top_radius = 1.1
+bottom_radius = 1.1
+height = 0.08
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_keep"]
-size = Vector3(2, 0.8, 2)
+size = Vector3(2.2, 0.08, 2.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_keep_zone"]
-size = Vector3(2.6, 2, 2.6)
+size = Vector3(2.8, 2, 2.8)
 
-[sub_resource type="BoxMesh" id="BoxMesh_recycle"]
-size = Vector3(2, 0.8, 2)
+[sub_resource type="TorusMesh" id="TorusMesh_keep_ring"]
+inner_radius = 0.95
+outer_radius = 1.08
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_recycle"]
+top_radius = 1.1
+bottom_radius = 1.1
+height = 0.08
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_recycle"]
-size = Vector3(2, 0.8, 2)
+size = Vector3(2.2, 0.08, 2.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_recycle_zone"]
-size = Vector3(2.6, 2, 2.6)
+size = Vector3(2.8, 2, 2.8)
+
+[sub_resource type="TorusMesh" id="TorusMesh_recycle_ring"]
+inner_radius = 0.95
+outer_radius = 1.08
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_left"]
 size = Vector3(0.2, 2, 3.4)
@@ -66,6 +84,37 @@ albedo_color = Color(0.25, 0.45, 0.25, 0.4)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_recycle"]
 transparency = 1
 albedo_color = Color(0.45, 0.25, 0.22, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_keep_ring"]
+shading_mode = 0
+albedo_color = Color(0.1, 0.8, 0.25, 1)
+emission_enabled = true
+emission = Color(0.1, 0.8, 0.25, 1)
+emission_energy_multiplier = 0.25
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_recycle_ring"]
+shading_mode = 0
+albedo_color = Color(0.9, 0.25, 0.15, 1)
+emission_enabled = true
+emission = Color(0.9, 0.25, 0.15, 1)
+emission_energy_multiplier = 0.25
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_unit"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(9, 0.1, 7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_shelf"]
+size = Vector3(5.4, 0.8, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.22, 0.18, 0.14, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.12, 0.1, 0.08, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shelf"]
+albedo_color = Color(0.3, 0.24, 0.18, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_title"]
 font = ExtResource("3_qrd20")
@@ -117,13 +166,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -0.3)
 collision_layer = 0
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
-mesh = SubResource("BoxMesh_keep")
+[node name="Pad" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("CylinderMesh_keep")
 surface_material_override/0 = SubResource("StandardMaterial3D_keep")
 
+[node name="Ring" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("TorusMesh_keep_ring")
+surface_material_override/0 = SubResource("StandardMaterial3D_keep_ring")
+
+[node name="Label" type="Label3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.35, 0)
+billboard = 1
+pixel_size = 0.015
+font = ExtResource("3_qrd20")
+font_size = 96
+outline_size = 8
+text = "KEEP"
+
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 shape = SubResource("BoxShape3D_keep")
 
 [node name="KeepZone" type="Area3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
@@ -139,13 +202,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -0.3)
 collision_layer = 0
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
-mesh = SubResource("BoxMesh_recycle")
+[node name="Pad" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("CylinderMesh_recycle")
 surface_material_override/0 = SubResource("StandardMaterial3D_recycle")
 
+[node name="Ring" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("TorusMesh_recycle_ring")
+surface_material_override/0 = SubResource("StandardMaterial3D_recycle_ring")
+
+[node name="Label" type="Label3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.35, 0)
+billboard = 1
+pixel_size = 0.015
+font = ExtResource("3_qrd20")
+font_size = 96
+outline_size = 8
+text = "RECYCLE"
+
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 shape = SubResource("BoxShape3D_recycle")
 
 [node name="RecycleZone" type="Area3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
@@ -159,25 +236,25 @@ shape = SubResource("BoxShape3D_recycle_zone")
 [node name="PileSpawn" type="Marker3D" parent="ViewportContainer/SubViewport/World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0.5)
 
-[node name="Walls" type="StaticBody3D" parent="ViewportContainer/SubViewport/World"]
+[node name="Boundaries" type="StaticBody3D" parent="ViewportContainer/SubViewport/World"]
 collision_layer = 64
 collision_mask = 0
 
-[node name="WallLeft" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9, 1, 0)
-shape = SubResource("BoxShape3D_wall_left")
+[node name="Left" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 1, 0)
+shape = SubResource("BoxShape3D_boundary_x")
 
-[node name="WallRight" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9, 1, 0)
-shape = SubResource("BoxShape3D_wall_right")
+[node name="Right" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 1, 0)
+shape = SubResource("BoxShape3D_boundary_x")
 
-[node name="WallFar" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -1.7)
-shape = SubResource("BoxShape3D_wall_far")
+[node name="Far" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -3.0)
+shape = SubResource("BoxShape3D_boundary_z")
 
-[node name="WallNear" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1.7)
-shape = SubResource("BoxShape3D_wall_near")
+[node name="Near" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 3.0)
+shape = SubResource("BoxShape3D_boundary_z")
 
 [node name="HudLayer" type="CanvasLayer" parent="."]
 layer = 2

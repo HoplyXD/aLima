@@ -34,6 +34,14 @@ const GRAB_LERP_SPEED: float = 18.0
 const RETURN_LERP_SPEED: float = 8.0
 const GLOW_EMISSION_ENERGY: float = 1.6
 
+const ZONE_HOVER_RADIUS: float = 1.5
+const ZONE_RING_BASE_ENERGY: float = 0.25
+const ZONE_RING_HOVER_ENERGY: float = 2.5
+
+const HELD_SPRING: float = 120.0
+const HELD_DAMP: float = 18.0
+const HELD_ANGULAR_DAMP: float = 10.0
+
 enum InputMode { MODE_3D, MODE_LIST }
 
 var _state: TriageState
@@ -52,6 +60,12 @@ var _input_mode: int = InputMode.MODE_3D
 var _force_fallback: bool = false
 var _bodies: Dictionary = {}  ## uid -> RigidBody3D.
 var _pending_release: bool = false
+var _props: Array[RigidBody3D] = []
+
+var _keep_zone_pos: Vector3 = Vector3.ZERO
+var _recycle_zone_pos: Vector3 = Vector3.ZERO
+var _keep_ring: MeshInstance3D = null
+var _recycle_ring: MeshInstance3D = null
 
 @onready var _viewport_container: SubViewportContainer = $ViewportContainer
 @onready var _viewport: SubViewport = $ViewportContainer/SubViewport
@@ -89,22 +103,77 @@ func _ready() -> void:
 	visible = false
 	_hud_layer.visible = false
 	_set_input_mode(InputMode.MODE_3D)
+	_cache_zone_visuals()
+
+
+func _cache_zone_visuals() -> void:
+	_keep_ring = _find_zone_ring(_keep_zone)
+	_recycle_ring = _find_zone_ring(_recycle_zone)
+	if _keep_zone != null:
+		_keep_zone_pos = _keep_zone.global_position
+	if _recycle_zone != null:
+		_recycle_zone_pos = _recycle_zone.global_position
+	_set_ring_energy(_keep_ring, ZONE_RING_BASE_ENERGY)
+	_set_ring_energy(_recycle_ring, ZONE_RING_BASE_ENERGY)
+
+
+func _find_zone_ring(zone: Area3D) -> MeshInstance3D:
+	if zone == null:
+		return null
+	var parent := zone.get_parent()
+	if parent == null:
+		return null
+	return parent.get_node_or_null("Ring") as MeshInstance3D
+
+
+func _set_ring_energy(ring: MeshInstance3D, energy: float) -> void:
+	if ring == null:
+		return
+	var mat := ring.material_override as StandardMaterial3D
+	if mat == null:
+		return
+	mat.emission_energy_multiplier = energy
+
+
+func _update_zone_highlights() -> void:
+	var keep_dist := _held_target.distance_to(_keep_zone_pos)
+	var recycle_dist := _held_target.distance_to(_recycle_zone_pos)
+	if minf(keep_dist, recycle_dist) > ZONE_HOVER_RADIUS:
+		_set_ring_energy(_keep_ring, ZONE_RING_BASE_ENERGY)
+		_set_ring_energy(_recycle_ring, ZONE_RING_BASE_ENERGY)
+		return
+	if keep_dist < recycle_dist:
+		_set_ring_energy(_keep_ring, ZONE_RING_HOVER_ENERGY)
+		_set_ring_energy(_recycle_ring, ZONE_RING_BASE_ENERGY)
+	else:
+		_set_ring_energy(_keep_ring, ZONE_RING_BASE_ENERGY)
+		_set_ring_energy(_recycle_ring, ZONE_RING_HOVER_ENERGY)
 
 
 func _process(delta: float) -> void:
 	if not visible:
 		return
-	if _held_body != null and is_instance_valid(_held_body):
-		var target := _held_target + _held_offset
-		_held_body.global_position = _held_body.global_position.lerp(
-			target, clampf(GRAB_LERP_SPEED * delta, 0.0, 1.0)
-		)
-	elif _returning_body != null and is_instance_valid(_returning_body):
+	if _returning_body != null and is_instance_valid(_returning_body):
 		_returning_body.global_position = _returning_body.global_position.lerp(
 			_return_target, clampf(RETURN_LERP_SPEED * delta, 0.0, 1.0)
 		)
 		if _returning_body.global_position.distance_to(_return_target) < 0.05:
 			_returning_body = null
+
+
+func _physics_process(_delta: float) -> void:
+	if not visible:
+		return
+	if _held_body == null or not is_instance_valid(_held_body):
+		return
+	var target := _held_target + _held_offset
+	var displacement := target - _held_body.global_position
+	var force := displacement * HELD_SPRING - _held_body.linear_velocity * HELD_DAMP
+	_held_body.apply_central_force(force)
+	_held_body.angular_velocity = _held_body.angular_velocity.lerp(
+		Vector3.ZERO, clampf(HELD_ANGULAR_DAMP * _delta, 0.0, 1.0)
+	)
+	_update_zone_highlights()
 
 
 func _input(event: InputEvent) -> void:
@@ -211,6 +280,10 @@ func _clear_world() -> void:
 		if is_instance_valid(body):
 			body.queue_free()
 	_bodies.clear()
+	for prop in _props:
+		if is_instance_valid(prop):
+			prop.queue_free()
+	_props.clear()
 	_held_body = null
 	_held_uid = ""
 	_returning_body = null
@@ -219,6 +292,7 @@ func _clear_world() -> void:
 func _spawn_items() -> void:
 	if _viewport == null or _pile_spawn == null:
 		return
+	_spawn_props()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = _delivery_seed()
 	var index := 0
@@ -291,6 +365,94 @@ func _create_item_body(inst: ObjectInstance, rng: RandomNumberGenerator, index: 
 	return body
 
 
+func _spawn_props() -> void:
+	var defs: Array[Dictionary] = [
+		{"name": "Crate", "pos": Vector3(-3.5, 0.25, 2.0), "rot": Vector3.ZERO},
+		{"name": "Can", "pos": Vector3(3.5, 0.15, 2.0), "rot": Vector3.ZERO},
+		{"name": "Wrench", "pos": Vector3(3.5, 0.04, -2.0), "rot": Vector3(0.0, 0.4, 0.0)},
+		{"name": "Ball", "pos": Vector3(-3.5, 0.2, -2.0), "rot": Vector3.ZERO},
+	]
+	for def in defs:
+		var body := _create_prop(str(def["name"]), def["pos"], def["rot"])
+		_viewport.add_child(body)
+		_props.append(body)
+
+
+func _create_prop(prop_name: String, pos: Vector3, rot: Vector3) -> RigidBody3D:
+	var body := RigidBody3D.new()
+	body.name = "Prop_%s" % prop_name
+	body.add_to_group(ITEM_GROUP)
+	body.collision_layer = ITEM_COLLISION_LAYER
+	body.collision_mask = ITEM_COLLISION_LAYER
+	body.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+	body.gravity_scale = 1.2
+	body.mass = 1.0
+	body.linear_damp = 2.0
+	body.angular_damp = 3.0
+
+	var phys := PhysicsMaterial.new()
+	phys.bounce = 0.15
+	phys.friction = 0.8
+	body.physics_material_override = phys
+
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = "PropMesh"
+	var shape := CollisionShape3D.new()
+	shape.name = "PropShape"
+
+	match prop_name:
+		"Crate":
+			var box := BoxMesh.new()
+			box.size = Vector3(0.5, 0.5, 0.5)
+			mesh_instance.mesh = box
+			var box_shape := BoxShape3D.new()
+			box_shape.size = Vector3(0.5, 0.5, 0.5)
+			shape.shape = box_shape
+			mesh_instance.material_override = _make_prop_material(Color(0.45, 0.32, 0.2))
+		"Can":
+			var cyl := CylinderMesh.new()
+			cyl.height = 0.5
+			cyl.top_radius = 0.15
+			cyl.bottom_radius = 0.15
+			mesh_instance.mesh = cyl
+			var cyl_shape := CylinderShape3D.new()
+			cyl_shape.height = 0.5
+			cyl_shape.radius = 0.15
+			shape.shape = cyl_shape
+			mesh_instance.material_override = _make_prop_material(Color(0.55, 0.55, 0.52))
+		"Wrench":
+			var box := BoxMesh.new()
+			box.size = Vector3(0.8, 0.06, 0.14)
+			mesh_instance.mesh = box
+			var box_shape := BoxShape3D.new()
+			box_shape.size = Vector3(0.8, 0.06, 0.14)
+			shape.shape = box_shape
+			mesh_instance.material_override = _make_prop_material(Color(0.35, 0.35, 0.38))
+		"Ball":
+			var sphere := SphereMesh.new()
+			sphere.radius = 0.2
+			sphere.height = 0.4
+			mesh_instance.mesh = sphere
+			var sphere_shape := SphereShape3D.new()
+			sphere_shape.radius = 0.2
+			shape.shape = sphere_shape
+			mesh_instance.material_override = _make_prop_material(Color(0.7, 0.2, 0.15))
+
+	body.add_child(mesh_instance)
+	body.add_child(shape)
+	body.position = pos
+	body.rotation = rot
+	return body
+
+
+func _make_prop_material(color: Color) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.roughness = 0.6
+	mat.metallic = 0.2
+	return mat
+
+
 func _apply_rarity_glow(root: Node3D, color: Color) -> void:
 	var outlined := false
 	for child in root.get_children(true):
@@ -342,9 +504,18 @@ func _try_pick(screen_pos: Vector2) -> void:
 		return
 	_held_body = body
 	_held_uid = body.get_meta("uid", "")
-	_held_body.freeze = true
+	_held_body.freeze = false
 	_held_body.linear_velocity = Vector3.ZERO
 	_held_body.angular_velocity = Vector3.ZERO
+	if not _held_body.has_meta("original_gravity_scale"):
+		_held_body.set_meta("original_gravity_scale", _held_body.gravity_scale)
+	if not _held_body.has_meta("original_linear_damp"):
+		_held_body.set_meta("original_linear_damp", _held_body.linear_damp)
+	if not _held_body.has_meta("original_angular_damp"):
+		_held_body.set_meta("original_angular_damp", _held_body.angular_damp)
+	_held_body.gravity_scale = 0.0
+	_held_body.linear_damp = HELD_DAMP
+	_held_body.angular_damp = HELD_ANGULAR_DAMP
 	var hit_point: Vector3 = result["position"]
 	_held_offset = _held_body.global_position - hit_point
 	_update_held_target(screen_pos)
@@ -362,6 +533,12 @@ func _release_held() -> void:
 		_held_body = null
 		_held_uid = ""
 		return
+	if _held_body.has_meta("original_gravity_scale"):
+		_held_body.gravity_scale = _held_body.get_meta("original_gravity_scale")
+	if _held_body.has_meta("original_linear_damp"):
+		_held_body.linear_damp = _held_body.get_meta("original_linear_damp")
+	if _held_body.has_meta("original_angular_damp"):
+		_held_body.angular_damp = _held_body.get_meta("original_angular_damp")
 	_held_body.freeze = false
 	_held_body.linear_velocity = Vector3.ZERO
 	_held_body.angular_velocity = Vector3.ZERO
@@ -369,6 +546,8 @@ func _release_held() -> void:
 	_resolve_drop_after_physics.call_deferred()
 	_held_body = null
 	_held_uid = ""
+	_set_ring_energy(_keep_ring, ZONE_RING_BASE_ENERGY)
+	_set_ring_energy(_recycle_ring, ZONE_RING_BASE_ENERGY)
 
 
 func _resolve_drop_after_physics() -> void:

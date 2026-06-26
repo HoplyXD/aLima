@@ -40,6 +40,9 @@
 [ext_resource type="PackedScene" uid="uid://c758vciy6cv7n" path="res://assets/3d Assets/Bookcase/books.glb" id="26_6nloe"]
 [ext_resource type="PackedScene" uid="uid://7wc33npp34v8" path="res://assets/3d Assets/FireLog/trn_Log.fbx" id="29_cxprb"]
 [ext_resource type="Texture2D" uid="uid://dx5tdmtsbisw8" path="res://assets/Characters/Archeologist.png" id="31_h8djy"]
+[ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_img5t"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_h0wdh"]
+[ext_resource type="FontFile" uid="uid://7gx30v1rvopa" path="res://assets/fonts/The Antique.otf" id="37_74aeg"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8dvp"]
 size = Vector3(1.5947266, 2.9886718, 0.15)
@@ -60,6 +63,9 @@ size = Vector3(0.8295288, 0.7, 0.8)
 ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.55, 0.46, 1)
 ambient_light_energy = 0.95
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_b3ncd"]
+texture = ExtResource("35_img5t")
 
 [node name="Antique Shop" type="Node3D" unique_id=894395]
 script = ExtResource("5_ctrl")
@@ -360,6 +366,7 @@ anchor_right = 1.0
 offset_right = -1.0
 offset_bottom = 104.0
 grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_b3ncd")
 
 [node name="Margin" type="MarginContainer" parent="HUD/TopPanel" unique_id=1864189275]
 layout_mode = 1
@@ -368,10 +375,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 177
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 21
+theme_override_constants/margin_bottom = 18
 
 [node name="Bar" type="HBoxContainer" parent="HUD/TopPanel/Margin" unique_id=1311711458]
 layout_mode = 2
@@ -382,13 +389,17 @@ layout_mode = 2
 
 [node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=1479397120]
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
+theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_font_sizes/font_size = 40
 text = "Unrestored"
 
 [node name="UnrestoredCounts" type="RichTextLabel" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=391317591]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 26)
 layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("37_74aeg")
+theme_override_font_sizes/normal_font_size = 38
+theme_override_font_sizes/bold_font_size = 38
 bbcode_enabled = true
 text = "W 0   G 0   B 0   P 0   Gd 0"
 fit_content = true
@@ -403,13 +414,17 @@ layout_mode = 2
 
 [node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=1824528476]
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
+theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_font_sizes/font_size = 40
 text = "Restored (sell via phone)"
 
 [node name="RestoredCounts" type="RichTextLabel" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=323339879]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 26)
 layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("37_74aeg")
+theme_override_font_sizes/normal_font_size = 38
+theme_override_font_sizes/bold_font_size = 38
 bbcode_enabled = true
 text = "W 0   G 0   B 0   P 0   Gd 0"
 fit_content = true
@@ -424,13 +439,15 @@ layout_mode = 2
 
 [node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=1652076586]
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
+theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_font_sizes/font_size = 40
 text = "Quest"
 
 [node name="QuestCount" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=1360764171]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_fonts/font = ExtResource("37_74aeg")
+theme_override_font_sizes/font_size = 38
 text = "0"
 
 [node name="Spacer" type="Control" parent="HUD/TopPanel/Margin/Bar" unique_id=1137674704]
@@ -439,19 +456,21 @@ size_flags_horizontal = 3
 
 [node name="Clock" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=975401912]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 12
 
 [node name="DayLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1239597475]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 15
+theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_font_sizes/font_size = 35
 text = "Day 1 of 5"
 horizontal_alignment = 2
 
 [node name="ClockLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1405431381]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_font_sizes/font_size = 48
 text = "7:00 AM"
 horizontal_alignment = 2
 
