@@ -50,19 +50,35 @@ the native-speaker pass. Only Ayla's framing and Maverick's climax are rewritten
 |---|---|---|---|---|---|---|
 | Elderly Auntie (Nang Shine) | `auntie` | Inside (shop) | 12:00–14:00 on Days 1, 3, 5 | — | frag | Safe code · drawer clue |
 | Local Artisan (Nong Lave) | `artisan` | Inside (shop) | 13:00–14:00 on Days 2, 4, 5 | **Auntie helped** (her grandson; no longer excludes Ayla) | frag | delicate (legacy) tool · fragile-object access |
-| Trash Scavenger (Ayla) | `scavenger` | **Outside (scrapyard)** | present every open day; story beats trigger on milestones | — | frag | lead → Archeologist (persists) |
-| Archeologist (Sam) | `archeologist` | Inside (shop) | 08:00–11:00 Days 3, 5; 15:00–17:00 Day 1 once Ayla's lead is known (persists) | Scavenger's lead | frag | excavation tools · sturdy-object access |
-| Mysterious Buyer (Mr. Maverick) | `buyer` | Inside (shopfront) | 17:00–18:00 daily; +07:00–09:00 Day 5 | deal Days 1–4 ≥ once | releases 5th frag | guaranteed special carrier in the yard · encoded ledger · investigation evidence |
+| Trash Scavenger (Ayla) | `scavenger` | **Outside (scrapyard)** | present every open day; her completion is the lunchbox beat | **Sam's excavation tool** (to dig the lunchbox); the Sam *lead* itself comes free from daily contact | frag | fragment released |
+| Archeologist (Sam) | `archeologist` | Inside (shop) | 08:00–11:00 Days 3, 5; 15:00–17:00 Day 1 once Ayla's lead is known (persists) | **Ayla's lead** (from daily contact, persists) | frag | excavation tools (also unearth Ayla's lunchbox) · sturdy-object access |
+| Mysterious Buyer (Mr. Maverick) | `buyer` | Inside (shopfront) | 17:00–18:00 daily; +07:00–09:00 Day 5 | deal Days 1–4 ≥ once; **finale capstone — after the other four fragments are seated** | releases 5th frag | guaranteed special carrier in the yard · encoded ledger · investigation evidence |
 | Uncle's Legacy (Yuyu) | `yuyu` | Inside (finale) | — | all 5 seated | — (finale) | Master Artifact whole · Perfect Loop |
 
 **Fragment lifecycle is unchanged:** `LOCKED → RELEASED → SEATED`. Completing a route *releases* its
 fragment into the scrap stream; the Spawn Director hides its carrier in the scrapyard; the player
 finds, cleans, opens, and seats it. No character hands a fragment over directly.
 
-**Perfect-Loop order** (the loop in which the final fragment seats) is unchanged as a *natural* path —
-Day 1 Archeologist (lead known) → Day 2 Scavenger → Day 3 Auntie → Day 4 Artisan → Days 1–4 deal with
-Buyer → Day 5 Buyer releases the fifth fragment — but it is **no longer forced** by a same-slot fork,
-since Ayla and Lave can both be reached in one loop.
+**One ending per loop.** A loop has room to **complete only one fragment-holder's route** — the
+scheduled characters' windows conflict, and Ayla's completion has its own multi-step gate (below). You
+*can* still **find and seat** an already-released fragment out in the yard the same loop (the hunt
+doesn't conflict with a route), so a typical loop = finish one new character + seat one older fragment.
+Re-running an already-finished route in a later loop replays the scenes but yields **no new fragment**.
+
+**Route dependency chain (the intended order across loops):**
+
+- **Sam** is gated by **Ayla's lead**, which the player gets *free* from daily contact at the yard (not
+  from completing Ayla). So Sam is reachable early.
+- **Ayla's completion** is gated by **Sam's excavation tool**: with it the player digs her father's
+  **lunchbox** out of the yard, cleans it (initials reveal), and chooses **"Show Ayla the lunchbox"** to
+  finish her route. So the order is **Sam loop → Ayla loop**.
+- **Lave** is gated by **helping Auntie** (his grandmother).
+- **Maverick** is the **finale capstone**: his daily trades are background; once the other four
+  fragments are seated, his qualifying Day-5 trade **releases the fifth**, found in the yard that same
+  Day 5 to break the loop. He is not one of the per-loop route slots.
+
+So a full playthrough is roughly **~5 loops**: Auntie, Lave, Sam, and Ayla one per loop (in a valid
+dependency order), seating each fragment as you go, then the Buyer's finale loop for the fifth.
 
 ---
 
@@ -75,23 +91,27 @@ flattens her arc:
 - **Routine register (every open day, light):** quick banter at the hand-off as she takes the scrap
   the player foraged. She always insists today's haul has "tesoro" in it. This is functional and
   varied, not a cutscene.
-- **Milestone register (gated, heavy):** her real arc surfaces the day the player **forages her late
-  father's dented lunchbox out of the scrapyard itself** — turning her big emotional beat into
-  something *discovered through the new core loop* rather than a scheduled visit. Cleaning it reveals
-  her father's initials and a date; she recognizes them, drops the bravado, and ties her father to
-  "the Manong with a notebook" (Yuyu). Completing this beat **releases her fragment** and banks the
-  **lead to Sam** (persists across loops).
+- **Milestone register (gated, heavy) — a cross-route chain:** the **lead to Sam** is a *free* early
+  gift of daily contact (she tells the player to go see the archeologist who digs professionally).
+  Completing **Sam** grants the **excavation tools**, which let the player **dig her late father's
+  dented lunchbox** out of a spot in the yard. Cleaning it reveals his initials and a date; then a
+  **"Show Ayla the lunchbox"** option appears at the yard. Showing it drops her bravado, ties her
+  father to "the Manong with a notebook" (Yuyu), and **releases her fragment**. So her ending cannot
+  land until Sam's is done in an earlier loop (one-ending-per-loop ordering).
 
 The v1 lunchbox dialogue (LOOP 1 dismissive / LOOP 2 vindicated) is reusable almost verbatim — relocate
-the setting from "the Restoration Corner" to "the hand-off at the yard / the bench after foraging it,"
-and let the *player's* foraging, not Ayla's delivery, surface the lunchbox.
+the setting to the yard hand-off / the bench, and let the **excavated** lunchbox (not a chance forage)
+surface it. The dig spot can be a fixed authored location or a Spawn-Director-style yard spot; the gate
+is owning Sam's excavation tool.
 
 ---
 
 ## 4. Mr. Maverick — climax fix (rewrite)
 
 Replace the v1 LOOP-2 hand-over with a **release**. Keep the ledger, the spiral mark, and the trust
-beat; change only the delivery of the fragment itself.
+beat; change only the delivery of the fragment itself. Maverick is the **finale capstone**, not a
+per-loop route slot: his daily trades are light background across loops, and his fragment release only
+matters once the other four fragments are seated — it is the final loop's climax.
 
 - Across Days 1–4 the player makes at least one honest trade (ideally a spiral-marked piece).
 - On his qualifying **Day 5** encounter, Maverick opens his encoded ledger, reveals Yuyu kept him on a

@@ -158,8 +158,9 @@ Manual: a complete echo-walk to the carrier with captions/resonance meter.
 
 ### Tasks
 
-- `[ ]` **RV2-D.1 Reauthor Ayla + remove the exclusion.**
-  - Ayla present every open day (delivery NPC); her deep beat triggers when the player forages her late father's lunchbox from the yard; completing it releases her fragment and banks the Sam lead.
+- `[ ]` **RV2-D.1 Reauthor Ayla + one-ending-per-loop + remove the exclusion.** (ROUTE-R7, ROUTE-R8)
+  - Ayla present every open day (delivery NPC). Her **Archeologist lead** comes free from daily contact; her **completion** is gated behind **Sam's excavation tool** → dig her father's lunchbox from a yard spot → restore it → a "Show Ayla the lunchbox" interaction releases her fragment. (Decouples the Ayla→Sam→Ayla cycle.)
+  - Enforce **one route completion per loop** (conflicting windows; Ayla via the tool/lunchbox gate); finding/seating an already-`RELEASED` fragment in the yard is parallel and exempt.
   - Remove the temporal Artisan/Scavenger mutual exclusion in `RouteService`; Lave stays Auntie-gated. Update `data/routes/routes.json`.
 - `[ ]` **RV2-D.2 Maverick release fix.**
   - His qualifying Day-5 encounter **releases** the 5th fragment into a Spawn-Director yard carrier (echo-hunt) with no hand-over. Update his flow/dialogue per `docs/route-dialogue-compendium.md`.

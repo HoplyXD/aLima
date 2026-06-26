@@ -425,7 +425,7 @@ class SaveState:
 
 ## 7. Delivery & Triage  · P0
 
-- **DLV-R1 (P0).** Each day's delivery is **earned by foraging**: the player gathers rarity-tiered **scrap** in the walkable scrapyard (SHELL-R3) and hands chosen scrap to Ayla, who sorts it into a set of `ObjectInstance`s. The sort is **weighted toward the scrap's own tier** with only a slim chance (~5%) of climbing one rarity higher (rarer-leaning; see D10), so high-rarity restorables stay scarce; there is no free automatic morning drop. Fragment **carriers** for any `RELEASED` fragment are placed by the Spawn Director in the scrapyard (§12), not injected into this sorted delivery.
+- **DLV-R1 (P0).** Each day's delivery is **earned by foraging**: the player gathers rarity-tiered **scrap** in the walkable scrapyard (SHELL-R3) and hands chosen scrap to Ayla, who sorts it into a set of `ObjectInstance`s. The sort is **weighted toward the scrap's own tier** with only a slim chance (~5%) of climbing one rarity higher (rarer-leaning; see D10), so high-rarity restorables stay scarce. Each handed-in scrap yields **1–3 outputs** when sorted, each independently a restorable object (rarity per D10), a **minor item**, or **trash** (worthless, auto-recycled) — so a batch can return thin or junk-heavy (D12). There is no free automatic morning drop. Fragment **carriers** for any `RELEASED` fragment are placed by the Spawn Director in the scrapyard (§12), not injected into this sorted delivery.
 - **DLV-R2 (P0).** Storage, time, and money are limited; the player selects which objects to keep before the rest is bulk-recycled (discarded).
 - **DLV-R3 (P0).** Each instance shows its **apparent** rarity glow per the fixed legend (§4.1 / Invariant §4-E). The glow reflects *appearance*, not truth — counterfeits can over-glow, treasures can under-glow.
 - **DLV-R4 (P1).** Delivery composition responds to mini-events (§17) (e.g., Rush Delivery = larger batch, less time).
@@ -573,9 +573,9 @@ Five fragment-holders (Auntie, Artisan, Scavenger, Archeologist, Buyer); the unc
 |---|---|---|---|---|---|
 | Elderly Auntie (Shine) | `auntie` | 12:00–14:00 on Days 1,3,5 | — | frag | Safe code · drawer clue |
 | Local Artisan (Lave) | `artisan` | 13:00–14:00 on Days 2,4,5 | **Auntie helped** (her grandson; no longer excludes Ayla) | frag | delicate (legacy) tool · fragile-object access |
-| Trash Scavenger (Ayla) | `scavenger` | present in the scrapyard every open day (delivery NPC) | — | frag | lead → Archeologist (persists) |
-| Archeologist (Sam) | `archeologist` | 15:00–17:00 Day 1; 08:00–11:00 Days 3,5 | **Scavenger's lead known** (persists; so available from Day 1 on later loops) | frag | excavation tools · sturdy-object access |
-| Mysterious Buyer (Mr. Maverick) | `buyer` | daily 17:00–18:00 (+ 07:00–09:00 Day 5) | deal on Days 1–4 ≥ once | releases frag (5th) | guaranteed special delivery · encoded ledger · investigation evidence |
+| Trash Scavenger (Ayla) | `scavenger` | present in the scrapyard every open day (delivery NPC) | **Sam's excavation tool** to dig the lunchbox (ROUTE-R8); the Archeologist lead is free from daily contact | frag | frag released |
+| Archeologist (Sam) | `archeologist` | 15:00–17:00 Day 1; 08:00–11:00 Days 3,5 | **Ayla's lead** (from daily contact, persists; so available from Day 1 on later loops) | frag | excavation tools (also unearth Ayla's lunchbox) · sturdy-object access |
+| Mysterious Buyer (Mr. Maverick) | `buyer` | daily 17:00–18:00 (+ 07:00–09:00 Day 5) | deal on Days 1–4 ≥ once; **finale capstone, after the other four are seated** | releases frag (5th) | guaranteed special carrier in the yard · encoded ledger · investigation evidence |
 | Uncle's Legacy (Yuyu) | `yuyu` | — | all 5 fragments seated | — (finale) | Master Artifact whole · Perfect Loop |
 
 **Requirements**
@@ -585,6 +585,8 @@ Five fragment-holders (Auntie, Artisan, Scavenger, Archeologist, Buyer); the unc
 - **ROUTE-R4 (P1).** Route completion + leads persist (§5); a known lead makes gated content available earlier on later loops (e.g., Archeologist from Day 1).
 - **ROUTE-R5 (P1).** The Buyer has no ending; after qualifying deals, his Day 5 encounter deterministically releases the fifth fragment into a guaranteed special delivery. The Spawn Director still promotes an ordinary carrier and places it; the Buyer never hands over the fragment directly.
 - **ROUTE-R6 (P1).** An unanswered visit within a window is consumed (CLOCK-R4) and may close that route for the loop.
+- **ROUTE-R7 (P1).** **One route completion per loop.** A loop has room to complete at most one fragment-holder route — scheduled characters' windows conflict, and Ayla's completion has its own multi-step gate (ROUTE-R8). Finding/seating an already-`RELEASED` fragment in the scrapyard is a parallel yard activity and does **not** count against this. Re-running a completed route in a later loop replays scenes but releases no new fragment.
+- **ROUTE-R8 (P1).** **Ayla's cross-route completion gate.** Ayla is the permanent scrapyard delivery NPC; her **Archeologist lead** is earned early from daily contact (not from completing her). Her own completion is gated behind **Sam's excavation tool**: with it the player digs her father's lunchbox from the yard, restores it (initials reveal), and selects a "Show Ayla the lunchbox" interaction to finish the route and release her fragment. This decouples the former Ayla→Sam→Ayla dependency cycle (lead from contact; fragment from the tool + lunchbox).
 
 **Acceptance**
 - [ ] Ayla is present in the scrapyard every open day and sorts foraged scrap into the delivery regardless of the Auntie's state.
@@ -634,7 +636,7 @@ Five fragment-holders (Auntie, Artisan, Scavenger, Archeologist, Buyer); the unc
 - **END-R1 (P1).** Five endings: four character endings (Auntie, Artisan, Scavenger, Archeologist) each completed by finishing that route; plus the **Yuyu** finale. The Buyer has no ending (supplies the 5th fragment).
 - **END-R2 (P1).** Completing no routes → **Neutral**: the loop simply repeats.
 - **END-R3 (P1).** The **Perfect Loop (Yuyu)** requires all five fragments seated. Because fragments persist, this is *the loop in which the final fragment is seated* — not a forced same-cycle re-gather. *(Resolves the former GDD 9.6-vs-9.14 conflict.)*
-- **END-R4 (P1).** The intended route path for the loop in which the final fragment is seated: Day 1 Archeologist (lead known) → Day 2 Scavenger → Day 3 Auntie → Day 4 Artisan → Days 1–4 deal with Buyer → Day 5 Buyer releases the 5th fragment into a guaranteed special delivery → find/clean/open the Director-placed carrier → seat it → case full → loop releases → uncle returns.
+- **END-R4 (P1).** With one route completion per loop (ROUTE-R7), the five fragments are gathered across **several loops** (≈5), not one: each loop complete one character (Auntie; Artisan after Auntie; Archeologist; Scavenger after the Archeologist per ROUTE-R8) and release their fragment, seating released fragments in the scrapyard over the following loops; deal with the Buyer at least once along the way; then in the final loop, with the other four seated, the Buyer's qualifying Day-5 encounter releases the 5th into a Director-placed yard carrier → find/clean/open → seat → case full → loop releases → uncle returns.
 - **END-R5 (P1).** When the case fills, trigger the finale: assemble/restore the Master Artifact, resolve the uncle's thread, end the loop.
 
 **Acceptance**
@@ -770,6 +772,8 @@ Full-game completion additionally requires every P1 requirement, every content-m
 | D9 | **Restoration view framing** (REST-R8) | resolved: focused 3D restoration view (3D object + 2D background/HUD overlay) |
 | D10 | **Scrap → delivery rarity bias** (DLV-R1) | rarer-leaning: the sort skews to the scrap's own tier, ~5% chance one tier up, ~35–40% one tier down (white floor ~95/5, gold ceiling ~65/35); full table below the decisions table; numbers tunable |
 | D11 | **Scrapyard size, zoning & perf** (SHELL-R3) | compact, zoned outdoor lot loaded only while outside; sized so the echo gradient is a real walk yet holds 30 FPS on the web reference (PLAT-R4) |
+| D12 | **Scrap yield (count + junk rate)** (DLV-R1) | each sorted scrap yields 1–3 outputs; per-output split ~50% restorable object / ~20% minor item / ~30% trash (auto-recycled, never enters triage); numbers tunable; what "minor item" is (repair parts / sellable bits / cash) and whether higher-tier scrap yields more or less junk are TBD |
+| D13 | **Route completions per loop** (ROUTE-R7) | resolved: one per loop (windows conflict; Ayla gated via ROUTE-R8); the five fragments are gathered ≈one per loop across ≈5 loops, with the Buyer's 5th as the finale capstone |
 
 **D10 — scrap → sort rarity bias (tuned default, rarer-leaning; numbers are placeholders for tuning):**
 

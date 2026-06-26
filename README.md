@@ -185,7 +185,7 @@ Exclusions. The Code of Kalantiaw is excluded as a documented 20th-century hoax 
 
 ## **9.1 Scrap Foraging, Sorting & Triage**
 
-The player no longer waits on a free morning drop — they **earn** each day's batch. Out in the scrapyard the player forages loose scrap and hands what they choose to **Ayla**, the scrap-hauler, who sorts it into a delivery of restorable objects (the sort skews to the scrap's own tier and only rarely climbs higher, so high-rarity finds stay scarce). Storage, time, and money are limited, so every rescued object is a bet. Each object carries a faint glow indicating apparent rarity — apparent, because the glow reflects how an object looks, not what it is. Counterfeits can shine; treasures can look like trash.
+The player no longer waits on a free morning drop — they **earn** each day's batch. Out in the scrapyard the player forages loose scrap and hands what they choose to **Ayla**, the scrap-hauler, who sorts it into a delivery of restorable objects (the sort skews to the scrap's own tier and only rarely climbs higher, so high-rarity finds stay scarce). Each scrap she sorts yields one to three outcomes — a restorable object, a minor item, or just trash — so a batch can come back generous or nearly worthless. Storage, time, and money are limited, so every rescued object is a bet. Each object carries a faint glow indicating apparent rarity — apparent, because the glow reflects how an object looks, not what it is. Counterfeits can shine; treasures can look like trash.
 
 | Glow | Apparent Meaning |
 | :---- | :---- |
@@ -238,8 +238,8 @@ Five “lima” characters knew the uncle and each controls the release of one f
 | :---- | :---- | :---- |
 | Elderly Auntie (Shine) | Restoring her family photographs and keepsakes reveals the uncle in her family’s past.  Schedule: 12:00pm–2:00pm on Days 1, 3, 5\.  Tie to the uncle: his first love, from long before your grandmother. | Fragment released • code to the uncle’s Safe • clue to the uncle’s locked drawer |
 | Local Artisan (Lave) | An artisan teaches the hardest lesson: preservation is not making things look new — patina is part of the story.  Schedule: 1:00pm–2:00pm on Days 2, 4, 5, unlocked once the Elderly Auntie's route is helped (he is her grandchild, drawn into the shop by the photograph you restore for her). He no longer displaces Ayla — both can be pursued in one loop.  Tie to the uncle: the Auntie’s grandchild, raised on her stories of the uncle. | Fragment released • delicate restoration tool • access to fragile objects |
-| Trash Scavenger (Ayla) | A scrap hauler convinced her junk is treasure — and now the shop's everyday lifeline: she works the **scrapyard** and sorts the scrap the player forages into each day's delivery. Her story surfaces through that daily contact rather than a scheduled visit; the turning point is the day the player forages her late father's dented lunchbox out of the yard.  Schedule: present in the scrapyard every day the shop is open.  Tie to the uncle: her father fed the uncle a steady stream of curios and “treasure.” Holds one of the five fragments. | Fragment released • lead to the Local Archeologist (persists across loops) |
-| Archeologist (Sam) | An archeologist recognizes your tools and tests your dedication, revealing that true mastery lies in re-forging broken pieces while honoring the soul of the original maker.  Schedule: 3:00pm–5:00pm on Day 1; 08:00am–11:00am on Days 3, 5 (requires the Scavenger’s lead, which persists across loops — so on a later/Perfect Loop he is available from Day 1).  Tie to the uncle: the last person seen with the uncle before he vanished — the one who got lost in time beside him. | Fragment released • excavation tools • access to Sturdy objects |
+| Trash Scavenger (Ayla) | A scrap hauler convinced her junk is treasure — and now the shop's everyday lifeline: she works the **scrapyard** and sorts the scrap the player forages into each day's delivery. Casual daily talk gives the **lead to the Archeologist** early; her own ending is a cross-route chain — with Sam's excavation tools the player digs her late father's lunchbox out of the yard, restores it, and shows it to her.  Schedule: present in the scrapyard every day the shop is open (completion gated behind Sam's excavation tool).  Tie to the uncle: her father fed the uncle a steady stream of curios and “treasure.” Holds one of the five fragments. | Fragment released (the Archeologist lead comes earlier, from daily contact) |
+| Archeologist (Sam) | An archeologist recognizes your tools and tests your dedication, revealing that true mastery lies in re-forging broken pieces while honoring the soul of the original maker.  Schedule: 3:00pm–5:00pm on Day 1; 08:00am–11:00am on Days 3, 5 (requires the Scavenger’s lead from daily contact, which persists across loops — so on a later/Perfect Loop he is available from Day 1).  Tie to the uncle: the last person seen with the uncle before he vanished — the one who got lost in time beside him. | Fragment released • excavation tools (also used to unearth Ayla's father's lunchbox) • access to Sturdy objects |
 | The Mysterious Buyer (Mr. Maverick) *— no ending; support route* | A buyer who overpays for objects marked with a certain symbol. Deal with him at least once on Days 1–4; his qualifying Day 5 encounter deterministically releases the fifth fragment into a guaranteed special delivery. Schedule: appears every day, 5:00pm–6:00pm (and 07:00am–09:00am on Day 5). Tie to the uncle: the dealer who for years bought from and sold to the uncle. | Fifth fragment released into a Director-placed carrier • encoded ledger • evidence of the uncle’s unfinished investigation |
 | The Uncle’s Legacy (Yuyu) *— final ending* | With all five fragments gathered and seated, the journal’s hidden notes finally make sense: the uncle deliberately entrusted the fragments to people he trusted, to be returned only to someone willing to listen. | The Master Artifact made whole • the Perfect Loop • the uncle pulled back from the void |
 
@@ -300,19 +300,15 @@ Completing the Elderly Auntie route reveals the code to the uncle’s Safe. Beca
 
 There are five endings: four character endings — Elderly Auntie, Local Artisan, Trash Scavenger, Archeologist — each completed by finishing that person’s route, plus the Uncle’s Legacy (Yuyu) finale. (The Mysterious Buyer has no ending of his own; he controls the fifth fragment’s release.) Completing none of the routes yields the Neutral outcome: the loop simply repeats.
 
-The Perfect Loop (Yuyu ending) begins when all five fragments are seated. Previously seated fragments persist across resets, so the player never needs to re-gather them. The intended route order for the loop in which the final fragment is seated is:
+The Perfect Loop (Yuyu ending) begins when all five fragments are seated. Previously seated fragments persist across resets, so the player never needs to re-gather them. Because a loop has room to complete only **one** character's route, the five fragments are gathered one per loop across several loops, not all in one week:
 
-• Day 1 — Archeologist quest (available from Day 1 once his lead is known from a prior loop).
+• Each loop, commit to one character — Elderly Auntie, Local Artisan (after the Auntie), Archeologist, or Trash Scavenger (after the Archeologist, using his excavation tools to dig up her father's lunchbox) — completing their route on Day 5 and releasing their fragment.
 
-• Day 2 — Scavenger quest.
+• Find and seat each released fragment out in the scrapyard over the following loop(s); the hunt runs in parallel with a new route, so progress compounds.
 
-• Day 3 — Elderly Auntie.
+• Across these loops, deal with the Mysterious Buyer at least once so his thread is primed.
 
-• Day 4 — Local Artisan.
-
-• Days 1–4 — buy from or sell to the Mysterious Buyer at least once.
-
-• Day 5 — the Buyer’s qualifying encounter releases the fifth fragment. He never hands it over; the Spawn Director hides it inside an ordinary carrier out in the scrapyard, and the player must still track it by sound, clean, open, and seat it. With the case full, the loop the journal sustains releases, the timeline resumes, and the uncle returns.
+• Day 5 of the final loop — with the other four fragments seated, the Buyer’s qualifying encounter releases the fifth fragment. He never hands it over; the Spawn Director hides it inside an ordinary carrier out in the scrapyard, and the player must still track it by sound, clean, open, and seat it. With the case full, the loop the journal sustains releases, the timeline resumes, and the uncle returns.
 
 # **10\. AI Integration & Disclosure**
 
