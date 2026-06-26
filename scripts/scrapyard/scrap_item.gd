@@ -2,8 +2,9 @@ class_name ScrapItem
 extends Interactable3D
 ## A rarity-tiered scrap pickup in the walkable scrapyard.
 ##
-## Uses the shared Interactable3D proximity-E path: stand near it and press E
-## (or gamepad A) to pick it up. The pickup increments the loop-scoped scrap
+## Uses a first-person raycast-E pickup: look at the scrap and press E (or
+## gamepad A) to pick it up. This works even when the scrap is sitting on or
+## partly inside a heap of trash. The pickup increments the loop-scoped scrap
 ## pool and despawns the item. Visuals are simple colored placeholder geometry so
 ## a future Blender map swap does not depend on these nodes.
 
@@ -21,8 +22,9 @@ const RARITY_COLORS := {
 
 
 func _ready() -> void:
-	# Enable the unified proximity-E interaction before Interactable3D wires it.
-	use_proximity = true
+	# Raycast-driven activation from the yard player controller; proximity is
+	# disabled so overlapping trash heaps don't block the interaction.
+	use_proximity = false
 	proximity_prompt_text = "Press E to grab scrap"
 	prompt_text = "Grab scrap"
 	super._ready()

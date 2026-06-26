@@ -113,6 +113,8 @@ func _maybe_swap_map() -> void:
 func _spawn_player() -> void:
 	_player = PLAYER_SCENE.instantiate()
 	add_child(_player)
+	if _hud != null:
+		_player.scrap_prompt_changed.connect(_hud.set_prompt)
 	if _player_spawn != null:
 		_player.global_position = _player_spawn.global_position
 
