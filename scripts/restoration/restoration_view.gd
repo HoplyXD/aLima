@@ -49,9 +49,9 @@ const ERASE_BLIT_SHADER := "shader_type texture_blit;\nrender_mode blend_sub;\nu
 ## back for the whole shape. The camera never moves. Presentation only; never touches game
 ## state. ZOOM_FRONT/BACK are the object's nearest/farthest position.z; the authored rest
 ## position is the starting point and what reset returns to.
-const ZOOM_FRONT: float = 1.3  ## Closest the artifact comes to the camera (camera sits at z≈2.6).
+const ZOOM_FRONT: float = 2.1  ## Closest the artifact comes to the camera (camera sits at z≈2.6).
 const ZOOM_BACK: float = -0.7  ## Farthest the artifact pulls back.
-const ZOOM_WHEEL_STEP: float = 0.2  ## Distance one mouse-wheel notch moves the artifact.
+const ZOOM_WHEEL_STEP: float = 0.25  ## Distance one mouse-wheel notch moves the artifact.
 const ZOOM_KEY_SPEED: float = 2.2  ## Distance/second for held keyboard/controller zoom.
 
 ## Temporary diagnostic logging for the restoration interaction. Flip to false
@@ -1058,6 +1058,15 @@ func _apply_action_feedback(result: RestorationService.ToolResult) -> void:
 		_refresh(inst, template)
 
 
+## Shows/hides the separate "Surface cleaned" caption + bar (hidden for overlay artifacts, whose clean
+## % lives in the Condition meter instead).
+func _set_surface_meter_visible(show: bool) -> void:
+	_surface_bar.visible = show
+	var caption := get_node_or_null("HUD/RightSideBar/Margin/VBox/SurfaceCaption")
+	if caption is CanvasItem:
+		(caption as CanvasItem).visible = show
+
+
 func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	# Keep the bench durability bars current after any action that may have worn a tool.
 	_tool_tray.update_durability(_service.get_workbench_durability())
@@ -1065,9 +1074,19 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_tool_sidebar.update_durability(_service.get_workbench_durability())
 	var threshold := template.clean_completion_threshold if template != null else 100
 	_state_label.text = "State: %s" % ModelEnums.obj_state_name(inst.state).capitalize()
-	_condition_bar.max_value = threshold
-	_condition_bar.value = inst.condition
-	_condition_label.text = "Condition %d / %d" % [int(inst.condition), threshold]
+	var is_overlay := _object.has_method("has_overlays") and _object.has_overlays()
+	if is_overlay:
+		# The Condition meter IS the live clean % for overlay artifacts; the separate Surface bar
+		# is hidden (one bar, no redundant 0/100).
+		var pct: float = _object.overlay_clean_percent() * 100.0
+		_condition_bar.max_value = 100
+		_condition_bar.value = pct
+		_condition_label.text = "Condition %d%%" % int(round(pct))
+	else:
+		_condition_bar.max_value = threshold
+		_condition_bar.value = inst.condition
+		_condition_label.text = "Condition %d / %d" % [int(inst.condition), threshold]
+	_set_surface_meter_visible(not is_overlay)
 	_value_label.text = "Value: P%d" % inst.value
 	_damage_label.text = "Recorded damage: %d" % inst.recorded_damage
 
@@ -1075,9 +1094,8 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_refresh_photo(inst, template)
 		return
 
-	if _object.has_method("has_overlays") and _object.has_overlays():
-		# Live overall clean %, weighted across the spawned condition overlays (smooth, not stepwise).
-		_surface_bar.value = _object.overlay_clean_percent() * 100.0
+	if is_overlay:
+		pass  # the Condition meter above already shows the clean %
 	elif _object.has_authored_conditions():
 		var total := _object.authored_active_count()
 		var cleaned := total - _object.uncleaned_authored_ids().size()
@@ -1579,7 +1597,7 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 		var pct: float = _object.overlay_clean_percent()
 		# Auto-finish: once the surface is ~spotless, snap to 100% and wipe every condition except
 		# crack/damage, so the player never has to chase the last few specks.
-		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and pct >= 0.99:
+		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and pct >= 0.98:
 			_object.force_clean_overlays(["crack"])
 			var fc: Dictionary = _object.overlay_counts()
 			_service.register_authored_clean(

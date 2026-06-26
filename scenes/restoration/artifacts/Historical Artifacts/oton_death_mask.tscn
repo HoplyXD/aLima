@@ -16,34 +16,32 @@ metallic = 0.55
 roughness = 0.45
 
 [node name="OtonDeathMask" type="Node3D" unique_id=1097946537]
-transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
 model_mesh = ExtResource("6_mask")
 model_material = SubResource("mask_gold")
 model_scale = 0.1
 
-[node name="CrackingOverlay" parent="." instance=ExtResource("4_g88vq")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+[node name="CrackingOverlay" parent="." unique_id=1157493513 instance=ExtResource("4_g88vq")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 5.5326086e-09, 0, -5.5326086e-09, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("6_mask")
 condition_texture = ExtResource("5_m1vn6")
 layer_order = 10
 
-[node name="TarnishOverlay" parent="." instance=ExtResource("4_g88vq")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+[node name="TarnishOverlay" parent="." unique_id=1690603259 instance=ExtResource("4_g88vq")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 5.5326086e-09, 0, -5.5326086e-09, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("6_mask")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
 layer_order = 20
 
-[node name="RustOverlay" parent="." instance=ExtResource("4_g88vq")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+[node name="RustOverlay" parent="." unique_id=173495141 instance=ExtResource("4_g88vq")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 5.5326086e-09, 0, -5.5326086e-09, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("6_mask")
 condition_texture = ExtResource("8_rust")
 layer_order = 25
 
-[node name="DustOverlay" parent="." instance=ExtResource("4_g88vq")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+[node name="DustOverlay" parent="." unique_id=1337523328 instance=ExtResource("4_g88vq")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 5.5326086e-09, 0, -5.5326086e-09, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("6_mask")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
-layer_order = 30

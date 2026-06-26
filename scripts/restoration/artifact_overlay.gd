@@ -15,9 +15,12 @@ extends Node3D
 ## inner OverlayShell is an INTERNAL child (never saved/duplicated into the .tscn).
 
 ## condition_tex * per-vertex keep (COLOR.a) * opacity. No UV is used for cleaning, only for the look.
-const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nuniform float highlight = 0.0;\nuniform vec4 highlight_color : source_color = vec4(1.0, 0.85, 0.3, 1.0);\nvoid fragment() {\n\tvec4 c = texture(condition_tex, UV);\n\tfloat base = c.a * COLOR.a;\n\tALBEDO = c.rgb;\n\tEMISSION = highlight_color.rgb * highlight * base;\n\tALPHA = clamp(base * overlay_opacity + highlight * base * 0.6, 0.0, 1.0);\n}\n"
+const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nuniform float highlight = 0.0;\nuniform vec4 highlight_color : source_color = vec4(1.0, 0.85, 0.3, 1.0);\nuniform bool use_triplanar = false;\nuniform float triplanar_scale = 0.5;\nvarying vec3 v_pos;\nvarying vec3 v_norm;\nvoid vertex() {\n\tv_pos = VERTEX;\n\tv_norm = NORMAL;\n}\nvec4 sample_tri(vec3 p, vec3 n) {\n\tvec3 b = abs(normalize(n));\n\tb /= (b.x + b.y + b.z + 1e-5);\n\tvec4 cx = texture(condition_tex, p.zy * triplanar_scale);\n\tvec4 cy = texture(condition_tex, p.xz * triplanar_scale);\n\tvec4 cz = texture(condition_tex, p.xy * triplanar_scale);\n\treturn cx * b.x + cy * b.y + cz * b.z;\n}\nvoid fragment() {\n\tvec4 c = use_triplanar ? sample_tri(v_pos, v_norm) : texture(condition_tex, UV);\n\tfloat base = c.a * COLOR.a;\n\tALBEDO = c.rgb;\n\tEMISSION = highlight_color.rgb * highlight * base;\n\tALPHA = clamp(base * overlay_opacity + highlight * base * 0.6, 0.0, 1.0);\n}\n"
 const PATTERN_FREQ: float = 2.4  ## Patch size of the random coverage pattern (normalised space).
 const PATTERN_SOFT: float = 0.06  ## Soft edge width of the pattern threshold.
+## Low-poly meshes (e.g. the 260-vert death mask) clean/pattern too coarsely (linear, not round), so
+## the shell is subdivided at build until it has at least this many vertices (capped at 2 levels).
+const MIN_VERTS: int = 2000
 ## Brush radius (fraction of overlay size) used ONLY when no tool radius is supplied — i.e. the debug
 ## eraser. Real cleaning passes the TOOL's clean_radius (see ToolConfig); the overlay no longer owns one.
 const DEFAULT_CLEAN_RADIUS: float = 0.12
@@ -156,6 +159,7 @@ func _rebuild() -> void:
 		return
 	if not _build_merged_arrays():
 		return
+	_subdivide_if_sparse()  # densify low-poly meshes so cleaning reads as smooth circles
 	var colors := PackedColorArray()
 	colors.resize(_verts.size())
 	colors.fill(Color.WHITE)  # keep = 1 everywhere (fully dusty)
@@ -381,6 +385,73 @@ func _build_merged_arrays() -> bool:
 	_verts = all_verts
 	_tris = all_indices
 	return true
+
+
+## Splits each triangle into 4 (midpoint subdivision) until the shell has >= MIN_VERTS vertices, so a
+## coarse mesh cleans/patterns smoothly. Independent per-triangle split (duplicate midpoints) — fine
+## for the per-vertex shader, and cheap at these sizes.
+func _subdivide_if_sparse() -> void:
+	var levels := 0
+	while _verts.size() < MIN_VERTS and levels < 2:
+		_subdivide_once()
+		levels += 1
+
+
+func _subdivide_once() -> void:
+	var verts := _verts
+	var raw_n: Variant = _arrays[Mesh.ARRAY_NORMAL]
+	var raw_u: Variant = _arrays[Mesh.ARRAY_TEX_UV]
+	var has_n := raw_n is PackedVector3Array and (raw_n as PackedVector3Array).size() == verts.size()
+	var has_u := raw_u is PackedVector2Array and (raw_u as PackedVector2Array).size() == verts.size()
+	var norms: PackedVector3Array = raw_n if has_n else PackedVector3Array()
+	var uvs: PackedVector2Array = raw_u if has_u else PackedVector2Array()
+	var idx := _tris
+	var nv := PackedVector3Array()
+	var nn := PackedVector3Array()
+	var nu := PackedVector2Array()
+	var ni := PackedInt32Array()
+	for t in range(0, idx.size() - 2, 3):
+		var a := idx[t]
+		var b := idx[t + 1]
+		var c := idx[t + 2]
+		var base := nv.size()
+		nv.append(verts[a])
+		nv.append(verts[b])
+		nv.append(verts[c])
+		nv.append((verts[a] + verts[b]) * 0.5)
+		nv.append((verts[b] + verts[c]) * 0.5)
+		nv.append((verts[c] + verts[a]) * 0.5)
+		if has_n:
+			nn.append(norms[a])
+			nn.append(norms[b])
+			nn.append(norms[c])
+			nn.append(((norms[a] + norms[b]) * 0.5).normalized())
+			nn.append(((norms[b] + norms[c]) * 0.5).normalized())
+			nn.append(((norms[c] + norms[a]) * 0.5).normalized())
+		if has_u:
+			nu.append(uvs[a])
+			nu.append(uvs[b])
+			nu.append(uvs[c])
+			nu.append((uvs[a] + uvs[b]) * 0.5)
+			nu.append((uvs[b] + uvs[c]) * 0.5)
+			nu.append((uvs[c] + uvs[a]) * 0.5)
+		# corner verts 0,1,2 ; midpoints ab=3, bc=4, ca=5 -> 4 sub-triangles
+		_add_tri(ni, base, 0, 3, 5)
+		_add_tri(ni, base, 3, 1, 4)
+		_add_tri(ni, base, 5, 4, 2)
+		_add_tri(ni, base, 3, 4, 5)
+	_arrays[Mesh.ARRAY_VERTEX] = nv
+	_arrays[Mesh.ARRAY_NORMAL] = nn if has_n else null
+	_arrays[Mesh.ARRAY_TEX_UV] = nu if has_u else null
+	_arrays[Mesh.ARRAY_INDEX] = ni
+	_verts = nv
+	_tris = ni
+
+
+func _add_tri(ni: PackedInt32Array, base: int, i: int, j: int, k: int) -> void:
+	ni.append(base + i)
+	ni.append(base + j)
+	ni.append(base + k)
 
 
 func _measure_extent(verts: PackedVector3Array) -> float:
