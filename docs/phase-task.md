@@ -629,7 +629,7 @@ Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per
 
 **Requirements:** DLV-R1..R5, ARCH-R5
 **Dependencies:** Phases 1-2
-**Subsystems:** delivery generator, 3D placement anchors, 2D triage UI
+**Subsystems:** delivery generator, 3D placement anchors, diegetic 3D triage interaction with 2D accessibility fallback
 
 ### Tasks
 
@@ -653,13 +653,15 @@ Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per
   - Carriers display their ordinary template rarity glow until `flicker_authorized` is true; no new rarity tier was added.
   - Evidence (2026-06-15): `tests/delivery/test_glow_mapper.gd` 6/6 passed.
 
-- `[x]` **P3.4 Build the 2D triage interface.**
-  - Added `scenes/ui/triage_screen.tscn` + `scenes/ui/triage_controller.gd`.
-  - Shows object name, apparent glow (color + text), assigned container, and storage cost per item.
-  - Enforces the configured storage cap by cost, not object count.
-  - Requires an explicit keep/recycle decision for every item; confirm is disabled while undecided or over capacity.
+- `[x]` **P3.4 Build the triage interface (diegetic 3D presentation with 2D fallback).**
+  - Rewrote `scenes/ui/triage_screen.tscn` + `scenes/ui/triage_controller.gd` so triage is a diegetic 3D physics interaction: each delivered object appears as its real 3D model in a center pile, the player grabs/drags it into a Keep box (left) or Recycle bin (right), and dropping inside a bin calls `TriageState.set_decision()` exactly as before.
+  - Reuses `ArtifactScenes.scene_for(...)` + `RestorationService.present_object(...)` and applies `GlowMapper.get_instance_glow_color(template.base_rarity, inst.is_carrier, false)` as a rarity emission glow — carriers remain visually identical to ordinary instances (no flicker/heartbeat in triage).
+  - Keeps the public API intact (`class_name TriageController`, `signal closed`, `open(delivery, storage_cap)`, `close()`, `.visible`) so `scripts/shop/shop_controller.gd` and `Shop.tscn` require no changes.
+  - Enforces the configured storage cap by cost, not object count; requires an explicit keep/recycle decision for every item; confirm is disabled while undecided or over capacity.
   - Acquires/releases `DayClock.PAUSE_TRIAGE` ownership while open and on every close/exit path.
-  - Evidence (2026-06-15): `tests/delivery/test_triage.gd` capacity/decision tests passed.
+  - Retains a toggleable 2D list-view fallback (button rows, keyboard/controller focus nav, storage meter, confirm) behind `SettingsService.previews_enabled()` / a HUD toggle for full accessibility parity (§4P).
+  - Added `tests/delivery/test_triage_drop_zones.gd` for the headless drop-zone → `Decision` mapping seam.
+  - Evidence (2026-06-26): `tests/delivery/test_triage.gd` 9/9 passed; `tests/delivery/test_triage_drop_zones.gd` 4/4 passed; focused delivery suite 38/38 passed.
 
 - `[x]` **P3.5 Apply triage results.**
   - Added `scripts/delivery/triage_service.gd` (`TriageService`).
@@ -671,8 +673,8 @@ Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per
   - Evidence (2026-06-15): `tests/delivery/test_triage.gd` outcome/eligibility/neglect tests passed.
 
 - `[x]` **P3.6 Test delivery invariants.**
-  - Added `tests/delivery/` with 33 tests covering batch bounds, deterministic weighted generation, unique IDs, carrier injection, carrier identity preservation, hidden flicker, six-state glow mapping, anchor compatibility/capacity/fallback, triage capacity enforcement, undecided blocking, keep/recycle outcomes, recycled carrier eligibility, neglect history persistence, seated-fragment protection, atomic application, and UID uniqueness across repeated morning deliveries on the same loop/day.
-  - Evidence (2026-06-15): focused delivery suite `33/33 passed` (197 asserts); complete GUT suite `121/121 passed` (509 asserts).
+  - Added `tests/delivery/` with 38 tests covering batch bounds, deterministic weighted generation, unique IDs, carrier injection, carrier identity preservation, hidden flicker, six-state glow mapping, anchor compatibility/capacity/fallback, triage capacity enforcement, undecided blocking, keep/recycle outcomes, recycled carrier eligibility, neglect history persistence, seated-fragment protection, atomic application, UID uniqueness across repeated morning deliveries on the same loop/day, and the 3D drop-zone → `Decision` mapping seam.
+  - Evidence (2026-06-26): focused delivery suite `38/38 passed` (232 asserts); complete GUT suite `549/549 passed` (1735 asserts).
 
 ### Acceptance
 
@@ -681,29 +683,29 @@ Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per
 - `[x]` All six fixed visual states work without adding a new rarity.
 - `[x]` Director-selected instances appear at the correct shop anchor/day (with deterministic fallback).
 - `[x]` Morning Delivery can only be triggered once per in-game day.
-- `[-]` Manual on-screen verification of mouse/keyboard input, 1920x1080 readability, and three accelerated debug mornings is pending human observation.
+- `[-]` Manual on-screen verification of the 3D drag-and-drop interaction (grabbing, floating, dropping into Keep/Recycle, rarity glow readability, storage meter, over-capacity/undecided blocking, confirm cue), the 2D list-view fallback with keyboard/controller, and three accelerated debug mornings is pending human observation.
 
 ### Verification
 
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/delivery
-# Result (2026-06-15): 33/33 passed, 197 asserts.
+# Result (2026-06-26): 38/38 passed, 232 asserts.
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result (2026-06-15): 121/121 passed, 509 asserts.
+# Result (2026-06-26): 549/549 passed, 1735 asserts.
 
 gdformat --check scripts scenes dialogue tests
-# Result (2026-06-15): no files need reformatting.
+# Result (2026-06-26): new/changed files clean; pre-existing formatting drift in 18 unrelated files remains to be addressed separately.
 
 gdlint scripts scenes dialogue tests
-# Result (2026-06-15): no problems found.
+# Result (2026-06-26): no problems in changed files; full-project lint reports no new problems.
 
 git diff --check
 # Result (2026-06-15): no trailing whitespace errors.
 ```
 
-Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor placement behavior. Pending human observation.
+Manual: start three debug days and confirm batch, glow, 3D grab/drop into Keep/Recycle, storage meter, over-capacity/undecided blocking, confirm cue, and the 2D list-view fallback with keyboard/controller. Pending human observation.
 
 ---
 
