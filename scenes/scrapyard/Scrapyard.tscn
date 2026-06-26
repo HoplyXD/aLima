@@ -45,11 +45,6 @@ reflected_light_source = 1
 tonemap_mode = 2
 tonemap_exposure = 1.1
 tonemap_white = 3.0
-ssao_enabled = true
-ssao_intensity = 1.5
-ssao_power = 1.5
-glow_enabled = true
-glow_intensity = 0.25
 
 [node name="Scrapyard" type="Node3D" unique_id=1552477199]
 script = ExtResource("1_scrapyard")
@@ -124,11 +119,13 @@ light_energy = 3.0
 shadow_enabled = true
 shadow_bias = 0.05
 shadow_normal_bias = 2.0
+shadow_opacity = 0.8
 directional_shadow_mode = 1
 directional_shadow_split_1 = 0.15
 directional_shadow_split_2 = 0.35
 directional_shadow_split_3 = 0.65
-directional_shadow_max_distance = 80.0
+directional_shadow_max_distance = 50.0
+directional_shadow_fade_start = 0.8
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1724588853]
 environment = SubResource("Environment_yard")

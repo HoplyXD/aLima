@@ -57,6 +57,13 @@ func test_hud_exists() -> void:
 	assert_not_null(hud, "ScrapyardHud should be present")
 	assert_is(hud, ScrapyardHud, "ScrapyardHud should use the ScrapyardHud script")
 
+	var day_label: Label = hud.get_node_or_null("DayLabel")
+	var clock_label: Label = hud.get_node_or_null("ClockLabel")
+	assert_not_null(day_label, "DayLabel should exist")
+	assert_not_null(clock_label, "ClockLabel should exist")
+	assert_true(day_label.visible, "Day label should be visible")
+	assert_true(clock_label.visible, "Clock label should be visible")
+
 
 func test_player_is_in_player_group() -> void:
 	var player := _yard.get_node_or_null("Player")
