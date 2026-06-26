@@ -39,6 +39,23 @@ func _ready() -> void:
 	_type_timer.timeout.connect(_on_type_timer_timeout)
 	_continue_indicator.hide()
 	hide()
+	_ensure_interact_action()
+
+
+## Registers the "interact" action if nothing else has, so dialogue advances on
+## keyboard E / gamepad A even in scenes without the yard player controller.
+func _ensure_interact_action() -> void:
+	if InputMap.has_action("interact"):
+		return
+	InputMap.add_action("interact")
+
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_E
+	InputMap.action_add_event("interact", key)
+
+	var pad := InputEventJoypadButton.new()
+	pad.button_index = JOY_BUTTON_A
+	InputMap.action_add_event("interact", pad)
 
 
 ## Queue and begin showing a list of lines. Ignored if the queue is empty.
@@ -103,7 +120,7 @@ func _input(event: InputEvent) -> void:
 	var advance := false
 	if event.is_action_pressed("ui_accept"):
 		advance = true
-	elif event.is_action_pressed("interact"):
+	elif InputMap.has_action("interact") and event.is_action_pressed("interact"):
 		advance = true
 	elif (
 		event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed

@@ -250,6 +250,20 @@
             "name": "Ayla",
             "text": "Indi pagdali-dali. Pero kon magbawi ka nga wala sang dala, daw sayang lang ang oras mo. [i]She jerks a thumb toward the heaps.[/i] Balik kon may makuha ka na, ha?"
           }
+        ],
+        "yard_sorting": [
+          {
+            "name": "Ayla",
+            "text": "[i]She doesn't look up from the scrap spread across her cloth.[/i] Hu, busy pa ko ga-sort sang imo dala. Daw indi pa na dayon — balik lang after a while, ha?"
+          },
+          {
+            "name": "You",
+            "text": "How long is it going to take?"
+          },
+          {
+            "name": "Ayla",
+            "text": "Mga isa ka oras pa. Kilid lang ko diri kon may maayo ako makita. [i]She waves you toward the heaps without lifting her eyes.[/i] Samari ka lang kon handa na."
+          }
         ]
       }
     },

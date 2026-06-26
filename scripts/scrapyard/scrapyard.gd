@@ -170,6 +170,16 @@ func _setup_scrap_items_root() -> void:
 
 
 func _open_handoff() -> void:
+	if AylaService.is_sort_active() and not AylaService.is_sort_ready():
+		var route := DataRepository.singleton().get_route("scavenger")
+		var lines: Array = []
+		if route != null:
+			lines = route.dialogue_for("yard_sorting")
+		if lines.is_empty():
+			lines = ["Ayla: Busy pa ko ga-sort sang imo scrap. Balik lang after a while, ha?"]
+		_dialogue_box.start(lines)
+		_enter_overlay()
+		return
 	if _total_scrap_count() == 0:
 		var route := DataRepository.singleton().get_route("scavenger")
 		var lines: Array = []
