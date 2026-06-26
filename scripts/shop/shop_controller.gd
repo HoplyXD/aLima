@@ -151,8 +151,8 @@ func _exit_tree() -> void:
 	# shared autoload state when the menu is torn down to enter the game.
 	if backdrop_mode:
 		return
-	# Stop the autoload clock so its state does not bleed into later scenes/tests.
-	DayClock.reset()
+	# The clock is intentionally not reset here: the scrapyard keeps the same
+	# running session, and SpaceManager resets it only on return-to-title.
 	if _triage_screen != null:
 		_triage_screen.close()
 
@@ -201,7 +201,8 @@ func _on_door_pressed() -> void:
 	# branching their lines on whether the player has met them before.
 	var route := RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
 	if route == null:
-		_open_dialogue(["No one is at the door right now."], false)
+		# No visitor waiting: step outside into the walkable scrapyard.
+		SpaceManager.go_to_yard()
 		return
 	var key := RouteService.dialogue_key(route, DayClock.get_day())
 	var lines := route.dialogue_for(key)

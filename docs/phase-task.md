@@ -7,12 +7,213 @@ Canonical step-by-step build tracker for the Godot 4.7 game, backend, live/mock 
 | Last audited | 2026-06-23 |
 | Current milestone | June 30, 2026 vertical slice |
 | Engine target | Godot 4.7 |
-| Presentation | Hybrid 3D shop with 2D gameplay interfaces |
+| Presentation | Hybrid 3D: seated shop interior + walkable scrapyard, with 2D gameplay interfaces (see Design Reform v2 below) |
 | Project root | Repository root (`project.godot` stays here) |
 | Build authority | `CLAUDE.md` §4 -> `README.md` full-game promises -> `docs/PRD.md` requirements -> this checklist |
 | Discovery specification | `docs/PRD.md` §12 |
 
 Toolchain references: [Godot 4.7 stable release](https://godotengine.org/article/godot-4-7-stable-released/) and [Godot 4.7 documentation](https://docs.godotengine.org/en/4.7/).
+
+## Design Reform v2 — Inside/Outside, Forage Delivery, Scrapyard Discovery (2026-06-26)
+
+A design decision reshaped the shell, the delivery loop, and discovery. It is recorded in `README.md`
+(GDD), `docs/PRD.md` (SHELL-R3, DLV-R1, DISC-R1, ROUTE-R2, D10/D11), `CLAUDE.md` (STACK CONTRACT, §4-I,
+§5), and `docs/route-dialogue-compendium.md`. **The v1 systems tracked below are genuinely built and
+tested — those `[x]`/`[-]` evidence records stand as accurate history of v1 work — but their design
+target has moved.** The v2 tasks reopen or extend them; until they land, the docs describe v2 while the
+code still runs v1, and that gap is expected, not a bug.
+
+The reform:
+
+- **Two connected spaces:** a **seated shop interior** (existing scene) entered through the door, and a
+  **walkable 3D scrapyard** stepped out through it. The clock runs in both.
+- **Delivery is earned by foraging:** gather rarity-tiered scrap in the yard, hand chosen scrap to
+  **Ayla**, who sorts it (~1 in-game hour) and knocks with a batch of restorables. No free morning drop;
+  richer scrap biases the haul (D10).
+- **Ayla = permanent scrapyard delivery NPC** (not a gated route); the **Lave↔Ayla mutual exclusion is
+  removed** (Lave is still Auntie-gated).
+- **Discovery is a spatial echo-walk in the yard:** the carrier hides there; on pickup the heartbeat
+  resolves to a soft carried-aura that persists until the fragment is seated (README §9.9 / §4-I).
+- **Maverick releases** the 5th fragment into the yard; he never hands it over (ROUTE-R5).
+
+Affected phases (target shift — rework/extend, do not delete the v1 evidence):
+
+- **Phase 3 (Delivery & Triage):** replace the auto morning delivery with forage → hand-off → sort →
+  knock; scrap as a rarity-tiered resource (D10). Triage of the returned batch is otherwise unchanged.
+- **Phase 4 (Shop shell / interactables):** the door also transitions inside↔outside; drop the "morning
+  delivery" prop; restoration/scanner/journal/phone stay inside.
+- **Phases 5–6 (Spawn Director / Echoes):** placement space + echo proximity move to the walkable yard;
+  never-twice keyed to yard hiding spots; carried-aura post-pickup state.
+- **Phases 10 / 15 (Routes):** Ayla becomes the always-present delivery NPC with milestone beats (her
+  father's lunchbox foraged from the yard); remove the temporal mutual exclusion; apply the Maverick
+  release fix.
+
+The work is broken into the five followable reform phases below (**do them before recording the July 11
+slice video** — they reshape what the video shows). Each reopens/extends the built v1 phase noted in its
+dependencies; sequence is RV2-A → RV2-B → RV2-C → RV2-D → RV2-E.
+
+---
+
+## Phase RV2-A - Two-Space Shell & Walking
+
+**Goal:** the player can step through the front door from the seated shop into a walkable 3D scrapyard and back; the clock runs in both; only one space is loaded at a time.
+
+**Requirements:** SHELL-R3, INPUT-R1, INPUT-R5, PLAT-R4
+**Dependencies:** Phase 4 (shop shell / interactables), Phase 2 (clock)
+**Subsystems:** scrapyard scene, space/door transition manager, player movement controller
+
+### Tasks
+
+- `[x]` **RV2-A.1 Walkable scrapyard scene + door transition.**
+  - New `scenes/scrapyard/Scrapyard.tscn` with placeholder dev geometry (ground plane, fence, scrap heaps, delivery bay shell, Ayla/DoorReturn anchors).
+  - `scripts/core/space_manager.gd` (`SpaceManager` autoload) owns the shop ↔ yard state machine and uses a `Callable` loader seam: production calls `get_tree().change_scene_to_file`, tests record the requested path.
+  - The shop door (`scripts/shop/shop_controller.gd`) steps outside when no visitor/delivery is waiting; returning from the yard is wired through the same `SpaceManager`.
+  - The clock is intentionally never paused by `SpaceManager`; `DayClock` keeps advancing across transitions.
+- `[x]` **RV2-A.2 Player movement controller.**
+  - `scripts/scrapyard/player_controller.gd` is a `CharacterBody3D` that reads runtime-registered movement actions (`move_left/right/up/down`) and provides FPS-style keyboard + controller stick movement.
+  - The mouse rotates the view directly (yaw on the player, pitch on the head camera).
+  - Walking is confined to the yard; the seated shop has no free-walk camera.
+
+### Acceptance
+
+- `[x]` Door out → walkable yard; door in → seated shop; state survives repeated back-and-forth; the clock advances throughout. (Automated coverage in `tests/scrapyard/test_space_manager.gd` + `tests/scrapyard/test_door_wiring.gd`.)
+- `[-]` FPS-style walking and mouselook works on mouse/keyboard and controller stick at 1920x1080 and 1280x720. A/D (or left/right) strafe, W/S move forward/back, and the mouse turns the view. Code is implemented; on-screen feel is a pending human verification gate.
+- `[x]` GUT covers the space-transition state machine; the on-screen walk is explicitly a manual gate.
+
+### Verification
+
+```powershell
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
+& $godot --headless --editor --path . --quit
+# Result (2026-06-26): exit 0, no parser/resource/UID errors.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/scrapyard -ginclude_subdirs -gexit
+# Result (2026-06-26): 13/13 passed, 39 asserts.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-06-26): 563/563 passed, 1778 asserts.
+```
+Manual (pending human observation): walk out the shop door into the yard; move with WASD/arrow keys (A/D strafe, W/S forward/back) or a gamepad left stick; look around by moving the mouse (FPS-style yaw/pitch); step back through the yard door return; confirm the HUD clock still advances in both spaces and at 1920x1080 and 1280x720.
+
+---
+
+## Phase RV2-B - Scrap Foraging & Ayla Delivery
+
+**Goal:** the day's restorable batch is earned — forage rarity-tiered scrap in the yard, hand chosen scrap to Ayla, she sorts (~1 in-game hour), then knocks with the batch to triage. No free morning drop.
+
+**Requirements:** DLV-R1, DLV-R2, ROUTE-R2, D10
+**Dependencies:** RV2-A, Phase 3 (delivery / triage)
+**Subsystems:** scrap resource + yard scatter, Ayla NPC, sort timer, delivery hand-off
+
+### Tasks
+
+- `[ ]` **RV2-B.1 Scrap as a foraged resource.**
+  - A `ScrapItem` (rarity-tiered, white→up) scattered in the yard; pick-up adds to a loop-scoped scrap pool; data-driven spawn density per day.
+- `[ ]` **RV2-B.2 Ayla hand-off + sort + knock.**
+  - Ayla anchor in the yard; the player submits chosen scrap; a sort timer (~1 in-game hour, clock running) then fires a door-knock that opens the existing triage screen with a batch whose rarity draw is **biased** by the submitted scrap (D10), never guaranteed. Replaces the auto "Morning Delivery" trigger.
+
+### Acceptance
+
+- `[ ]` No free delivery; the only path to restorables is forage → hand to Ayla → sorted batch.
+- `[ ]` Across seeded runs, richer scrap measurably raises higher-rarity odds without guaranteeing them.
+- `[ ]` Sort consumes ~1 in-game hour; the knock opens triage; keep/recycle behaves as Phase 3.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/delivery -ginclude_subdirs -gexit
+```
+Manual: a full forage → hand-off → sort → knock → triage run.
+
+---
+
+## Phase RV2-C - Scrapyard Discovery (relocate the headline mechanic)
+
+**Goal:** a released carrier hides in the walkable yard; the four-band Cultural Echo intensifies as the player walks toward it; pickup resolves the heartbeat into a carried-aura that persists until seated.
+
+**Requirements:** DISC-R1, DISC-R7..R11, CLAUDE.md §4-I
+**Dependencies:** RV2-A, Phase 5 (Spawn Director), Phase 6 (Cultural Echoes)
+**Subsystems:** spawn placement (yard spots), spatial echo proximity, carried-aura state
+
+### Tasks
+
+- `[ ]` **RV2-C.1 Relocate placement + echo proximity to the yard.**
+  - Spawn Director places the carrier at a yard hiding spot; never-twice keyed to yard spots.
+  - Echo proximity is driven by the player's walking distance to the carrier; flicker reveals only at proximity (`GLOW_REVEAL_AT`); heartbeat stays gated to `is_carrier == true`.
+  - On pickup the hunt bands resolve and a soft carried-aura plays until the fragment is cleaned/opened/seated, then silence (§4-I).
+
+### Acceptance
+
+- `[ ]` Three seeded runs hide the carrier at visibly different yard spots; never a repeat (carrier, spot) for the player.
+- `[ ]` Walking toward the carrier raises the bands; the heartbeat never fires on a decoy; flicker only at proximity.
+- `[ ]` Pickup → carried-aura → carry inside → clean → open → seat → aura goes silent.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/discovery -ginclude_subdirs -gexit
+```
+Manual: a complete echo-walk to the carrier with captions/resonance meter.
+
+---
+
+## Phase RV2-D - Route Reconciliation (Ayla, Lave, Maverick)
+
+**Goal:** routes match v2 — Ayla is the permanent delivery NPC with milestone beats, the Lave↔Ayla exclusion is gone, and Maverick releases (never hands over) the 5th fragment.
+
+**Requirements:** ROUTE-R2, ROUTE-R3, ROUTE-R5, CLAUDE.md §4-B/§4-C
+**Dependencies:** RV2-B, RV2-C, Phase 10 (Auntie/route integration), Phase 15 (full routes)
+**Subsystems:** RouteService, route data, fragment release
+
+### Tasks
+
+- `[ ]` **RV2-D.1 Reauthor Ayla + one-ending-per-loop + remove the exclusion.** (ROUTE-R7, ROUTE-R8)
+  - Ayla present every open day (delivery NPC). Her **Archeologist lead** comes free from daily contact; her **completion** is gated behind **Sam's excavation tool** → dig her father's lunchbox from a yard spot → restore it → a "Show Ayla the lunchbox" interaction releases her fragment. (Decouples the Ayla→Sam→Ayla cycle.)
+  - Enforce **one route completion per loop** (conflicting windows; Ayla via the tool/lunchbox gate); finding/seating an already-`RELEASED` fragment in the yard is parallel and exempt.
+  - Remove the temporal Artisan/Scavenger mutual exclusion in `RouteService`; Lave stays Auntie-gated. Update `data/routes/routes.json`.
+- `[ ]` **RV2-D.2 Maverick release fix.**
+  - His qualifying Day-5 encounter **releases** the 5th fragment into a Spawn-Director yard carrier (echo-hunt) with no hand-over. Update his flow/dialogue per `docs/route-dialogue-compendium.md`.
+
+### Acceptance
+
+- `[ ]` Both the Artisan's and Scavenger's fragments can release within one loop; Ayla never disappears.
+- `[ ]` Maverick's Day-5 path produces a yard carrier the player must find/clean/open/seat — never a directly handed fragment.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core -gexit
+```
+Manual: a route playthrough confirming Ayla persistence, Lave unlock, and the Maverick release.
+
+---
+
+## Phase RV2-E - Perf, Data & Reconciliation Close-out
+
+**Goal:** the reform holds the perf targets, the data/tests agree with v2, and the milestone-video plan reflects the yard hunt.
+
+**Requirements:** PLAT-R4, D11, REST/DISC test parity
+**Dependencies:** RV2-A..D
+**Subsystems:** performance, data, tests, milestone evidence
+
+### Tasks
+
+- `[ ]` **RV2-E.1 Scrapyard perf pass + data migration.**
+  - Profile the yard on the web reference (30 FPS @ 1280x720); zone/cull as needed; migrate `data/routes/containers.json` (piles → yard spots) and any pile-based fixtures.
+- `[ ]` **RV2-E.2 Test + evidence reconciliation.**
+  - Update/extend GUT suites that assumed v1 delivery/discovery; revise the milestone-video shot list (echo hunt now in the yard); re-run full GUT + lint + import; record evidence; append `docs/ai-disclosure.md`.
+
+### Acceptance
+
+- `[ ]` Full GUT / lint / import green under 4.7; the web build holds 30 FPS in the yard stress scenario.
+- `[ ]` No remaining v1 delivery/discovery contradiction in `data/` or tests.
+
+### Verification
+
+```powershell
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
+& $godot --headless --path . --export-release "Web" "build/web/aLima.html"
+```
 
 ## Status Markers
 
@@ -435,7 +636,7 @@ Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per
 
 **Requirements:** DLV-R1..R5, ARCH-R5
 **Dependencies:** Phases 1-2
-**Subsystems:** delivery generator, 3D placement anchors, 2D triage UI
+**Subsystems:** delivery generator, 3D placement anchors, diegetic 3D triage interaction with 2D accessibility fallback
 
 ### Tasks
 
@@ -459,13 +660,15 @@ Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per
   - Carriers display their ordinary template rarity glow until `flicker_authorized` is true; no new rarity tier was added.
   - Evidence (2026-06-15): `tests/delivery/test_glow_mapper.gd` 6/6 passed.
 
-- `[x]` **P3.4 Build the 2D triage interface.**
-  - Added `scenes/ui/triage_screen.tscn` + `scenes/ui/triage_controller.gd`.
-  - Shows object name, apparent glow (color + text), assigned container, and storage cost per item.
-  - Enforces the configured storage cap by cost, not object count.
-  - Requires an explicit keep/recycle decision for every item; confirm is disabled while undecided or over capacity.
+- `[x]` **P3.4 Build the triage interface (diegetic 3D presentation with 2D fallback).**
+  - Rewrote `scenes/ui/triage_screen.tscn` + `scenes/ui/triage_controller.gd` so triage is a diegetic 3D physics interaction: each delivered object appears as its real 3D model in a center pile, the player grabs/drags it into a Keep box (left) or Recycle bin (right), and dropping inside a bin calls `TriageState.set_decision()` exactly as before.
+  - Reuses `ArtifactScenes.scene_for(...)` + `RestorationService.present_object(...)` and applies `GlowMapper.get_instance_glow_color(template.base_rarity, inst.is_carrier, false)` as a rarity emission glow — carriers remain visually identical to ordinary instances (no flicker/heartbeat in triage).
+  - Keeps the public API intact (`class_name TriageController`, `signal closed`, `open(delivery, storage_cap)`, `close()`, `.visible`) so `scripts/shop/shop_controller.gd` and `Shop.tscn` require no changes.
+  - Enforces the configured storage cap by cost, not object count; requires an explicit keep/recycle decision for every item; confirm is disabled while undecided or over capacity.
   - Acquires/releases `DayClock.PAUSE_TRIAGE` ownership while open and on every close/exit path.
-  - Evidence (2026-06-15): `tests/delivery/test_triage.gd` capacity/decision tests passed.
+  - Retains a toggleable 2D list-view fallback (button rows, keyboard/controller focus nav, storage meter, confirm) behind `SettingsService.previews_enabled()` / a HUD toggle for full accessibility parity (§4P).
+  - Added `tests/delivery/test_triage_drop_zones.gd` for the headless drop-zone → `Decision` mapping seam.
+  - Evidence (2026-06-26): `tests/delivery/test_triage.gd` 9/9 passed; `tests/delivery/test_triage_drop_zones.gd` 4/4 passed; focused delivery suite 38/38 passed.
 
 - `[x]` **P3.5 Apply triage results.**
   - Added `scripts/delivery/triage_service.gd` (`TriageService`).
@@ -477,8 +680,8 @@ Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per
   - Evidence (2026-06-15): `tests/delivery/test_triage.gd` outcome/eligibility/neglect tests passed.
 
 - `[x]` **P3.6 Test delivery invariants.**
-  - Added `tests/delivery/` with 33 tests covering batch bounds, deterministic weighted generation, unique IDs, carrier injection, carrier identity preservation, hidden flicker, six-state glow mapping, anchor compatibility/capacity/fallback, triage capacity enforcement, undecided blocking, keep/recycle outcomes, recycled carrier eligibility, neglect history persistence, seated-fragment protection, atomic application, and UID uniqueness across repeated morning deliveries on the same loop/day.
-  - Evidence (2026-06-15): focused delivery suite `33/33 passed` (197 asserts); complete GUT suite `121/121 passed` (509 asserts).
+  - Added `tests/delivery/` with 38 tests covering batch bounds, deterministic weighted generation, unique IDs, carrier injection, carrier identity preservation, hidden flicker, six-state glow mapping, anchor compatibility/capacity/fallback, triage capacity enforcement, undecided blocking, keep/recycle outcomes, recycled carrier eligibility, neglect history persistence, seated-fragment protection, atomic application, UID uniqueness across repeated morning deliveries on the same loop/day, and the 3D drop-zone → `Decision` mapping seam.
+  - Evidence (2026-06-26): focused delivery suite `38/38 passed` (232 asserts); complete GUT suite `549/549 passed` (1735 asserts).
 
 ### Acceptance
 
@@ -487,29 +690,29 @@ Manual (PENDING on-screen observation under windowed 4.7): run with `seconds_per
 - `[x]` All six fixed visual states work without adding a new rarity.
 - `[x]` Director-selected instances appear at the correct shop anchor/day (with deterministic fallback).
 - `[x]` Morning Delivery can only be triggered once per in-game day.
-- `[-]` Manual on-screen verification of mouse/keyboard input, 1920x1080 readability, and three accelerated debug mornings is pending human observation.
+- `[-]` Manual on-screen verification of the 3D drag-and-drop interaction (grabbing, floating, dropping into Keep/Recycle, rarity glow readability, storage meter, over-capacity/undecided blocking, confirm cue), the 2D list-view fallback with keyboard/controller, and three accelerated debug mornings is pending human observation.
 
 ### Verification
 
 ```powershell
 $godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/delivery
-# Result (2026-06-15): 33/33 passed, 197 asserts.
+# Result (2026-06-26): 38/38 passed, 232 asserts.
 
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-# Result (2026-06-15): 121/121 passed, 509 asserts.
+# Result (2026-06-26): 549/549 passed, 1735 asserts.
 
 gdformat --check scripts scenes dialogue tests
-# Result (2026-06-15): no files need reformatting.
+# Result (2026-06-26): new/changed files clean; pre-existing formatting drift in 18 unrelated files remains to be addressed separately.
 
 gdlint scripts scenes dialogue tests
-# Result (2026-06-15): no problems found.
+# Result (2026-06-26): no problems in changed files; full-project lint reports no new problems.
 
 git diff --check
 # Result (2026-06-15): no trailing whitespace errors.
 ```
 
-Manual: start three debug days and confirm batch, glow, keep/recycle, and anchor placement behavior. Pending human observation.
+Manual: start three debug days and confirm batch, glow, 3D grab/drop into Keep/Recycle, storage meter, over-capacity/undecided blocking, confirm cue, and the 2D list-view fallback with keyboard/controller. Pending human observation.
 
 ---
 

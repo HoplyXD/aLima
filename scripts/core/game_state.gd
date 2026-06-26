@@ -10,6 +10,9 @@ var player_id: String = "local-player"
 var loop_index: int = 0
 var run_seed: int = 0
 var debug_seed_override: int = -1  ## -1 means use a generated seed.
+## DEBUG: guarantee a Gold artifact in day-1 deliveries (so the dust overlay contrasts with the
+## silver artifacts) — see DeliveryGenerator.DEBUG_FIRST_GOLD. Set false for unbiased deliveries.
+var debug_first_gold: bool = true
 
 var save_state: SaveState = SaveState.new()
 var run_context: RunContext = RunContext.new()
@@ -30,6 +33,9 @@ func initialize(new_player_id: String = "local-player") -> void:
 	save_state.player_id = player_id
 	_load_fragment_definitions()
 	_new_run_context()
+	# A fresh session is a fresh loop: clear loop-scoped state in every subscriber
+	# (visit log, marketplace ghosts, etc.) so tests and new games start isolated.
+	EventBus.loop_reset.emit(loop_index)
 
 
 ## Copies authored fragment definitions into persistent state so the loop can

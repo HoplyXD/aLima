@@ -204,10 +204,9 @@ func debug_clear_forced_visit() -> void:
 
 ## Returns the route whose visit window covers the given day/hour and whose visit
 ## gating is satisfied, or null. Ranked by a stable priority so a deterministic
-## visitor answers when (rarely) more than one window overlaps. A window only closes
-## at end_hour, and _window_covers already excludes hour >= end_hour, so an expired
-## (consumed) visit can never resolve here — the is_visit_missed record drives the
-## visit_missed signal and feedback, not resolution.
+## visitor answers when (rarely) more than one window overlaps. A visit that has
+## already been answered or missed in the current loop is skipped, so the shop door
+## opens to the yard once the scheduled visitor has been dealt with.
 func resolve_visitor(day: int, hour: int) -> CharacterRoute:
 	var repo := _repo()
 	if not _debug_forced_route.is_empty():
@@ -217,6 +216,8 @@ func resolve_visitor(day: int, hour: int) -> CharacterRoute:
 		if route == null:
 			continue
 		if not _window_covers(route, day, hour):
+			continue
+		if is_visit_consumed(route_id, day):
 			continue
 		if not can_visit(route_id):
 			continue

@@ -87,11 +87,11 @@ aLima’s answer to the theme is structural rather than decorative. Preservation
 | Working Title | aLima |
 | Genre | Cozy restoration sim × narrative roguelite |
 | Platform | PC (Windows) primary; HTML5/web build required for the AI Fest exhibit booth |
-| Engine | Godot 4.7 — hybrid 3D shop environment with 2D `Control`/`CanvasLayer` gameplay interfaces, audio-bus control for Cultural Echoes, and desktop/web export targets |
+| Engine | Godot 4.7 — two connected 3D spaces (a seated shop interior + a walkable outdoor scrapyard) with 2D `Control`/`CanvasLayer` gameplay interfaces, audio-bus control for Cultural Echoes, and desktop/web export targets |
 | Mode | Single-player |
 | Session Length | ≈10–13 minutes real per in-game day (1 real minute \= 1 in-game hour); ≈1 hour per five-day loop; full story arc 6–10 hours |
 | Target Audience | Teens and adults; players of Unpacking, PowerWash Simulator, Strange Horticulture, and Coffee Talk |
-| Input | Mouse-first; complete mouse, controller, and touch support on Windows and HTML5 |
+| Input | Mouse-first; free-roam walking in the scrapyard; complete mouse, controller, and touch support on Windows and HTML5 |
 | Language | English UI; Kinaray-a and Hiligaynon cultural lines, always subtitled |
 | Team Size | 3 members — see Section 16 |
 
@@ -122,9 +122,11 @@ The daily clock. Each in-game hour passes in one real minute (1 minute \= 1 hour
 
 Daily Loop (one in-game day)
 
-1\.  Morning delivery. A fresh batch of scrap arrives: recyclables, damaged household objects, old photographs, broken watches, tarnished jewelry, locked containers, forgotten keepsakes.
+The shop is two connected spaces. Stepping **through the front door** sits the player down at the restoration corner (the seated shop); stepping **out the door** drops them into the **scrapyard**, a small walkable 3D lot. The clock keeps running in both.
 
-2\.  Triage. Limited storage, time, and money force the player to choose which objects to rescue before the rest is bulk-recycled. A faint glow hints at rarity — but the glow can lie.
+1\.  Forage & hand-off (outside). In the scrapyard the player gathers loose **scrap** — each piece carrying a faint apparent-rarity glow (white, green, and up) — and hands the scrap they choose to **Ayla**, the scrap-hauler who works the yard. She sorts it; the haul skews to the tier of scrap you hand in and only rarely climbs higher, so good pieces stay scarce.
+
+2\.  Delivery & triage (inside). About an in-game hour later Ayla knocks at the shop door with a batch of restorable objects sorted from that scrap. Limited storage, time, and money force the player to choose which to rescue before the rest is bulk-recycled. A faint glow hints at rarity — but the glow can lie.
 
 3\.  Restore. Tactile, hands-on cleaning mini-games played on the **actual 3D object** — you rotate and turn it in a focused restoration view and work the tool across its surface: brushing, wiping, rust removal, polishing, paper care, frame repair, photo restoration, engraving reveals. The wrong tool damages value permanently.
 
@@ -134,7 +136,7 @@ Daily Loop (one in-game day)
 
 6\.  Evening. Journal updates, shop upkeep, story interactions, and preparation for tomorrow’s delivery.
 
-Weekly Meta-Loop. At the end of Day 5, the week resets. Across repeating cycles the player anticipates events, prepares the right tools in advance, completes character story routes, releases fragments into the world, and tracks them down through Cultural Echoes — until all five fragments are seated in the journal’s case and the final cycle unlocks.
+Weekly Meta-Loop. At the end of Day 5, the week resets. Across repeating cycles the player anticipates events, prepares the right tools in advance, completes character story routes, releases fragments into the world, and tracks them down through Cultural Echoes out in the scrapyard — until all five fragments are seated in the journal’s case and the final cycle unlocks.
 
 # **7\. Compliance with Official Jam Mechanics**
 
@@ -144,7 +146,7 @@ This section maps every required AI Game On\! mechanic to its concrete implement
 | :---- | :---- |
 | Hidden Heritage Artifact — a secret in-game relic | The Master Artifact, a regional heritage object shattered into five fragments. None is handed to the player at the start — the player begins with only the journal, and all five fragments are hidden in the game world and physically discovered, then seated into the journal’s case. |
 | Regional Artifact — a unique item from local history | A real Western Visayas artifact (the “Master Artifact” is its in-fiction name). Final selection is in progress from four time-themed candidates (Section 8); all systems are artifact-agnostic, so the choice locks in without architectural cost. |
-| AI Procedural Placement — never in the same spot twice | The Spawn Director: a constraint-weighted AI placement system that hides each fragment in a different pile, container, nested object, or day for every player and run, with per-player spawn-history exclusion (9.8). |
+| AI Procedural Placement — never in the same spot twice | The Spawn Director: a constraint-weighted AI placement system that hides each fragment in a different spot across the walkable scrapyard (and eligible containers / nested objects / days) for every player and run, with per-player spawn-history exclusion (9.8). |
 | Discovery Cues — AI-generated “Cultural Echoes” | A four-band proximity audio system: melody, ambient nature sounds, and Kinaray-a phrases that grow louder and clearer with proximity, resolving into a heartbeat at the object (9.9). |
 | API Unlock / ADK — portal call \+ in-game found screen | An “Artifact Found” screen triggers a call to the City-Wide Portal API, saving the item and its real-world history to the player’s profile. A mock service mirrors the official contract until portal access is granted (9.10). |
 | Digital Museum — portal turns finds into a gallery | An online API museum holds the Gold finds and the Master Artifact, while Purple-and-below items are archived in the Journal (9.10). |
@@ -181,9 +183,9 @@ Exclusions. The Code of Kalantiaw is excluded as a documented 20th-century hoax 
 
 # **9\. Game Systems**
 
-## **9.1 Scrap Deliveries & Triage**
+## **9.1 Scrap Foraging, Sorting & Triage**
 
-Daily deliveries are the game’s card draw. Storage, time, and money are limited, so every rescued object is a bet. Each object carries a faint glow indicating apparent rarity — apparent, because the glow reflects how an object looks, not what it is. Counterfeits can shine; treasures can look like trash.
+The player no longer waits on a free morning drop — they **earn** each day's batch. Out in the scrapyard the player forages loose scrap and hands what they choose to **Ayla**, the scrap-hauler, who sorts it into a delivery of restorable objects (the sort skews to the scrap's own tier and only rarely climbs higher, so high-rarity finds stay scarce). Each scrap she sorts yields one to three outcomes — a restorable object, a minor item, or just trash — so a batch can come back generous or nearly worthless. Storage, time, and money are limited, so every rescued object is a bet. Each object carries a faint glow indicating apparent rarity — apparent, because the glow reflects how an object looks, not what it is. Counterfeits can shine; treasures can look like trash.
 
 | Glow | Apparent Meaning |
 | :---- | :---- |
@@ -230,14 +232,14 @@ Example. On Day 2, the Elderly Auntie asks for help restoring a faded photograph
 
 ## **9.7 Character-Driven Story Routes**
 
-Five “lima” characters knew the uncle and each controls the release of one fragment. Four of them have a completable character ending; the Mysterious Buyer has no ending of his own but triggers the fifth fragment’s release; the uncle’s own thread (Yuyu) is the final ending. Characters never hand fragments directly to the player: route completion releases them into the scrap stream for the Spawn Director to place.
+Five “lima” characters knew the uncle and each controls the release of one fragment. Four of them have a completable character ending; the Mysterious Buyer has no ending of his own but triggers the fifth fragment’s release; the uncle’s own thread (Yuyu) is the final ending. Full per-route schedules, gates, inside/outside placement, and the draft dialogue compendium live in `docs/route-dialogue-compendium.md`. Characters never hand fragments directly to the player: route completion releases them into the scrap stream for the Spawn Director to place.
 
 | Route | Arc & Schedule | Completion Reward |
 | :---- | :---- | :---- |
 | Elderly Auntie (Shine) | Restoring her family photographs and keepsakes reveals the uncle in her family’s past.  Schedule: 12:00pm–2:00pm on Days 1, 3, 5\.  Tie to the uncle: his first love, from long before your grandmother. | Fragment released • code to the uncle’s Safe • clue to the uncle’s locked drawer |
-| Local Artisan (Lave) | An artisan teaches the hardest lesson: preservation is not making things look new — patina is part of the story.  Schedule: 1:00pm–2:00pm on Days 2, 4, 5 (appears only after you have helped the Elderly Auntie — Lave will not share a shop with the scrap hauler and replaces the Trash Scavenger).  Tie to the uncle: the Auntie’s grandchild, raised on her stories of the uncle. | Fragment released • delicate restoration tool • access to fragile objects |
-| Trash Scavenger (Ayla) | A scrap hauler convinced her junk is treasure. Humor her and clean her hauls and she pays well; keep your distance from the Elderly Auntie Grandchild and she eventually trusts you.  Schedule: 1:00pm–2:00pm on Days 2, 4, 5 (only if you have NOT helped the Elderly Auntie).  Tie to the uncle: the hauler who fed the uncle a steady stream of curios and “treasure.” Holds one of the five fragments. | Fragment released • lead to the Local Archeologist (persists across loops) |
-| Archeologist (Sam) | An archeologist recognizes your tools and tests your dedication, revealing that true mastery lies in re-forging broken pieces while honoring the soul of the original maker.  Schedule: 3:00pm–5:00pm on Day 1; 08:00am–11:00am on Days 3, 5 (requires the Scavenger’s lead, which persists across loops — so on a later/Perfect Loop he is available from Day 1).  Tie to the uncle: the last person seen with the uncle before he vanished — the one who got lost in time beside him. | Fragment released • excavation tools • access to Sturdy objects |
+| Local Artisan (Lave) | An artisan teaches the hardest lesson: preservation is not making things look new — patina is part of the story.  Schedule: 1:00pm–2:00pm on Days 2, 4, 5, unlocked once the Elderly Auntie's route is helped (he is her grandchild, drawn into the shop by the photograph you restore for her). He no longer displaces Ayla — both can be pursued in one loop.  Tie to the uncle: the Auntie’s grandchild, raised on her stories of the uncle. | Fragment released • delicate restoration tool • access to fragile objects |
+| Trash Scavenger (Ayla) | A scrap hauler convinced her junk is treasure — and now the shop's everyday lifeline: she works the **scrapyard** and sorts the scrap the player forages into each day's delivery. Casual daily talk gives the **lead to the Archeologist** early; her own ending is a cross-route chain — with Sam's excavation tools the player digs her late father's lunchbox out of the yard, restores it, and shows it to her.  Schedule: present in the scrapyard every day the shop is open (completion gated behind Sam's excavation tool).  Tie to the uncle: her father fed the uncle a steady stream of curios and “treasure.” Holds one of the five fragments. | Fragment released (the Archeologist lead comes earlier, from daily contact) |
+| Archeologist (Sam) | An archeologist recognizes your tools and tests your dedication, revealing that true mastery lies in re-forging broken pieces while honoring the soul of the original maker.  Schedule: 3:00pm–5:00pm on Day 1; 08:00am–11:00am on Days 3, 5 (requires the Scavenger’s lead from daily contact, which persists across loops — so on a later/Perfect Loop he is available from Day 1).  Tie to the uncle: the last person seen with the uncle before he vanished — the one who got lost in time beside him. | Fragment released • excavation tools (also used to unearth Ayla's father's lunchbox) • access to Sturdy objects |
 | The Mysterious Buyer (Mr. Maverick) *— no ending; support route* | A buyer who overpays for objects marked with a certain symbol. Deal with him at least once on Days 1–4; his qualifying Day 5 encounter deterministically releases the fifth fragment into a guaranteed special delivery. Schedule: appears every day, 5:00pm–6:00pm (and 07:00am–09:00am on Day 5). Tie to the uncle: the dealer who for years bought from and sold to the uncle. | Fifth fragment released into a Director-placed carrier • encoded ledger • evidence of the uncle’s unfinished investigation |
 | The Uncle’s Legacy (Yuyu) *— final ending* | With all five fragments gathered and seated, the journal’s hidden notes finally make sense: the uncle deliberately entrusted the fragments to people he trusted, to be returned only to someone willing to listen. | The Master Artifact made whole • the Perfect Loop • the uncle pulled back from the void |
 
@@ -245,17 +247,17 @@ Five “lima” characters knew the uncle and each controls the release of one f
 
 Story gates when. AI decides where. Completing a route never hands the player a fragment directly. Instead, the fragment enters the city’s scrap stream with an in-fiction justification — the Elderly Auntie donates a box of her late husband’s things; the suspicious buyer’s goods are seized and auctioned; the artisan clears out an old workshop. From that moment, the Spawn Director takes over.
 
-• Placement space: delivery piles, shelving, eligible outer containers, specific days and times — and nested inside restorable junk objects (a rusted biscuit tin, a hollow wooden santo, the backing of a framed photo), so discovery flows through the core restoration loop itself. Once its code is known, the Safe may be selected as an outer container, but the fragment remains inside a promoted ordinary carrier and is never loose.
+• Placement space: **hiding spots across the walkable scrapyard** (under tarps, inside scrap heaps, behind the fence, tucked in the delivery bay), plus shop shelving and eligible outer containers — and always nested inside a restorable junk object (a rusted biscuit tin, a hollow wooden santo, the backing of a framed photo), so discovery still flows through the core restoration loop. The released carrier hides in the yard, where the player tracks it by sound; once its code is known, the Safe may also be selected as an outer container, but the fragment remains inside a promoted ordinary carrier and is never loose.
 
 • Constraint-weighted selection: weighs route state, owned tools, container compatibility, and the player’s own behavior history — deliberately favoring places the player has been neglecting.
 
 • Never-twice guarantee: per-player spawn history is recorded and excluded from future placement; per-run seeds differ across players, so no two discoveries happen in the same place.
 
-• Demonstrability: the 50% gameplay video shows side-by-side runs with the same fragment spawning in different piles, containers, and days.
+• Demonstrability: the 50% gameplay video shows side-by-side runs with the same fragment spawning in different spots across the scrapyard, containers, and days.
 
 ## **9.9 Cultural Echoes (Discovery Cues)**
 
-When a hidden fragment is nearby, the shop begins to sound different. Echoes are AI-generated, human-curated audio layers mixed by proximity:
+When a released fragment's carrier is hidden out in the scrapyard, the yard begins to sound different the closer the player walks to it. Echoes are AI-generated, human-curated audio layers mixed by proximity:
 
 | Band | Proximity | What the Player Hears |
 | :---- | :---- | :---- |
@@ -263,6 +265,8 @@ When a hidden fragment is nearby, the shop begins to sound different. Echoes are
 | 2\. The Melody | Closer | An original folk-style melody in a Western Visayas idiom |
 | 3\. The Voice | Near | Kinaray-a phrases and ambient sounds tied to the artifact’s story |
 | 4\. The Heartbeat | At the object | A soft heartbeat — the theme made audible. The object is here. |
+
+Picking the carrier up collapses the overwhelming heartbeat into calm, but a faint thread of resonance keeps sounding while the player carries it back to the bench — going fully silent only once the fragment is cleaned, opened, and seated. The heartbeat band is impossible on a decoy; it is what confirms the true carrier.
 
 *Accessibility: every echo band has subtitle captions and a visual resonance meter, so the mechanic is playable without audio.*
 
@@ -296,19 +300,15 @@ Completing the Elderly Auntie route reveals the code to the uncle’s Safe. Beca
 
 There are five endings: four character endings — Elderly Auntie, Local Artisan, Trash Scavenger, Archeologist — each completed by finishing that person’s route, plus the Uncle’s Legacy (Yuyu) finale. (The Mysterious Buyer has no ending of his own; he controls the fifth fragment’s release.) Completing none of the routes yields the Neutral outcome: the loop simply repeats.
 
-The Perfect Loop (Yuyu ending) begins when all five fragments are seated. Previously seated fragments persist across resets, so the player never needs to re-gather them. The intended route order for the loop in which the final fragment is seated is:
+The Perfect Loop (Yuyu ending) begins when all five fragments are seated. Previously seated fragments persist across resets, so the player never needs to re-gather them. Because a loop has room to complete only **one** character's route, the five fragments are gathered one per loop across several loops, not all in one week:
 
-• Day 1 — Archeologist quest (available from Day 1 once his lead is known from a prior loop).
+• Each loop, commit to one character — Elderly Auntie, Local Artisan (after the Auntie), Archeologist, or Trash Scavenger (after the Archeologist, using his excavation tools to dig up her father's lunchbox) — completing their route on Day 5 and releasing their fragment.
 
-• Day 2 — Scavenger quest.
+• Find and seat each released fragment out in the scrapyard over the following loop(s); the hunt runs in parallel with a new route, so progress compounds.
 
-• Day 3 — Elderly Auntie.
+• Across these loops, deal with the Mysterious Buyer at least once so his thread is primed.
 
-• Day 4 — Local Artisan.
-
-• Days 1–4 — buy from or sell to the Mysterious Buyer at least once.
-
-• Day 5 — the Buyer’s qualifying encounter releases the fifth fragment into a guaranteed special delivery. The Spawn Director places it inside an ordinary carrier; the player must still find, clean, open, and seat it. With the case full, the loop the journal sustains releases, the timeline resumes, and the uncle returns.
+• Day 5 of the final loop — with the other four fragments seated, the Buyer’s qualifying encounter releases the fifth fragment. He never hands it over; the Spawn Director hides it inside an ordinary carrier out in the scrapyard, and the player must still track it by sound, clean, open, and seat it. With the case full, the loop the journal sustains releases, the timeline resumes, and the uncle returns.
 
 # **10\. AI Integration & Disclosure**
 
@@ -336,7 +336,7 @@ Development AI (production tools, fully disclosed)
 
 # **11\. Technical Overview**
 
-• Engine: Godot 4.7 — the shop is a 3D environment whose major actions (door, workbench, journal, phone, delivery) are **diegetic 3D interactables** the player hovers and clicks, with HUD buttons kept only as labelled accessibility/fallback. **Restoration is a focused 3D object-manipulation interaction** (rotate the 3D object and clean its surface) whose **cleaning tools are visible, selectable 3D props on the bench**, framed by a supportive 2D HUD overlay; the **journal is hybrid 2D/3D** (a 2D book that embeds 3D viewers for the Fragment Case and restored objects). Triage, scanner, dialogue, and Portal flows use 2D `Control`/`CanvasLayer` interfaces. Godot’s audio buses drive the four-band echo mixer; Windows is primary and HTML5 is a separately verified exhibit target.
+• Engine: Godot 4.7 — the game runs in two connected spaces: a **seated shop interior** (entered through the front door) whose major actions (door, workbench, journal, phone) are **diegetic 3D interactables** the player hovers and clicks, and a **walkable 3D scrapyard** (stepped out through that same door) where the player roams on foot to forage scrap, hand it to Ayla, and track hidden fragment carriers by sound. HUD buttons are kept only as labelled accessibility/fallback. **Restoration is a focused 3D object-manipulation interaction** (rotate the 3D object and clean its surface) whose **cleaning tools are visible, selectable 3D props on the bench**, framed by a supportive 2D HUD overlay; the **journal is hybrid 2D/3D** (a 2D book that embeds 3D viewers for the Fragment Case and restored objects). Triage, scanner, dialogue, and Portal flows use 2D `Control`/`CanvasLayer` interfaces. Godot’s audio buses drive the four-band echo mixer; Windows is primary and HTML5 is a separately verified exhibit target.
 
 • Architecture: game client ↔ a lightweight Node.js/Express service ↔ the City-Wide Portal API. LLM calls run server-side with rate limiting and cached fallbacks. The team’s lead developer ships production MERN systems, so this layer reuses proven tooling.
 
@@ -350,7 +350,7 @@ Development AI (production tools, fully disclosed)
 
 # **12\. Art & Audio Direction**
 
-Art. A warm hybrid presentation: a stylized 3D junk-shop space framed with hand-crafted, painted 2D interfaces and overlays. The palette is golden-hour junk shop: rust, brass, varnished wood, late-afternoon light through dusty louvers. The UI lives inside the fiction — journal paper, masking tape, ballpoint ink. Props are unmistakably Filipino: weighing scales, soft-drink crates, sari-sari signage, santo figures, capiz panels.
+Art. A warm hybrid presentation: a stylized 3D junk-shop interior and its adjoining open-air scrapyard lot, framed with hand-crafted, painted 2D interfaces and overlays. The palette is golden-hour junk shop: rust, brass, varnished wood, late-afternoon light through dusty louvers. The UI lives inside the fiction — journal paper, masking tape, ballpoint ink. Props are unmistakably Filipino: weighing scales, soft-drink crates, sari-sari signage, santo figures, capiz panels.
 
 Audio. An original folk-inspired score in a Western Visayas idiom — AI-generated, human-curated, and never sampling existing recordings. Kinaray-a and Hiligaynon lines are recorded with native speakers where feasible. The shop itself is an instrument: rain on the roof, the scale’s creak, a tricycle passing — and underneath it all, sometimes, a hum that should not be there.
 

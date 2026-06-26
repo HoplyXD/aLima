@@ -1,27 +1,9 @@
 [gd_scene format=3 uid="uid://cvks8que78441"]
 
-; Auntie's Faded Family Photo (template id: auntie_photo_faded). Swap the model and adjust
-; the ArtifactConditionDecal children. "Randomized Decal Count" picks how many appear per run.
-
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
-[ext_resource type="PackedScene" uid="uid://b8artcond3cal" path="res://scenes/restoration/artifact_condition_decal.tscn" id="2_decal"]
-[ext_resource type="Texture2D" uid="uid://dsu3auuqw2stv" path="res://assets/artifact_conditions/Fading.png" id="3_fade"]
-[ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
-[ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="5_water"]
 
-[node name="AuntiePhotoFaded" type="Node3D"]
+[node name="AuntiePhotoFaded" type="Node3D" unique_id=1853400994]
+transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
 customization = "Max Decals: 3"
 randomized_decal_count = 3
-
-[node name="FadingDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.12, 0.5)
-texture = ExtResource("3_fade")
-
-[node name="DustDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, -0.04, 0.5)
-texture = ExtResource("4_dust")
-
-[node name="WaterStainDecal" parent="." instance=ExtResource("2_decal")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, -0.26, 0.49)
-texture = ExtResource("5_water")

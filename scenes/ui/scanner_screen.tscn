@@ -61,16 +61,6 @@ size_flags_vertical = 0
 theme_override_constants/separation = 12
 alignment = 2
 
-[node name="BackButton" type="Button" parent="Panel/Margin/Buttons" unique_id=1205507376]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(80, 30)
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_3ddhd")
-theme_override_styles/hover = SubResource("StyleBoxFlat_ldtip")
-text = "Back"
-
 [node name="CloseButton" type="Button" parent="Panel/Margin/Buttons" unique_id=1065927892]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 30)

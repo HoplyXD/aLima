@@ -67,6 +67,19 @@ func test_screen_releases_only_its_pause_on_close() -> void:
 	DayClock.release_pause(DayClock.PAUSE_DIALOGUE)
 
 
+func test_back_action_closes_scanner() -> void:
+	var inst := _make_instance("tarnished_pendant", ModelEnums.ObjState.CLEAN)
+	_screen.open(inst)
+	await wait_physics_frames(1)
+	assert_true(_screen.visible)
+	var event := InputEventAction.new()
+	event.action = "back"
+	event.pressed = true
+	_screen._unhandled_input(event)
+	await wait_physics_frames(1)
+	assert_false(_screen.visible, "Back action should close the scanner")
+
+
 func test_no_verdict_selected_initially() -> void:
 	var inst := _make_instance("tarnished_pendant", ModelEnums.ObjState.CLEAN)
 	_screen.open(inst)

@@ -47,7 +47,7 @@ func _set_durability(uid: String, value: int) -> void:
 
 func test_using_a_tool_consumes_one_durability() -> void:
 	_add_photo("photo_1")
-	var inst := _tools.grant_tool("stain_lifter")  # finite (durability 12)
+	var inst := _tools.grant_tool("stain_lifter")  # finite (durability 24)
 	var before := inst.durability
 
 	# water_blotch is cleaned by the stain lifter.

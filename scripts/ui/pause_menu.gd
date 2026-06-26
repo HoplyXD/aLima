@@ -116,7 +116,7 @@ func is_open() -> bool:
 
 func _on_return_to_title() -> void:
 	close()
-	get_tree().change_scene_to_file(TITLE_SCENE)
+	SpaceManager.return_to_title()
 
 
 ## Syncs the controls to the saved/effective settings each time the menu opens.

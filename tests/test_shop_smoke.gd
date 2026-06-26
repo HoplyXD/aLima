@@ -92,6 +92,7 @@ func test_door_dialogue_pauses_and_resumes_clock_via_keyboard() -> void:
 
 
 func test_dialogue_advances_via_left_click() -> void:
+	_advance_clock_to(1, 12)  # Auntie's visit window so a visitor is scheduled.
 	_hud.door_pressed.emit()
 	await wait_physics_frames(1)
 
@@ -101,7 +102,15 @@ func test_dialogue_advances_via_left_click() -> void:
 	await _advance_until_closed(dialogue, _make_click_event)
 
 	assert_false(dialogue.visible, "Left click advances and closes the dialogue")
-	assert_true(_shop.is_day_running(), "Clock resumes after the dialogue")
+
+	# Phase 10: Auntie's scripted showcase opens after her door dialogue and keeps
+	# the clock paused until it is closed.
+	var showcase: ShowcaseScreen = _shop._showcase
+	assert_true(showcase.is_open(), "Auntie's showcase opens after her door dialogue")
+	assert_false(_shop.is_day_running(), "The showcase keeps time paused")
+	showcase.close()
+	await wait_physics_frames(1)
+	assert_true(_shop.is_day_running(), "Clock resumes after the showcase closes")
 
 
 func test_phone_opens_without_pausing() -> void:
@@ -191,12 +200,13 @@ func test_hovering_a_prop_shows_its_prompt() -> void:
 
 func test_overlays_disable_shop_props() -> void:
 	var workbench: Interactable3D = _shop.get_node("Interactables/WorkbenchInteractable")
-	_hud.door_pressed.emit()  # Opens the visitor dialogue overlay.
+	_hud.storage_pressed.emit()  # Opens the storage overlay.
 	await wait_physics_frames(1)
 	assert_false(workbench.interactable_enabled, "Shop props are disabled while an overlay is open")
 
-	var dialogue: DialogueBox = _hud.get_node("DialogueBox")
-	await _advance_until_closed(dialogue, _make_accept_event)
+	var storage: StorageScreen = _shop.get_node("StorageScreen")
+	storage.close()
+	await wait_physics_frames(1)
 	assert_true(workbench.interactable_enabled, "Shop props re-enable after the overlay closes")
 
 

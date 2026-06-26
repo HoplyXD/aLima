@@ -87,7 +87,7 @@ func _process(delta: float) -> void:
 
 
 func _on_play_pressed() -> void:
-	get_tree().change_scene_to_file(SHOP_SCENE)
+	SpaceManager.go_to_shop()
 
 
 func _on_options_pressed() -> void:

@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://cjm8k2o6gqmv1"]
+
+[ext_resource type="Script" uid="uid://bptc52vqr0q8s" path="res://scenes/ui/scrapyard_hud.gd" id="1_hud"]
+
+[node name="ScrapyardHud" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="DayLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -180.0
+offset_top = 16.0
+offset_right = -24.0
+offset_bottom = 43.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.96, 0.88, 0.55, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ClockLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -180.0
+offset_top = 40.0
+offset_right = -24.0
+offset_bottom = 80.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.96, 0.88, 0.55, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="PromptLabel" type="Label" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -120.0
+offset_right = 320.0
+offset_bottom = -86.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.96, 0.88, 0.55, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1

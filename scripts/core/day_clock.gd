@@ -154,6 +154,12 @@ func get_minute() -> int:
 	return clampi(minute, 0, MINUTES_PER_HOUR - 1)
 
 
+## Continuous fractional hour (e.g. 7.5 for 7:30). Useful for smooth visual
+## animations like the sun arc, where integer-minute steps would look jittery.
+func get_fractional_hour() -> float:
+	return float(_hour) + (_hour_elapsed / maxf(seconds_per_hour, 0.0001))
+
+
 func is_paused() -> bool:
 	return not _pause_owners.is_empty()
 

@@ -38,6 +38,7 @@ EventDirector="*res://scripts/core/event_director.gd"
 SettingsService="*res://scripts/core/settings_service.gd"
 PauseMenu="*res://scenes/ui/pause_menu.tscn"
 LocalAI="*res://scripts/economy/local_ai.gd"
+SpaceManager="*res://scripts/core/space_manager.gd"
 
 [display]
 
@@ -63,3 +64,12 @@ textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
+lights_and_shadows/directional_shadow_atlas/size=2048
+lights_and_shadows/directional_shadow_atlas/16_bits=true
+lights_and_shadows/positional_shadow_atlas/size=1024
+lights_and_shadows/positional_shadow_atlas/16_bits=true
+environment/volumetric_fog/use_filter=0
+environment/ssao/quality=0
+environment/ssil/quality=0
+textures/decals/filter=0
+textures/light_projectors/filter=0

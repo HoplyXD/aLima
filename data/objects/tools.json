@@ -22,7 +22,7 @@
       "quality": 1,
       "cost": 80,
       "is_legacy": false,
-      "durability": 12,
+      "durability": 24,
       "buyable": true,
       "ship_hours": 2
     },
@@ -58,7 +58,7 @@
       "quality": 2,
       "cost": 120,
       "is_legacy": false,
-      "durability": 10,
+      "durability": 20,
       "buyable": true,
       "ship_hours": 3
     },
@@ -70,7 +70,7 @@
       "quality": 1,
       "cost": 60,
       "is_legacy": false,
-      "durability": 12,
+      "durability": 24,
       "buyable": true,
       "ship_hours": 2
     },
@@ -82,7 +82,7 @@
       "quality": 1,
       "cost": 40,
       "is_legacy": false,
-      "durability": 15,
+      "durability": 30,
       "buyable": true,
       "ship_hours": 2
     },
@@ -94,7 +94,7 @@
       "quality": 2,
       "cost": 90,
       "is_legacy": false,
-      "durability": 8,
+      "durability": 16,
       "buyable": true,
       "ship_hours": 3
     },
@@ -106,9 +106,33 @@
       "quality": 1,
       "cost": 70,
       "is_legacy": false,
-      "durability": 12,
+      "durability": 24,
       "buyable": true,
       "ship_hours": 2
+    },
+    {
+      "record_type": "tool",
+      "id": "debug_brush",
+      "display_name": "Debug Draw Brush",
+      "enables": ["debug_draw"],
+      "quality": 1,
+      "cost": 0,
+      "is_legacy": true,
+      "durability": 0,
+      "buyable": false,
+      "ship_hours": 0
+    },
+    {
+      "record_type": "tool",
+      "id": "debug_eraser",
+      "display_name": "Debug Eraser",
+      "enables": ["debug_erase"],
+      "quality": 1,
+      "cost": 0,
+      "is_legacy": true,
+      "durability": 0,
+      "buyable": false,
+      "ship_hours": 0
     },
     {
       "record_type": "tool",
@@ -118,7 +142,7 @@
       "quality": 2,
       "cost": 100,
       "is_legacy": false,
-      "durability": 6,
+      "durability": 12,
       "buyable": true,
       "ship_hours": 3
     }

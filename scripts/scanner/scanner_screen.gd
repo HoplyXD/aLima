@@ -41,7 +41,6 @@ var _committed: bool = false
 @onready var _verdict_hint: Label = %VerdictHint
 @onready var _verdict_buttons: HBoxContainer = %VerdictButtons
 @onready var _confirm_button: Button = %ConfirmButton
-@onready var _back_button: Button = %BackButton
 @onready var _close_button: Button = %CloseButton
 
 
@@ -49,7 +48,6 @@ func _ready() -> void:
 	visible = false
 	_verdict_section.visible = false
 	_confirm_button.pressed.connect(_on_confirm)
-	_back_button.pressed.connect(_on_back)
 	_close_button.pressed.connect(close)
 	_build_verdict_buttons()
 
@@ -58,7 +56,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("back"):
 		get_viewport().set_input_as_handled()
-		_on_back()
+		close()
 
 
 ## Opens the scanner for the given cleaned instance. Requests clock pause.
@@ -75,7 +73,6 @@ func open(instance: ObjectInstance) -> void:
 	_update_object_label()
 	_verdict_section.visible = false
 	_confirm_button.disabled = true
-	_back_button.text = "Back"
 	_run_scan()
 	_grab_initial_focus()
 
@@ -259,11 +256,7 @@ func _on_confirm() -> void:
 		_confirm_button.disabled = true
 		_verdict_hint.text = "Verdict recorded: %s" % VERDICT_BUTTONS[_selected_verdict]
 		verdict_committed.emit(_instance.uid, _selected_verdict)
-		_back_button.text = "Close"
-
-
-func _on_back() -> void:
-	close()
+		_close_button.text = "Close"
 
 
 func get_selected_verdict() -> int:
