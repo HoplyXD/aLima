@@ -75,3 +75,6 @@ func test_interact_action_registered() -> void:
 	assert_true(InputMap.has_action("interact"), "The interact input action should be registered")
 	var events := InputMap.action_get_events("interact")
 	assert_gt(events.size(), 0, "The interact action should have at least one event bound")
+
+
+

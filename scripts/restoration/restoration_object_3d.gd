@@ -126,7 +126,8 @@ var _dirt_image: Image
 var _dirt_texture: ImageTexture
 ## Runtime-only drawn grime/damage layer composited by the dirt shader. Null in the editor
 ## (created at runtime) so the @tool geometry build never depends on the experimental texture.
-var _paint_texture: DrawableTexture2D
+var _paint_texture: ImageTexture = null
+var _paint_image: Image = null
 
 ## Dust overlay state: the shell node, its per-triangle vertices (3 per triangle, object space),
 ## centroids (1 per triangle), and an alive flag per triangle (1 = dusty, 0 = cleaned/absent).
@@ -321,10 +322,9 @@ func set_fully_clean() -> void:
 func _ensure_paint_layer() -> void:
 	if Engine.is_editor_hint() or _material == null or _paint_texture != null:
 		return
-	_paint_texture = DrawableTexture2D.new()
-	_paint_texture.setup(
-		PAINT_SIZE, PAINT_SIZE, DrawableTexture2D.DRAWABLE_FORMAT_RGBA8, Color(0, 0, 0, 0), false
-	)
+	_paint_image = Image.create_empty(PAINT_SIZE, PAINT_SIZE, false, Image.FORMAT_RGBA8)
+	_paint_image.fill(Color(0, 0, 0, 0))
+	_paint_texture = ImageTexture.create_from_image(_paint_image)
 	_material.set_shader_parameter("paint_layer", _paint_texture)
 	_material.set_shader_parameter("paint_enabled", 1.0)
 
@@ -347,18 +347,27 @@ func paint_at_uv(uv: Vector2, brush: Texture2D, size_px: int, material: Material
 		_blit_paint(cx - PAINT_SIZE, cy, r, brush, material)
 
 
-func _blit_paint(cx: int, cy: int, r: int, brush: Texture2D, material: Material) -> void:
-	_paint_texture.blit_rect(Rect2i(cx - r, cy - r, r * 2, r * 2), brush, Color.WHITE, 0, material)
+func _blit_paint(cx: int, cy: int, r: int, brush: Texture2D, _material: Material) -> void:
+	if _paint_image == null or brush == null:
+		return
+	var src := brush.get_image()
+	if src == null:
+		return
+	if src.get_format() != _paint_image.get_format():
+		src = src.duplicate()
+		src.convert(_paint_image.get_format())
+	var dst := Vector2i(cx - r, cy - r)
+	_paint_image.blend_rect(src, Rect2i(Vector2i.ZERO, src.get_size()), dst)
+	_paint_texture.update(_paint_image)
 
 
 ## Clears all drawn paint (re-fills the layer transparent) so drawn damage doesn't carry
 ## between artifacts when the bench loads a new instance.
 func clear_paint() -> void:
-	if _paint_texture == null:
+	if _paint_image == null:
 		return
-	_paint_texture.setup(
-		PAINT_SIZE, PAINT_SIZE, DrawableTexture2D.DRAWABLE_FORMAT_RGBA8, Color(0, 0, 0, 0), false
-	)
+	_paint_image.fill(Color(0, 0, 0, 0))
+	_paint_texture.update(_paint_image)
 
 
 ## True when a runtime paint layer exists (not the editor / not yet built).

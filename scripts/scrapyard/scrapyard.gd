@@ -37,6 +37,7 @@ const PLAYER_SCENE := preload("res://scenes/scrapyard/player.tscn")
 @onready var _map_root: Node3D = $MapRoot
 @onready var _hud: ScrapyardHud = $ScrapyardHud
 @onready var _sun: DirectionalLight3D = $DirectionalLight3D
+@onready var _world_env: WorldEnvironment = $WorldEnvironment
 
 const SUNRISE_HOUR: float = 6.0
 const SUNSET_HOUR: float = 20.0
@@ -44,6 +45,11 @@ const SUN_NOON_ENERGY: float = 3.0
 const SUN_HORIZON_ENERGY: float = 1.2
 const SUN_NOON_COLOR := Color(1.0, 0.97, 0.88, 1.0)
 const SUN_HORIZON_COLOR := Color(1.0, 0.75, 0.45, 1.0)
+
+const SKY_NOON_TOP := Color(0.384, 0.643, 0.906, 1.0)
+const SKY_NOON_HORIZON := Color(0.624, 0.78, 0.906, 1.0)
+const SKY_SUNSET_TOP := Color(0.18, 0.24, 0.42, 1.0)
+const SKY_SUNSET_HORIZON := Color(0.95, 0.55, 0.32, 1.0)
 
 
 func _ready() -> void:
@@ -106,10 +112,11 @@ func _update_hud() -> void:
 
 ## Rotates the directional sun light based on the in-game clock so the yard
 ## lighting matches the time of day (sunrise -> noon -> sunset).
+## Uses the fractional hour so movement is smooth, not snapping once per minute.
 func _update_sun() -> void:
 	if _sun == null:
 		return
-	var hour := DayClock.get_hour() + DayClock.get_minute() / 60.0
+	var hour := DayClock.get_fractional_hour()
 	var progress := clampf((hour - SUNRISE_HOUR) / (SUNSET_HOUR - SUNRISE_HOUR), 0.0, 1.0)
 
 	# Elevation: low at horizon at sunrise/sunset, high at noon.
@@ -117,17 +124,31 @@ func _update_sun() -> void:
 	# Azimuth: east (90°) at sunrise to west (-90°) at sunset.
 	var azimuth := deg_to_rad(90.0 - progress * 180.0)
 
-	var sun_dir := Vector3(
-		cos(elevation) * sin(azimuth),
-		sin(elevation),
-		-cos(elevation) * cos(azimuth)
-	)
-	_sun.look_at(_sun.global_position + sun_dir)
+	# Default directional light points -Z. Rotate so -Z aligns with the sun direction:
+	# yaw by -azimuth (east -> west), pitch by -elevation (horizon -> noon).
+	_sun.rotation = Vector3(-elevation, -azimuth, 0.0)
 
 	# Warm/dim near the horizon, bright/white at noon.
 	var noon_weight := sin(progress * PI)
 	_sun.light_energy = lerp(SUN_HORIZON_ENERGY, SUN_NOON_ENERGY, noon_weight)
 	_sun.light_color = SUN_HORIZON_COLOR.lerp(SUN_NOON_COLOR, noon_weight)
+
+	# Shift the sky colors so sunrise/sunset look warm and noon looks bright blue.
+	_update_sky(noon_weight)
+
+
+func _update_sky(noon_weight: float) -> void:
+	if _world_env == null or _world_env.environment == null:
+		return
+	var sky: Sky = _world_env.environment.sky
+	if sky == null:
+		return
+	var mat := sky.sky_material
+	if mat == null or not mat is ProceduralSkyMaterial:
+		return
+	var proc := mat as ProceduralSkyMaterial
+	proc.sky_top_color = SKY_SUNSET_TOP.lerp(SKY_NOON_TOP, noon_weight)
+	proc.sky_horizon_color = SKY_SUNSET_HORIZON.lerp(SKY_NOON_HORIZON, noon_weight)
 
 
 ## Generates trimesh collision for the visual geometry under MapRoot. Keeps the

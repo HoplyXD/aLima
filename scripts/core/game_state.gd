@@ -33,6 +33,9 @@ func initialize(new_player_id: String = "local-player") -> void:
 	save_state.player_id = player_id
 	_load_fragment_definitions()
 	_new_run_context()
+	# A fresh session is a fresh loop: clear loop-scoped state in every subscriber
+	# (visit log, marketplace ghosts, etc.) so tests and new games start isolated.
+	EventBus.loop_reset.emit(loop_index)
 
 
 ## Copies authored fragment definitions into persistent state so the loop can
