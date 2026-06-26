@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://b22c7422onsmh" path="res://scripts/scrapyard/scrapyard.gd" id="1_scrapyard"]
 [ext_resource type="Script" uid="uid://cmnncy5e8fmri" path="res://scripts/shop/interactable_3d.gd" id="3_interactable"]
 [ext_resource type="PackedScene" uid="uid://c8g1y868fsx8g" path="res://assets/3d Assets/Scrapyard/scrapyard.glb" id="4_map"]
+[ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="5_ayla"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(46, 0.1, 40)
@@ -76,6 +77,13 @@ shape = SubResource("BoxShape3D_door_return")
 
 [node name="AylaAnchor" type="Marker3D" parent="Anchors" unique_id=1478725153]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 1)
+
+[node name="Ayla" type="Sprite3D" parent="Anchors/AylaAnchor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+pixel_size = 0.00055
+billboard = 2
+alpha_cut = 1
+texture = ExtResource("5_ayla")
 
 [node name="DeliveryBay" type="Marker3D" parent="Anchors" unique_id=1828124101]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 2.6)
