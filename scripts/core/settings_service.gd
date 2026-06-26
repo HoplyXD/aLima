@@ -16,10 +16,11 @@ const DEFAULT_RENDERER := RENDERER_MOBILE
 ## Marketplace AI banter source. "online" prefers the backend LLM proxy (NegotiationClient);
 ## "offline" prefers the on-device Godot LLM (LocalAI). Either falls back to the deterministic
 ## offline bot when its choice is unavailable, so banter never fully breaks (Invariant §4-O).
-## Default offline so the exhibit build never depends on venue internet (§4-K).
+## Default online because the project runs against a live Groq/OpenAI-compatible backend;
+## toggle to offline in the pause menu if you want to run without the backend.
 const AI_ONLINE := "online"
 const AI_OFFLINE := "offline"
-const DEFAULT_AI_MODE := AI_OFFLINE
+const DEFAULT_AI_MODE := AI_ONLINE
 
 ## Selectable windowed resolutions.
 const RESOLUTIONS: Array[Vector2i] = [

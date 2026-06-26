@@ -60,6 +60,7 @@ var _pending_release: bool = false
 @onready var _recycle_zone: Area3D = $ViewportContainer/SubViewport/World/RecycleBin/RecycleZone
 @onready var _pile_spawn: Marker3D = $ViewportContainer/SubViewport/World/PileSpawn
 
+@onready var _hud_layer: CanvasLayer = $HudLayer
 @onready var _hud_storage_label: Label = $HudLayer/StorageLabel
 @onready var _hud_validation_label: Label = $HudLayer/ValidationLabel
 @onready var _hud_confirm_button: Button = $HudLayer/ConfirmButton
@@ -86,6 +87,7 @@ func _ready() -> void:
 	if _viewport != null and _viewport.world_3d == null:
 		_viewport.world_3d = World3D.new()
 	visible = false
+	_hud_layer.visible = false
 	_set_input_mode(InputMode.MODE_3D)
 
 
@@ -144,6 +146,7 @@ func open(delivery: Array[ObjectInstance], storage_cap: int) -> void:
 	_service = TriageService.new(GameState)
 	_restoration = RestorationService.new()
 	visible = true
+	_hud_layer.visible = true
 	DayClock.request_pause(DayClock.PAUSE_TRIAGE)
 	_clear_world()
 	_clear_rows()
@@ -162,8 +165,10 @@ func open(delivery: Array[ObjectInstance], storage_cap: int) -> void:
 func close() -> void:
 	if visible:
 		visible = false
+		_hud_layer.visible = false
 		DayClock.release_pause(DayClock.PAUSE_TRIAGE)
 	_clear_world()
+	_clear_rows()
 	closed.emit()
 
 

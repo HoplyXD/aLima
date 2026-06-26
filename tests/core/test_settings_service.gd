@@ -69,9 +69,9 @@ func test_request_renderer_rejects_unknown_method() -> void:
 	assert_false(SettingsService.request_renderer("ray_tracing"))
 
 
-func test_default_ai_mode_is_offline() -> void:
-	assert_eq(SettingsService.DEFAULT_AI_MODE, "offline")
-	assert_false(SettingsService.ai_mode_is_online(), "the exhibit-safe default prefers on-device")
+func test_default_ai_mode_is_online() -> void:
+	assert_eq(SettingsService.DEFAULT_AI_MODE, "online")
+	assert_true(SettingsService.ai_mode_is_online(), "the project defaults to the live backend")
 
 
 func test_set_ai_mode_persists_and_rejects_unknown() -> void:
