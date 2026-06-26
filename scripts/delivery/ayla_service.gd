@@ -22,7 +22,8 @@ func _ready() -> void:
 
 ## Submits a selection of scrap from the loop pool. Returns true if the sort starts.
 ## `selection` is { rarity_name -> count }. The counts are moved out of scrap_pool
-## into pending_sort and Ayla knocks after SORT_HOURS of in-game time.
+## into pending_sort and Ayla knocks after SORT_HOURS of in-game time. This is
+## independent of the daily free morning delivery.
 func submit_scrap(selection: Dictionary) -> bool:
 	var loop := GameState.save_state.loop
 	if not _can_start_sort(loop):
@@ -115,10 +116,8 @@ func _on_hour_changed(day: int, hour: int) -> void:
 		sort_ready.emit(day, hour)
 
 
-func _can_start_sort(loop: Variant) -> bool:
-	if is_sort_active():
-		return false
-	return loop.last_delivery_day != loop.current_day
+func _can_start_sort(_loop: Variant) -> bool:
+	return not is_sort_active()
 
 
 func _selection_is_valid(pool: Dictionary, selection: Dictionary) -> bool:

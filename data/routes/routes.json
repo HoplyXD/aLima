@@ -107,7 +107,7 @@
         }
       ],
       "prerequisites": ["auntie"],
-      "mutual_exclusions": ["scavenger"],
+      "mutual_exclusions": [],
       "holds_fragment_id": "fragment_02",
       "rewards": ["delicate_tool"],
       "has_ending": true,
@@ -178,7 +178,7 @@
         }
       ],
       "prerequisites": [],
-      "mutual_exclusions": ["artisan"],
+      "mutual_exclusions": [],
       "holds_fragment_id": "fragment_03",
       "rewards": ["archeologist_lead"],
       "has_ending": true,

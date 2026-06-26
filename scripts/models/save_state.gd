@@ -159,6 +159,8 @@ class LoopState:
 	var scrap_pool: Dictionary = {}  ## rarity_name -> count foraged this loop.
 	## pending_sort = { "submitted": {}, "ready_index": int, "active": bool }.
 	var pending_sort: Dictionary = {}
+	## Pieces of scrap still scattered in the yard today. -1 means "not spawned yet".
+	var yard_scrap_remaining: int = -1
 	## Phase 18 mini-event state. All reset on loop_reset; persistent knowledge untouched.
 	var event_active: Array = []  ## Active event states: {event_id, day, hour,
 	## expires_hour, resolved}.
@@ -187,6 +189,7 @@ class LoopState:
 		l.flashlight_on = ModelUtils.as_bool(data.get("flashlight_on"))
 		l.scrap_pool = ModelUtils.as_dictionary(data.get("scrap_pool"))
 		l.pending_sort = ModelUtils.as_dictionary(data.get("pending_sort"))
+		l.yard_scrap_remaining = ModelUtils.as_int(data.get("yard_scrap_remaining"), -1)
 		l.event_active = SaveState._as_array(data.get("event_active", []))
 		l.event_history = ModelUtils.as_string_array(data.get("event_history"))
 		l.event_caps = data.get("event_caps", {}) as Dictionary
@@ -214,6 +217,7 @@ class LoopState:
 			"flashlight_on": flashlight_on,
 			"scrap_pool": scrap_pool.duplicate(),
 			"pending_sort": pending_sort.duplicate(true),
+			"yard_scrap_remaining": yard_scrap_remaining,
 			"event_active": event_active.duplicate(),
 			"event_history": event_history.duplicate(),
 			"event_caps": event_caps.duplicate(),

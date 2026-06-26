@@ -84,6 +84,7 @@ func _ready() -> void:
 	_setup_ayla_interaction()
 	_setup_scrap_items_root()
 	_spawn_scrap_items()
+	EventBus.day_changed.connect(_on_yard_day_changed)
 
 	# Keep the day clock running; the shop will resume driving it on return.
 	DayClock.running = true
@@ -142,7 +143,6 @@ func _setup_ayla_interaction() -> void:
 	area.name = "AylaInteractable"
 	area.collision_layer = 1
 	area.collision_mask = 1
-	_ayla_anchor.add_child(area)
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -159,6 +159,8 @@ func _setup_ayla_interaction() -> void:
 	_ayla_interactable.activated.connect(_open_handoff)
 	if _hud != null:
 		_ayla_interactable.prompt_changed.connect(_hud.set_prompt)
+
+	_ayla_anchor.add_child(area)
 
 
 func _setup_scrap_items_root() -> void:
@@ -185,13 +187,21 @@ func _open_handoff() -> void:
 
 func _spawn_scrap_items() -> void:
 	var scrap_cfg := DataRepository.singleton().get_scrap_config()
-	var count := scrap_cfg.base_scatter_count
+	var rng := GameState.make_rng("scrap_scatter_day_%d" % DayClock.get_day())
+
+	var desired_count := scrap_cfg.base_scatter_count
 	var bonus_key := str(DayClock.get_day())
-	count += int(scrap_cfg.per_day_scatter_bonus.get(bonus_key, 0))
+	desired_count += int(scrap_cfg.per_day_scatter_bonus.get(bonus_key, 0))
+	desired_count += rng.randi_range(0, 1)
+
+	var loop := GameState.save_state.loop
+	if loop.yard_scrap_remaining < 0:
+		loop.yard_scrap_remaining = desired_count
+
+	var count := maxi(loop.yard_scrap_remaining, 0)
 	if count <= 0:
 		return
 
-	var rng := GameState.make_rng("scrap_scatter_day_%d" % DayClock.get_day())
 	var rarity_names := ModelEnums.RARITY_NAMES
 	var weights: Array[float] = []
 	for rarity_name in rarity_names:
@@ -356,6 +366,9 @@ func _find_mesh_instances(root: Node) -> Array[MeshInstance3D]:
 
 
 func _on_scrap_collected(_rarity: String) -> void:
+	GameState.save_state.loop.yard_scrap_remaining = maxi(
+		GameState.save_state.loop.yard_scrap_remaining - 1, 0
+	)
 	_refresh_hud_hotbar()
 
 
@@ -371,6 +384,13 @@ func _total_scrap_count() -> int:
 	for count in pool.values():
 		total += int(count)
 	return total
+
+
+func _on_yard_day_changed(_day: int) -> void:
+	GameState.save_state.loop.yard_scrap_remaining = -1
+	for child in _scrap_items_root.get_children():
+		child.queue_free()
+	_spawn_scrap_items()
 
 
 func _on_handoff_closed() -> void:

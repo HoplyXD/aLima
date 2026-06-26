@@ -21,6 +21,9 @@ func before_each() -> void:
 	# Start from clean persistent state so a scheduled visitor (and her Phase 10
 	# showcase) resolve deterministically regardless of test order.
 	GameState.initialize("shop-smoke")
+	# Mark the daily free delivery as already received so Ayla is not waiting at
+	# the door and the scheduled route visitor can appear.
+	GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
 	_shop = SHOP_SCENE.instantiate()
 	add_child_autofree(_shop)
 	await wait_physics_frames(1)

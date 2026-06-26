@@ -106,7 +106,7 @@ func _on_submit() -> void:
 	if AylaService.submit_scrap(_selection):
 		close()
 	else:
-		_summary.text = "Ayla is already sorting, or today already has a delivery."
+		_summary.text = "Ayla is already sorting a batch."
 
 
 func _on_close() -> void:

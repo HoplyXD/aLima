@@ -51,6 +51,7 @@ func _on_hour_changed(day: int, hour: int) -> void:
 
 func _on_day_changed(day: int) -> void:
 	GameState.save_state.loop.current_day = day
+	GameState.save_state.loop.yard_scrap_remaining = -1
 	EventBus.day_changed.emit(day)
 
 

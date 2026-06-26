@@ -11,6 +11,7 @@ var _loaded_paths: Array[String]
 
 func before_each() -> void:
 	GameState.initialize("door-wiring-test")
+	GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
 	SpaceManager.current_space = SpaceManager.Space.SHOP
 	SpaceManager._on_title = false
 	SpaceManager.set_loader(_record_load)

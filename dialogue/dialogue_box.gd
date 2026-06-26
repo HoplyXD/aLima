@@ -103,6 +103,8 @@ func _input(event: InputEvent) -> void:
 	var advance := false
 	if event.is_action_pressed("ui_accept"):
 		advance = true
+	elif event.is_action_pressed("interact"):
+		advance = true
 	elif (
 		event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed
 	):

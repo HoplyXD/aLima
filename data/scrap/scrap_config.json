@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "base_scatter_count": 10,
+  "base_scatter_count": 2,
   "per_day_scatter_bonus": {
-    "1": 2,
-    "2": 2,
-    "3": 3,
-    "4": 3,
-    "5": 4
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0
   },
   "yard_scatter_rarity_weights": {
     "white": 50,
