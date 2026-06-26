@@ -48,3 +48,23 @@ func test_return_door_interactable_exists() -> void:
 	var door := _yard.get_node_or_null("Anchors/DoorReturn")
 	assert_not_null(door, "Return door interactable should exist")
 	assert_is(door, Interactable3D, "Return door should be an Interactable3D")
+	assert_true(door.use_proximity, "Return door should use proximity interaction")
+	assert_eq(door.proximity_prompt_text, "Press E to enter", "Return door prompt should mention the interact key")
+
+
+func test_hud_exists() -> void:
+	var hud := _yard.get_node_or_null("ScrapyardHud")
+	assert_not_null(hud, "ScrapyardHud should be present")
+	assert_is(hud, ScrapyardHud, "ScrapyardHud should use the ScrapyardHud script")
+
+
+func test_player_is_in_player_group() -> void:
+	var player := _yard.get_node_or_null("Player")
+	assert_not_null(player, "Player should be instanced")
+	assert_true(player.is_in_group("player"), "Player should be in the 'player' group for proximity detection")
+
+
+func test_interact_action_registered() -> void:
+	assert_true(InputMap.has_action("interact"), "The interact input action should be registered")
+	var events := InputMap.action_get_events("interact")
+	assert_gt(events.size(), 0, "The interact action should have at least one event bound")

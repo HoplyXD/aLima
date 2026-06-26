@@ -1,165 +1,136 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c0tprawi7kli5"]
 
-[ext_resource type="Script" path="res://scripts/scrapyard/scrapyard.gd" id="1_scrapyard"]
-[ext_resource type="PackedScene" path="res://scenes/scrapyard/player.tscn" id="2_player"]
-[ext_resource type="Script" path="res://scripts/shop/interactable_3d.gd" id="3_interactable"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
-albedo_color = Color(0.35, 0.32, 0.28, 1)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
-size = Vector2(30, 30)
+[ext_resource type="Script" uid="uid://b22c7422onsmh" path="res://scripts/scrapyard/scrapyard.gd" id="1_scrapyard"]
+[ext_resource type="Script" uid="uid://cmnncy5e8fmri" path="res://scripts/shop/interactable_3d.gd" id="3_interactable"]
+[ext_resource type="PackedScene" uid="uid://cjm8k2o6gqmv1" path="res://scenes/ui/scrapyard_hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://c8g1y868fsx8g" path="res://assets/3d Assets/Scrapyard/scrapyard.glb" id="4_map"]
+[ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="5_ayla"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
-size = Vector3(30, 0.1, 30)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fence"]
-albedo_color = Color(0.5, 0.42, 0.35, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_fence_x"]
-size = Vector3(0.2, 2, 30)
-
-[sub_resource type="BoxMesh" id="BoxMesh_fence_z"]
-size = Vector3(30, 2, 0.2)
+size = Vector3(46, 0.1, 40)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fence_x"]
-size = Vector3(0.2, 2, 30)
+size = Vector3(0.2, 2, 40)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fence_z"]
-size = Vector3(30, 2, 0.2)
+size = Vector3(46, 2, 0.2)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_scrap"]
-albedo_color = Color(0.6, 0.35, 0.2, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_scrap_heap"]
-size = Vector3(2, 1, 2)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_delivery_bay"]
-albedo_color = Color(0.35, 0.4, 0.45, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_delivery_bay"]
-size = Vector3(3, 1.2, 3)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
-albedo_color = Color(0.45, 0.3, 0.25, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_door_frame"]
-size = Vector3(2, 2.5, 0.2)
+[sub_resource type="BoxShape3D" id="BoxShape3D_house"]
+size = Vector3(8.4, 3.2, 6.4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_door_return"]
-size = Vector3(2, 2.5, 0.2)
+size = Vector3(2, 2.5, 0.4)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yard"]
+sky_top_color = Color(0.384, 0.643, 0.906, 1)
+sky_horizon_color = Color(0.624, 0.78, 0.906, 1)
+sky_curve = 0.09
+ground_bottom_color = Color(0.137, 0.118, 0.09, 1)
+ground_horizon_color = Color(0.275, 0.251, 0.204, 1)
+ground_curve = 0.02
+sun_angle_max = 30.0
+sun_curve = 0.15
+
+[sub_resource type="Sky" id="Sky_yard"]
+sky_material = SubResource("ProceduralSkyMaterial_yard")
+process_mode = 3
 
 [sub_resource type="Environment" id="Environment_yard"]
 background_mode = 2
-background_color = Color(0.6, 0.7, 0.8, 1)
+sky = SubResource("Sky_yard")
 ambient_light_source = 3
-ambient_light_color = Color(0.5, 0.5, 0.45, 1)
-ambient_light_energy = 0.8
+ambient_light_color = Color(0.56, 0.6, 0.7, 1)
+ambient_light_energy = 0.6
+reflected_light_source = 1
+tonemap_mode = 2
+tonemap_exposure = 1.1
+tonemap_white = 3.0
+ssao_enabled = true
+ssao_intensity = 1.5
+ssao_power = 1.5
+glow_enabled = true
+glow_intensity = 0.25
 
-[node name="Scrapyard" type="Node3D"]
+[node name="Scrapyard" type="Node3D" unique_id=1552477199]
 script = ExtResource("1_scrapyard")
 
-[node name="MapRoot" type="Node3D" parent="."]
+[node name="MapRoot" type="Node3D" parent="." unique_id=2052798434]
 
-[node name="Ground" type="MeshInstance3D" parent="MapRoot"]
-mesh = SubResource("PlaneMesh_ground")
-surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+[node name="ScrapyardMap" parent="MapRoot" unique_id=1771809705 instance=ExtResource("4_map")]
 
-[node name="FenceLeft" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1, 0)
-mesh = SubResource("BoxMesh_fence_x")
-surface_material_override/0 = SubResource("StandardMaterial3D_fence")
-
-[node name="FenceRight" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1, 0)
-mesh = SubResource("BoxMesh_fence_x")
-surface_material_override/0 = SubResource("StandardMaterial3D_fence")
-
-[node name="FenceFar" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -15)
-mesh = SubResource("BoxMesh_fence_z")
-surface_material_override/0 = SubResource("StandardMaterial3D_fence")
-
-[node name="FenceNear" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 15)
-mesh = SubResource("BoxMesh_fence_z")
-surface_material_override/0 = SubResource("StandardMaterial3D_fence")
-
-[node name="ScrapHeap1" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, 5)
-mesh = SubResource("BoxMesh_scrap_heap")
-surface_material_override/0 = SubResource("StandardMaterial3D_scrap")
-
-[node name="ScrapHeap2" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.5, -4)
-mesh = SubResource("BoxMesh_scrap_heap")
-surface_material_override/0 = SubResource("StandardMaterial3D_scrap")
-
-[node name="ScrapHeap3" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, -8)
-mesh = SubResource("BoxMesh_scrap_heap")
-surface_material_override/0 = SubResource("StandardMaterial3D_scrap")
-
-[node name="DeliveryBayShell" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.6, -8)
-mesh = SubResource("BoxMesh_delivery_bay")
-surface_material_override/0 = SubResource("StandardMaterial3D_delivery_bay")
-
-[node name="Collision" type="StaticBody3D" parent="."]
-collision_layer = 1
+[node name="Collision" type="StaticBody3D" parent="." unique_id=317714501]
 collision_mask = 0
 
-[node name="GroundShape" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+[node name="GroundShape" type="CollisionShape3D" parent="Collision" unique_id=1620894018]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, -7)
 shape = SubResource("BoxShape3D_ground")
 
-[node name="WallLeft" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1, 0)
+[node name="WallLeft" type="CollisionShape3D" parent="Collision" unique_id=1472255180]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, 1, -7)
 shape = SubResource("BoxShape3D_fence_x")
 
-[node name="WallRight" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1, 0)
+[node name="WallRight" type="CollisionShape3D" parent="Collision" unique_id=216536026]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 1, -7)
 shape = SubResource("BoxShape3D_fence_x")
 
-[node name="WallFar" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -15)
+[node name="WallFar" type="CollisionShape3D" parent="Collision" unique_id=433264684]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -27)
 shape = SubResource("BoxShape3D_fence_z")
 
-[node name="WallNear" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 15)
+[node name="WallNear" type="CollisionShape3D" parent="Collision" unique_id=1972217523]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 13)
 shape = SubResource("BoxShape3D_fence_z")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="HouseBlock" type="CollisionShape3D" parent="Collision" unique_id=837482028]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 7)
+shape = SubResource("BoxShape3D_house")
 
-[node name="PlayerSpawn" type="Marker3D" parent="Anchors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 10)
+[node name="Anchors" type="Node3D" parent="." unique_id=1939789917]
 
-[node name="DoorReturn" type="Area3D" parent="Anchors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -13)
+[node name="PlayerSpawn" type="Marker3D" parent="Anchors" unique_id=1340026385]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 1.5)
+
+[node name="DoorReturn" type="Area3D" parent="Anchors" unique_id=272128124]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.9)
 script = ExtResource("3_interactable")
 prompt_text = "Return to the shop"
+proximity_prompt_text = "Press E to enter"
+use_proximity = true
 
-[node name="DoorFrame" type="MeshInstance3D" parent="Anchors/DoorReturn"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
-mesh = SubResource("BoxMesh_door_frame")
-surface_material_override/0 = SubResource("StandardMaterial3D_door")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Anchors/DoorReturn"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Anchors/DoorReturn" unique_id=2013270549]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 shape = SubResource("BoxShape3D_door_return")
 
-[node name="AylaAnchor" type="Marker3D" parent="Anchors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -8)
+[node name="AylaAnchor" type="Marker3D" parent="Anchors" unique_id=1478725153]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 1)
 
-[node name="DeliveryBay" type="Marker3D" parent="Anchors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -8)
+[node name="Ayla" type="Sprite3D" parent="Anchors/AylaAnchor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+pixel_size = 0.00055
+billboard = 2
+alpha_cut = 1
+texture = ExtResource("5_ayla")
 
-[node name="Bounds" type="Marker3D" parent="Anchors"]
+[node name="DeliveryBay" type="Marker3D" parent="Anchors" unique_id=1828124101]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 2.6)
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.8, -0.4, 0.45, 0, 0.75, 0.66, -0.6, -0.53, 0.6, 0, 8, 0)
-light_energy = 1.1
+[node name="Bounds" type="Marker3D" parent="Anchors" unique_id=1320290198]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=825483703]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 28.75, -8.91)
+light_color = Color(1.0, 0.95, 0.82, 1)
+light_energy = 3.0
 shadow_enabled = true
+shadow_bias = 0.05
+shadow_normal_bias = 2.0
+directional_shadow_mode = 1
+directional_shadow_split_1 = 0.15
+directional_shadow_split_2 = 0.35
+directional_shadow_split_3 = 0.65
+directional_shadow_max_distance = 80.0
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1724588853]
 environment = SubResource("Environment_yard")
+
+[node name="ScrapyardHud" parent="." instance=ExtResource("3_hud")]
