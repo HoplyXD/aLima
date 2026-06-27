@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://dk260ihakjiyh" path="res://scenes/ui/triage_controller.gd" id="1_triage"]
 [ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_oyyef"]
 [ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="2_qrd20"]
-[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="3_qrd20"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="3_qrd20"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="4_1vmhu"]
 [ext_resource type="Texture2D" uid="uid://dxr4jmbwn30dm" path="res://assets/UI assets/game/gui/bar/left.png" id="5_cuj4i"]
 [ext_resource type="Texture2D" uid="uid://dprq1wdcmqdih" path="res://assets/UI assets/game/gui/bar/right.png" id="6_7h80y"]
