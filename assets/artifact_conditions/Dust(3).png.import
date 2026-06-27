@@ -2,21 +2,18 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dl7jj4pf0qdsy"
-path.s3tc="res://.godot/imported/Bell Wood Overlay_castletexture.png-6f5202da9f527ac0c0904df71cf9c946.s3tc.ctex"
-path.etc2="res://.godot/imported/Bell Wood Overlay_castletexture.png-6f5202da9f527ac0c0904df71cf9c946.etc2.ctex"
+uid="uid://c5c37kgex58pu"
+path.s3tc="res://.godot/imported/Dust(3).png-080cd2076fcdbe390808ab7407ff5669.s3tc.ctex"
+path.etc2="res://.godot/imported/Dust(3).png-080cd2076fcdbe390808ab7407ff5669.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
-generator_parameters={
-"md5": "a1e45bcec34251034d797fbdb9d68e1c"
-}
 
 [deps]
 
-source_file="res://assets/3d Assets/Artifacts/Modified Artifacts Assets/Bell Wood Overlay_castletexture.png"
-dest_files=["res://.godot/imported/Bell Wood Overlay_castletexture.png-6f5202da9f527ac0c0904df71cf9c946.s3tc.ctex", "res://.godot/imported/Bell Wood Overlay_castletexture.png-6f5202da9f527ac0c0904df71cf9c946.etc2.ctex"]
+source_file="res://assets/artifact_conditions/Dust(3).png"
+dest_files=["res://.godot/imported/Dust(3).png-080cd2076fcdbe390808ab7407ff5669.s3tc.ctex", "res://.godot/imported/Dust(3).png-080cd2076fcdbe390808ab7407ff5669.etc2.ctex"]
 
 [params]
 

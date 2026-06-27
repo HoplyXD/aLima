@@ -26,24 +26,23 @@ transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("4_vnjfm")
 layer_order = 10
-uv2_tiling = null
 
 [node name="TarnishOverlay" parent="." unique_id=1649402556 instance=ExtResource("3_jrqtf")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("4_tarnish")
 layer_order = 20
-uv2_tiling = null
 
 [node name="RustOverlay" parent="." unique_id=1863475199 instance=ExtResource("3_jrqtf")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("6_rust")
 layer_order = 25
-uv2_tiling = null
 
 [node name="DustOverlay" parent="." unique_id=458583480 instance=ExtResource("3_jrqtf")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("3_dust")
-uv2_tiling = null

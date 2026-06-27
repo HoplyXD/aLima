@@ -9,8 +9,11 @@ class_name DeliveryGenerator
 const DELIVERY_STREAM := "delivery_generator"
 const UID_PREFIX := "obj_"
 ## DEBUG: guarantee this template in every day-1 delivery while iterating on the condition overlays.
-## Set to "" to disable. Replaces the first delivered slot, so batch size + uids stay unchanged.
-const DEBUG_FIRST_GOLD := "bronze_pendant"
+## Set to "" to disable. Replaces the first delivered slots, so batch size + uids stay unchanged.
+const DEBUG_FIRST_GOLD := "brass_hand_bell"
+## How many copies of DEBUG_FIRST_GOLD to force in (debug: prove two of the same artifact roll
+## DIFFERENT overlay patterns). Each copy keeps the slot's own uid, so their seeds — and patterns — differ.
+const DEBUG_FIRST_GOLD_COUNT := 2
 
 var _repo: DataRepository
 var _game_state: GameState
@@ -64,11 +67,13 @@ func generate_day_delivery(
 		and not instances.is_empty()
 	):
 		var gold_template := _repo.get_template(DEBUG_FIRST_GOLD)
-		if gold_template != null and instances[0].template_id != DEBUG_FIRST_GOLD:
-			var replacement := _create_instance(gold_template, day)
-			_assign_random_conditions(replacement, rng)
-			replacement.uid = instances[0].uid
-			instances[0] = replacement
+		if gold_template != null:
+			var count: int = mini(DEBUG_FIRST_GOLD_COUNT, instances.size())
+			for i in count:
+				var replacement := _create_instance(gold_template, day)
+				_assign_random_conditions(replacement, rng)
+				replacement.uid = instances[i].uid  # keep slot uid -> deterministic, per-slot seed
+				instances[i] = replacement
 
 	_inject_carriers(instances, day, used_uids)
 

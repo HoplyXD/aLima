@@ -49,8 +49,9 @@ const ERASE_BLIT_SHADER := "shader_type texture_blit;\nrender_mode blend_sub;\nu
 ## back for the whole shape. The camera never moves. Presentation only; never touches game
 ## state. ZOOM_FRONT/BACK are the object's nearest/farthest position.z; the authored rest
 ## position is the starting point and what reset returns to.
-const ZOOM_FRONT: float = 2.1  ## Closest the artifact comes to the camera (camera sits at z≈2.6).
-const ZOOM_BACK: float = -0.7  ## Farthest the artifact pulls back.
+const ZOOM_FRONT: float = 2.45  ## Closest the artifact comes to the camera (camera sits at z≈2.6).
+const ZOOM_BACK: float = -1.5  ## Farthest the artifact pulls back (more zoom-out range too).
+const ZOOM_NEAR_MARGIN: float = 0.15  ## Gap kept between the artifact's nearest point and the camera.
 const ZOOM_WHEEL_STEP: float = 0.25  ## Distance one mouse-wheel notch moves the artifact.
 const ZOOM_KEY_SPEED: float = 2.2  ## Distance/second for held keyboard/controller zoom.
 
@@ -1239,11 +1240,24 @@ func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
 	_object.rotate_view(delta_yaw, delta_pitch)
 
 
-## Moves the artifact toward the camera (amount > 0 = zoom in) or away (amount < 0),
-## clamped to [ZOOM_BACK, ZOOM_FRONT]. The camera never moves — only the artifact.
+## Moves the artifact toward the camera (amount > 0 = zoom in) or away (amount < 0). The near limit is
+## DYNAMIC: a big artifact stops sooner so its nearest point never pushes through the camera. The camera
+## never moves — only the artifact.
 func zoom_by(amount: float) -> void:
-	_zoom_z = clampf(_zoom_z + amount, ZOOM_BACK, ZOOM_FRONT)
+	_zoom_z = clampf(_zoom_z + amount, ZOOM_BACK, _zoom_front_limit())
 	_object.position.z = _zoom_z
+
+
+## Nearest zoom position.z that keeps the artifact's front face clear of the camera. = camera.z minus a
+## small near-plane margin minus the artifact's bounding radius (so its closest point can't reach the
+## camera at any rotation). Capped at ZOOM_FRONT so small artifacts still have a sane closest distance.
+func _zoom_front_limit() -> float:
+	if not is_instance_valid(_camera) or not is_instance_valid(_object):
+		return ZOOM_FRONT
+	var radius := 0.0
+	if _object.has_method("view_bounding_radius"):
+		radius = _object.view_bounding_radius()
+	return minf(ZOOM_FRONT, _camera.position.z - ZOOM_NEAR_MARGIN - radius)
 
 
 ## Current artifact zoom position.z (test/integration seam).
@@ -1251,9 +1265,10 @@ func zoom_offset() -> float:
 	return _zoom_z
 
 
-## Returns the artifact to its authored rest position (on reset and artifact swap).
+## Returns the artifact to its authored rest position (on reset and artifact swap), but never closer than
+## the dynamic near limit — so a big artifact doesn't start out clipping into the camera.
 func _reset_zoom() -> void:
-	_zoom_z = _zoom_rest_z
+	_zoom_z = minf(_zoom_rest_z, _zoom_front_limit())
 	if is_instance_valid(_object):
 		_object.position.z = _zoom_z
 
