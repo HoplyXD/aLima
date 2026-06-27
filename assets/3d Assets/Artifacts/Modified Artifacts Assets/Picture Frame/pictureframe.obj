@@ -1,6 +1,6 @@
 # Blender 5.1.2
 # www.blender.org
-mtllib pictureframetable03.mtl
+mtllib pictureframe.mtl
 o Cube.001
 v -0.015406 0.113250 -0.036415
 v -0.011244 0.085068 -0.036415
