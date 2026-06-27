@@ -28,11 +28,12 @@ func _ready() -> void:
 func initialize(new_player_id: String = "local-player") -> void:
 	player_id = new_player_id
 	loop_index = 0
+	run_seed = 0
 	debug_seed_override = -1
 	save_state = SaveState.new()
 	save_state.player_id = player_id
 	_load_fragment_definitions()
-	_new_run_context()
+	_update_run_context()
 	# A fresh session is a fresh loop: clear loop-scoped state in every subscriber
 	# (visit log, marketplace ghosts, etc.) so tests and new games start isolated.
 	EventBus.loop_reset.emit(loop_index)
@@ -62,6 +63,8 @@ func new_run(seed: int = -1) -> void:
 		run_seed = debug_seed_override
 	else:
 		run_seed = int(Time.get_unix_time_from_system() * 1000.0) % 2147483647
+	save_state.run_seed = run_seed
+	save_state.loop_index = loop_index
 	run_context = RunContext.new()
 	_update_run_context()
 
@@ -86,6 +89,16 @@ func derive_seed(stream_name: String) -> int:
 	return run_context.derive_seed(stream_name)
 
 
+## Restores the run context from a saved game without incrementing the loop.
+## Continue uses this so the loaded run reproduces the same procedural rolls.
+func restore_run_context(seed: int, index: int) -> void:
+	run_seed = seed
+	loop_index = index
+	save_state.run_seed = run_seed
+	save_state.loop_index = loop_index
+	_update_run_context()
+
+
 func _new_run_context() -> void:
 	_update_run_context()
 
@@ -94,6 +107,8 @@ func _update_run_context() -> void:
 	run_context.player_id = player_id
 	run_context.loop_index = loop_index
 	run_context.run_seed = run_seed
+	save_state.run_seed = run_seed
+	save_state.loop_index = loop_index
 
 
 ## ---------------------------------------------------------------------------

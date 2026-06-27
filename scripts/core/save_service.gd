@@ -4,14 +4,27 @@ extends Node
 ## SaveService serializes the top-level SaveState, validates schema versions,
 ## provides a migration entrypoint, and writes atomically via temp file. It
 ## depends on GameState for the in-memory state but never touches scene nodes.
+##
+## Supports up to three independent save slots. Slot selection routes through the
+## same save_path/temp_path fields so set_save_paths() test redirection keeps
+## working; when no slot is selected the service falls back to the default single
+## save file for backward compatibility.
 
 const DEFAULT_SAVE_PATH := "user://save.json"
 const DEFAULT_TEMP_PATH := "user://save.tmp"
+
+const SLOT_COUNT: int = 3
+const DEFAULT_SLOT: int = 0
+const SLOT_SAVE_PATH := "user://save_slot_%d.json"
+const SLOT_TEMP_PATH := "user://save_slot_%d.tmp"
 
 ## Active save paths. Defaulted to the real game save; overridable via
 ## set_save_paths() so tests never write into the developer's real save location.
 var save_path: String = DEFAULT_SAVE_PATH
 var temp_path: String = DEFAULT_TEMP_PATH
+
+## Currently selected slot index. -1 means "no slot; use save_path/temp_path directly".
+var _slot_index: int = -1
 
 
 func _ready() -> void:
@@ -23,10 +36,79 @@ func _ready() -> void:
 func set_save_paths(new_save_path: String, new_temp_path: String) -> void:
 	save_path = new_save_path
 	temp_path = new_temp_path
+	_slot_index = -1
+
+
+## Selects one of the three save slots. All future save/load/delete operations
+## target that slot until another slot is selected or set_save_paths() is called.
+func select_slot(index: int) -> void:
+	if not is_slot_valid(index):
+		push_warning("SaveService.select_slot: invalid slot %d; ignoring" % index)
+		return
+	_slot_index = index
+	save_path = SLOT_SAVE_PATH % index
+	temp_path = SLOT_TEMP_PATH % index
+
+
+func slot_count() -> int:
+	return SLOT_COUNT
+
+
+func is_slot_valid(index: int) -> bool:
+	return index >= 0 and index < SLOT_COUNT
+
+
+func get_selected_slot() -> int:
+	return _slot_index
+
+
+func slot_exists(index: int) -> bool:
+	if not is_slot_valid(index):
+		return false
+	return FileAccess.file_exists(SLOT_SAVE_PATH % index)
+
+
+## Deletes both files for the given slot. Does not change the active selection.
+func delete_slot(index: int) -> void:
+	if not is_slot_valid(index):
+		return
+	var final_path: String = SLOT_SAVE_PATH % index
+	var tmp_path: String = SLOT_TEMP_PATH % index
+	for path in [final_path, tmp_path]:
+		if FileAccess.file_exists(path):
+			DirAccess.open(path.get_base_dir()).remove(path.get_file())
+
+
+## Lightweight metadata reader for the menu. Does not fully validate the payload
+## and returns an empty dictionary if the file is missing or unreadable.
+func slot_summary(index: int) -> Dictionary:
+	if not is_slot_valid(index):
+		return {}
+	var path: String = SLOT_SAVE_PATH % index
+	if not FileAccess.file_exists(path):
+		return {}
+	var parsed: Variant = _load_raw_json(path)
+	if not (parsed is Dictionary):
+		return {}
+	var data: Dictionary = parsed
+	var loop_raw: Variant = data.get("loop")
+	var loop_data: Dictionary = loop_raw if loop_raw is Dictionary else {}
+	return {
+		"schema_version": ModelUtils.as_int(data.get("schema_version"), 0),
+		"player_id": ModelUtils.as_string(data.get("player_id"), "local-player"),
+		"run_seed": ModelUtils.as_int(data.get("run_seed"), 0),
+		"loop_index": ModelUtils.as_int(data.get("loop_index"), 0),
+		"current_day": ModelUtils.as_int(loop_data.get("current_day"), 1),
+		"current_hour": ModelUtils.as_int(loop_data.get("current_hour"), 7),
+		"money": ModelUtils.as_int(loop_data.get("money"), 0),
+	}
 
 
 ## Serializes the current GameState into a JSON string and validates it.
 func serialize_state() -> Dictionary:
+	# Ensure the run context is always reflected into the save before serializing.
+	GameState.save_state.run_seed = GameState.run_seed
+	GameState.save_state.loop_index = GameState.loop_index
 	var payload := GameState.save_state.to_dictionary()
 	return {"ok": true, "json": JSON.stringify(payload, "\t"), "payload": payload}
 
@@ -86,6 +168,8 @@ func load_game() -> Dictionary:
 
 	GameState.save_state = SaveState.from_dictionary(parsed)
 	GameState.player_id = GameState.save_state.player_id
+	# Restore the run context so procedural generation matches the saved run.
+	GameState.restore_run_context(GameState.save_state.run_seed, GameState.save_state.loop_index)
 	return {"ok": true, "schema_version": SaveState.CURRENT_SCHEMA_VERSION}
 
 
@@ -94,7 +178,7 @@ func migrate_payload(payload: Dictionary, from_version: int) -> Dictionary:
 	return _migrate(payload, from_version)
 
 
-## Deletes both the temp and final save files. Useful for tests.
+## Deletes both the temp and final save files for the active path. Useful for tests.
 func delete_save_files() -> void:
 	for path in [save_path, temp_path]:
 		if FileAccess.file_exists(path):
@@ -136,6 +220,12 @@ func _migrate(payload: Dictionary, from_version: int) -> Dictionary:
 		return {"ok": true, "payload": payload}
 	if from_version > SaveState.CURRENT_SCHEMA_VERSION:
 		return {"ok": false, "error": "unsupported future schema version %d" % from_version}
+	if from_version == 1:
+		var migrated: Dictionary = payload.duplicate(true)
+		migrated["schema_version"] = 2
+		migrated["run_seed"] = migrated.get("run_seed", 0)
+		migrated["loop_index"] = migrated.get("loop_index", 0)
+		return {"ok": true, "payload": migrated}
 	# Future migrations chain from older versions here.
 	return {"ok": false, "error": "no migration defined for schema version %d" % from_version}
 
@@ -146,6 +236,9 @@ func _migrate(payload: Dictionary, from_version: int) -> Dictionary:
 ## the model's job and run afterwards.
 func _validate_raw_payload(parsed: Dictionary) -> ValidationResult:
 	var result := ValidationResult.new()
+
+	_require_numeric(parsed, "run_seed", result)
+	_require_numeric(parsed, "loop_index", result)
 
 	var loop_raw: Variant = parsed.get("loop")
 	if loop_raw != null and not (loop_raw is Dictionary):
@@ -180,7 +273,7 @@ func _require_numeric(section: Dictionary, key: String, result: ValidationResult
 	if section.has(key):
 		var value: Variant = section[key]
 		if not (value is int or value is float):
-			result.add_error("loop.%s must be a number" % key)
+			result.add_error("%s must be a number" % key)
 
 
 func _validate_json(text: String) -> bool:

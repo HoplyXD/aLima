@@ -4,10 +4,13 @@ class_name SaveState
 ## The save is split into persistent (Chronos-bound) and loop-scoped sections.
 ## See docs/phase-task.md "Save Contract" and PRD §5.
 
-const CURRENT_SCHEMA_VERSION: int = 1
+const CURRENT_SCHEMA_VERSION: int = 2
 
 var schema_version: int = CURRENT_SCHEMA_VERSION
 var player_id: String = "local-player"
+## Run context. Persisted at the top level so loop reset never wipes the seed (SAVE-R1).
+var run_seed: int = 0
+var loop_index: int = 0
 var persistent: PersistentState = PersistentState.new()
 var loop: LoopState = LoopState.new()
 
@@ -20,6 +23,8 @@ static func from_dictionary(data: Dictionary) -> SaveState:
 	var s := SaveState.new()
 	s.schema_version = ModelUtils.as_int(data.get("schema_version"))
 	s.player_id = ModelUtils.as_string(data.get("player_id"), "local-player")
+	s.run_seed = ModelUtils.as_int(data.get("run_seed"), 0)
+	s.loop_index = ModelUtils.as_int(data.get("loop_index"), 0)
 	if data.get("persistent") is Dictionary:
 		s.persistent = PersistentState.from_dictionary(data["persistent"])
 	if data.get("loop") is Dictionary:
@@ -31,6 +36,8 @@ func to_dictionary() -> Dictionary:
 	return {
 		"schema_version": schema_version,
 		"player_id": player_id,
+		"run_seed": run_seed,
+		"loop_index": loop_index,
 		"persistent": persistent.to_dictionary(),
 		"loop": loop.to_dictionary(),
 	}
@@ -48,6 +55,12 @@ func validate(
 		)
 	if player_id.is_empty():
 		result.add_field_error(file_path, player_id, "player_id", "player_id is required")
+	if run_seed < 0:
+		result.add_field_error(file_path, player_id, "run_seed", "run_seed must be non-negative")
+	if loop_index < 0:
+		result.add_field_error(
+			file_path, player_id, "loop_index", "loop_index must be non-negative"
+		)
 	persistent.validate(result, file_path)
 	loop.validate(result, file_path)
 	return result

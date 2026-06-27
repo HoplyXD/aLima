@@ -45,3 +45,15 @@ func test_flashlight_resets_with_loop_state() -> void:
 	GameState.save_state.loop.flashlight_on = true
 	GameState.reset_loop_state()
 	assert_false(GameState.save_state.loop.flashlight_on, "flashlight_on resets with LoopState")
+
+
+func test_restore_run_context_sets_seed_and_index() -> void:
+	GameState.new_run(11111)
+	GameState.save_state.loop.money = 50
+	GameState.restore_run_context(22222, 5)
+	assert_eq(GameState.run_seed, 22222)
+	assert_eq(GameState.loop_index, 5)
+	assert_eq(GameState.save_state.run_seed, 22222)
+	assert_eq(GameState.save_state.loop_index, 5)
+	# Loop-scoped state must not be cleared by restore_run_context.
+	assert_eq(GameState.save_state.loop.money, 50)

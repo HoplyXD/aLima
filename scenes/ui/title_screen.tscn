@@ -84,17 +84,127 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 109.67)
 layout_mode = 2
 
-[node name="Play" type="Button" parent="VBoxContainer" unique_id=769956769]
-custom_minimum_size = Vector2(0, 130)
-layout_mode = 2
-text = "Play"
+[node name="MainMenu" type="VBoxContainer" parent="." unique_id=1082419697]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 540.0
+offset_right = 500.0
+offset_bottom = 944.0
+theme_override_constants/separation = 20
 
-[node name="Options" type="Button" parent="VBoxContainer" unique_id=926703686]
-custom_minimum_size = Vector2(0, 130)
+[node name="NewGame" type="Button" parent="MainMenu" unique_id=769956769]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+text = "New Game"
+
+[node name="Continue" type="Button" parent="MainMenu" unique_id=926703687]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+text = "Continue"
+
+[node name="Options" type="Button" parent="MainMenu" unique_id=2001389161]
+custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 text = "Options"
 
-[node name="Quit" type="Button" parent="VBoxContainer" unique_id=2001389161]
-custom_minimum_size = Vector2(0, 130)
+[node name="Quit" type="Button" parent="MainMenu" unique_id=2001389162]
+custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 text = "Quit"
+
+[node name="SlotMenu" type="VBoxContainer" parent="." unique_id=1082419698]
+visible = false
+layout_mode = 0
+offset_left = 50.0
+offset_top = 540.0
+offset_right = 500.0
+offset_bottom = 944.0
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="SlotMenu" unique_id=1777390967]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Choose a Slot"
+
+[node name="Slot0" type="Button" parent="SlotMenu" unique_id=769956770]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+text = "Slot 1"
+
+[node name="Slot1" type="Button" parent="SlotMenu" unique_id=926703688]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+text = "Slot 2"
+
+[node name="Slot2" type="Button" parent="SlotMenu" unique_id=2001389163]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+text = "Slot 3"
+
+[node name="Back" type="Button" parent="SlotMenu" unique_id=2001389164]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+text = "Back"
+
+[node name="SeedMenu" type="VBoxContainer" parent="." unique_id=1082419699]
+visible = false
+layout_mode = 0
+offset_left = 50.0
+offset_top = 540.0
+offset_right = 500.0
+offset_bottom = 944.0
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="SeedMenu" unique_id=1777390968]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Enter a Seed"
+
+[node name="Hint" type="Label" parent="SeedMenu" unique_id=1777390969]
+layout_mode = 2
+text = "Same seed = same world. Leave blank for random."
+
+[node name="SeedRow" type="HBoxContainer" parent="SeedMenu" unique_id=639529966]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SeedEdit" type="LineEdit" parent="SeedMenu/SeedRow" unique_id=129268524]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "12345"
+
+[node name="Randomize" type="Button" parent="SeedMenu/SeedRow" unique_id=129268525]
+layout_mode = 2
+text = "Randomize"
+
+[node name="Start" type="Button" parent="SeedMenu" unique_id=1266561066]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+text = "Start"
+
+[node name="Back" type="Button" parent="SeedMenu" unique_id=1266561067]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+text = "Back"
+
+[node name="Status" type="Label" parent="SeedMenu" unique_id=956113386]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.65, 0.65, 1)
+autowrap_mode = 3
+
+[node name="StatusLabel" type="Label" parent="." unique_id=956113387]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 1000.0
+offset_right = 900.0
+offset_bottom = 1040.0
+theme_override_colors/font_color = Color(1, 0.65, 0.65, 1)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="OverwriteConfirm" type="AcceptDialog" parent="." unique_id=956113388]
+title = "Overwrite Slot?"
+initial_position = 2
+size = Vector2i(400, 120)
+ok_button_text = "Overwrite"
+dialog_text = "This slot already has a saved run. Overwrite it?"

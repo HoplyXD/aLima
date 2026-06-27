@@ -27,6 +27,10 @@ func _ready() -> void:
 ## Guarded by DayClock.running so the clock keeps ticking when the player returns
 ## from the scrapyard: the first shop entry resets and starts the session, while
 ## subsequent entries reuse the running clock.
+##
+## Resumes from GameState.save_state.loop.current_day/current_hour so Continue
+## restores the saved moment; New Game starts at Day 1 07:00 because initialize()
+## resets those fields.
 func begin_session() -> void:
 	if DayClock.running:
 		return
@@ -37,7 +41,13 @@ func begin_session() -> void:
 	# Reflect any persisted RELEASED/SEATED fragment state onto the repo so the Spawn
 	# Director keeps placing a released-but-unfound fragment after a reload.
 	FragmentService.sync_repo_from_persistent()
-	DayClock.start_day(1)
+	var resume_day: int = clampi(GameState.save_state.loop.current_day, 1, DayClock.TOTAL_DAYS)
+	DayClock.start_day(resume_day)
+	# start_day() resets the hour to DAY_START_HOUR; resume the saved hour if it is
+	# still within the working day, otherwise leave it at the start-of-day default.
+	var saved_hour: int = GameState.save_state.loop.current_hour
+	if saved_hour >= DayClock.DAY_START_HOUR and saved_hour < DayClock.DAY_END_HOUR:
+		DayClock.set_hour(saved_hour)
 
 
 # --- DayClock -> EventBus / GameState bridge ---------------------------------

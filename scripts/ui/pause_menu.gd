@@ -2,15 +2,17 @@ extends CanvasLayer
 ## Global pause + settings overlay.
 ##
 ## The layout lives in pause_menu.tscn so every control is visible/editable in the
-## editor; this script is presentation wiring + input only. Opens on the "back/cancel"
-## action when nothing else consumed it (uses _unhandled_input so it never fights an
-## open overlay's Esc-to-close). Pauses the game tree while open. Hosts display
-## settings (resolution, fullscreen) that apply live, and a renderer choice (Mobile vs
-## Compatibility) that applies on relaunch. All persistence/rules live in SettingsService.
+## editor; this script is presentation wiring + input only. Opens on the "pause"
+## action (Space or Esc) when nothing else consumed it (uses _unhandled_input so
+## it never fights an open overlay's Esc-to-close). Pauses the game tree while
+## open. Hosts display settings that apply live, and a renderer choice that
+## applies on relaunch. All persistence/rules live in SettingsService.
 
 const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 
 @onready var _resume_button: Button = %ResumeButton
+@onready var _save_button: Button = %SaveButton
+@onready var _save_and_quit_button: Button = %SaveAndQuitButton
 @onready var _return_button: Button = %ReturnToTitleButton
 @onready var _exit_button: Button = %ExitButton
 @onready var _res_option: OptionButton = %ResolutionOption
@@ -21,6 +23,8 @@ const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 @onready var _renderer_option: OptionButton = %RendererOption
 @onready var _apply_renderer_button: Button = %ApplyRendererButton
 @onready var _status_label: Label = %StatusLabel
+@onready var _seed_label: Label = %SeedLabel
+@onready var _slot_label: Label = %SlotLabel
 
 var _open: bool = false
 
@@ -35,7 +39,7 @@ func _ready() -> void:
 
 
 ## Registers the global input scheme: "back" (Esc) closes/returns out of overlays, and
-## "pause" (Space) toggles the pause menu. Idempotent; runs before the main scene.
+## "pause" (Space or Esc) toggles the pause menu. Idempotent; runs before the main scene.
 func _ensure_actions() -> void:
 	if not InputMap.has_action("back"):
 		InputMap.add_action("back")
@@ -43,6 +47,7 @@ func _ensure_actions() -> void:
 	if not InputMap.has_action("pause"):
 		InputMap.add_action("pause")
 		_bind_key("pause", KEY_SPACE)
+		_bind_key("pause", KEY_ESCAPE)
 		_bind_joy("pause", JOY_BUTTON_START)
 
 
@@ -66,6 +71,8 @@ func _populate_resolutions() -> void:
 
 func _connect_signals() -> void:
 	_resume_button.pressed.connect(close)
+	_save_button.pressed.connect(_on_save_pressed)
+	_save_and_quit_button.pressed.connect(_on_save_and_quit_pressed)
 	_return_button.pressed.connect(_on_return_to_title)
 	_exit_button.pressed.connect(func() -> void: get_tree().quit())
 	_res_option.item_selected.connect(_on_resolution_selected)
@@ -77,8 +84,8 @@ func _connect_signals() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Space toggles pause; Esc/Backspace closes the pause menu when it is open (and is
-	# otherwise consumed by whatever overlay is up). Headless test runs never pause.
+	# Space/Esc toggles pause; Esc/Backspace closes the pause menu when it is open
+	# (and is otherwise consumed by whatever overlay is up). Headless test runs never pause.
 	if DisplayServer.get_name() == "headless":
 		return
 	if event.is_action_pressed("pause"):
@@ -114,6 +121,23 @@ func is_open() -> bool:
 	return _open
 
 
+func _on_save_pressed() -> void:
+	var result := SaveService.save_game()
+	if result.ok:
+		_status_label.text = "Saved to %s." % result.get("path", "slot")
+	else:
+		_status_label.text = "Save failed: %s" % result.get("error", "")
+
+
+func _on_save_and_quit_pressed() -> void:
+	var result := SaveService.save_game()
+	if not result.ok:
+		_status_label.text = "Save failed: %s" % result.get("error", "")
+		return
+	close()
+	SpaceManager.return_to_title()
+
+
 func _on_return_to_title() -> void:
 	close()
 	SpaceManager.return_to_title()
@@ -138,6 +162,12 @@ func _refresh() -> void:
 	if not mobile_ok:
 		_status_label.text += " This device can't run Mobile — locked to Compatibility."
 
+	var seed_text := "Seed: %d" % GameState.run_seed
+	var slot := SaveService.get_selected_slot()
+	var slot_text := "Slot: %d" % (slot + 1) if SaveService.is_slot_valid(slot) else "Slot: —"
+	_seed_label.text = seed_text
+	_slot_label.text = slot_text
+
 
 func _on_resolution_selected(index: int) -> void:
 	if index >= 0 and index < SettingsService.RESOLUTIONS.size():
@@ -150,7 +180,9 @@ func _on_fullscreen_toggled(pressed: bool) -> void:
 
 ## Toggles the marketplace AI source: on → backend server, off → on-device Godot LLM.
 func _on_online_toggled(pressed: bool) -> void:
-	SettingsService.set_ai_mode(SettingsService.AI_ONLINE if pressed else SettingsService.AI_OFFLINE)
+	SettingsService.set_ai_mode(
+		SettingsService.AI_ONLINE if pressed else SettingsService.AI_OFFLINE
+	)
 
 
 func _on_previews_toggled(pressed: bool) -> void:

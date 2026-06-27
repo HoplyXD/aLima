@@ -90,6 +90,15 @@ func start_day(day: int) -> void:
 	hour_changed.emit(_day, _hour)
 
 
+## Sets the current hour (for resuming a saved game). Clamped to the working day.
+## Emits hour_changed if the hour actually changes.
+func set_hour(hour: int) -> void:
+	var new_hour := clampi(hour, DAY_START_HOUR, DAY_END_HOUR - 1)
+	if new_hour != _hour:
+		_hour = new_hour
+		hour_changed.emit(_day, _hour)
+
+
 ## Advances the simulation by `delta` real seconds. No-op while paused or closed.
 ## Emits hour_changed exactly once per in-game hour; on reaching 20:00 it latches
 ## closed and emits day_closed exactly once, discarding any leftover delta so a
