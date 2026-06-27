@@ -252,11 +252,11 @@ transform = Transform3D(1.3838073, 0, 0.5788591, 0, 1.5, 0, -0.5788591, 0, 1.383
 [node name="trn_Candle" parent="trn_Candelabra" unique_id=467392542 instance=ExtResource("10_3j7l6")]
 transform = Transform3D(0.605185, 0, 0.27963477, 0, 0.6666667, 0, -0.27963477, 0, 0.605185, 0.32167274, 0.5899131, 0.008988023)
 
+[node name="trn_Candle2" parent="trn_Candelabra" unique_id=227175330 instance=ExtResource("10_3j7l6")]
+transform = Transform3D(0.605185, 0, 0.27963477, 0, 0.66666657, 0, -0.27963477, 0, 0.605185, -0.0024614334, 0.65606594, -0.0040397644)
+
 [node name="trn_Candle_full" parent="trn_Candelabra" unique_id=741412471 instance=ExtResource("11_16mbf")]
 transform = Transform3D(0.605185, 0, 0.27963474, 0, 0.6666667, 0, -0.27963474, 0, 0.605185, -0.32650054, 0.59247595, -0.00026154518)
-
-[node name="trn_Candle_half" parent="trn_Candelabra" unique_id=61532128 instance=ExtResource("12_xhn4e")]
-transform = Transform3D(-0.41773593, 0, 0.5195586, 0, 0.6666667, 0, -0.5195586, 0, -0.41773593, -0.0021876097, 0.6742818, 0.0006211996)
 
 [node name="trn_CandleFlame2" parent="trn_Candelabra" unique_id=509967817 instance=ExtResource("13_idnp1")]
 transform = Transform3D(0.010438081, 0, 0.012225036, 0, 0.016, 0, -0.012225036, 0, 0.010370553, 0.32130224, 0.7597304, 0.014812827)
@@ -265,7 +265,7 @@ transform = Transform3D(0.010438081, 0, 0.012225036, 0, 0.016, 0, -0.012225036, 
 transform = Transform3D(0.010438081, 0, 0.012225036, 0, 0.016, 0, -0.012225036, 0, 0.010370553, -0.3254192, 0.80043715, -0.013606906)
 
 [node name="trn_CandleFlame" parent="trn_Candelabra" unique_id=1412866424 instance=ExtResource("13_idnp1")]
-transform = Transform3D(0.014603272, 0, 0.0067193354, 0, 0.016, 0, -0.00674766, 0, 0.0145419715, -0.005493641, 0.7922775, -0.00022137165)
+transform = Transform3D(0.014603269, 0, 0.006719334, 0, 0.015999997, 0, -0.0067476598, 0, 0.01454197, -0.0054941177, 0.83398783, -0.00022125244)
 
 [node name="Ceiling" type="CSGBox3D" parent="." unique_id=1284448389]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2823787, 5.275242, -1.9094129)
