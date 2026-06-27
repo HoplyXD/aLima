@@ -23,25 +23,51 @@ model_scale = 0.1
 
 [node name="CrackingOverlay" parent="." unique_id=263730433 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_77ino")
 layer_order = 10
+condition_max_distance = null
+use_own_uvs = null
+auto_unwrap = null
+triplanar_tiling = 3.0
+own_uv_tiling = null
+own_uv_aspect = null
 
 [node name="TarnishOverlay" parent="." unique_id=1528200091 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
 layer_order = 20
+condition_max_distance = null
+use_own_uvs = true
+triplanar_tiling = 3.0
+own_uv_aspect = null
 
 [node name="RustOverlay" parent="." unique_id=1380345557 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("6_rust")
 layer_order = 25
+condition_max_distance = null
+use_own_uvs = true
+auto_unwrap = null
+triplanar_tiling = 3.0
+own_uv_tiling = null
+own_uv_aspect = null
 
 [node name="DustOverlay" parent="." unique_id=720166940 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
+condition_max_distance = null
+use_own_uvs = true
+auto_unwrap = null
+triplanar_tiling = 3.0
+own_uv_tiling = null
+own_uv_aspect = null

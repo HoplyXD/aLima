@@ -101,9 +101,11 @@ func test_zoom_moves_the_artifact_within_clamped_range_and_resets() -> void:
 	# Zooming in moves the artifact toward the camera (larger position.z) than the rest pose.
 	_view.zoom_by(0.5)
 	assert_gt(_view.zoom_offset(), rest, "zooming in brings the artifact closer")
-	# A huge zoom-in is clamped at the front limit, never past it.
+	# A huge zoom-in is clamped at the DYNAMIC front limit (so the artifact's nearest point never pushes
+	# through the camera), and never past the fixed ZOOM_FRONT cap.
 	_view.zoom_by(100.0)
-	assert_almost_eq(_view.zoom_offset(), RestorationView.ZOOM_FRONT, 0.001)
+	assert_almost_eq(_view.zoom_offset(), _view._zoom_front_limit(), 0.001)
+	assert_lte(_view.zoom_offset(), RestorationView.ZOOM_FRONT + 0.001, "never past the fixed cap")
 	# A huge zoom-out is clamped at the back limit.
 	_view.zoom_by(-100.0)
 	assert_almost_eq(_view.zoom_offset(), RestorationView.ZOOM_BACK, 0.001)

@@ -347,6 +347,10 @@ func _create_item_body(inst: ObjectInstance, rng: RandomNumberGenerator, index: 
 
 	if template != null:
 		_restoration.present_object(obj, inst, template, inst.uid.hash())
+		# Show the condition overlays here too, so the player can judge how dirty/hard-to-clean an
+		# artifact is while deciding Keep vs Recycle. Same seed as the bench so triage == what you clean.
+		if obj.has_overlays():
+			obj.build_overlays(inst.uid.hash() ^ (GameState.loop_index * 104729))
 		var color := GlowMapper.get_instance_glow_color(
 			template.base_rarity, inst.is_carrier, false
 		)

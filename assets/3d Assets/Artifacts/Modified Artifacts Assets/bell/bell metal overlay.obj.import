@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dsf8i6pceq2i1"
+path="res://.godot/imported/bell metal overlay.obj-b6c8629e0c6e4374bee46c41c2394a7f.mesh"
+
+[deps]
+
+files=["res://.godot/imported/bell metal overlay.obj-b6c8629e0c6e4374bee46c41c2394a7f.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Modified Artifacts Assets/bell/bell metal overlay.obj"
+dest_files=["res://.godot/imported/bell metal overlay.obj-b6c8629e0c6e4374bee46c41c2394a7f.mesh", "res://.godot/imported/bell metal overlay.obj-b6c8629e0c6e4374bee46c41c2394a7f.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

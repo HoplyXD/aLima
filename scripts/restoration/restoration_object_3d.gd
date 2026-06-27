@@ -35,6 +35,13 @@ extends Node3D
 		model_material = value
 		if _built:
 			_apply_authored_model()
+## SHORTCUT: drop a PNG (e.g. a pack's `<name>_castletexture.png`) here and it's auto-wrapped into a
+## StandardMaterial3D for the `model_mesh` — no need to hand-build a material. Wins over model_material.
+@export var model_texture: Texture2D:
+	set(value):
+		model_texture = value
+		if _built:
+			_apply_authored_model()
 ## Uniform scale applied to the authored model (raw .glb/.obj are often metres-large).
 @export var model_scale: float = 1.0:
 	set(value):
@@ -223,8 +230,9 @@ func configure(template: ScrapObjectTemplate, inst: ObjectInstance) -> void:
 ## Orbits the object by the given yaw/pitch deltas (radians). Pitch is clamped and
 ## yaw wraps so the object can never reach an unusable upside-down/gimbal state.
 func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
+	# Both axes wrap freely (no pitch clamp) so the artifact can be spun all the way over — top to bottom.
 	_yaw = fposmod(_yaw + delta_yaw, TAU)
-	_pitch = clampf(_pitch + delta_pitch, -1.3, 1.3)
+	_pitch = fposmod(_pitch + delta_pitch, TAU)
 	_apply_orientation()
 
 
@@ -1485,14 +1493,64 @@ func _apply_authored_model() -> void:
 	else:
 		var mi := MeshInstance3D.new()
 		mi.mesh = model_mesh
-		if model_material != null:
-			mi.material_override = model_material
+		var mat := _resolve_model_material()
+		if mat != null:
+			mi.material_override = mat
 		_model_instance = mi
 	if _model_instance == null:
 		return
 	_model_instance.name = "Model"
 	_model_instance.scale = Vector3.ONE * model_scale
 	add_child(_model_instance)
+
+
+## Max distance from the artifact's pivot (origin) to its visible surface, in WORLD units (model_scale
+## and the authored root scale folded in). The view uses this to stop zoom before the artifact's nearest
+## point reaches the camera — the bounding SPHERE is rotation-invariant, so it holds at any orientation.
+func view_bounding_radius() -> float:
+	var local_r := _radius  # placeholder medallion fallback
+	var mesh: Mesh = model_mesh
+	if mesh == null and _model_instance != null:
+		mesh = _first_mesh(_model_instance)
+	if mesh != null:
+		local_r = _aabb_corner_radius(mesh.get_aabb()) * model_scale
+	return maxf(0.05, local_r * _authored_scale)
+
+
+## Largest distance from the AABB's local origin to any of its 8 corners.
+func _aabb_corner_radius(ab: AABB) -> float:
+	var m := 0.0
+	for i in 8:
+		var c := ab.position + Vector3(
+			ab.size.x if (i & 1) != 0 else 0.0,
+			ab.size.y if (i & 2) != 0 else 0.0,
+			ab.size.z if (i & 4) != 0 else 0.0
+		)
+		m = maxf(m, c.length())
+	return m
+
+
+## First MeshInstance3D mesh found under a node (for a model_scene whose geometry is nested).
+func _first_mesh(node: Node) -> Mesh:
+	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
+		return (node as MeshInstance3D).mesh
+	for child in node.get_children():
+		var m := _first_mesh(child)
+		if m != null:
+			return m
+	return null
+
+
+## The material for a bare `model_mesh`: a `model_texture` PNG (auto-wrapped into a StandardMaterial3D)
+## takes priority, else the explicit `model_material`, else null (renders untextured grey).
+func _resolve_model_material() -> Material:
+	if model_texture != null:
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = model_texture
+		mat.metallic = 0.0
+		mat.roughness = 0.5
+		return mat
+	return model_material
 
 
 func _apply_preset(preset: Dictionary) -> void:
