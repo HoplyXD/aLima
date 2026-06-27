@@ -23,6 +23,9 @@ signal scrap_prompt_changed(text: String)
 @onready var _camera: Camera3D = $Camera3D
 
 const SCRAP_INTERACT_RANGE := 4.0
+## Minimum camera-forward dot toward a scrap to be grabbable (~0.0 = within ~90°
+## cone in front). Forgiving so the player just has to face the scrap, not pixel-aim.
+const SCRAP_FACING_MIN := 0.45
 const SCRAP_PROMPT := "Press E to grab scrap"
 
 var _target_yaw: float = 0.0
@@ -114,26 +117,36 @@ func _ensure_input_actions() -> void:
 	_add_action("interact", [KEY_E], [JOY_BUTTON_A], JOY_AXIS_INVALID, 0.0)
 
 
-## Raycasts from the center of the screen and highlights/prompts any ScrapItem
-## the player is looking at, even if it is sitting on or partly inside trash.
+## Picks the best ScrapItem to grab: the closest one within range that is roughly
+## in front of the camera. This is far more forgiving than a thin raycast (no need
+## to pixel-aim a small object on the ground) and isn't blocked by trash heaps,
+## since it scans the scrap group directly instead of relying on physics picking.
 func _update_scrap_target() -> void:
 	if not _input_enabled or _camera == null:
 		_set_scrap_target(null)
 		return
-	var space := get_world_3d().direct_space_state
-	var from := _camera.global_position
-	var to := from - _camera.global_transform.basis.z * SCRAP_INTERACT_RANGE
-	var query := PhysicsRayQueryParameters3D.new()
-	query.from = from
-	query.to = to
-	query.collision_mask = 1
-	var result := space.intersect_ray(query)
-	var item: ScrapItem = null
-	if not result.is_empty():
-		item = result.collider as ScrapItem
-		if item != null and not item.interactable_enabled:
-			item = null
-	_set_scrap_target(item)
+	var cam_origin := _camera.global_position
+	var forward := -_camera.global_transform.basis.z
+	var best: ScrapItem = null
+	var best_score := 0.0
+	for node in get_tree().get_nodes_in_group("scrap_item"):
+		var item := node as ScrapItem
+		if item == null or not item.interactable_enabled:
+			continue
+		# Aim at the heap's body (origin sits at its base), not the ground point.
+		var target := item.global_position + Vector3(0.0, 0.25, 0.0)
+		var dist := global_position.distance_to(target)
+		if dist > SCRAP_INTERACT_RANGE:
+			continue
+		var facing := forward.dot((target - cam_origin).normalized())
+		if facing < SCRAP_FACING_MIN:
+			continue
+		# Prefer items that are both well-centred in view and close.
+		var score := facing / (1.0 + dist)
+		if score > best_score:
+			best_score = score
+			best = item
+	_set_scrap_target(best)
 
 
 func _set_scrap_target(item: ScrapItem) -> void:

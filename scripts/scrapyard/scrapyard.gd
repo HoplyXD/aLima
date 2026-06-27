@@ -69,6 +69,10 @@ const SKY_NOON_HORIZON := Color(0.624, 0.78, 0.906, 1.0)
 const SKY_SUNSET_TOP := Color(0.18, 0.24, 0.42, 1.0)
 const SKY_SUNSET_HORIZON := Color(0.95, 0.55, 0.32, 1.0)
 
+## Minimum horizontal distance (metres) between two foraged scrap spawns, so the
+## scatter never stacks two on the same spot.
+const MIN_SCRAP_SPACING := 2.5
+
 
 func _ready() -> void:
 	# The return door and any future yard interactables need physics picking.
@@ -242,9 +246,11 @@ func _spawn_scrap_items() -> void:
 	var size_z := float(bounds.get("size_z", 34.0))
 
 	var space := get_world_3d().direct_space_state
+	var placed: Array[Vector3] = []
 	for i in count:
 		var rarity := _pick_rarity(rng, rarity_names, weights)
-		var pos := _find_scrap_spawn_position(rng, bounds, space)
+		var pos := _find_scrap_spawn_position(rng, bounds, space, placed)
+		placed.append(pos)
 		var item: ScrapItem = SCRAP_ITEM_SCENE.instantiate()
 		item.set_rarity(rarity)
 		item.position = pos
@@ -272,14 +278,17 @@ func _pick_rarity(
 ## y=0.3 plane, so items don't spawn buried under uneven ground or inside debris.
 ## Falls back to the old flat position if no collision is hit after a few tries.
 func _find_scrap_spawn_position(
-	rng: RandomNumberGenerator, bounds: Dictionary, space: PhysicsDirectSpaceState3D
+	rng: RandomNumberGenerator,
+	bounds: Dictionary,
+	space: PhysicsDirectSpaceState3D,
+	placed: Array[Vector3] = []
 ) -> Vector3:
 	var center_x := float(bounds.get("center_x", 0.0))
 	var center_z := float(bounds.get("center_z", -7.0))
 	var size_x := float(bounds.get("size_x", 40.0))
 	var size_z := float(bounds.get("size_z", 34.0))
 
-	var max_attempts := 10
+	var max_attempts := 18
 	for attempt in max_attempts:
 		var x := center_x + rng.randf_range(-size_x * 0.5, size_x * 0.5)
 		var z := center_z + rng.randf_range(-size_z * 0.5, size_z * 0.5)
@@ -294,6 +303,9 @@ func _find_scrap_spawn_position(
 		pos.y += 0.1
 		if pos.y < 0.0:
 			continue
+		# Keep foraged scrap spread out so two never stack on the same spot.
+		if _too_close_to_placed(pos, placed):
+			continue
 		return pos
 
 	return Vector3(
@@ -301,6 +313,15 @@ func _find_scrap_spawn_position(
 		0.3,
 		center_z + rng.randf_range(-size_z * 0.5, size_z * 0.5)
 	)
+
+
+## True if pos is within MIN_SCRAP_SPACING (on the ground plane) of any already
+## placed scrap, so the spawner can reject clustered/overlapping positions.
+func _too_close_to_placed(pos: Vector3, placed: Array[Vector3]) -> bool:
+	for other in placed:
+		if Vector2(pos.x, pos.z).distance_to(Vector2(other.x, other.z)) < MIN_SCRAP_SPACING:
+			return true
+	return false
 
 
 func _update_hud() -> void:
