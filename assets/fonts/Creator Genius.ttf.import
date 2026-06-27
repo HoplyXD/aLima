@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://c6rub4sia07fh"
-path="res://.godot/imported/The Antique.ttf-f844c9a02e3e8a07fabbbc355ee2c058.fontdata"
+uid="uid://du4umalkc0ppp"
+path="res://.godot/imported/Creator Genius.ttf-7da2190511de84049d8fe86b5405d255.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/The Antique.ttf"
-dest_files=["res://.godot/imported/The Antique.ttf-f844c9a02e3e8a07fabbbc355ee2c058.fontdata"]
+source_file="res://assets/fonts/Creator Genius.ttf"
+dest_files=["res://.godot/imported/Creator Genius.ttf-7da2190511de84049d8fe86b5405d255.fontdata"]
 
 [params]
 
@@ -22,7 +22,7 @@ msdf_size=48
 allow_system_fallback=true
 force_autohinter=false
 modulate_color_glyphs=false
-hinting=1
+hinting=3
 subpixel_positioning=4
 keep_rounding_remainders=true
 oversampling=0.0

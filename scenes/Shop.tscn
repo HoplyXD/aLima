@@ -41,7 +41,7 @@
 [ext_resource type="Texture2D" uid="uid://dx5tdmtsbisw8" path="res://assets/Characters/Archeologist.png" id="31_ep7b0"]
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_yh0ut"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_6tp7w"]
-[ext_resource type="FontFile" uid="uid://7gx30v1rvopa" path="res://assets/fonts/The Antique.otf" id="37_mqs5k"]
+[ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="36_yh0ut"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4uftm"]
 size = Vector3(1.5947266, 2.9886718, 0.15)
@@ -482,6 +482,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -21.0
+offset_bottom = 21.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 177
@@ -491,14 +493,15 @@ theme_override_constants/margin_bottom = 18
 
 [node name="Bar" type="HBoxContainer" parent="HUD/TopPanel2/Margin" unique_id=1057700593]
 layout_mode = 2
-theme_override_constants/separation = 138
+theme_override_constants/separation = 80
 
 [node name="Unrestored" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=18342938]
 layout_mode = 2
+theme_override_constants/separation = -11
 
 [node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Unrestored" unique_id=1773867073]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_6tp7w")
+theme_override_fonts/font = ExtResource("36_yh0ut")
 theme_override_font_sizes/font_size = 40
 text = "Unrestored"
 
@@ -506,7 +509,7 @@ text = "Unrestored"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 26)
 layout_mode = 2
-theme_override_fonts/normal_font = ExtResource("37_mqs5k")
+theme_override_fonts/normal_font = ExtResource("36_yh0ut")
 theme_override_font_sizes/normal_font_size = 38
 theme_override_font_sizes/bold_font_size = 38
 bbcode_enabled = true
@@ -520,10 +523,11 @@ layout_mode = 2
 
 [node name="Restored" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=546177771]
 layout_mode = 2
+theme_override_constants/separation = -11
 
 [node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Restored" unique_id=2121423419]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_6tp7w")
+theme_override_fonts/font = ExtResource("36_yh0ut")
 theme_override_font_sizes/font_size = 40
 text = "Restored (sell via phone)"
 
@@ -531,7 +535,7 @@ text = "Restored (sell via phone)"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 26)
 layout_mode = 2
-theme_override_fonts/normal_font = ExtResource("37_mqs5k")
+theme_override_fonts/normal_font = ExtResource("36_yh0ut")
 theme_override_font_sizes/normal_font_size = 38
 theme_override_font_sizes/bold_font_size = 38
 bbcode_enabled = true
@@ -545,17 +549,17 @@ layout_mode = 2
 
 [node name="Quest" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=1285818467]
 layout_mode = 2
+theme_override_constants/separation = -11
 
 [node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Quest" unique_id=851278566]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_6tp7w")
+theme_override_fonts/font = ExtResource("36_yh0ut")
 theme_override_font_sizes/font_size = 40
 text = "Quest"
 
 [node name="QuestCount" type="Label" parent="HUD/TopPanel2/Margin/Bar/Quest" unique_id=43241348]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_fonts/font = ExtResource("37_mqs5k")
 theme_override_font_sizes/font_size = 38
 text = "0"
 

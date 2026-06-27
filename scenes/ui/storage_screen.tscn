@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://ybrc7qdq3rvs"]
 
 [ext_resource type="Script" uid="uid://b4wblwci2sqfy" path="res://scripts/economy/storage_screen.gd" id="1_storage"]
-[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/Pause_menu.tres" id="2_vur48"]
-[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="3_80ekr"]
+[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="2_vur48"]
+[ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="3_vur48"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vur48"]
 
@@ -33,7 +33,7 @@ theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Dim/Margin/VBox" unique_id=667131593]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("3_80ekr")
+theme_override_fonts/font = ExtResource("3_vur48")
 theme_override_font_sizes/font_size = 65
 text = "Storage"
 

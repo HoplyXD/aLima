@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bp3613uu3rgti" path="res://scripts/scanner/scanner_screen.gd" id="1_scanner"]
 [ext_resource type="Theme" uid="uid://jr6503orak54" path="res://Themes/scanner.tres" id="2_vlm2r"]
-[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="3_ql5bc"]
+[ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="3_vlm2r"]
 [ext_resource type="Texture2D" uid="uid://fea2iartni8r" path="res://assets/UI assets/game/gui/separator.png" id="4_mmpfc"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ddhd"]
@@ -77,7 +77,7 @@ theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=912121541]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("3_ql5bc")
+theme_override_fonts/font = ExtResource("3_vlm2r")
 theme_override_font_sizes/font_size = 138
 text = "Scanner Analysis"
 horizontal_alignment = 1
