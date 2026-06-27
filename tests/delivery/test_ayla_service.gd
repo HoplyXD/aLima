@@ -175,7 +175,6 @@ func test_bias_never_forces_a_tier_to_probability_one() -> void:
 
 
 func test_seeded_distribution_is_biased_by_scrap() -> void:
-	GameState.debug_first_gold = false
 	var generator := DeliveryGenerator.new(_repo, GameState)
 	var base_cfg := _repo.get_delivery_config()
 	var impulses := _repo.get_scrap_config().bias_impulses
@@ -221,7 +220,6 @@ func test_seeded_distribution_is_biased_by_scrap() -> void:
 
 
 func test_same_seed_and_scrap_produces_same_batch() -> void:
-	GameState.debug_first_gold = false
 	var generator := DeliveryGenerator.new(_repo, GameState)
 	var base_cfg := _repo.get_delivery_config()
 	var impulses := _repo.get_scrap_config().bias_impulses

@@ -143,7 +143,6 @@ var _cursor_tilt: float = 0.0
 @onready var _condition_bar: ProgressBar = %ConditionBar
 @onready var _condition_label: Label = %ConditionLabel
 @onready var _value_label: Label = %ValueLabel
-@onready var _damage_label: Label = %DamageLabel
 @onready var _surface_bar: ProgressBar = %SurfaceBar
 @onready var _tool_container: HBoxContainer = %ToolContainer
 @onready var _feedback_label: Label = %FeedbackLabel
@@ -1089,7 +1088,6 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_condition_label.text = "Condition %d / %d" % [int(inst.condition), threshold]
 	_set_surface_meter_visible(not is_overlay)
 	_value_label.text = "Value: P%d" % inst.value
-	_damage_label.text = "Recorded damage: %d" % inst.recorded_damage
 
 	if _object.is_photo_mode():
 		_refresh_photo(inst, template)
@@ -1155,7 +1153,6 @@ func _show_empty_state() -> void:
 	_state_label.text = ""
 	_condition_label.text = ""
 	_value_label.text = ""
-	_damage_label.text = ""
 	_clasp_prompt.visible = false
 	# The bench tools (and their durability/condition panels) still show even with no
 	# artifact on the bench, so the player can inspect their kit.
@@ -1657,9 +1654,11 @@ func _accumulate_paint_stroke(pos: Vector2) -> void:
 		_paint_at_pointer(pos)
 
 
-## True for the debug paint tools (draw / erase), which work the paint layer not the cleaning rules.
+## True for the debug DRAW brush, which paints grime onto the paint layer instead of cleaning.
+## The debug ERASER is no longer a paint tool: it routes through the real cleaning paths as a
+## universal cleaner (CleaningPower.is_universal_cleaner) so it removes ANY condition for real.
 func _is_paint_tool(tool_id: String) -> bool:
-	return tool_id == DRAW_TOOL_ID or tool_id == ERASE_TOOL_ID
+	return tool_id == DRAW_TOOL_ID
 
 
 ## Builds the circular brushes + erase material the first time a debug paint tool is used (lazy).

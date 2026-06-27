@@ -316,7 +316,6 @@ func test_wrong_tool_strokes_preserve_damage_consequences() -> void:
 	assert_not_null(result)
 	assert_false(result.compatible, "Wrong tool is incompatible")
 	var after := RestorationService.new().find_instance_by_id("pendant_wrong")
-	assert_gt(after.recorded_damage, before.recorded_damage, "Wrong tool records damage")
 	assert_lt(after.condition, before.condition, "Wrong tool lowers condition")
 
 

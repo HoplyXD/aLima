@@ -155,6 +155,10 @@ func _exit_tree() -> void:
 		return
 	# The clock is intentionally not reset here: the scrapyard keeps the same
 	# running session, and SpaceManager resets it only on return-to-title.
+	# Autosave on the way out so the exact day/hour/minute survives stepping into the
+	# yard or quitting the game (serialize_state snapshots the live clock).
+	if DayClock.running:
+		SaveService.save_game()
 	if _triage_screen != null:
 		_triage_screen.close()
 
@@ -307,36 +311,12 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	if not is_free_daily:
 		biased_cfg = AylaService.get_biased_delivery_config(event_cfg)
 	var extras := EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
-	if is_free_daily:
-		extras.append_array(_first_delivery_showcase(GameState.save_state.loop.current_day))
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(
 		GameState.save_state.loop.current_day, biased_cfg, extras
 	)
 	_triage_screen.open(delivery, biased_cfg.storage_cap, is_free_daily)
-
-
-## Guarantees the Oton Death Mask arrives in the very first delivery so the gold
-## surface-clean artifact (authored Tarnish/Dust/Grime conditions) can be exercised
-## end-to-end. Day 1 only; its scene-placed decals drive the cleaning, so no data-driven
-## conditions are assigned (spawned_decals stays empty).
-func _first_delivery_showcase(day: int) -> Array[ObjectInstance]:
-	var out: Array[ObjectInstance] = []
-	if day != 1:
-		return out
-	var template := DataRepository.singleton().get_template("oton_death_mask")
-	if template == null:
-		return out
-	var inst := ObjectInstance.new()
-	inst.template_id = template.id
-	inst.uid = "inst_oton_day1"
-	inst.condition = 0.0
-	inst.state = ModelEnums.ObjState.DIRTY
-	inst.storage_cost = template.storage_cost
-	inst.value = int(template.base_value_range.x)
-	out.append(inst)
-	return out
 
 
 func _on_morning_delivery_pressed() -> void:

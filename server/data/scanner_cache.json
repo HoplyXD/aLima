@@ -120,6 +120,318 @@
         ]
       },
       "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "oton_death_mask",
+      "template_id": "oton_death_mask",
+      "response": {
+        "type": "gold burial mask",
+        "period": "pre-colonial (c. 14th-15th century, attributed)",
+        "materials": ["gold"],
+        "markings": ["repoussé facial features", "eye and mouth cutouts", "thin hammered sheet"],
+        "condition_note": "Thin gold sheet with surface tarnish, dust, and grime in the recessed features; fragile at the edges.",
+        "cultural_relevance": "Gold death masks of this form are associated with pre-colonial burial practice in the Oton area of Iloilo, Panay. Such pieces are treated as historically significant; this is framed as folklore-adjacent context pending verified records, not an authenticated provenance.",
+        "price_range": [800, 1500],
+        "modification_signs": [],
+        "confidence": "low",
+        "uncertainty_notes": "Attribution and dating are tentative; a genuine piece of this kind would require expert authentication and is excluded from any folklore-as-fact claim.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review and verified local sources; the Code of Kalantiaw and similar disputed sources are not used."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "silver_locket",
+      "template_id": "silver_locket",
+      "response": {
+        "type": "locket",
+        "period": "early 20th century",
+        "materials": ["silver"],
+        "markings": ["hinge wear", "tarnish bloom"],
+        "condition_note": "Tarnished silver with a stiff hinge; the catch still closes.",
+        "cultural_relevance": "A keepsake locket of a type kept in many Visayan households. Specific maker and owner are not recorded; treated as ordinary heirloom jewelry, not a documented piece.",
+        "price_range": [80, 200],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "Metal is inferred from surface color and tarnish, not assay.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "silver_pendant",
+      "template_id": "silver_pendant",
+      "response": {
+        "type": "pendant",
+        "period": "early 20th century",
+        "materials": ["silver"],
+        "markings": ["clasp wear", "surface tarnish"],
+        "condition_note": "Silver pendant darkened by tarnish; the clasp is intact but stiff.",
+        "cultural_relevance": "A personal pendant in a style common to heirloom jewelry in the Panay region. No specific provenance is claimed.",
+        "price_range": [80, 200],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "Exact maker and original owner are unknown.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "bronze_locket",
+      "template_id": "bronze_locket",
+      "response": {
+        "type": "locket",
+        "period": "early to mid-20th century",
+        "materials": ["bronze"],
+        "markings": ["green patina", "hinge wear"],
+        "condition_note": "Bronze with patches of green patina; hinge moves with resistance.",
+        "cultural_relevance": "An everyday keepsake locket of modest material. Any historical value depends on provenance, not the metal itself.",
+        "price_range": [60, 160],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "Date is estimated from wear and patina, not a maker's mark.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "bronze_pendant",
+      "template_id": "bronze_pendant",
+      "response": {
+        "type": "pendant",
+        "period": "early to mid-20th century",
+        "materials": ["bronze"],
+        "markings": ["green patina", "clasp wear"],
+        "condition_note": "Bronze pendant with patina in the recesses; clasp functional but worn.",
+        "cultural_relevance": "A common personal pendant of inexpensive material, of a kind kept as a family keepsake across the Visayas.",
+        "price_range": [60, 160],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "Maker and owner are unknown.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "brass_oil_lamp",
+      "template_id": "brass_oil_lamp",
+      "response": {
+        "type": "brass oil lamp",
+        "period": "late 19th to early 20th century",
+        "materials": ["brass"],
+        "markings": ["solder seams", "burner wear", "tarnish"],
+        "condition_note": "Tarnished brass body; burner and wick channel show use. Reservoir cap is removable.",
+        "cultural_relevance": "A household oil lamp of a type used before rural electrification across the Philippines. The form is common; significance depends on provenance.",
+        "price_range": [70, 220],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "No maker's mark; date estimated from construction and wear.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "capiz_shell_panel",
+      "template_id": "capiz_shell_panel",
+      "response": {
+        "type": "capiz shell window panel",
+        "period": "early to mid-20th century",
+        "materials": ["capiz", "wood"],
+        "markings": ["lattice frame", "shell discoloration", "edge chips"],
+        "condition_note": "Translucent capiz shells set in a wooden lattice; several shells are chipped or yellowed.",
+        "cultural_relevance": "Capiz (windowpane oyster) shell panels are a traditional element of Filipino sliding windows, especially in Visayan and colonial-era houses. Presented as cultural context, not authenticated provenance.",
+        "price_range": [90, 260],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "Age of the shells versus the frame cannot be confirmed from the exterior alone.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review and verified local sources."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "ceramic_lidded_jar",
+      "template_id": "ceramic_lidded_jar",
+      "response": {
+        "type": "glazed ceramic lidded jar",
+        "period": "20th century",
+        "materials": ["ceramic", "glaze"],
+        "markings": ["glaze crazing", "kiln spots", "lid chip"],
+        "condition_note": "Glazed jar with fine crazing in the surface; lid seats but is lightly chipped.",
+        "cultural_relevance": "A glazed storage jar of a common domestic form. Trade and household ceramics like this circulated widely; no specific origin is claimed.",
+        "price_range": [50, 160],
+        "modification_signs": [],
+        "confidence": "low",
+        "uncertainty_notes": "Glaze and form are not distinctive enough to attribute a kiln or date precisely.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "brass_hand_bell",
+      "template_id": "brass_hand_bell",
+      "response": {
+        "type": "brass hand bell",
+        "period": "early to mid-20th century",
+        "materials": ["brass"],
+        "markings": ["tarnish", "clapper wear", "cast seam"],
+        "condition_note": "Cast brass bell with overall tarnish; clapper swings freely and the tone is intact.",
+        "cultural_relevance": "A common hand bell of the sort used in schools, chapels, and homes. The form is ordinary; any value rests on provenance rather than the object.",
+        "price_range": [20, 70],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "No foundry mark; date estimated from casting and wear.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "wooden_rosary",
+      "template_id": "wooden_rosary",
+      "response": {
+        "type": "carved wooden rosary",
+        "period": "20th century",
+        "materials": ["wood", "metal"],
+        "markings": ["hand-carved beads", "worn finish", "metal crucifix"],
+        "condition_note": "Wooden beads with a worn finish on a metal link chain; crucifix shows handling wear.",
+        "cultural_relevance": "A devotional rosary tied to Filipino Catholic practice. This appears to be a personal household piece rather than a documented workshop item.",
+        "price_range": [40, 130],
+        "modification_signs": [],
+        "confidence": "medium",
+        "uncertainty_notes": "No workshop mark or documented provenance is visible.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Cultural context is a development placeholder pending workshop review."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "auntie_photo_faded",
+      "template_id": "auntie_photo_faded",
+      "response": {
+        "type": "family photograph",
+        "period": "mid-20th century",
+        "materials": ["paper"],
+        "markings": ["silver mirroring", "water blotch", "faded emulsion"],
+        "condition_note": "Faded gelatin-silver print with surface grime and a water blotch; image still legible.",
+        "cultural_relevance": "A personal family photograph. Its meaning is sentimental and tied to a specific household rather than to a documented public record.",
+        "price_range": [0, 80],
+        "modification_signs": [],
+        "confidence": "low",
+        "uncertainty_notes": "People, place, and date are unknown without the owner's account.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Development fixture; provenance comes from the owner's story line, not external sources."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "auntie_frame_portrait",
+      "template_id": "auntie_frame_portrait",
+      "response": {
+        "type": "framed portrait",
+        "period": "mid-20th century",
+        "materials": ["wood", "glass"],
+        "markings": ["molding tarnish", "glass dust", "cracked corner"],
+        "condition_note": "A portrait behind glass in a wooden frame; the molding is tarnished and one corner is cracked.",
+        "cultural_relevance": "A framed family portrait of personal rather than public significance. Value rests on the sitter's identity and the family's story.",
+        "price_range": [0, 120],
+        "modification_signs": [],
+        "confidence": "low",
+        "uncertainty_notes": "Sitter and photographer are unknown without the owner's account.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Development fixture; provenance comes from the owner's story line, not external sources."
+          }
+        ]
+      },
+      "fallback": true
+    },
+    {
+      "record_type": "scanner_cache",
+      "id": "auntie_halfphoto_torn",
+      "template_id": "auntie_halfphoto_torn",
+      "response": {
+        "type": "torn photograph",
+        "period": "mid-20th century",
+        "materials": ["paper"],
+        "markings": ["tear down the center", "tape residue", "surface dust"],
+        "condition_note": "A photograph torn in two and previously taped; residue remains along the join.",
+        "cultural_relevance": "A personal photograph whose torn state is part of its story. Significance is sentimental and specific to the owner's family.",
+        "price_range": [0, 150],
+        "modification_signs": ["Old tape residue suggests an earlier repair attempt."],
+        "confidence": "low",
+        "uncertainty_notes": "The missing half and the people pictured are unknown without the owner's account.",
+        "source_references": [
+          {
+            "status": "unverified",
+            "note": "Development fixture; provenance comes from the owner's story line, not external sources."
+          }
+        ]
+      },
+      "fallback": true
     }
   ]
 }

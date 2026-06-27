@@ -97,8 +97,7 @@ func test_different_seeds_produce_different_deliveries() -> void:
 
 func test_weight_distribution_respects_rarity_weights() -> void:
 	# With real weights, white (40) should outnumber blue (18) over many runs.
-	# This measures the UNBIASED weighted distribution, so disable the day-1 Gold debug override.
-	GameState.debug_first_gold = false
+	# This measures the UNBIASED weighted distribution.
 	var white_count := 0
 	var blue_count := 0
 	for seed in range(50):

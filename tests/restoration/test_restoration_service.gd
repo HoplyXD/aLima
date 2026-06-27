@@ -205,7 +205,6 @@ func test_wrong_tool_records_persistent_instance_damage() -> void:
 	assert_true(result.ok)
 	assert_false(result.compatible)
 	var after := _service.find_instance_by_id("pendant_05")
-	assert_gt(after.recorded_damage, 0, "Wrong tool must record damage")
 	assert_lt(after.condition, before_condition, "Wrong tool must lower condition")
 	assert_lt(after.value, before_value, "Wrong tool must lower value")
 
@@ -224,13 +223,18 @@ func test_wrong_tool_feedback_is_distinguishable() -> void:
 
 func test_damage_survives_serialization_round_trips() -> void:
 	var inst := _make_pendant("pendant_07")
+	inst.condition = 50.0
+	inst.value = 200
 	_add_instance(inst)
-	_service.apply_tool("pendant_07", "rust_brush")
-	var before_save := _service.find_instance_by_id("pendant_07").recorded_damage
+	_service.apply_tool("pendant_07", "rust_brush")  # wrong tool lowers condition + value
+	var saved := _service.find_instance_by_id("pendant_07")
+	var before_condition := saved.condition
+	var before_value := saved.value
 	_reload_state()
 	var after_load := _service.find_instance_by_id("pendant_07")
 	assert_not_null(after_load)
-	assert_eq(after_load.recorded_damage, before_save, "Damage must survive save/load")
+	assert_eq(after_load.condition, before_condition, "Condition damage must survive save/load")
+	assert_eq(after_load.value, before_value, "Value damage must survive save/load")
 
 
 func test_restoration_changes_only_the_selected_instance() -> void:
@@ -243,7 +247,6 @@ func test_restoration_changes_only_the_selected_instance() -> void:
 	var after_b := _service.find_instance_by_id("pendant_b")
 	assert_gt(after_a.condition, 0.0)
 	assert_eq(after_b.condition, 0.0)
-	assert_eq(after_b.recorded_damage, 0)
 
 
 func test_clean_pendant_can_open() -> void:
