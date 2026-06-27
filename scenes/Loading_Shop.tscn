@@ -36,7 +36,7 @@
 [ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="34_tbuk6"]
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_ti6pn"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_t20sg"]
-[ext_resource type="FontFile" uid="uid://7gx30v1rvopa" path="res://assets/fonts/The Antique.otf" id="37_5lrsh"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="37_5lrsh"]
 [ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="38_wohsn"]
 [ext_resource type="PackedScene" uid="uid://bwmj5triq5qvx" path="res://scenes/ui/triage_screen.tscn" id="39_3hoyv"]
 [ext_resource type="PackedScene" uid="uid://b5vdlwu6lrg0" path="res://scenes/ui/echo_hud.tscn" id="40_klsx8"]

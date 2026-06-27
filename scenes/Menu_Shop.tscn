@@ -42,7 +42,7 @@
 [ext_resource type="Texture2D" uid="uid://dx5tdmtsbisw8" path="res://assets/Characters/Archeologist.png" id="31_h8djy"]
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_img5t"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_h0wdh"]
-[ext_resource type="FontFile" uid="uid://7gx30v1rvopa" path="res://assets/fonts/The Antique.otf" id="37_74aeg"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="37_74aeg"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8dvp"]
 size = Vector3(1.5947266, 2.9886718, 0.15)
