@@ -63,6 +63,10 @@ const UNWRAP_TEXEL_EDGE_FRAC: float = 0.75
 ## moderate random range so overlays that don't set it still spawn partial/varied (tune per layer).
 @export_range(0.0, 100.0) var coverage_min: float = 20.0
 @export_range(0.0, 100.0) var coverage_max: float = 60.0
+## CONDITION RANDOMIZER: if ON, this condition is GUARANTEED on every instance of the artifact (it takes a
+## reserved slot); the rest of the artifact's randomized [min,max] conditions are filled from the
+## non-guaranteed spawnable ones. (The artifact's randomize_conditions_min/max drives the count.)
+@export var guaranteed_spawn: bool = false
 ## "Fake-it" distance gate (mesh-local metres): vertices farther than this from the mesh origin get NO
 ## condition AND don't count toward the artifact's size. Lets the overlay mesh carry clean DECOY geometry
 ## parked far away (e.g. a torus strip with perfect UVs) without it getting dirt or skewing blob/clean
@@ -316,6 +320,13 @@ func clean_ray(
 
 func is_built() -> bool:
 	return _shell != null
+
+
+## True when this overlay can actually put a condition on the surface — so the artifact's condition
+## randomizer knows which overlays are in the pool. False for disabled overlays (coverage_max == 0) and
+## crack (off until the damage system). guaranteed_spawn overlays still must be spawnable to count.
+func is_spawnable() -> bool:
+	return coverage_max > 0.0 and get_condition_id() != "crack"
 
 
 ## The condition id a tool must be able to clean: the explicit `condition_id`, or one derived from the

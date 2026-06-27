@@ -165,7 +165,7 @@ func test_cleaning_the_last_authored_condition_counts_as_clean() -> void:
 	assert_gt(inst.condition, 0.0, "condition rose as the authored condition was cleaned")
 
 
-func test_randomized_decal_count_limits_active_conditions() -> void:
+func test_randomize_conditions_max_limits_active_conditions() -> void:
 	var obj := RestorationObject3D.new()
 	add_child_autofree(obj)
 	await wait_physics_frames(1)
@@ -177,34 +177,11 @@ func test_randomized_decal_count_limits_active_conditions() -> void:
 		decal.name = "Condition%d" % i
 		decal.texture = RUST_TEXTURE
 		obj.add_child(decal)
-	obj.randomized_decal_count = 2
+	obj.randomize_conditions_max = 2
 
 	obj.register_authored_conditions(DataRepository.singleton(), 123)
 
 	assert_eq(obj.authored_active_count(), 2, "only the randomized number of conditions go live")
-
-
-## The "Max Decals: N" customization directive limits active conditions, and takes
-## precedence over the legacy randomized_decal_count when both are set.
-func test_max_decals_directive_limits_and_overrides_legacy() -> void:
-	var obj := RestorationObject3D.new()
-	add_child_autofree(obj)
-	await wait_physics_frames(1)
-	for child in obj.get_children():
-		if child.has_method("condition_slug"):
-			child.free()
-	for i in range(4):
-		var decal := ArtifactConditionDecal.new()
-		decal.name = "Condition%d" % i
-		decal.texture = RUST_TEXTURE
-		obj.add_child(decal)
-	# Directive says 2; the legacy field says 4 — the directive must win.
-	obj.customization = "Max Decals: 2"
-	obj.randomized_decal_count = 4
-
-	obj.register_authored_conditions(DataRepository.singleton(), 123)
-
-	assert_eq(obj.authored_active_count(), 2, "the Max Decals directive limits and overrides")
 
 
 ## Scaling an artifact scene's ROOT node enlarges it on the bench AND grows the analytic

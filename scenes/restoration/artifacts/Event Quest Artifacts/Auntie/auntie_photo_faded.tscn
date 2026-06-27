@@ -5,5 +5,4 @@
 [node name="AuntiePhotoFaded" type="Node3D" unique_id=1853400994]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-customization = "Max Decals: 3"
-randomized_decal_count = 3
+randomize_conditions_max = 3

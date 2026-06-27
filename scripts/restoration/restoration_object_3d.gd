@@ -2,16 +2,12 @@
 class_name RestorationObject3D
 extends Node3D
 
-## Per-artifact customisation — one directive per line, in the Inspector. Supported now:
-##   Max Decals: N    -> only N of the placed ArtifactConditionDecal children appear,
-##                       chosen at random (seeded per save + loop). Place as many decals
-##                       as you like; N show in game. 0 = show ALL.
-## When NO "Max Decals" line is present the legacy randomized_decal_count below is used
-## instead. Unknown lines are ignored, so more directives can be added later.
-@export_multiline var customization: String = ""
-## Legacy fallback for the decal limit (use the "Max Decals" line above instead). Only
-## consulted when the customisation text has no "Max Decals" directive.
-@export var randomized_decal_count: int = 0
+## CONDITION RANDOMIZER: how many conditions each instance of this artifact spawns with. Each instance
+## rolls a count in [min, max] and that many SPAWNABLE overlays (coverage_max > 0) are made active; the
+## rest render clean. Any overlay with `guaranteed_spawn` ON always takes a slot. max <= 0 disables the
+## randomizer (every spawnable condition shows). E.g. min 3 / max 5 -> a bell with 3–5 random conditions.
+@export var randomize_conditions_min: int = 0
+@export var randomize_conditions_max: int = 0
 ## OPTIONAL authored 3D model for this artifact. When set, it is instanced and shown in
 ## place of the placeholder medallion (the placeholder sphere stays, invisible, as the
 ## rotate/clean hit-test proxy). Set this on a per-artifact scene to use the real model.
@@ -34,14 +30,22 @@ extends Node3D
 	set(value):
 		model_material = value
 		if _built:
-			_apply_authored_model()
+			_apply_model_surface_materials()  # update in place — no model rebuild
 ## SHORTCUT: drop a PNG (e.g. a pack's `<name>_castletexture.png`) here and it's auto-wrapped into a
 ## StandardMaterial3D for the `model_mesh` — no need to hand-build a material. Wins over model_material.
 @export var model_texture: Texture2D:
 	set(value):
 		model_texture = value
 		if _built:
-			_apply_authored_model()
+			_apply_model_surface_materials()
+## PER-SURFACE materials for a multi-part model_mesh (e.g. the bell's metal body / wood / clapper). Entry
+## `i` is applied to surface `i`; any surface without an entry (or null entry) falls back to model_texture
+## / model_material. So you can give the body brass and the clapper wood, etc.
+@export var model_materials: Array[Material] = []:
+	set(value):
+		model_materials = value
+		if _built:
+			_apply_model_surface_materials()
 ## Uniform scale applied to the authored model (raw .glb/.obj are often metres-large).
 @export var model_scale: float = 1.0:
 	set(value):
@@ -600,11 +604,55 @@ func build_overlays(seed_value: int = 0) -> void:
 		return
 	var mesh := _dust_source_mesh()
 	var scale := _dust_source_scale()
-	for overlay in _find_overlays(self):
+	var overlays := _find_overlays(self)
+	for overlay in overlays:
 		# Offset the seed per layer so each condition rolls its OWN coverage/pattern on the same
 		# artifact, while two different instances (different seed_value) differ overall.
 		var s: int = seed_value ^ (int(overlay.layer_order) * 73856093)
 		overlay.build_with_fallback(mesh, scale, s)
+	_apply_condition_randomizer(overlays, seed_value)
+
+
+## Picks WHICH conditions this instance has: rolls a count in [randomize_conditions_min, max], keeps every
+## guaranteed_spawn overlay, fills the rest at random from the other spawnable overlays, and clears the
+## ones that didn't make the cut (they render clean). Deterministic per seed. Disabled when max <= 0.
+func _apply_condition_randomizer(overlays: Array, seed_value: int) -> void:
+	if randomize_conditions_max <= 0:
+		return
+	var eligible: Array = []
+	for o in overlays:
+		if o.has_method("is_spawnable") and o.is_spawnable():
+			eligible.append(o)
+	if eligible.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var lo: int = maxi(0, randomize_conditions_min)
+	var hi: int = maxi(lo, randomize_conditions_max)
+	var target := rng.randi_range(lo, hi)
+	var guaranteed: Array = []
+	var optional: Array = []
+	for o in eligible:
+		if "guaranteed_spawn" in o and o.guaranteed_spawn:
+			guaranteed.append(o)
+		else:
+			optional.append(o)
+	# Shuffle the optional pool (Fisher-Yates) so the fill is random but seeded.
+	for i in range(optional.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp: Variant = optional[i]
+		optional[i] = optional[j]
+		optional[j] = tmp
+	var active := {}
+	for o in guaranteed:
+		active[o] = true
+	var need: int = maxi(0, target - guaranteed.size())
+	for k in mini(need, optional.size()):
+		active[optional[k]] = true
+	# Conditions that didn't make the cut render clean.
+	for o in eligible:
+		if not active.has(o) and o.has_method("clear_condition"):
+			o.clear_condition()
 
 
 func has_overlays() -> bool:
@@ -1122,7 +1170,7 @@ func _clear_blemishes() -> void:
 ## brush), tints it, and registers it as a cleanable hotspot AT ITS AUTHORED POSITION.
 ## Idempotent: safe to call again on reload (cleaned ones keep their removed flag).
 ## `seed_value` (instance uid + loop) only drives which decals are active this run
-## (randomized_decal_count) and resets dirt; it does NOT move the decals.
+## (randomize_conditions_max) and resets dirt; it does NOT move the decals.
 func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> void:
 	_authored.clear()
 	var rng := RandomNumberGenerator.new()
@@ -1157,7 +1205,7 @@ func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> 
 		decal.tint(color)
 		# Keep the decal EXACTLY where the dev placed it in the artifact scene (its authored
 		# transform). Positions/rotations set in the editor carry straight into the game; the
-		# only randomisation is WHICH decals are active (randomized_decal_count above).
+		# only randomisation is WHICH decals are active (randomize_conditions_max above).
 		_authored[decal.name] = {
 			"node": decal,
 			"required_tool": required_tool,
@@ -1250,29 +1298,10 @@ func authored_active_count() -> int:
 	return _authored.size()
 
 
-## The active-decal limit: the "Max Decals: N" directive from `customization` when present
-## (authoritative — author it per artifact), otherwise the legacy randomized_decal_count.
-## <= 0 means "show all".
+## The active-condition limit for the legacy decal/photo path — now driven by randomize_conditions_max
+## (decals pick up to that many, chosen at random). <= 0 means "show all".
 func _active_decal_limit() -> int:
-	var directive := _max_decals_directive()
-	return directive if directive >= 0 else randomized_decal_count
-
-
-## Parses the "Max Decals: N" line out of `customization` (case-insensitive). Returns the
-## integer N, or -1 when no such directive is present so callers fall back to the legacy
-## field. More directives can be added here later (the rest of `customization` is ignored).
-func _max_decals_directive() -> int:
-	for raw_line in customization.split("\n", false):
-		var line := raw_line.strip_edges()
-		if not line.to_lower().begins_with("max decals"):
-			continue
-		var colon := line.find(":")
-		if colon == -1:
-			continue
-		var value := line.substr(colon + 1).strip_edges()
-		if value.is_valid_int():
-			return value.to_int()
-	return -1
+	return randomize_conditions_max
 
 
 ## Chooses which placed decals are live this run. With the limit <= 0 or >= the number
@@ -1493,10 +1522,8 @@ func _apply_authored_model() -> void:
 	else:
 		var mi := MeshInstance3D.new()
 		mi.mesh = model_mesh
-		var mat := _resolve_model_material()
-		if mat != null:
-			mi.material_override = mat
 		_model_instance = mi
+		_apply_model_surface_materials()
 	if _model_instance == null:
 		return
 	_model_instance.name = "Model"
@@ -1539,6 +1566,27 @@ func _first_mesh(node: Node) -> Mesh:
 		if m != null:
 			return m
 	return null
+
+
+## Applies per-surface materials to the EXISTING model MeshInstance without rebuilding it: model_materials[i]
+## wins, else the shared model_texture/model_material; null clears that surface's override. No-ops for a
+## model_scene. Called by the material setters so editing a material in the inspector updates IN PLACE —
+## rebuilding the whole model node on every edit left stale copies in the @tool editor (the bug where all
+## surfaces showed the last material).
+func _apply_model_surface_materials() -> void:
+	if not (_model_instance is MeshInstance3D):
+		return
+	var mi := _model_instance as MeshInstance3D
+	if mi.mesh == null:
+		return
+	var base_mat := _resolve_model_material()
+	for i in mi.mesh.get_surface_count():
+		var m: Material = null
+		if i < model_materials.size() and model_materials[i] != null:
+			m = model_materials[i]
+		elif base_mat != null:
+			m = base_mat
+		mi.set_surface_override_material(i, m)
 
 
 ## The material for a bare `model_mesh`: a `model_texture` PNG (auto-wrapped into a StandardMaterial3D)
