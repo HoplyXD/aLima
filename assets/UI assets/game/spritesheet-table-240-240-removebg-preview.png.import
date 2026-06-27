@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dbacvbr5mq1jr"
-path="res://.godot/imported/spritesheet-logo.png-f3cd19d6d151ada4eda164e48feca845.ctex"
+uid="uid://bvu52ryl6ysed"
+path="res://.godot/imported/spritesheet-table-240-240-removebg-preview.png-c36914362f34cf9fdd59434865004052.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/UI assets/game/spritesheet-logo.png"
-dest_files=["res://.godot/imported/spritesheet-logo.png-f3cd19d6d151ada4eda164e48feca845.ctex"]
+source_file="res://assets/UI assets/game/spritesheet-table-240-240-removebg-preview.png"
+dest_files=["res://.godot/imported/spritesheet-table-240-240-removebg-preview.png-c36914362f34cf9fdd59434865004052.ctex"]
 
 [params]
 
