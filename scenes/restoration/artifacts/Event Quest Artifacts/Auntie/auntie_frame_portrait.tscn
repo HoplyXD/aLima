@@ -1,8 +1,102 @@
 [gd_scene format=3 uid="uid://cvks8q2h8c441"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
+[ext_resource type="ArrayMesh" uid="uid://bwodc0smios7e" path="res://assets/3d Assets/Artifacts/Modified Artifacts Assets/Picture Frame/pictureframe.obj" id="2_7ev5v"]
+[ext_resource type="Texture2D" uid="uid://bvl4hbb65rakm" path="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets (1)/squareishdesignassets/gltf/pictureframetable03_castletexture.png" id="3_qvwo1"]
+[ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="4_lv1dj"]
+[ext_resource type="ArrayMesh" uid="uid://qqx48lm56pl7" path="res://assets/3d Assets/Artifacts/Modified Artifacts Assets/Picture Frame/pictureframe Overlay.obj" id="5_wxk07"]
+[ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="6_utoaw"]
+[ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="7_mj3ik"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_5t8fa"]
+[ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="9_mt3ca"]
+[ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_fr6ox"]
+[ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_oolf3"]
+[ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_cvxs6"]
 
 [node name="AuntieFramePortrait" type="Node3D" unique_id=1341802665]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-randomize_conditions_max = 2
+randomize_conditions_min = 4
+randomize_conditions_max = 4
+model_mesh = ExtResource("2_7ev5v")
+model_texture = ExtResource("3_qvwo1")
+model_scale = 5.0
+
+[node name="CrackingOverlay" parent="." unique_id=1216183678 instance=ExtResource("4_lv1dj")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+overlay_mesh = ExtResource("5_wxk07")
+condition_texture = ExtResource("6_utoaw")
+opacity = 1.0
+layer_order = 10
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
+
+[node name="TarnishOverlay" parent="." unique_id=1802591925 instance=ExtResource("4_lv1dj")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_wxk07")
+condition_texture = ExtResource("7_mj3ik")
+opacity = 1.0
+layer_order = 20
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+
+[node name="RustOverlay" parent="." unique_id=1045416207 instance=ExtResource("4_lv1dj")]
+transform = Transform3D(5, 0, 0, 0, 5, 1.4901156e-07, 0, -1.4901156e-07, 5, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_wxk07")
+condition_texture = ExtResource("8_5t8fa")
+layer_order = 25
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+
+[node name="DustOverlay" parent="." unique_id=1516377637 instance=ExtResource("4_lv1dj")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+overlay_mesh = ExtResource("5_wxk07")
+condition_texture = ExtResource("9_mt3ca")
+opacity = 0.5
+coverage_min = 90.0
+coverage_max = 100.0
+use_own_uvs = true
+uv2_tiling = 2.0
+own_uv_tiling = 12.525
+
+[node name="WaterStainOverlay" parent="." unique_id=1329716641 instance=ExtResource("4_lv1dj")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+overlay_mesh = ExtResource("5_wxk07")
+condition_texture = ExtResource("10_fr6ox")
+opacity = 1.0
+condition_id = "water_stain"
+layer_order = 35
+coverage_min = 30.0
+coverage_max = 100.0
+auto_unwrap = true
+
+[node name="GrimeOverlay" parent="." unique_id=30527475 instance=ExtResource("4_lv1dj")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+overlay_mesh = ExtResource("5_wxk07")
+condition_texture = ExtResource("11_oolf3")
+opacity = 1.0
+condition_id = "dirt"
+layer_order = 28
+auto_unwrap = true
+own_uv_tiling = 7.9
+
+[node name="TapeResidueOverlay" parent="." unique_id=1640125573 instance=ExtResource("4_lv1dj")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+overlay_mesh = ExtResource("5_wxk07")
+condition_texture = ExtResource("12_cvxs6")
+opacity = 1.0
+condition_id = "tape_residue"
+layer_order = 36
+coverage_min = 100.0
+coverage_max = 100.0
+guaranteed_spawn = true
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 20.0
+own_uv_aspect = 0.09

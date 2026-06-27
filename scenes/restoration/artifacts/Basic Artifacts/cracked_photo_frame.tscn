@@ -1,8 +1,0 @@
-[gd_scene format=3 uid="uid://cvks8g4y0x441"]
-
-[ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
-
-[node name="CrackedPhotoFrame" type="Node3D" unique_id=1290945425]
-transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
-script = ExtResource("1_obj")
-randomize_conditions_max = 2

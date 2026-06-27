@@ -7,6 +7,9 @@
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
 [ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Pendant.obj" id="5_pendant"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
+[ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="8_im5t2"]
+[ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_gqyvn"]
+[ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_oip4t"]
 
 [sub_resource type="StandardMaterial3D" id="pendant_silver"]
 albedo_color = Color(0.9, 0.91, 0.93, 1)
@@ -14,60 +17,119 @@ metallic = 0.9
 metallic_specular = 0.6
 roughness = 0.3
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_im5t2"]
+albedo_color = Color(0.9, 0.91, 0.93, 1)
+metallic = 0.9
+metallic_specular = 0.6
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gqyvn"]
+albedo_color = Color(0.9, 0.91, 0.93, 1)
+metallic = 0.9
+metallic_specular = 0.6
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oip4t"]
+albedo_color = Color(0.9, 0.91, 0.93, 1)
+metallic = 0.9
+metallic_specular = 0.6
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fvfxs"]
+albedo_color = Color(0.9, 0.91, 0.93, 1)
+metallic = 0.9
+metallic_specular = 0.6
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_668c3"]
+albedo_color = Color(0, 0, 0.92941177, 1)
+metallic = 0.9
+metallic_specular = 0.6
+roughness = 0.3
+
 [node name="SilverPendant" type="Node3D" unique_id=1843766839]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+randomize_conditions_min = 3
+randomize_conditions_max = 5
 model_mesh = ExtResource("5_pendant")
 model_material = SubResource("pendant_silver")
+model_materials = Array[Material]([SubResource("StandardMaterial3D_im5t2"), SubResource("StandardMaterial3D_gqyvn"), SubResource("StandardMaterial3D_oip4t"), SubResource("StandardMaterial3D_fvfxs"), SubResource("StandardMaterial3D_668c3")])
 model_scale = 0.1
 
-[node name="CrackingOverlay" parent="." unique_id=263730433 instance=ExtResource("3_waa2k")]
+[node name="CrackingOverlay" parent="." unique_id=605321876 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_77ino")
+opacity = 1.0
 layer_order = 10
-condition_max_distance = null
-use_own_uvs = null
-auto_unwrap = null
-triplanar_tiling = 3.0
-own_uv_tiling = null
-own_uv_aspect = null
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
 
-[node name="TarnishOverlay" parent="." unique_id=1528200091 instance=ExtResource("3_waa2k")]
+[node name="TarnishOverlay" parent="." unique_id=359226937 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
 layer_order = 20
-condition_max_distance = null
-use_own_uvs = true
-triplanar_tiling = 3.0
-own_uv_aspect = null
+coverage_min = 30.0
+coverage_max = 90.0
+guaranteed_spawn = true
 
-[node name="RustOverlay" parent="." unique_id=1380345557 instance=ExtResource("3_waa2k")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
+[node name="RustOverlay" parent="." unique_id=826253032 instance=ExtResource("3_waa2k")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 2.980231e-09, 0, -2.980231e-09, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("6_rust")
 layer_order = 25
-condition_max_distance = null
-use_own_uvs = true
-auto_unwrap = null
-triplanar_tiling = 3.0
-own_uv_tiling = null
-own_uv_aspect = null
+coverage_min = 30.0
+coverage_max = 90.0
+guaranteed_spawn = true
 
-[node name="DustOverlay" parent="." unique_id=720166940 instance=ExtResource("3_waa2k")]
+[node name="DustOverlay" parent="." unique_id=612566130 instance=ExtResource("3_waa2k")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
-condition_max_distance = null
 use_own_uvs = true
-auto_unwrap = null
-triplanar_tiling = 3.0
-own_uv_tiling = null
-own_uv_aspect = null
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 7.22
+
+[node name="WaterStainOverlay" parent="." unique_id=625647610 instance=ExtResource("3_waa2k")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_pendant")
+condition_texture = ExtResource("8_im5t2")
+opacity = 1.0
+condition_id = "water_stain"
+layer_order = 35
+coverage_max = 100.0
+auto_unwrap = true
+
+[node name="GrimeOverlay" parent="." unique_id=64450719 instance=ExtResource("3_waa2k")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_pendant")
+condition_texture = ExtResource("9_gqyvn")
+opacity = 1.0
+condition_id = "dirt"
+layer_order = 28
+coverage_max = 80.0
+triplanar_tiling = 6.415
+uv2_tiling = 2.95
+own_uv_tiling = 7.9
+
+[node name="TapeResidueOverlay" parent="." unique_id=1591384637 instance=ExtResource("3_waa2k")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_pendant")
+condition_texture = ExtResource("10_oip4t")
+opacity = 1.0
+condition_id = "tape_residue"
+layer_order = 36
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 20.0
+own_uv_aspect = 0.09

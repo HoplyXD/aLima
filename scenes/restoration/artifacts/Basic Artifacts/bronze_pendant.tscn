@@ -7,6 +7,9 @@
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="4_mastu"]
 [ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Pendant.obj" id="5_pendant"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
+[ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="8_knnsl"]
+[ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_8w8gy"]
+[ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_vv2ug"]
 
 [sub_resource type="StandardMaterial3D" id="pendant_bronze"]
 albedo_color = Color(0.6, 0.4, 0.2, 1)
@@ -14,47 +17,95 @@ metallic = 0.9
 metallic_specular = 0.55
 roughness = 0.38
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_knnsl"]
+albedo_color = Color(0, 0.4627451, 0, 1)
+metallic = 0.9
+metallic_specular = 0.55
+roughness = 0.38
+
 [node name="BronzePendant" type="Node3D" unique_id=1338701552]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+randomize_conditions_min = 3
+randomize_conditions_max = 4
 model_mesh = ExtResource("5_pendant")
 model_material = SubResource("pendant_bronze")
+model_materials = Array[Material]([SubResource("pendant_bronze"), SubResource("pendant_bronze"), SubResource("pendant_bronze"), SubResource("pendant_bronze"), SubResource("StandardMaterial3D_knnsl")])
 model_scale = 0.1
 
-[node name="CrackingOverlay" parent="." unique_id=1414563452 instance=ExtResource("3_67bof")]
+[node name="CrackingOverlay" parent="." unique_id=1786695597 instance=ExtResource("3_67bof")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_mastu")
+opacity = 1.0
 layer_order = 10
-uv2_tiling = null
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
 
-[node name="TarnishOverlay" parent="." unique_id=985633772 instance=ExtResource("3_67bof")]
+[node name="TarnishOverlay" parent="." unique_id=1659621772 instance=ExtResource("3_67bof")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
-condition_id = "tarnish"
 layer_order = 20
-coverage_min = 0.0
-coverage_max = 0.0
-uv2_tiling = null
+coverage_min = 30.0
+coverage_max = 90.0
+guaranteed_spawn = true
 
-[node name="RustOverlay" parent="." unique_id=45582588 instance=ExtResource("3_67bof")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+[node name="RustOverlay" parent="." unique_id=1156354277 instance=ExtResource("3_67bof")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 2.980231e-09, 0, -2.980231e-09, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("6_rust")
-condition_id = "rust"
 layer_order = 25
-coverage_min = 0.0
-coverage_max = 0.0
-uv2_tiling = null
+coverage_min = 30.0
+coverage_max = 90.0
+guaranteed_spawn = true
 
-[node name="DustOverlay" parent="." unique_id=597236714 instance=ExtResource("3_67bof")]
+[node name="DustOverlay" parent="." unique_id=1473383074 instance=ExtResource("3_67bof")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_pendant")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
-condition_id = "dust"
-coverage_min = 100.0
+use_own_uvs = true
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 7.22
+
+[node name="WaterStainOverlay" parent="." unique_id=439861112 instance=ExtResource("3_67bof")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_pendant")
+condition_texture = ExtResource("8_knnsl")
+opacity = 1.0
+condition_id = "water_stain"
+layer_order = 35
 coverage_max = 100.0
-uv2_tiling = null
+auto_unwrap = true
+
+[node name="GrimeOverlay" parent="." unique_id=8368770 instance=ExtResource("3_67bof")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_pendant")
+condition_texture = ExtResource("9_8w8gy")
+opacity = 1.0
+condition_id = "dirt"
+layer_order = 28
+coverage_max = 80.0
+triplanar_tiling = 6.415
+uv2_tiling = 2.95
+own_uv_tiling = 7.9
+
+[node name="TapeResidueOverlay" parent="." unique_id=499749155 instance=ExtResource("3_67bof")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_pendant")
+condition_texture = ExtResource("10_vv2ug")
+opacity = 1.0
+condition_id = "tape_residue"
+layer_order = 36
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 20.0
+own_uv_aspect = 0.09
