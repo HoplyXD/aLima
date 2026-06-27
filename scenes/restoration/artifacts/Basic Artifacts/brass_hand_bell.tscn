@@ -19,28 +19,24 @@ albedo_color = Color(0.78, 0.6, 0.28, 1)
 metallic = 0.85
 roughness = 0.4
 
-[sub_resource type="StandardMaterial3D" id="brass"]
-albedo_color = Color(0.5372549, 0.37254903, 0.21176471, 1)
-metallic_specular = 0.0
-roughness = 0.4
-
 [node name="BrassHandBell" type="Node3D" unique_id=456840677]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, -0.11943139, 0)
 script = ExtResource("1_obj")
-randomize_conditions_min = 3
-randomize_conditions_max = 4
+randomize_conditions_min = 2
+randomize_conditions_max = 3
 model_mesh = ExtResource("5_awa71")
 model_texture = ExtResource("3_102qs")
-model_materials = Array[Material]([SubResource("StandardMaterial3D_yxfh3"), SubResource("brass"), null])
+model_materials = Array[Material]([SubResource("StandardMaterial3D_yxfh3"), null, null])
 model_scale = 0.2
 
 [node name="CrackingOverlay" parent="." unique_id=816983379 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
 overlay_mesh = ExtResource("5_8j547")
 condition_texture = ExtResource("7_cracking")
-opacity = 0.99
+opacity = 1.0
 layer_order = 10
-guaranteed_spawn = null
+coverage_min = 0.0
+coverage_max = 0.0
 auto_unwrap = true
 uv2_tiling = 2.0
 
@@ -52,12 +48,7 @@ opacity = 1.0
 layer_order = 20
 coverage_min = 50.0
 coverage_max = 80.0
-guaranteed_spawn = null
 auto_unwrap = true
-triplanar = true
-triplanar_tiling = 8.06
-uv2_tiling = 30.73
-uv2_aspect = 1.335
 
 [node name="RustOverlay" parent="." unique_id=40732597 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 5.960462e-09, 0, -5.960462e-09, 0.2, 0, 0, 0)
@@ -66,15 +57,13 @@ condition_texture = ExtResource("8_rust")
 layer_order = 25
 coverage_min = 50.0
 coverage_max = 80.0
-guaranteed_spawn = null
-uv2_tiling = 2.0
+auto_unwrap = true
 
 [node name="DustOverlay" parent="." unique_id=1195122582 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
 overlay_mesh = ExtResource("5_8j547")
 condition_texture = ExtResource("3_dust")
 opacity = 0.5
-guaranteed_spawn = null
 use_own_uvs = true
 auto_unwrap = true
 uv2_tiling = 2.0
@@ -82,14 +71,13 @@ own_uv_tiling = 7.22
 
 [node name="WaterStainOverlay" parent="." unique_id=348099890 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
-overlay_mesh = ExtResource("5_8j547")
+overlay_mesh = ExtResource("7_awa71")
 condition_texture = ExtResource("8_102qs")
 opacity = 1.0
 condition_id = "water_stain"
 layer_order = 35
-coverage_min = 0.0
+coverage_min = 40.0
 coverage_max = 100.0
-guaranteed_spawn = null
 auto_unwrap = true
 
 [node name="GrimeOverlay" parent="." unique_id=1539316648 instance=ExtResource("6_overlay")]
@@ -100,13 +88,14 @@ opacity = 1.0
 condition_id = "dirt"
 layer_order = 28
 coverage_max = 80.0
-guaranteed_spawn = null
+auto_unwrap = true
 triplanar_tiling = 6.415
 uv2_tiling = 2.95
 own_uv_tiling = 7.9
 
 [node name="TapeResidueOverlay" parent="." unique_id=1817624610 instance=ExtResource("6_overlay")]
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_8j547")
 condition_texture = ExtResource("10_awa71")
 opacity = 1.0
@@ -114,7 +103,6 @@ condition_id = "tape_residue"
 layer_order = 36
 coverage_min = 0.0
 coverage_max = 0.0
-guaranteed_spawn = null
 auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 20.0

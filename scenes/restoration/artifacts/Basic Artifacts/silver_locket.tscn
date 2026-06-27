@@ -7,6 +7,9 @@
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="4_vnjfm"]
 [ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Locket.obj" id="5_locket"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
+[ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="8_b7306"]
+[ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_a0st0"]
+[ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_4iri1"]
 
 [sub_resource type="StandardMaterial3D" id="locket_silver"]
 albedo_color = Color(0.9, 0.91, 0.93, 1)
@@ -17,32 +20,85 @@ roughness = 0.3
 [node name="SilverLocket" type="Node3D" unique_id=1780852344]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+randomize_conditions_min = 3
+randomize_conditions_max = 5
 model_mesh = ExtResource("5_locket")
 model_material = SubResource("locket_silver")
 model_scale = 0.1
 
-[node name="CrackingOverlay" parent="." unique_id=1163201502 instance=ExtResource("3_jrqtf")]
+[node name="CrackingOverlay" parent="." unique_id=1221171256 instance=ExtResource("3_jrqtf")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("4_vnjfm")
+opacity = 1.0
 layer_order = 10
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
 
-[node name="TarnishOverlay" parent="." unique_id=1649402556 instance=ExtResource("3_jrqtf")]
+[node name="TarnishOverlay" parent="." unique_id=399320458 instance=ExtResource("3_jrqtf")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("4_tarnish")
+opacity = 1.0
 layer_order = 20
+coverage_min = 30.0
+coverage_max = 90.0
+guaranteed_spawn = true
 
-[node name="RustOverlay" parent="." unique_id=1863475199 instance=ExtResource("3_jrqtf")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
+[node name="RustOverlay" parent="." unique_id=153455562 instance=ExtResource("3_jrqtf")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 2.980231e-09, 0, -2.980231e-09, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("6_rust")
 layer_order = 25
+coverage_min = 30.0
+coverage_max = 90.0
+guaranteed_spawn = true
 
-[node name="DustOverlay" parent="." unique_id=458583480 instance=ExtResource("3_jrqtf")]
+[node name="DustOverlay" parent="." unique_id=1832895856 instance=ExtResource("3_jrqtf")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_locket")
+condition_texture = ExtResource("3_dust")
+opacity = 0.5
+use_own_uvs = true
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 7.22
+
+[node name="WaterStainOverlay" parent="." unique_id=1250896106 instance=ExtResource("3_jrqtf")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_locket")
+condition_texture = ExtResource("8_b7306")
+opacity = 1.0
+condition_id = "water_stain"
+layer_order = 35
+coverage_max = 100.0
+auto_unwrap = true
+
+[node name="GrimeOverlay" parent="." unique_id=510961960 instance=ExtResource("3_jrqtf")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+overlay_mesh = ExtResource("5_locket")
+condition_texture = ExtResource("9_a0st0")
+opacity = 1.0
+condition_id = "dirt"
+layer_order = 28
+coverage_max = 80.0
+triplanar_tiling = 6.415
+uv2_tiling = 2.95
+own_uv_tiling = 7.9
+
+[node name="TapeResidueOverlay" parent="." unique_id=1544911102 instance=ExtResource("3_jrqtf")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 visible = false
 overlay_mesh = ExtResource("5_locket")
-condition_texture = ExtResource("3_dust")
+condition_texture = ExtResource("10_4iri1")
+opacity = 1.0
+condition_id = "tape_residue"
+layer_order = 36
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 20.0
+own_uv_aspect = 0.09
