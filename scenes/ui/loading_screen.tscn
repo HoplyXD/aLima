@@ -1,0 +1,183 @@
+[gd_scene format=3 uid="uid://b8jj3gj4exdek"]
+
+[ext_resource type="FontFile" uid="uid://caoi8eihs4qs" path="res://assets/fonts/RomanAntique-Italic.ttf" id="1_fieat"]
+[ext_resource type="PackedScene" uid="uid://bkchvc2unh8e3" path="res://scenes/Loading_Shop.tscn" id="2_shop"]
+[ext_resource type="Texture2D" uid="uid://bvu52ryl6ysed" path="res://assets/UI assets/game/spritesheet-table-240-240-removebg-preview.png" id="3_5fj0j"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6otdk"]
+bg_color = Color(0, 0, 0, 0.5)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s2kth"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(0, 0, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s41fs"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(125, 0, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y06jl"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(250, 0, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g5iak"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(375, 0, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2hmxs"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(0, 125, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jwu8f"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(125, 125, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pqjuo"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(250, 125, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2ani7"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(375, 125, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ec5e7"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(0, 250, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h8fv6"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(125, 250, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dsavn"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(250, 250, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_50gfd"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(375, 250, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1id1c"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(0, 375, 125, 125)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8cs12"]
+atlas = ExtResource("3_5fj0j")
+region = Rect2(125, 375, 125, 125)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_b3ncd"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s2kth")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s41fs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y06jl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g5iak")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2hmxs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jwu8f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pqjuo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2ani7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ec5e7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h8fv6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dsavn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_50gfd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1id1c")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8cs12")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="LoadingScreen" type="Control" unique_id=780604155]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Backdrop" type="SubViewportContainer" parent="." unique_id=780604156]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Backdrop" unique_id=780604157]
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(1920, 1080)
+render_target_update_mode = 4
+
+[node name="LoadingShop" parent="Backdrop/SubViewport" unique_id=102296577 instance=ExtResource("2_shop")]
+backdrop_mode = true
+
+[node name="Panel" type="Panel" parent="." unique_id=1225191572]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_6otdk")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=201189137]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 37
+theme_override_constants/margin_bottom = 42
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1034286772]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+theme_override_constants/separation = 23
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer" unique_id=913501445]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_fieat")
+theme_override_font_sizes/font_size = 66
+text = "Tips:"
+
+[node name="Label2" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1562534305]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_fieat")
+theme_override_font_sizes/font_size = 48
+text = "tips show up here....."
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="MarginContainer" unique_id=518422069]
+position = Vector2(1838, 997)
+sprite_frames = SubResource("SpriteFrames_b3ncd")
+frame_progress = 0.8727505

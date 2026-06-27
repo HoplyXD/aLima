@@ -39,6 +39,9 @@
 [ext_resource type="PackedScene" uid="uid://7wc33npp34v8" path="res://assets/3d Assets/FireLog/trn_Log.fbx" id="29_ay5bd"]
 [ext_resource type="PackedScene" uid="uid://bk05oms0otiob" path="res://assets/3d Assets/FireLog/Fire.glb" id="30_q2l85"]
 [ext_resource type="Texture2D" uid="uid://dx5tdmtsbisw8" path="res://assets/Characters/Archeologist.png" id="31_ep7b0"]
+[ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_yh0ut"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_6tp7w"]
+[ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="36_yh0ut"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4uftm"]
 size = Vector3(1.5947266, 2.9886718, 0.15)
@@ -59,6 +62,9 @@ size = Vector3(0.8295288, 0.7, 0.8)
 ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.55, 0.46, 1)
 ambient_light_energy = 0.95
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ni0rq"]
+texture = ExtResource("35_yh0ut")
 
 [node name="Shop" type="Node3D" unique_id=395316236]
 script = ExtResource("5_ctrl")
@@ -350,107 +356,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1, -2)
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1556611821]
 script = ExtResource("4_yltc6")
 
-[node name="TopPanel" type="Panel" parent="HUD" unique_id=1337147794]
-anchors_preset = 10
-anchor_right = 1.0
-offset_right = -1.0
-offset_bottom = 104.0
-grow_horizontal = 2
-
-[node name="Margin" type="MarginContainer" parent="HUD/TopPanel" unique_id=1434980256]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 10
-
-[node name="Bar" type="HBoxContainer" parent="HUD/TopPanel/Margin" unique_id=254108583]
-layout_mode = 2
-theme_override_constants/separation = 18
-
-[node name="Unrestored" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=688990181]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=814406825]
-layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "Unrestored"
-
-[node name="UnrestoredCounts" type="RichTextLabel" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=73064481]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 26)
-layout_mode = 2
-bbcode_enabled = true
-text = "W 0   G 0   B 0   P 0   Gd 0"
-fit_content = true
-scroll_active = false
-autowrap_mode = 0
-
-[node name="Sep1" type="VSeparator" parent="HUD/TopPanel/Margin/Bar" unique_id=85690444]
-layout_mode = 2
-
-[node name="Restored" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=183143230]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=486102830]
-layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "Restored (sell via phone)"
-
-[node name="RestoredCounts" type="RichTextLabel" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=1284508716]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 26)
-layout_mode = 2
-bbcode_enabled = true
-text = "W 0   G 0   B 0   P 0   Gd 0"
-fit_content = true
-scroll_active = false
-autowrap_mode = 0
-
-[node name="Sep2" type="VSeparator" parent="HUD/TopPanel/Margin/Bar" unique_id=1833120518]
-layout_mode = 2
-
-[node name="Quest" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=37654742]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=1038735734]
-layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "Quest"
-
-[node name="QuestCount" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=574583549]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "0"
-
-[node name="Spacer" type="Control" parent="HUD/TopPanel/Margin/Bar" unique_id=1172847619]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Clock" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=796987476]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="DayLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=985414638]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 15
-text = "Day 1 of 5"
-horizontal_alignment = 2
-
-[node name="ClockLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1672275074]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "7:00 AM"
-horizontal_alignment = 2
-
 [node name="MorningDeliveryButton" type="Button" parent="HUD" unique_id=1915616714]
 visible = false
 anchors_preset = 8
@@ -563,6 +468,124 @@ horizontal_alignment = 1
 
 [node name="DialogueBox" parent="HUD" unique_id=896587535 instance=ExtResource("3_dlgbox")]
 visible = false
+
+[node name="TopPanel2" type="Panel" parent="HUD" unique_id=1722176874]
+anchors_preset = 10
+anchor_right = 1.0
+offset_right = -1.0
+offset_bottom = 104.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_ni0rq")
+
+[node name="Margin" type="MarginContainer" parent="HUD/TopPanel2" unique_id=1933300548]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -21.0
+offset_bottom = 21.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 177
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 21
+theme_override_constants/margin_bottom = 18
+
+[node name="Bar" type="HBoxContainer" parent="HUD/TopPanel2/Margin" unique_id=1057700593]
+layout_mode = 2
+theme_override_constants/separation = 80
+
+[node name="Unrestored" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=18342938]
+layout_mode = 2
+theme_override_constants/separation = -11
+
+[node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Unrestored" unique_id=1773867073]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("36_yh0ut")
+theme_override_font_sizes/font_size = 40
+text = "Unrestored"
+
+[node name="UnrestoredCounts" type="RichTextLabel" parent="HUD/TopPanel2/Margin/Bar/Unrestored" unique_id=737087263]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 26)
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("36_yh0ut")
+theme_override_font_sizes/normal_font_size = 38
+theme_override_font_sizes/bold_font_size = 38
+bbcode_enabled = true
+text = "W 0   G 0   B 0   P 0   Gd 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Sep1" type="VSeparator" parent="HUD/TopPanel2/Margin/Bar" unique_id=516100664]
+layout_mode = 2
+
+[node name="Restored" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=546177771]
+layout_mode = 2
+theme_override_constants/separation = -11
+
+[node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Restored" unique_id=2121423419]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("36_yh0ut")
+theme_override_font_sizes/font_size = 40
+text = "Restored (sell via phone)"
+
+[node name="RestoredCounts" type="RichTextLabel" parent="HUD/TopPanel2/Margin/Bar/Restored" unique_id=1567502995]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 26)
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("36_yh0ut")
+theme_override_font_sizes/normal_font_size = 38
+theme_override_font_sizes/bold_font_size = 38
+bbcode_enabled = true
+text = "W 0   G 0   B 0   P 0   Gd 0"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Sep2" type="VSeparator" parent="HUD/TopPanel2/Margin/Bar" unique_id=196134297]
+layout_mode = 2
+
+[node name="Quest" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=1285818467]
+layout_mode = 2
+theme_override_constants/separation = -11
+
+[node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Quest" unique_id=851278566]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("36_yh0ut")
+theme_override_font_sizes/font_size = 40
+text = "Quest"
+
+[node name="QuestCount" type="Label" parent="HUD/TopPanel2/Margin/Bar/Quest" unique_id=43241348]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 38
+text = "0"
+
+[node name="Spacer" type="Control" parent="HUD/TopPanel2/Margin/Bar" unique_id=1020011671]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Clock" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=490636225]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DayLabel" type="Label" parent="HUD/TopPanel2/Margin/Bar/Clock" unique_id=767463733]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = ExtResource("36_6tp7w")
+theme_override_font_sizes/font_size = 35
+text = "Day 1 of 5"
+horizontal_alignment = 2
+
+[node name="ClockLabel" type="Label" parent="HUD/TopPanel2/Margin/Bar/Clock" unique_id=1483693581]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = ExtResource("36_6tp7w")
+theme_override_font_sizes/font_size = 48
+text = "7:00 AM"
+horizontal_alignment = 2
 
 [node name="TriageScreen" parent="." unique_id=194688073 instance=ExtResource("6_triage")]
 visible = false

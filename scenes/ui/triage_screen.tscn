@@ -2,14 +2,73 @@
 
 [ext_resource type="Script" uid="uid://dk260ihakjiyh" path="res://scenes/ui/triage_controller.gd" id="1_triage"]
 [ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_oyyef"]
+[ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="2_qrd20"]
 [ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="3_qrd20"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="4_1vmhu"]
 [ext_resource type="Texture2D" uid="uid://dxr4jmbwn30dm" path="res://assets/UI assets/game/gui/bar/left.png" id="5_cuj4i"]
 [ext_resource type="Texture2D" uid="uid://dprq1wdcmqdih" path="res://assets/UI assets/game/gui/bar/right.png" id="6_7h80y"]
 [ext_resource type="Texture2D" uid="uid://c11csnwuhrll7" path="res://assets/UI assets/game/gui/overlay/confirm.png" id="7_3m4ny"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tj61w"]
-texture = ExtResource("2_oyyef")
+[sub_resource type="BoxMesh" id="BoxMesh_table"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_table"]
+albedo_color = Color(0.36, 0.3, 0.24, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_table"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_keep"]
+top_radius = 1.1
+bottom_radius = 1.1
+height = 0.08
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_keep"]
+transparency = 1
+albedo_color = Color(0.25, 0.45, 0.25, 0.4)
+
+[sub_resource type="TorusMesh" id="TorusMesh_keep_ring"]
+inner_radius = 0.95
+outer_radius = 1.08
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_keep_ring"]
+shading_mode = 0
+albedo_color = Color(0.1, 0.8, 0.25, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_keep"]
+size = Vector3(2.2, 0.08, 2.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_keep_zone"]
+size = Vector3(2.8, 2, 2.8)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_recycle"]
+top_radius = 1.1
+bottom_radius = 1.1
+height = 0.08
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_recycle"]
+transparency = 1
+albedo_color = Color(0.45, 0.25, 0.22, 0.4)
+
+[sub_resource type="TorusMesh" id="TorusMesh_recycle_ring"]
+inner_radius = 0.95
+outer_radius = 1.08
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_recycle_ring"]
+shading_mode = 0
+albedo_color = Color(0.9, 0.25, 0.15, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_recycle"]
+size = Vector3(2.2, 0.08, 2.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_recycle_zone"]
+size = Vector3(2.8, 2, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_x"]
+size = Vector3(0.2, 2, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_z"]
+size = Vector3(10.8, 2, 0.2)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_q1i8a"]
 texture = ExtResource("5_cuj4i")
@@ -20,101 +79,8 @@ texture = ExtResource("6_7h80y")
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bcddo"]
 texture = ExtResource("7_3m4ny")
 
-[sub_resource type="BoxMesh" id="BoxMesh_table"]
-size = Vector3(20, 0.2, 20)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_table"]
-size = Vector3(20, 0.2, 20)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_x"]
-size = Vector3(0.2, 2, 6)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_z"]
-size = Vector3(10.8, 2, 0.2)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_keep"]
-top_radius = 1.1
-bottom_radius = 1.1
-height = 0.08
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_keep"]
-size = Vector3(2.2, 0.08, 2.2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_keep_zone"]
-size = Vector3(2.8, 2, 2.8)
-
-[sub_resource type="TorusMesh" id="TorusMesh_keep_ring"]
-inner_radius = 0.95
-outer_radius = 1.08
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_recycle"]
-top_radius = 1.1
-bottom_radius = 1.1
-height = 0.08
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_recycle"]
-size = Vector3(2.2, 0.08, 2.2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_recycle_zone"]
-size = Vector3(2.8, 2, 2.8)
-
-[sub_resource type="TorusMesh" id="TorusMesh_recycle_ring"]
-inner_radius = 0.95
-outer_radius = 1.08
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_left"]
-size = Vector3(0.2, 2, 3.4)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_right"]
-size = Vector3(0.2, 2, 3.4)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_far"]
-size = Vector3(5.8, 2, 0.2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_near"]
-size = Vector3(5.8, 2, 0.2)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_table"]
-albedo_color = Color(0.36, 0.3, 0.24, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_keep"]
-transparency = 1
-albedo_color = Color(0.25, 0.45, 0.25, 0.4)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_recycle"]
-transparency = 1
-albedo_color = Color(0.45, 0.25, 0.22, 0.4)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_keep_ring"]
-shading_mode = 0
-albedo_color = Color(0.1, 0.8, 0.25, 1)
-emission_enabled = true
-emission = Color(0.1, 0.8, 0.25, 1)
-emission_energy_multiplier = 0.25
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_recycle_ring"]
-shading_mode = 0
-albedo_color = Color(0.9, 0.25, 0.15, 1)
-emission_enabled = true
-emission = Color(0.9, 0.25, 0.15, 1)
-emission_energy_multiplier = 0.25
-
-[sub_resource type="BoxMesh" id="BoxMesh_wall_unit"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_floor"]
-size = Vector3(9, 0.1, 7)
-
-[sub_resource type="BoxMesh" id="BoxMesh_shelf"]
-size = Vector3(5.4, 0.8, 0.4)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_color = Color(0.22, 0.18, 0.14, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.12, 0.1, 0.08, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shelf"]
-albedo_color = Color(0.3, 0.24, 0.18, 1)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tj61w"]
+texture = ExtResource("2_oyyef")
 
 [sub_resource type="LabelSettings" id="LabelSettings_title"]
 font = ExtResource("3_qrd20")
@@ -124,7 +90,7 @@ font_size = 48
 process_mode = 3
 script = ExtResource("1_triage")
 
-[node name="ViewportContainer" type="SubViewportContainer" parent="."]
+[node name="ViewportContainer" type="SubViewportContainer" parent="." unique_id=919952069]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -132,134 +98,135 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="ViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="ViewportContainer" unique_id=1753651753]
 handle_input_locally = false
 size = Vector2i(1920, 1080)
+render_target_update_mode = 4
 
-[node name="World" type="Node3D" parent="ViewportContainer/SubViewport"]
+[node name="World" type="Node3D" parent="ViewportContainer/SubViewport" unique_id=969103661]
 
-[node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport/World"]
+[node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport/World" unique_id=2064106053]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 6, 0)
 projection = 1
 size = 5.5
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="ViewportContainer/SubViewport/World"]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="ViewportContainer/SubViewport/World" unique_id=1479306052]
 transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 4, 0)
 light_energy = 1.2
 shadow_enabled = true
 
-[node name="Table" type="StaticBody3D" parent="ViewportContainer/SubViewport/World"]
+[node name="Table" type="StaticBody3D" parent="ViewportContainer/SubViewport/World" unique_id=861600174]
 collision_layer = 64
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/Table"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/Table" unique_id=1844015964]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 mesh = SubResource("BoxMesh_table")
 surface_material_override/0 = SubResource("StandardMaterial3D_table")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Table"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Table" unique_id=1561562886]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_table")
 
-[node name="KeepBin" type="StaticBody3D" parent="ViewportContainer/SubViewport/World"]
+[node name="KeepBin" type="StaticBody3D" parent="ViewportContainer/SubViewport/World" unique_id=977448723]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -0.3)
 collision_layer = 0
 collision_mask = 0
 
-[node name="Pad" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
+[node name="Pad" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/KeepBin" unique_id=2004977386]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 mesh = SubResource("CylinderMesh_keep")
 surface_material_override/0 = SubResource("StandardMaterial3D_keep")
 
-[node name="Ring" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
+[node name="Ring" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/KeepBin" unique_id=525164296]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
 mesh = SubResource("TorusMesh_keep_ring")
 surface_material_override/0 = SubResource("StandardMaterial3D_keep_ring")
 
-[node name="Label" type="Label3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
+[node name="Label" type="Label3D" parent="ViewportContainer/SubViewport/World/KeepBin" unique_id=147884601]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.35, 0)
-billboard = 1
 pixel_size = 0.015
-font = ExtResource("3_qrd20")
+billboard = 1
+text = "KEEP"
+font = ExtResource("2_qrd20")
 font_size = 96
 outline_size = 8
-text = "KEEP"
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/KeepBin" unique_id=1800405761]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 shape = SubResource("BoxShape3D_keep")
 
-[node name="KeepZone" type="Area3D" parent="ViewportContainer/SubViewport/World/KeepBin"]
+[node name="KeepZone" type="Area3D" parent="ViewportContainer/SubViewport/World/KeepBin" unique_id=721393419]
 collision_layer = 128
 collision_mask = 64
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/KeepBin/KeepZone"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/KeepBin/KeepZone" unique_id=1859676928]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("BoxShape3D_keep_zone")
 
-[node name="RecycleBin" type="StaticBody3D" parent="ViewportContainer/SubViewport/World"]
+[node name="RecycleBin" type="StaticBody3D" parent="ViewportContainer/SubViewport/World" unique_id=695822690]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -0.3)
 collision_layer = 0
 collision_mask = 0
 
-[node name="Pad" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
+[node name="Pad" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/RecycleBin" unique_id=99639448]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 mesh = SubResource("CylinderMesh_recycle")
 surface_material_override/0 = SubResource("StandardMaterial3D_recycle")
 
-[node name="Ring" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
+[node name="Ring" type="MeshInstance3D" parent="ViewportContainer/SubViewport/World/RecycleBin" unique_id=1253497775]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
 mesh = SubResource("TorusMesh_recycle_ring")
 surface_material_override/0 = SubResource("StandardMaterial3D_recycle_ring")
 
-[node name="Label" type="Label3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
+[node name="Label" type="Label3D" parent="ViewportContainer/SubViewport/World/RecycleBin" unique_id=2006945694]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.35, 0)
-billboard = 1
 pixel_size = 0.015
-font = ExtResource("3_qrd20")
+billboard = 1
+text = "RECYCLE"
+font = ExtResource("2_qrd20")
 font_size = 96
 outline_size = 8
-text = "RECYCLE"
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/RecycleBin" unique_id=1583544773]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 shape = SubResource("BoxShape3D_recycle")
 
-[node name="RecycleZone" type="Area3D" parent="ViewportContainer/SubViewport/World/RecycleBin"]
+[node name="RecycleZone" type="Area3D" parent="ViewportContainer/SubViewport/World/RecycleBin" unique_id=1002864789]
 collision_layer = 128
 collision_mask = 64
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/RecycleBin/RecycleZone"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/RecycleBin/RecycleZone" unique_id=127499502]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("BoxShape3D_recycle_zone")
 
-[node name="PileSpawn" type="Marker3D" parent="ViewportContainer/SubViewport/World"]
+[node name="PileSpawn" type="Marker3D" parent="ViewportContainer/SubViewport/World" unique_id=2011493540]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0.5)
 
-[node name="Boundaries" type="StaticBody3D" parent="ViewportContainer/SubViewport/World"]
+[node name="Boundaries" type="StaticBody3D" parent="ViewportContainer/SubViewport/World" unique_id=1397517369]
 collision_layer = 64
 collision_mask = 0
 
-[node name="Left" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries"]
+[node name="Left" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries" unique_id=316634543]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 1, 0)
 shape = SubResource("BoxShape3D_boundary_x")
 
-[node name="Right" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries"]
+[node name="Right" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries" unique_id=1130518695]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 1, 0)
 shape = SubResource("BoxShape3D_boundary_x")
 
-[node name="Far" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -3.0)
+[node name="Far" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries" unique_id=974145875]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -3)
 shape = SubResource("BoxShape3D_boundary_z")
 
-[node name="Near" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 3.0)
+[node name="Near" type="CollisionShape3D" parent="ViewportContainer/SubViewport/World/Boundaries" unique_id=900029705]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 3)
 shape = SubResource("BoxShape3D_boundary_z")
 
-[node name="HudLayer" type="CanvasLayer" parent="."]
+[node name="HudLayer" type="CanvasLayer" parent="." unique_id=2053937979]
 layer = 2
 
-[node name="StorageLabel" type="Label" parent="HudLayer"]
+[node name="StorageLabel" type="Label" parent="HudLayer" unique_id=275483309]
 anchors_preset = 10
 anchor_right = 1.0
 offset_top = 16.0
@@ -270,7 +237,7 @@ theme_override_font_sizes/font_size = 28
 text = "Storage: 0 / 0 used, 0 available"
 horizontal_alignment = 1
 
-[node name="ValidationLabel" type="Label" parent="HudLayer"]
+[node name="ValidationLabel" type="Label" parent="HudLayer" unique_id=1393492996]
 anchors_preset = 10
 anchor_right = 1.0
 offset_top = 56.0
@@ -280,7 +247,7 @@ theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 
-[node name="FallbackButton" type="Button" parent="HudLayer"]
+[node name="FallbackButton" type="Button" parent="HudLayer" unique_id=984066953]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -291,7 +258,7 @@ offset_bottom = -16.0
 grow_vertical = 0
 text = "Switch to List View"
 
-[node name="ConfirmButton" type="Button" parent="HudLayer"]
+[node name="ConfirmButton" type="Button" parent="HudLayer" unique_id=1167593860]
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
@@ -312,7 +279,7 @@ theme_override_styles/disabled = SubResource("StyleBoxTexture_bcddo")
 disabled = true
 text = "Confirm Triage"
 
-[node name="FallbackPanel" type="Panel" parent="HudLayer"]
+[node name="FallbackPanel" type="Panel" parent="HudLayer" unique_id=711396514]
 visible = false
 anchors_preset = 15
 anchor_right = 1.0
@@ -325,7 +292,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_tj61w")
 
-[node name="Panel" type="Panel" parent="HudLayer/FallbackPanel"]
+[node name="Panel" type="Panel" parent="HudLayer/FallbackPanel" unique_id=2050328605]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -337,7 +304,7 @@ offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="HudLayer/FallbackPanel/Panel"]
+[node name="Margin" type="MarginContainer" parent="HudLayer/FallbackPanel/Panel" unique_id=1147475836]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -353,40 +320,40 @@ theme_override_constants/margin_top = 50
 theme_override_constants/margin_right = 50
 theme_override_constants/margin_bottom = 50
 
-[node name="VBox" type="VBoxContainer" parent="HudLayer/FallbackPanel/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="HudLayer/FallbackPanel/Panel/Margin" unique_id=284870732]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="HudLayer/FallbackPanel/Panel/Margin/VBox"]
+[node name="Title" type="Label" parent="HudLayer/FallbackPanel/Panel/Margin/VBox" unique_id=1608979544]
 layout_mode = 2
-label_settings = SubResource("LabelSettings_title")
 text = "Alya's Delivery"
+label_settings = SubResource("LabelSettings_title")
 horizontal_alignment = 1
 
-[node name="StorageLabel" type="Label" parent="HudLayer/FallbackPanel/Panel/Margin/VBox"]
+[node name="StorageLabel" type="Label" parent="HudLayer/FallbackPanel/Panel/Margin/VBox" unique_id=651280187]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("4_1vmhu")
 theme_override_font_sizes/font_size = 45
 text = "Storage: 0 / 0 used, 0 available"
 horizontal_alignment = 1
 
-[node name="ValidationLabel" type="Label" parent="HudLayer/FallbackPanel/Panel/Margin/VBox"]
+[node name="ValidationLabel" type="Label" parent="HudLayer/FallbackPanel/Panel/Margin/VBox" unique_id=649572625]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 
-[node name="Scroll" type="ScrollContainer" parent="HudLayer/FallbackPanel/Panel/Margin/VBox"]
+[node name="Scroll" type="ScrollContainer" parent="HudLayer/FallbackPanel/Panel/Margin/VBox" unique_id=1279957977]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Items" type="VBoxContainer" parent="HudLayer/FallbackPanel/Panel/Margin/VBox/Scroll"]
+[node name="Items" type="VBoxContainer" parent="HudLayer/FallbackPanel/Panel/Margin/VBox/Scroll" unique_id=770018928]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="ConfirmButton" type="Button" parent="HudLayer/FallbackPanel/Panel/Margin/VBox"]
+[node name="ConfirmButton" type="Button" parent="HudLayer/FallbackPanel/Panel/Margin/VBox" unique_id=1542603262]
 custom_minimum_size = Vector2(1000, 50)
 layout_mode = 2
 size_flags_horizontal = 4

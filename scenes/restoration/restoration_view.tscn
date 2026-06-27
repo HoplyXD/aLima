@@ -6,9 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://c55yre3k0bgf8" path="res://assets/3d Assets/Phone.glb" id="4_phone"]
 [ext_resource type="PackedScene" uid="uid://dre33nw45m7tr" path="res://assets/3d Assets/Bookcase/Book.glb" id="5_book"]
 [ext_resource type="PackedScene" uid="uid://chyonocig3s54" path="res://assets/3d Assets/Box/Box.glb" id="6_box"]
-[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/Pause_menu.tres" id="7_jodhg"]
+[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="7_jodhg"]
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="8_54x15"]
-[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="9_ot4no"]
 [ext_resource type="Texture2D" uid="uid://gkfx8vh1gdg5" path="res://assets/UI assets/game/gui/phone/nvl.png" id="11_ot4no"]
 [ext_resource type="PackedScene" uid="uid://ccw18fb4d26lu" path="res://assets/3d Assets/Table.glb" id="11_table"]
 [ext_resource type="Texture2D" uid="uid://2ni4wolm4vun" path="res://assets/UI assets/game/gui/ProgressBar/BackgroundBar.png" id="12_4edn4"]
@@ -149,7 +148,6 @@ theme_override_constants/separation = 138
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
-theme_override_fonts/font = ExtResource("9_ot4no")
 theme_override_font_sizes/font_size = 67
 text = "Restoration Bench"
 horizontal_alignment = 2
@@ -321,6 +319,7 @@ autowrap_mode = 3
 [node name="CaptionLabel" type="Label" parent="HUD/BottomPanel/Margin/VBox" unique_id=866705463]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 41
 text = "Rotate to inspect, then pick up a tool from the bench and work the surface."
 autowrap_mode = 3
 
@@ -409,33 +408,25 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="ToolRow" parent="LeftSideBar/Margin/VBox" unique_id=1170192607 instance=ExtResource("15_toolrow")]
-custom_maximum_size = Vector2(-1, 85)
 layout_mode = 2
 
 [node name="ToolRow2" parent="LeftSideBar/Margin/VBox" unique_id=383567420 instance=ExtResource("15_toolrow")]
-custom_maximum_size = Vector2(-1, 85)
 layout_mode = 2
 
 [node name="ToolRow3" parent="LeftSideBar/Margin/VBox" unique_id=152370274 instance=ExtResource("15_toolrow")]
-custom_maximum_size = Vector2(-1, 85)
 layout_mode = 2
 
 [node name="ToolRow4" parent="LeftSideBar/Margin/VBox" unique_id=235462 instance=ExtResource("15_toolrow")]
-custom_maximum_size = Vector2(-1, 85)
 layout_mode = 2
 
 [node name="ToolRow5" parent="LeftSideBar/Margin/VBox" unique_id=1230342447 instance=ExtResource("15_toolrow")]
-custom_maximum_size = Vector2(-1, 85)
 layout_mode = 2
 
 [node name="ToolRow6" parent="LeftSideBar/Margin/VBox" unique_id=1907381007 instance=ExtResource("15_toolrow")]
-custom_maximum_size = Vector2(-1, 85)
 layout_mode = 2
 
 [node name="ToolRow7" parent="LeftSideBar/Margin/VBox" unique_id=1105885903 instance=ExtResource("15_toolrow")]
-custom_maximum_size = Vector2(-1, 85)
 layout_mode = 2
 
 [node name="ToolRow8" parent="LeftSideBar/Margin/VBox" unique_id=452416141 instance=ExtResource("15_toolrow")]
-custom_maximum_size = Vector2(-1, 85)
 layout_mode = 2
