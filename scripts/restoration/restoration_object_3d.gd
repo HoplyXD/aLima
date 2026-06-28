@@ -848,9 +848,10 @@ func overlay_counts() -> Dictionary:
 	return {"total": total, "cleaned": cleaned}
 
 
-## condition_id -> REMAINING dirt fraction (0..1) across the artifact's active overlays, so the value
-## model can price the piece off how much of each condition is still present (full when dirty, 0 when
-## cleaned). Multiple overlays of the same condition take the max remaining. Empty overlays are skipped.
+## condition_id -> {coverage, value_reduction} across the artifact's active overlays, so the value
+## model prices the piece off how much of each condition is still present (coverage: full when dirty,
+## 0 when cleaned) and that overlay's own value_reduction percent (set per artifact). Multiple overlays
+## of the same condition take the max of each. Empty (never-spawned) overlays are skipped.
 func active_condition_coverage() -> Dictionary:
 	var out := {}
 	for overlay in _find_overlays(self):
@@ -860,7 +861,12 @@ func active_condition_coverage() -> Dictionary:
 		if cid.is_empty():
 			continue
 		var remaining := clampf(1.0 - overlay.cleaned_fraction(), 0.0, 1.0)
-		out[cid] = maxf(float(out.get(cid, 0.0)), remaining)
+		var reduction: float = overlay.value_reduction if "value_reduction" in overlay else 0.0
+		if out.has(cid):
+			out[cid]["coverage"] = maxf(float(out[cid]["coverage"]), remaining)
+			out[cid]["value_reduction"] = maxf(float(out[cid]["value_reduction"]), reduction)
+		else:
+			out[cid] = {"coverage": remaining, "value_reduction": reduction}
 	return out
 
 

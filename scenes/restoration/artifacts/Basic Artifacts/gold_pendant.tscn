@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_dcdtr"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_lo217"]
+[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [sub_resource type="StandardMaterial3D" id="pendant_gold"]
 albedo_color = Color(0.82, 0.67, 0.29, 1)
@@ -116,3 +117,6 @@ auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
+
+[node name="ScannerData" type="Node" parent="."]
+script = ExtResource("scannerdata_node")

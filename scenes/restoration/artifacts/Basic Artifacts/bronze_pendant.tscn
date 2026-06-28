@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="8_knnsl"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_8w8gy"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_vv2ug"]
+[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [sub_resource type="StandardMaterial3D" id="pendant_bronze"]
 albedo_color = Color(0.6, 0.4, 0.2, 1)
@@ -26,13 +27,9 @@ roughness = 0.38
 [node name="BronzePendant" type="Node3D" unique_id=1338701552]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-artifact_template_id = null
 artifact_rarity = 1
 base_value_min = 250
 base_value_max = 300
-is_quest_item = null
-quest_npc = null
-quest_number = null
 randomize_conditions_min = 3
 randomize_conditions_max = 4
 model_mesh = ExtResource("5_pendant")
@@ -116,3 +113,6 @@ auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
+
+[node name="ScannerData" type="Node" parent="."]
+script = ExtResource("scannerdata_node")

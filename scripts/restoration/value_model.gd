@@ -2,18 +2,19 @@ class_name ValueModel
 ## Computes an artifact instance's current market value from its rolled pristine
 ## ("true") value and the live coverage of its surface conditions.
 ##
-## Each surface condition cuts up to its `value_reduction` percent of the true value
-## at full coverage; cleaning the condition off scales that penalty toward zero, so a
-## partially-cleaned piece is still sellable — just worth less. The result is floored
-## at the template's minimum base value and never exceeds the rolled true value.
-##
-## Coverage source (artifact-agnostic, from persisted instance data):
-##   * decal-based pieces — the fraction of each condition's spawned decals not yet
-##     removed (removed_decals).
-##   * authored-overlay pieces (no decal removals) — the overall remaining-dirt
-##     fraction (1 - condition/100), applied to every condition the instance carries.
-## When per-condition coverage is later persisted (see the data-reset fix), this seam
-## can read it directly without changing callers.
+## The TRUE value is rolled per instance, uniformly within the template's [min, max] range. Each
+## surface condition cuts up to its `value_reduction` percent of that true value at full coverage;
+## cleaning the condition off scales the penalty toward zero, so a partially-cleaned piece is still
+## sellable — just worth less. The result is FLOORED AT 1/4 OF THE TRUE VALUE (so a filthy piece is
+## still worth something, but cleaning always pays off) and never exceeds the true value.
+
+## Fraction of the true value below which conditions can never push the price (the dirty-piece floor).
+const MIN_VALUE_FRACTION := 0.25
+
+
+## The floor value (1/4 of the true value), never below 1 for a positive-valued piece.
+static func _floor_for(true_value: int) -> int:
+	return maxi(1, int(round(float(true_value) * MIN_VALUE_FRACTION)))
 
 
 ## The current market value for `inst`. Falls back gracefully for pre-revamp instances.
@@ -27,29 +28,28 @@ static func current_value(
 		base = inst.value if inst.value > 0 else _template_mid(template)
 	if template == null or repo == null or base <= 0:
 		return maxi(base, 0)
-	var floor_value := int(template.base_value_range.x)
 	var reduction := _reduction_percent(inst, repo)
 	var current := int(round(float(base) * (1.0 - reduction / 100.0)))
-	return clampi(current, mini(floor_value, base), base)
+	return clampi(current, mini(_floor_for(base), base), base)
 
 
-## Current value from an explicit {condition_id: remaining_fraction 0..1} coverage map — used by the
-## restoration view to price authored-overlay artifacts off their LIVE overlay coverage, so the value
-## climbs smoothly as the player cleans. Floored at `floor_value`, capped at `true_value`.
-static func value_from_coverage(
-	true_value: int, coverage: Dictionary, floor_value: int, repo: DataRepository
-) -> int:
+## Current value from an explicit {condition_id: {coverage 0..1, value_reduction percent}} map — used
+## by the restoration view to price authored-overlay artifacts off their LIVE overlay coverage and each
+## overlay's OWN value_reduction. The value climbs smoothly as the player cleans, floored at 1/4 of the
+## true value and capped at it.
+static func value_from_coverage(true_value: int, coverage: Dictionary) -> int:
 	if true_value <= 0:
 		return maxi(true_value, 0)
-	if repo == null or coverage.is_empty():
+	if coverage.is_empty():
 		return true_value
 	var reduction := 0.0
 	for condition_id in coverage.keys():
-		var condition := repo.get_surface_condition(condition_id)
-		if condition != null:
-			reduction += condition.value_reduction * clampf(float(coverage[condition_id]), 0.0, 1.0)
+		var entry: Dictionary = coverage[condition_id]
+		reduction += (
+			float(entry.get("value_reduction", 0.0)) * clampf(float(entry.get("coverage", 0.0)), 0.0, 1.0)
+		)
 	var current := int(round(float(true_value) * (1.0 - reduction / 100.0)))
-	return clampi(current, mini(floor_value, true_value), true_value)
+	return clampi(current, mini(_floor_for(true_value), true_value), true_value)
 
 
 ## Total percent (0..100) of the true value removed by the instance's still-present conditions.

@@ -12,23 +12,22 @@
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_tape"]
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="11_water"]
 [ext_resource type="Texture2D" uid="uid://dfjm4i3j7utu1" path="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/gltf/woodpipe01_castletexture.png" id="12_pipetex"]
+[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="WoodPipe" type="Node3D" unique_id=229666069]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_iah84")
-artifact_template_id = null
 artifact_rarity = 0
 base_value_min = 40
 base_value_max = 100
-is_quest_item = null
-quest_npc = null
-quest_number = null
 randomize_conditions_min = 1
 randomize_conditions_max = 3
 model_mesh = ExtResource("2_4nwjt")
 model_texture = ExtResource("12_pipetex")
+model_scale = 3.0
 
 [node name="CrackingOverlay" parent="." unique_id=162945207 instance=ExtResource("4_iah84")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 visible = false
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("5_grkaj")
@@ -38,6 +37,7 @@ coverage_max = 0.0
 uv2_tiling = 2.0
 
 [node name="TarnishOverlay" parent="." unique_id=624407190 instance=ExtResource("4_iah84")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 visible = false
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("6_hk6qs")
@@ -47,7 +47,7 @@ coverage_max = 0.0
 uv2_tiling = 2.0
 
 [node name="RustOverlay" parent="." unique_id=1546917133 instance=ExtResource("4_iah84")]
-transform = Transform3D(1, 0, 0, 0, 1.0000005, 2.9802322e-08, 0, -2.9802322e-08, 1.0000005, 0, 0, 0)
+transform = Transform3D(3, 0, 0, 0, 3, 8.9406925e-08, 0, -8.9406925e-08, 3, 0, 0, 0)
 visible = false
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("7_4nwjt")
@@ -57,6 +57,7 @@ coverage_max = 0.0
 uv2_tiling = 2.0
 
 [node name="DustOverlay" parent="." unique_id=1961040203 instance=ExtResource("4_iah84")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("8_b6n8a")
 opacity = 0.3
@@ -65,6 +66,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 7.22
 
 [node name="WaterStainOverlay" parent="." unique_id=1615825983 instance=ExtResource("4_iah84")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("11_water")
 condition_id = "water_stain"
@@ -74,6 +76,7 @@ use_own_uvs = true
 uv2_tiling = 2.0
 
 [node name="GrimeOverlay" parent="." unique_id=1669138805 instance=ExtResource("4_iah84")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("9_grime")
 condition_id = "dirt"
@@ -84,6 +87,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 6.41
 
 [node name="TapeResidueOverlay" parent="." unique_id=1719824455 instance=ExtResource("4_iah84")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 visible = false
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("10_tape")
@@ -92,3 +96,6 @@ layer_order = 35
 coverage_min = 0.0
 coverage_max = 0.0
 uv2_tiling = 2.0
+
+[node name="ScannerData" type="Node" parent="."]
+script = ExtResource("scannerdata_node")

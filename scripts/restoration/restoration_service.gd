@@ -337,8 +337,7 @@ func apply_tool(uid: String, tool_id: String) -> ToolResult:
 	# still damages the artifact, but must not silently burn through — and delete — the tool.
 	if compatible:
 		_consume_tool_durability(tool_id)
-	_write_instance_back(inst)
-	SaveService.save_game()
+	_write_instance_back(inst)  # in-memory only — the bench writes to disk on switch/close (no per-stroke save lag)
 	result.ok = true
 	return result
 
@@ -445,8 +444,7 @@ func persist_dirt_mask(uid: String, png_bytes: PackedByteArray) -> void:
 	if inst == null:
 		return
 	inst.dirt_mask = png_bytes
-	_write_instance_back(inst)
-	SaveService.save_game()
+	_write_instance_back(inst)  # in-memory; the view's _cache_current_dirt does the single disk save
 
 
 ## Persists authored-overlay cleaning progress onto the instance so it survives a full scene
@@ -461,8 +459,7 @@ func persist_overlay_keep(uid: String, raw_state: Dictionary) -> void:
 		var arr: PackedFloat32Array = raw_state[key]
 		encoded[str(key)] = Marshalls.raw_to_base64(arr.to_byte_array())
 	inst.overlay_keep = encoded
-	_write_instance_back(inst)
-	SaveService.save_game()
+	_write_instance_back(inst)  # in-memory; the view's _cache_current_dirt does the single disk save
 
 
 ## Decodes a persisted overlay_keep dict back to {overlay_name: PackedFloat32Array} for
@@ -656,8 +653,7 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 	# Wrong-tool strokes punish the artifact but do not wear (and delete) the tool.
 	if result.compatible:
 		_consume_tool_durability(tool_id)
-	_write_instance_back(inst)
-	SaveService.save_game()
+	_write_instance_back(inst)  # in-memory only — the bench writes to disk on switch/close (no per-stroke save lag)
 	result.ok = true
 	return result
 
@@ -723,8 +719,7 @@ func register_authored_clean(
 		EventBus.restoration_completed.emit(inst.uid, inst.condition, tool_id)
 	result.condition_after = inst.condition
 	result.value_after = inst.value
-	_write_instance_back(inst)
-	SaveService.save_game()
+	_write_instance_back(inst)  # in-memory only — the bench writes to disk on switch/close (no per-stroke save lag)
 	result.ok = true
 	return result
 

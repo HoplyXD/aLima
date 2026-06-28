@@ -75,6 +75,8 @@ func generate_day_delivery(
 
 func _group_templates_by_rarity() -> Dictionary:
 	var groups := {}
+	# Make sure scene-only artifacts are synthesized + registered before we snapshot the template keys.
+	_ArtifactCatalog.ensure_ready()
 	for id in _repo.scrap_object_templates.keys():
 		var template: ScrapObjectTemplate = _repo.scrap_object_templates[id]
 		if not template.deliverable:

@@ -251,27 +251,26 @@ func close() -> void:
 	closed.emit()
 
 
-## Snapshots the loaded condition-based artifact's exact dirt mask into the in-memory
-## cache and persists it onto the instance (survives save/reload).
+## Writes the current artifact's cleaning progress onto its instance and saves to DISK ONCE. This is
+## the single save point: cleaning strokes only update memory (no per-stroke disk save = no lag), and
+## this runs on every artifact switch and on leaving the bench, so progress survives a house exit/return.
 func _cache_current_dirt() -> void:
-	# Cache the outgoing artifact's overlay cleaning progress (works in any mode).
-	if (
-		not _selected_uid.is_empty()
-		and is_instance_valid(_object)
-		and _object.has_method("capture_overlay_keep")
-	):
+	if _selected_uid.is_empty():
+		return
+	# Overlay cleaning progress (authored-overlay artifacts), in-memory + the instance.
+	if is_instance_valid(_object) and _object.has_method("capture_overlay_keep"):
 		var state: Dictionary = _object.capture_overlay_keep()
 		if not state.is_empty():
 			_overlay_cache[_selected_uid] = state
-			# Persist onto the instance (save) so overlay cleaning survives a FULL scene reload
-			# (scrapyard trip), not just an in-session artifact switch held in _overlay_cache.
 			_service.persist_overlay_keep(_selected_uid, state)
-	if _selected_uid.is_empty() or _object.is_decal_mode():
-		return
-	var png := _object.snapshot_dirt_png()
-	if not png.is_empty():
-		_dirt_cache[_selected_uid] = png
-		_service.persist_dirt_mask(_selected_uid, png)
+	# Exact dirt mask (condition-based, non-decal artifacts).
+	if is_instance_valid(_object) and not _object.is_decal_mode():
+		var png := _object.snapshot_dirt_png()
+		if not png.is_empty():
+			_dirt_cache[_selected_uid] = png
+			_service.persist_dirt_mask(_selected_uid, png)
+	# THE disk write: one save per switch/close, covering condition/value/decals for every artifact type.
+	SaveService.save_game()
 
 
 func _exit_tree() -> void:
@@ -1688,11 +1687,7 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 func _overlay_market_value(inst: ObjectInstance) -> int:
 	if inst == null or inst.true_value <= 0 or not _object.has_method("active_condition_coverage"):
 		return -1
-	var template := _service.get_repository().get_template(inst.template_id)
-	var floor_value := int(template.base_value_range.x) if template != null else 0
-	return ValueModel.value_from_coverage(
-		inst.true_value, _object.active_condition_coverage(), floor_value, _service.get_repository()
-	)
+	return ValueModel.value_from_coverage(inst.true_value, _object.active_condition_coverage())
 
 
 ## The selected tool's cleaning params {cleans, radius}: the scene-authored ToolConfig if it lists

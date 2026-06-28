@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_6l6e7"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_dfwf6"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_37w2r"]
+[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="AuntiePhotoFaded" type="Node3D" unique_id=1853400994]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
@@ -105,3 +106,6 @@ auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
+
+[node name="ScannerData" type="Node" parent="."]
+script = ExtResource("scannerdata_node")

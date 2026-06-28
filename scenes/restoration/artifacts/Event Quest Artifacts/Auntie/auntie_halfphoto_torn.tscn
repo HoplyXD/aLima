@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cvks8u2h2k441"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
+[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="AuntieHalfphotoTorn" type="Node3D" unique_id=735344398]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
@@ -12,3 +13,6 @@ base_value_max = null
 is_quest_item = true
 quest_number = 3
 randomize_conditions_max = 2
+
+[node name="ScannerData" type="Node" parent="."]
+script = ExtResource("scannerdata_node")

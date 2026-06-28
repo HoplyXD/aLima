@@ -217,6 +217,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			_show_validation("Decide every item (keep or recycle) before leaving.")
 
 
+## Shows the full-screen loading overlay immediately. Call this BEFORE generating the delivery so the
+## one-time catalog scan + generation freeze happens behind the loading screen, not on Alya's face.
+func begin_loading() -> void:
+	visible = true
+	_show_loading(true)
+
+
 ## Opens the triage interface for the given delivery. Requests clock pause.
 ## `is_free_daily` marks the daily Morning Delivery so it consumes the daily drop
 ## when confirmed; scrap-sort triages do not.

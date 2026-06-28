@@ -55,6 +55,10 @@ const UNWRAP_TEXEL_EDGE_FRAC: float = 0.75
 ## from the condition texture's file name (Rust.png -> rust, "Water Stain.png" -> water_stain,
 ## Cracking.png -> crack). A tool cleans this overlay only if its config lists this condition.
 @export var condition_id: String = ""
+## How much of the artifact's value THIS condition removes at full coverage, as a percent. Set per
+## artifact + per condition (e.g. a piece with little metal gets only 5% rust). The live penalty
+## scales with how much of this condition is still present, and cleaning it off restores the value.
+@export_range(0.0, 100.0) var value_reduction: float = 10.0
 ## Higher layers sit outer and are cleaned first (dust 30 > rust 20 > cracking 10).
 @export var layer_order: int = 30
 ## Random coverage range (PERCENT). At spawn each artifact instance rolls a value in [min, max] and
@@ -307,8 +311,11 @@ func _rebuild() -> void:
 ## ARRAY_COLOR is replaced afterwards, and cleaning only fades colours), so sharing is safe and cheap.
 ## Returns false when the mesh can't be merged. This is the artifact-load / bench-switch lag fix.
 func _load_geometry() -> bool:
+	# In the EDITOR, always rebuild fresh so designers see UV/subdivide/own-uv changes live — the cache
+	# is a RUNTIME optimisation only (a stale cache would ignore inspector edits).
+	var use_cache := not Engine.is_editor_hint()
 	var key := overlay_mesh.get_rid().get_id()
-	if _geo_cache.has(key):
+	if use_cache and _geo_cache.has(key):
 		var cached: Dictionary = _geo_cache[key]
 		_arrays = (cached["arrays"] as Array).duplicate()  # ARRAY_COLOR is overwritten per instance
 		_verts = cached["verts"]
@@ -321,13 +328,14 @@ func _load_geometry() -> bool:
 	_resolve_uv_mode()  # pick UV1 / repaired-UV2 / triplanar; repairs broken UVs in-engine (no Blender)
 	_subdivide_if_sparse()  # densify low-poly meshes so cleaning reads as smooth circles
 	_extent = _measure_extent(_verts)
-	_geo_cache[key] = {
-		"arrays": _arrays.duplicate(),
-		"verts": _verts,
-		"tris": _tris,
-		"uv_mode": _uv_mode,
-		"extent": _extent,
-	}
+	if use_cache:
+		_geo_cache[key] = {
+			"arrays": _arrays.duplicate(),
+			"verts": _verts,
+			"tris": _tris,
+			"uv_mode": _uv_mode,
+			"extent": _extent,
+		}
 	return true
 
 

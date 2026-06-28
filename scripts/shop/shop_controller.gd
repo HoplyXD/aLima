@@ -288,6 +288,10 @@ func _open_dialogue(lines: Array, show_visitor: bool) -> void:
 
 func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	_set_interactables_enabled(false)
+	# Pop the loading screen up FIRST and let it paint, so the (one-time) catalog scan + delivery
+	# generation below freezes behind the loading overlay instead of on Alya's face.
+	_triage_screen.begin_loading()
+	await get_tree().process_frame
 	var repo := DataRepository.singleton()
 
 	# Plan carrier placements once per loop if missing.

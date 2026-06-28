@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_vfcm3"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_wneg4"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_eb6n0"]
+[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [sub_resource type="StandardMaterial3D" id="mask_gold"]
 albedo_color = Color(0.85, 0.7, 0.3, 1)
@@ -116,3 +117,6 @@ auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
+
+[node name="ScannerData" type="Node" parent="."]
+script = ExtResource("scannerdata_node")

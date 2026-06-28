@@ -25,6 +25,76 @@ static func _ensure_scanned() -> void:
 	_scanned = true
 	_entries.clear()
 	_scan_dir(ROOT_DIR)
+	_apply_overrides_to_repo()
+
+
+## Makes the FOLDER the source of truth for spawning: for every discovered scene, either apply its
+## rarity/value overrides onto the matching data template, OR — if no template exists — synthesize a
+## minimal one and register it, so a brand-new artifact scene spawns with NO objects.json edit. Every
+## system (delivery weighting, rarity glow, storage/top-bar colours) then reads one consistent record.
+static func _apply_overrides_to_repo() -> void:
+	var repo := DataRepository.singleton()
+	if repo == null:
+		return
+	for tid in _entries.keys():
+		var entry: Dictionary = _entries[tid]
+		var template := repo.get_template(tid)
+		if template == null:
+			# Scene-only artifact (e.g. vase / wood_pipe / lamp): generate a spawnable template.
+			repo.scrap_object_templates[tid] = _synthesize_template(tid, entry)
+			continue
+		var rarity := int(entry.get("rarity", -1))
+		if rarity >= 0:
+			template.base_rarity = rarity
+		var vmin := int(entry.get("value_min", 0))
+		var vmax := int(entry.get("value_max", 0))
+		if vmin > 0 or vmax > 0:
+			template.base_value_range = Vector2(vmin, maxi(vmin, vmax))
+
+
+## Builds a minimal, spawnable data template from a scene's config + sensible defaults. The artifact is
+## a non-openable, surface-clean piece (its scene overlays ARE its conditions), deliverable unless it's
+## a quest item. Rarity/value come from the scene (default white, 20–80 when unset).
+static func _synthesize_template(tid: String, entry: Dictionary) -> ScrapObjectTemplate:
+	var rarity := int(entry.get("rarity", -1))
+	if rarity < 0:
+		rarity = ModelEnums.Rarity.WHITE
+	var vmin := int(entry.get("value_min", 0))
+	var vmax := int(entry.get("value_max", 0))
+	if vmax <= 0:
+		vmin = 20
+		vmax = 80
+	return ScrapObjectTemplate.from_dictionary(
+		{
+			"id": tid,
+			"display_name": tid.capitalize(),  # "wood_pipe" -> "Wood Pipe"
+			"category": "artifact",
+			"base_rarity": ModelEnums.rarity_name(rarity),
+			"weight_range": [50.0, 250.0],
+			"materials": [],
+			"tags": [],
+			"is_openable": false,
+			"openable_type": "",
+			"required_clean_tool": "",
+			"clean_minigame": "",
+			"clean_completion_threshold": 100,
+			"clean_progress_per_action": 25,
+			"clean_value_bonus": 10,
+			"wrong_tool_condition_damage": 10,
+			"wrong_tool_value_damage": 8,
+			"wrong_tool_feedback": "The wrong tool risks damaging the surface.",
+			"base_value_range": [vmin, maxi(vmin, vmax)],
+			"storage_cost": 1,
+			"can_hold_temporal_echo": false,
+			"deliverable": not bool(entry.get("is_quest", false)),
+		}
+	)
+
+
+## Ensures the folder has been scanned and synthesized templates are registered in the repo. Call
+## this BEFORE iterating the repo's templates so scene-only artifacts are included.
+static func ensure_ready() -> void:
+	_ensure_scanned()
 
 
 ## Forces a fresh scan (e.g. after adding a scene at runtime / in a tool).
