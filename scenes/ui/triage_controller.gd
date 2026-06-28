@@ -675,6 +675,7 @@ func _build_rows() -> void:
 	for child in _fallback_items_container.get_children():
 		child.queue_free()
 	_rows.clear()
+	_fallback_items_container.add_theme_constant_override("separation", 14)
 
 	for inst in _state.instances:
 		var row := _make_row(inst)
@@ -709,52 +710,133 @@ func _make_row(inst: ObjectInstance) -> Control:
 		)
 	)
 
-	var row := HBoxContainer.new()
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var heading_font: Font = load("res://assets/fonts/RomanAntique.ttf")
 
+	# Card shell: a framed panel with a rarity-coloured left edge.
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _make_card_style(glow_color))
+
+	var pad := MarginContainer.new()
+	pad.add_theme_constant_override("margin_left", 20)
+	pad.add_theme_constant_override("margin_right", 20)
+	pad.add_theme_constant_override("margin_top", 14)
+	pad.add_theme_constant_override("margin_bottom", 14)
+	card.add_child(pad)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 20)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pad.add_child(row)
+
+	# Artifact preview (or a rarity swatch when 3D previews are disabled).
 	if SettingsService.previews_enabled():
-		var card: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
-		card.custom_minimum_size = Vector2(96, 108)
-		card.tooltip_text = glow_name
-		row.add_child(card)
-		row.set_meta("preview_card", card)
+		var preview: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
+		preview.custom_minimum_size = Vector2(150, 165)
+		preview.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		preview.tooltip_text = glow_name
+		row.add_child(preview)
+		card.set_meta("preview_card", preview)
 	else:
 		var icon := ColorRect.new()
-		icon.custom_minimum_size = Vector2(40, 40)
+		icon.custom_minimum_size = Vector2(72, 72)
 		icon.color = glow_color
 		icon.tooltip_text = glow_name
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(icon)
 
+	# Name + rarity + storage details.
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info.add_theme_constant_override("separation", 6)
+	row.add_child(info)
 
 	var name_label := Label.new()
 	name_label.text = display_name
-	name_label.add_theme_font_size_override("font_size", 18)
+	if heading_font != null:
+		name_label.add_theme_font_override("font", heading_font)
+	name_label.add_theme_font_size_override("font_size", 34)
+	name_label.add_theme_color_override("font_color", Color(0.96, 0.92, 0.82))
 	info.add_child(name_label)
 
+	var rarity_chip := Label.new()
+	rarity_chip.text = glow_name.to_upper()
+	rarity_chip.add_theme_font_size_override("font_size", 18)
+	rarity_chip.add_theme_color_override("font_color", glow_color.lightened(0.25))
+	info.add_child(rarity_chip)
+
 	var detail := Label.new()
-	detail.text = "%s | %s | cost %d" % [glow_name, container_name, inst.storage_cost]
-	detail.add_theme_font_size_override("font_size", 14)
+	detail.text = "%s   •   cost %d" % [container_name, inst.storage_cost]
+	detail.add_theme_font_size_override("font_size", 22)
+	detail.add_theme_color_override("font_color", Color(0.78, 0.74, 0.66))
 	info.add_child(detail)
 
-	row.add_child(info)
+	# Keep / Recycle decision buttons.
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 12)
+	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(actions)
 
 	var keep := Button.new()
 	keep.text = "Keep"
 	keep.toggle_mode = true
+	keep.custom_minimum_size = Vector2(150, 64)
+	_style_decision_button(keep, Color(0.16, 0.5, 0.24), Color(0.2, 0.78, 0.34))
 	keep.pressed.connect(func() -> void: _set_decision(inst.uid, TriageState.Decision.KEEP))
-	row.add_child(keep)
+	actions.add_child(keep)
 
 	var recycle := Button.new()
 	recycle.text = "Recycle"
 	recycle.toggle_mode = true
+	recycle.custom_minimum_size = Vector2(150, 64)
+	_style_decision_button(recycle, Color(0.55, 0.2, 0.16), Color(0.86, 0.28, 0.18))
 	recycle.pressed.connect(func() -> void: _set_decision(inst.uid, TriageState.Decision.RECYCLE))
-	row.add_child(recycle)
+	actions.add_child(recycle)
 
-	row.set_meta("keep_button", keep)
-	row.set_meta("recycle_button", recycle)
-	return row
+	card.set_meta("keep_button", keep)
+	card.set_meta("recycle_button", recycle)
+	return card
+
+
+## Builds the framed card background, tinted by the item's rarity glow colour.
+func _make_card_style(accent: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.14, 0.11, 0.09, 0.92)
+	sb.set_corner_radius_all(12)
+	sb.set_border_width_all(2)
+	sb.border_color = Color(accent.r, accent.g, accent.b, 0.55)
+	sb.border_width_left = 6  # Rarity accent stripe down the left edge.
+	return sb
+
+
+## Applies a green (keep) / red (recycle) toggle style. The toggled-on state
+## reuses the solid "pressed" box so the chosen decision reads at a glance.
+func _style_decision_button(button: Button, base: Color, accent: Color) -> void:
+	button.focus_mode = Control.FOCUS_ALL
+	button.add_theme_font_size_override("font_size", 24)
+	button.add_theme_color_override("font_color", Color(0.96, 0.95, 0.9))
+	button.add_theme_color_override("font_hover_color", Color(1, 1, 1))
+	button.add_theme_color_override("font_pressed_color", Color(1, 1, 1))
+
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(base.r, base.g, base.b, 0.35)
+	normal.set_corner_radius_all(10)
+	normal.set_border_width_all(2)
+	normal.border_color = Color(accent.r, accent.g, accent.b, 0.7)
+	normal.set_content_margin_all(8)
+
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(base.r, base.g, base.b, 0.55)
+
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = accent
+	pressed.border_color = Color(1, 1, 1, 0.85)
+
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", hover)
 
 
 func _fill_row_preview(row: Control, inst: ObjectInstance) -> void:

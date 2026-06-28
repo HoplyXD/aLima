@@ -41,9 +41,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 58
+theme_override_constants/margin_left = 113
 theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 24
+theme_override_constants/margin_right = 87
 theme_override_constants/margin_bottom = 30
 
 [node name="VBox" type="VBoxContainer" parent="Panel/Margin" unique_id=1274205188]
