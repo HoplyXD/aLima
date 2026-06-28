@@ -20,6 +20,13 @@ roughness = 0.3
 [node name="SilverLocket" type="Node3D" unique_id=1780852344]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+artifact_template_id = null
+artifact_rarity = 2
+base_value_min = 300
+base_value_max = 500
+is_quest_item = null
+quest_npc = null
+quest_number = null
 randomize_conditions_min = 3
 randomize_conditions_max = 5
 model_mesh = ExtResource("5_locket")

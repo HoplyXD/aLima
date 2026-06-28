@@ -48,6 +48,8 @@ func begin_session() -> void:
 	var saved_hour: int = GameState.save_state.loop.current_hour
 	if saved_hour >= DayClock.DAY_START_HOUR and saved_hour < DayClock.DAY_END_HOUR:
 		DayClock.set_hour(saved_hour)
+	# Resume the exact minute within the hour so reloading restores the saved moment.
+	DayClock.set_minute(GameState.save_state.loop.current_minute)
 
 
 # --- DayClock -> EventBus / GameState bridge ---------------------------------
@@ -56,6 +58,7 @@ func begin_session() -> void:
 func _on_hour_changed(day: int, hour: int) -> void:
 	GameState.save_state.loop.current_day = day
 	GameState.save_state.loop.current_hour = hour
+	GameState.save_state.loop.current_minute = 0  # a fresh hour starts at minute 0
 	EventBus.hour_changed.emit(day, hour)
 
 

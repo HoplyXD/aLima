@@ -109,6 +109,12 @@ func serialize_state() -> Dictionary:
 	# Ensure the run context is always reflected into the save before serializing.
 	GameState.save_state.run_seed = GameState.run_seed
 	GameState.save_state.loop_index = GameState.loop_index
+	# Snapshot the live clock so any save captures the exact day/hour/minute. Only while
+	# the clock is actually running, so isolated tests that set a fixed time aren't clobbered.
+	if DayClock.running:
+		GameState.save_state.loop.current_day = DayClock.get_day()
+		GameState.save_state.loop.current_hour = DayClock.get_hour()
+		GameState.save_state.loop.current_minute = DayClock.get_minute()
 	var payload := GameState.save_state.to_dictionary()
 	return {"ok": true, "json": JSON.stringify(payload, "\t"), "payload": payload}
 

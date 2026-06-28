@@ -129,6 +129,32 @@ const UNWRAP_TEXEL_EDGE_FRAC: float = 0.75
 		if _material != null:
 			_material.set_shader_parameter("own_uv_aspect", value)
 
+## ONE shared compiled Shader for every overlay. Previously each overlay did Shader.new() with the
+## same code, so the GPU compiled a fresh shader per overlay — a triage pile / storage grid with many
+## overlays caused a burst of compilations (the load lag spike). ShaderMaterials still hold their own
+## per-overlay parameters; only the compiled program is shared, so it compiles exactly once.
+static var _shared_shader: Shader
+
+
+## The one shared overlay shader, compiled on first use.
+static func _overlay_shader() -> Shader:
+	if _shared_shader == null:
+		_shared_shader = Shader.new()
+		_shared_shader.code = SHADER
+	return _shared_shader
+
+
+## Cached rebuilt overlay GEOMETRY keyed by the source mesh. The merge + UV-repair + subdivide is
+## identical for the same mesh and is the bulk of the per-overlay build cost — caching it makes
+## artifact loads, bench switches, and the triage pile far cheaper (only the per-instance dirt colours
+## are rebuilt). mesh RID id -> {arrays, verts, tris, uv_mode, extent}.
+static var _geo_cache: Dictionary = {}
+
+
+## Clears the geometry cache (tests / after reimporting artifact meshes).
+static func clear_geometry_cache() -> void:
+	_geo_cache.clear()
+
 var _shell: MeshInstance3D
 var _uv_mode: int = 0  ## 0 = mesh UV1, 1 = generated UV2 (UV repair), 2 = triplanar.
 var _material: ShaderMaterial
@@ -248,21 +274,16 @@ func _rebuild() -> void:
 	_clear()
 	if overlay_mesh == null or overlay_mesh.get_surface_count() == 0:
 		return
-	if not _build_merged_arrays():
+	if not _load_geometry():
 		return
-	_resolve_uv_mode()  # pick UV1 / repaired-UV2 / triplanar; repairs broken UVs in-engine (no Blender)
-	_subdivide_if_sparse()  # densify low-poly meshes so cleaning reads as smooth circles
 	var colors := PackedColorArray()
 	colors.resize(_verts.size())
 	colors.fill(Color.WHITE)  # keep = 1 everywhere (fully dusty)
 	_arrays[Mesh.ARRAY_COLOR] = colors
-	_extent = _measure_extent(_verts)
 	_runtime_mesh = ArrayMesh.new()
 	_runtime_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _arrays)
 	_material = ShaderMaterial.new()
-	var sh := Shader.new()
-	sh.code = SHADER
-	_material.shader = sh
+	_material.shader = _overlay_shader()
 	_material.set_shader_parameter("condition_tex", condition_texture)
 	_material.set_shader_parameter("overlay_opacity", opacity)
 	_material.set_shader_parameter("uv_mode", _uv_mode)
@@ -279,6 +300,35 @@ func _rebuild() -> void:
 	_shell.material_override = _material
 	# INTERNAL so the editor never saves/duplicates this generated child into the .tscn.
 	add_child(_shell, false, Node.INTERNAL_MODE_BACK)
+
+
+## Fills _arrays/_verts/_tris/_uv_mode/_extent for this overlay's mesh, reusing the cached build when
+## the same mesh was processed before. The geometry slots are shared read-only (only the per-instance
+## ARRAY_COLOR is replaced afterwards, and cleaning only fades colours), so sharing is safe and cheap.
+## Returns false when the mesh can't be merged. This is the artifact-load / bench-switch lag fix.
+func _load_geometry() -> bool:
+	var key := overlay_mesh.get_rid().get_id()
+	if _geo_cache.has(key):
+		var cached: Dictionary = _geo_cache[key]
+		_arrays = (cached["arrays"] as Array).duplicate()  # ARRAY_COLOR is overwritten per instance
+		_verts = cached["verts"]
+		_tris = cached["tris"]
+		_uv_mode = int(cached["uv_mode"])
+		_extent = float(cached["extent"])
+		return true
+	if not _build_merged_arrays():
+		return false
+	_resolve_uv_mode()  # pick UV1 / repaired-UV2 / triplanar; repairs broken UVs in-engine (no Blender)
+	_subdivide_if_sparse()  # densify low-poly meshes so cleaning reads as smooth circles
+	_extent = _measure_extent(_verts)
+	_geo_cache[key] = {
+		"arrays": _arrays.duplicate(),
+		"verts": _verts,
+		"tris": _tris,
+		"uv_mode": _uv_mode,
+		"extent": _extent,
+	}
+	return true
 
 
 ## Cleans where a world-space ray meets the shell: fades the keep alpha (opacity) of vertices within
@@ -414,7 +464,11 @@ func set_highlight(intensity: float) -> void:
 		_material.set_shader_parameter("highlight", clampf(intensity, 0.0, 1.0))
 
 
-## Instantly clears this condition (used by the auto-finish at 99%).
+## Instantly clears this condition (the randomizer drops non-selected conditions, and the auto-finish
+## wipes the last specks). Resetting _initial_keep to 0 is essential: otherwise a cleared overlay still
+## reports its old dirt as "cleaned", which inflates overlay_clean_percent / condition above 0% on a
+## freshly-delivered piece. With it zeroed, a cleared condition contributes nothing (the as-generated
+## pattern reads 0% cleaned, and a fully auto-finished piece reads 100%).
 func clear_condition() -> void:
 	if _arrays.is_empty():
 		return
@@ -422,6 +476,7 @@ func clear_condition() -> void:
 	for i in colors.size():
 		colors[i].a = 0.0
 	_arrays[Mesh.ARRAY_COLOR] = colors
+	_initial_keep = 0.0
 	if _runtime_mesh != null:
 		_runtime_mesh.clear_surfaces()
 		_runtime_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _arrays)

@@ -153,6 +153,7 @@ class PersistentState:
 class LoopState:
 	var current_day: int = 1
 	var current_hour: int = 7
+	var current_minute: int = 0  ## Minute within the hour (0..59); resumes the saved moment.
 	var money: int = 0
 	var inventory: Array = []  ## ObjectInstance dictionaries.
 	var tool_items: Array[String] = []  ## Owned non-legacy tool ids.
@@ -185,6 +186,7 @@ class LoopState:
 		var l := LoopState.new()
 		l.current_day = ModelUtils.as_int(data.get("current_day"), 1)
 		l.current_hour = ModelUtils.as_int(data.get("current_hour"), 7)
+		l.current_minute = ModelUtils.as_int(data.get("current_minute"), 0)
 		l.money = ModelUtils.as_int(data.get("money"))
 		l.inventory = SaveState._as_array(data.get("inventory", []))
 		l.tool_items = ModelUtils.as_string_array(data.get("tool_items"))
@@ -213,6 +215,7 @@ class LoopState:
 		return {
 			"current_day": current_day,
 			"current_hour": current_hour,
+			"current_minute": current_minute,
 			"money": money,
 			"inventory": inventory.duplicate(),
 			"tool_items": tool_items.duplicate(),
@@ -242,6 +245,10 @@ class LoopState:
 			result.add_field_error(file_path, "", "loop.current_day", "current_day must be 1..5")
 		if current_hour < 0 or current_hour > 23:
 			result.add_field_error(file_path, "", "loop.current_hour", "current_hour must be 0..23")
+		if current_minute < 0 or current_minute > 59:
+			result.add_field_error(
+				file_path, "", "loop.current_minute", "current_minute must be 0..59"
+			)
 		if money < 0:
 			result.add_field_error(file_path, "", "loop.money", "money must be non-negative")
 

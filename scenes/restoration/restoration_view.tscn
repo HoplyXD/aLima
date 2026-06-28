@@ -243,12 +243,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Value: P0"
 
-[node name="DamageLabel" type="Label" parent="HUD/RightSideBar/Margin/VBox" unique_id=410083370]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Recorded damage: 0"
-
 [node name="SurfaceCaption" type="Label" parent="HUD/RightSideBar/Margin/VBox" unique_id=969480184]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30

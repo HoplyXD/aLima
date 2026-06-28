@@ -16,6 +16,11 @@
 [node name="AuntiePhotoFaded" type="Node3D" unique_id=1853400994]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+artifact_template_id = null
+artifact_rarity = null
+base_value_min = null
+base_value_max = null
+is_quest_item = true
 randomize_conditions_min = 4
 randomize_conditions_max = 4
 model_mesh = ExtResource("2_y3vv3")

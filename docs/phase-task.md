@@ -1960,3 +1960,57 @@ not committed scope.
   change. Open questions to resolve when scheduling: per-frame vs. accumulated wear, how it
   reads on touch/controller, and how it composes with the per-condition decal cleaning. Raised
   by the team 2026-06-25.
+
+- [ ] **Artifact price revamp (coverage-based value reduction).** Each artifact template has a
+  `[min, max]` base value; on spawn an instance rolls a single *true value* uniformly in that
+  range (e.g. `[100, 200]` → 155) and stores it. Each surface condition gains a new
+  `value_reduction` config: the percentage it cuts from the true value at 100% coverage. The
+  reduction SCALES with the condition's current coverage on the instance, so a 20% condition that
+  generated at only 50% coverage starts at −10%, and as the player cleans it the coverage (and
+  the penalty) falls toward 0. Final value = `true_value − Σ(condition.value_reduction ×
+  condition.coverage)`, summed across active conditions and floored at `min`. The player can scan
+  and sell a partially-cleaned piece — it just sells for less. Pairs with "condition starts at 0":
+  the as-generated pattern reads 0% cleaned, and cleaning raises condition while lowering coverage.
+  Raised by the team 2026-06-28.
+
+- [ ] **Condition starts at 0% (as-generated pattern = fully dirty).** Opening an artifact at the
+  bench currently shows a non-zero condition (e.g. 38%) because the cleanliness reading is taken
+  against a fully-bare surface, but the as-generated dirty pattern only covers part of it. The
+  spawned pattern must read **0% condition**, with cleaning raising it to 100% when the pattern is
+  fully removed — i.e. normalise progress over the *generated* dirt, not the whole surface
+  (`progress = (current_clean - initial_clean) / (1 - initial_clean)`), so a freshly-delivered piece
+  always starts at 0%. Pairs with the price revamp (coverage = remaining generated dirt). Raised by
+  the team 2026-06-28.
+
+- [ ] **Auto-complete timing (soften the snap-to-100%).** Currently the surface snaps to 100% once
+  overlay coverage hits ~98%. Replace with: (a) if condition is **≥95% AND ≥30 s** have elapsed in
+  the current restoration session (both true), the **next** successful clean stroke sets it to
+  100%; (b) if condition reaches **≥98%** at any point it snaps to 100% immediately. The 30 s timer
+  starts when the piece first crosses 95% in the session. Keeps the player from chasing the last
+  specks without making completion instant. Raised by the team 2026-06-28.
+
+- [ ] **Artifact configs (folder-driven randomizer + rarity + quest assignment).** The delivery
+  randomizer must AUTO-FOLLOW `scenes/restoration/artifacts/**` — dropping a new artifact scene in
+  the folder adds it to the spawn pool with no code/registry edit (replace the hand-maintained
+  `ArtifactScenes` map with a folder scan / generated manifest). Add two per-artifact configs the
+  designer sets in the inspector: (1) **rarity** — freely settable per artifact (white/green/blue/
+  purple/gold). (2) **Quest assignment** — an `is_quest_item` checkbox that, when checked, reveals
+  an **NPC** selector (the 5 main NPCs) and a **quest item number**, so an artifact can be bound to
+  e.g. "Alya, quest 2". Two artifacts sharing the same NPC + quest number are pooled and one is
+  randomly given for that quest step. Quest-bound artifacts are excluded from the ordinary random
+  delivery pool. Raised by the team 2026-06-28.
+
+- [ ] **BUG: artifact cleaning resets on a scrapyard round-trip.** Cleaning progress persists across
+  shop ↔ restoration view and shop-only re-entries, but is LOST after stepping out to the scrapyard
+  and back. Repro: clean an artifact 10% → 20%, close restoration → shop (still 20%), go to the
+  scrapyard scene, return to the shop, reopen restoration → it shows 10% again (an earlier value),
+  not 20%. Indicates the latest cleaned state isn't the source of truth across a full two-scene
+  unload/reload (stale save reload or in-view-only cleaned state for authored-overlay artifacts).
+  Raised by the team 2026-06-28.
+
+- [ ] **PERF: artifact load lag spike (GPU MultiMesh).** Rendering artifacts (body + condition
+  overlays) in the Storage screen, the restoration view top bar, and the 3D keep/recycle triage
+  view causes a noticeable lag spike on load. Move those non-interactive artifact renders to GPU
+  `MultiMesh` so body and overlays upload/draw cheaply. Only the single center artifact in the
+  restoration view stays CPU-side, since its overlays are mutated every clean stroke. Raised by the
+  team 2026-06-28.

@@ -99,6 +99,13 @@ func set_hour(hour: int) -> void:
 		hour_changed.emit(_day, _hour)
 
 
+## Sets the minute within the current hour (for resuming a saved game) by seeding the
+## elapsed-seconds accumulator. Clamped to 0..59; needs seconds_per_hour set first.
+func set_minute(minute: int) -> void:
+	var m := clampi(minute, 0, MINUTES_PER_HOUR - 1)
+	_hour_elapsed = (float(m) / float(MINUTES_PER_HOUR)) * seconds_per_hour
+
+
 ## Advances the simulation by `delta` real seconds. No-op while paused or closed.
 ## Emits hour_changed exactly once per in-game hour; on reaching 20:00 it latches
 ## closed and emits day_closed exactly once, discarding any leftover delta so a

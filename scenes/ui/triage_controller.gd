@@ -63,6 +63,13 @@ var _bodies: Dictionary = {}  ## uid -> RigidBody3D.
 var _pending_release: bool = false
 var _props: Array[RigidBody3D] = []
 
+## Pile items are built a few per frame behind a loading overlay so the (now much smaller) build cost
+## never freezes the frame. The generation guards against a close()/reopen() landing mid-build.
+const SPAWN_BATCH: int = 2
+var _build_generation: int = 0
+var _loading_layer: CanvasLayer = null
+var _loading_label: Label = null
+
 var _keep_zone_pos: Vector3 = Vector3.ZERO
 var _recycle_zone_pos: Vector3 = Vector3.ZERO
 var _keep_ring: MeshInstance3D = null
@@ -225,7 +232,15 @@ func open(delivery: Array[ObjectInstance], storage_cap: int, is_free_daily: bool
 	_clear_rows()
 	_update_input_mode_from_settings()
 	_build_rows()
-	_spawn_items()
+	# Build the 3D pile incrementally behind a loading overlay (paint it once before the heavy work).
+	_build_generation += 1
+	var gen := _build_generation
+	_show_loading(true)
+	await get_tree().process_frame
+	await _spawn_items_async(gen)
+	if _build_generation != gen:
+		return  # a close()/reopen() superseded this build
+	_show_loading(false)
 	_update_ui()
 	if _input_mode == InputMode.MODE_LIST and _rows.size() > 0:
 		var first_row: Control = _rows.values()[0]
@@ -236,6 +251,9 @@ func open(delivery: Array[ObjectInstance], storage_cap: int, is_free_daily: bool
 
 ## Closes the interface and releases pause ownership.
 func close() -> void:
+	_build_generation += 1  # abort any in-flight incremental pile build
+	if _loading_layer != null:
+		_loading_layer.visible = false
 	if visible:
 		visible = false
 		_hud_layer.visible = false
@@ -293,7 +311,9 @@ func _clear_world() -> void:
 	_returning_body = null
 
 
-func _spawn_items() -> void:
+## Builds the pile a few items per frame (SPAWN_BATCH), awaiting a frame between batches so the
+## loading overlay stays responsive and no single frame stalls. Aborts if the build is superseded.
+func _spawn_items_async(gen: int) -> void:
 	if _viewport == null or _pile_spawn == null:
 		return
 	_spawn_props()
@@ -301,10 +321,35 @@ func _spawn_items() -> void:
 	rng.seed = _delivery_seed()
 	var index := 0
 	for inst in _state.instances:
+		if _build_generation != gen or not is_instance_valid(_viewport):
+			return
 		var body := _create_item_body(inst, rng, index)
 		_viewport.add_child(body)
 		_bodies[inst.uid] = body
 		index += 1
+		if index % SPAWN_BATCH == 0:
+			await get_tree().process_frame
+
+
+## Full-screen loading overlay shown while the pile builds. Created lazily; no .tscn edit needed.
+func _show_loading(on: bool) -> void:
+	if _loading_layer == null:
+		_loading_layer = CanvasLayer.new()
+		_loading_layer.layer = 100  # above the HUD
+		add_child(_loading_layer)
+		var rect := ColorRect.new()
+		rect.color = Color(0.05, 0.045, 0.06, 1.0)
+		rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		rect.mouse_filter = Control.MOUSE_FILTER_STOP  # swallow clicks while building
+		_loading_layer.add_child(rect)
+		_loading_label = Label.new()
+		_loading_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_loading_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_loading_label.add_theme_font_size_override("font_size", 36)
+		_loading_label.text = "Sorting today's haul…"
+		_loading_layer.add_child(_loading_label)
+	_loading_layer.visible = on
 
 
 func _delivery_seed() -> int:

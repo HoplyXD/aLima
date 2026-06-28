@@ -16,6 +16,13 @@
 [node name="WoodPipe" type="Node3D" unique_id=229666069]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_iah84")
+artifact_template_id = null
+artifact_rarity = 0
+base_value_min = 40
+base_value_max = 100
+is_quest_item = null
+quest_npc = null
+quest_number = null
 randomize_conditions_min = 1
 randomize_conditions_max = 3
 model_mesh = ExtResource("2_4nwjt")

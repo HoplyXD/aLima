@@ -98,6 +98,13 @@ var _dirt_cache: Dictionary = {}
 ## and returning keeps how much of each condition the player has cleaned (the spawn pattern itself
 ## regenerates deterministically from the instance seed).
 var _overlay_cache: Dictionary = {}
+## Auto-finish rule (REST): once the surface is ≥95% clean AND has been so for AUTO_FINISH_HOLD_S
+## real seconds, the next clean stroke snaps to 100%; ≥98% snaps immediately. This timestamps when
+## the CURRENT artifact first crossed 95% in the session (-1 = not yet / fell back below 95%).
+const AUTO_FINISH_HOLD_S: float = 30.0
+const AUTO_FINISH_NEAR: float = 0.95
+const AUTO_FINISH_SNAP: float = 0.98
+var _overlay_at95_ms: int = -1
 var _scanner_screen: ScannerScreen
 var _journal_viewport: BookViewport
 var _phone: Phone
@@ -143,7 +150,6 @@ var _cursor_tilt: float = 0.0
 @onready var _condition_bar: ProgressBar = %ConditionBar
 @onready var _condition_label: Label = %ConditionLabel
 @onready var _value_label: Label = %ValueLabel
-@onready var _damage_label: Label = %DamageLabel
 @onready var _surface_bar: ProgressBar = %SurfaceBar
 @onready var _tool_container: HBoxContainer = %ToolContainer
 @onready var _feedback_label: Label = %FeedbackLabel
@@ -257,6 +263,9 @@ func _cache_current_dirt() -> void:
 		var state: Dictionary = _object.capture_overlay_keep()
 		if not state.is_empty():
 			_overlay_cache[_selected_uid] = state
+			# Persist onto the instance (save) so overlay cleaning survives a FULL scene reload
+			# (scrapyard trip), not just an in-session artifact switch held in _overlay_cache.
+			_service.persist_overlay_keep(_selected_uid, state)
 	if _selected_uid.is_empty() or _object.is_decal_mode():
 		return
 	var png := _object.snapshot_dirt_png()
@@ -496,6 +505,7 @@ func load_instance(uid: String) -> void:
 	# Per-instance seed so a shared placed decal scatters/cleans independently per
 	# artifact; folding in the loop index re-rolls which random conditions appear each loop.
 	var instance_seed := _artifact_seed(uid)
+	_overlay_at95_ms = -1  # the auto-finish 95%-hold timer is per-artifact-session
 	_object.visible = true
 	if _object.has_method("clear_paint"):
 		_object.clear_paint()  # drawn debug grime doesn't carry between artifacts
@@ -510,9 +520,15 @@ func load_instance(uid: String) -> void:
 	if _object.has_method("build_overlays"):
 		_object.build_overlays(instance_seed)
 		# Restore prior cleaning progress for this artifact (the spawn pattern itself is deterministic
-		# from instance_seed, so only the player's cleaning needs caching).
-		if _overlay_cache.has(uid) and _object.has_method("apply_overlay_keep"):
-			_object.apply_overlay_keep(_overlay_cache[uid])
+		# from instance_seed, so only the player's cleaning needs caching). Prefer the in-session
+		# cache; otherwise fall back to the keep persisted on the instance (survives a scene reload).
+		if _object.has_method("apply_overlay_keep"):
+			if _overlay_cache.has(uid):
+				_object.apply_overlay_keep(_overlay_cache[uid])
+			elif not inst.overlay_keep.is_empty():
+				var restored: Dictionary = _service.decode_overlay_keep(inst.overlay_keep)
+				_object.apply_overlay_keep(restored)
+				_overlay_cache[uid] = restored
 	if not (_object.has_method("has_overlays") and _object.has_overlays()):
 		if _object.has_method("build_dust_overlay"):
 			_object.build_dust_overlay(instance_seed)
@@ -1088,8 +1104,19 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_condition_bar.value = inst.condition
 		_condition_label.text = "Condition %d / %d" % [int(inst.condition), threshold]
 	_set_surface_meter_visible(not is_overlay)
-	_value_label.text = "Value: P%d" % inst.value
-	_damage_label.text = "Recorded damage: %d" % inst.recorded_damage
+	# Market value climbs as the player cleans. Authored-overlay artifacts price off the LIVE overlay
+	# coverage (so the number moves smoothly, per condition); other pieces use the instance's
+	# decal/condition state. Pre-revamp instances (no rolled true value) fall back to inst.value.
+	# DISPLAY ONLY — never persists here (this runs on every hover/rotate/stroke refresh). The sale
+	# value is written once per clean step inside register_authored_clean, so cleaning never saves
+	# to disk per frame.
+	var shown_value := inst.value
+	if inst.true_value > 0:
+		if is_overlay and _object.has_method("active_condition_coverage"):
+			shown_value = _overlay_market_value(inst)
+		else:
+			shown_value = ValueModel.current_value(inst, template, _service.get_repository())
+	_value_label.text = "Value: P%d" % shown_value
 
 	if _object.is_photo_mode():
 		_refresh_photo(inst, template)
@@ -1155,7 +1182,6 @@ func _show_empty_state() -> void:
 	_state_label.text = ""
 	_condition_label.text = ""
 	_value_label.text = ""
-	_damage_label.text = ""
 	_clasp_prompt.visible = false
 	# The bench tools (and their durability/condition panels) still show even with no
 	# artifact on the bench, so the player can inspect their kit.
@@ -1610,13 +1636,32 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 			_object.clean_burst_at_world(hit_pt)
 		var inst := _service.find_instance_by_id(_selected_uid)
 		var pct: float = _object.overlay_clean_percent()
-		# Auto-finish: once the surface is ~spotless, snap to 100% and wipe every condition except
-		# crack/damage, so the player never has to chase the last few specks.
-		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and pct >= 0.98:
+		# Track how long the piece has been ≥95% clean this session (-1 once it drops back below).
+		if pct >= AUTO_FINISH_NEAR:
+			if _overlay_at95_ms < 0:
+				_overlay_at95_ms = Time.get_ticks_msec()
+		else:
+			_overlay_at95_ms = -1
+		var held_95_s := (
+			float(Time.get_ticks_msec() - _overlay_at95_ms) / 1000.0 if _overlay_at95_ms >= 0 else 0.0
+		)
+		# Auto-finish: snap to 100% immediately at ≥98%, or once the piece has held ≥95% for
+		# AUTO_FINISH_HOLD_S (this next stroke completes it) — so the player isn't chasing specks,
+		# but completion is no longer instant the moment the surface looks nearly done.
+		var should_finish := (
+			pct >= AUTO_FINISH_SNAP
+			or (pct >= AUTO_FINISH_NEAR and held_95_s >= AUTO_FINISH_HOLD_S)
+		)
+		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and should_finish:
 			_object.force_clean_overlays(["crack"])
 			var fc: Dictionary = _object.overlay_counts()
 			_service.register_authored_clean(
-				_selected_uid, _selected_tool_id, int(fc.get("total", 0)), int(fc.get("total", 0)), true
+				_selected_uid,
+				_selected_tool_id,
+				int(fc.get("total", 0)),
+				int(fc.get("total", 0)),
+				true,
+				_overlay_market_value(inst)
 			)
 			_feedback_label.text = "Spotless!"
 		else:
@@ -1626,7 +1671,8 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 				_selected_tool_id,
 				int(counts.get("total", 0)),
 				int(counts.get("cleaned", 0)),
-				bool(result.get("fully_cleaned", false))
+				bool(result.get("fully_cleaned", false)),
+				_overlay_market_value(inst)
 			)
 			_feedback_label.text = "Working off the %s..." % String(result.get("condition_id", "")).replace("_", " ")
 		var inst2 := _service.find_instance_by_id(_selected_uid)
@@ -1634,6 +1680,19 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 			_refresh(inst2, _service.get_repository().get_template(inst2.template_id))
 	elif result.get("wrong_tool", false):
 		_feedback_label.text = "Wrong tool for that layer — try another."
+
+
+## The coverage-based market value for an authored-overlay artifact, or -1 to leave it unchanged
+## (legacy / pre-revamp). Computed from the artifact's LIVE overlay coverage so the price tracks
+## cleaning. Passed into register_authored_clean so it's saved in that step's existing write.
+func _overlay_market_value(inst: ObjectInstance) -> int:
+	if inst == null or inst.true_value <= 0 or not _object.has_method("active_condition_coverage"):
+		return -1
+	var template := _service.get_repository().get_template(inst.template_id)
+	var floor_value := int(template.base_value_range.x) if template != null else 0
+	return ValueModel.value_from_coverage(
+		inst.true_value, _object.active_condition_coverage(), floor_value, _service.get_repository()
+	)
 
 
 ## The selected tool's cleaning params {cleans, radius}: the scene-authored ToolConfig if it lists
@@ -1657,9 +1716,11 @@ func _accumulate_paint_stroke(pos: Vector2) -> void:
 		_paint_at_pointer(pos)
 
 
-## True for the debug paint tools (draw / erase), which work the paint layer not the cleaning rules.
+## True for the debug DRAW brush, which paints grime onto the paint layer instead of cleaning.
+## The debug ERASER is no longer a paint tool: it routes through the real cleaning paths as a
+## universal cleaner (CleaningPower.is_universal_cleaner) so it removes ANY condition for real.
 func _is_paint_tool(tool_id: String) -> bool:
-	return tool_id == DRAW_TOOL_ID or tool_id == ERASE_TOOL_ID
+	return tool_id == DRAW_TOOL_ID
 
 
 ## Builds the circular brushes + erase material the first time a debug paint tool is used (lazy).

@@ -97,8 +97,7 @@ func test_different_seeds_produce_different_deliveries() -> void:
 
 func test_weight_distribution_respects_rarity_weights() -> void:
 	# With real weights, white (40) should outnumber blue (18) over many runs.
-	# This measures the UNBIASED weighted distribution, so disable the day-1 Gold debug override.
-	GameState.debug_first_gold = false
+	# This measures the UNBIASED weighted distribution.
 	var white_count := 0
 	var blue_count := 0
 	for seed in range(50):
@@ -107,7 +106,9 @@ func test_weight_distribution_respects_rarity_weights() -> void:
 		GameState.new_run()
 		var delivery := _make_generator().generate_day_delivery(1)
 		for inst in delivery:
-			if inst.template_id == "rusted_tin":
+			# brass_hand_bell (white) and tarnished_pendant (blue) both have real artifact
+			# scenes, so both are eligible to spawn under the artifacts-only filter.
+			if inst.template_id == "brass_hand_bell":
 				white_count += 1
 			elif inst.template_id == "tarnished_pendant":
 				blue_count += 1

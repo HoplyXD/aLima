@@ -8,12 +8,10 @@ class_name DeliveryGenerator
 
 const DELIVERY_STREAM := "delivery_generator"
 const UID_PREFIX := "obj_"
-## DEBUG: guarantee this template in every day-1 delivery while iterating on the condition overlays.
-## Set to "" to disable. Replaces the first delivered slots, so batch size + uids stay unchanged.
-const DEBUG_FIRST_GOLD := "brass_hand_bell"
-## How many copies of DEBUG_FIRST_GOLD to force in (debug: prove two of the same artifact roll
-## DIFFERENT overlay patterns). Each copy keeps the slot's own uid, so their seeds — and patterns — differ.
-const DEBUG_FIRST_GOLD_COUNT := 2
+## Only templates with a real authored artifact scene (a model in scenes/restoration/artifacts/)
+## may spawn in random deliveries — no placeholder shapes. The registry is the source of truth.
+const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const _ArtifactCatalog := preload("res://scripts/restoration/artifact_catalog.gd")
 
 var _repo: DataRepository
 var _game_state: GameState
@@ -53,27 +51,11 @@ func generate_day_delivery(
 			break
 		var inst := _create_instance(template, day)
 		_assign_random_conditions(inst, rng)
+		_apply_initial_value(inst, template, rng)
 		while used_uids.has(inst.uid):
 			inst.uid = _make_uid(day)
 		used_uids[inst.uid] = true
 		instances.append(inst)
-
-	# DEBUG: force a Gold artifact into the first slot of day-1 deliveries (see DEBUG_FIRST_GOLD).
-	# Replaces rather than appends so batch size, uids, and determinism are unaffected.
-	if (
-		not DEBUG_FIRST_GOLD.is_empty()
-		and _game_state.debug_first_gold
-		and day == 1
-		and not instances.is_empty()
-	):
-		var gold_template := _repo.get_template(DEBUG_FIRST_GOLD)
-		if gold_template != null:
-			var count: int = mini(DEBUG_FIRST_GOLD_COUNT, instances.size())
-			for i in count:
-				var replacement := _create_instance(gold_template, day)
-				_assign_random_conditions(replacement, rng)
-				replacement.uid = instances[i].uid  # keep slot uid -> deterministic, per-slot seed
-				instances[i] = replacement
 
 	_inject_carriers(instances, day, used_uids)
 
@@ -98,7 +80,13 @@ func _group_templates_by_rarity() -> Dictionary:
 		if not template.deliverable:
 			# Quest/given items (e.g. Auntie's photos) never enter the random pool.
 			continue
-		var rarity_name := ModelEnums.rarity_name(template.base_rarity)
+		if not _ArtifactScenes.has_scene(id):
+			# Only artifacts with a real authored model spawn — never placeholder shapes.
+			continue
+		if _ArtifactCatalog.is_quest_item(id):
+			# Quest-bound artifacts are handed out for their NPC step, never randomly delivered.
+			continue
+		var rarity_name := ModelEnums.rarity_name(_effective_rarity(template))
 		if not groups.has(rarity_name):
 			groups[rarity_name] = []
 		groups[rarity_name].append(template)
@@ -128,6 +116,31 @@ func _pick_template(
 		if roll <= 0.0:
 			return templates[rng.randi_range(0, templates.size() - 1)]
 	return null
+
+
+## Rolls the instance's pristine true value within the template range, then sets its current
+## value from the live condition coverage (a freshly-delivered, dirty piece spawns below true).
+func _apply_initial_value(
+	inst: ObjectInstance, template: ScrapObjectTemplate, rng: RandomNumberGenerator
+) -> void:
+	var value_range := _effective_value_range(template)
+	inst.true_value = ValueModel.roll_true_value_range(value_range.x, value_range.y, rng)
+	inst.value = ValueModel.current_value(inst, template, _repo)
+
+
+## The artifact's rarity: the scene-config override (ArtifactCatalog) when set, else the data template.
+func _effective_rarity(template: ScrapObjectTemplate) -> int:
+	var override := _ArtifactCatalog.rarity_override(template.id)
+	return override if override >= 0 else template.base_rarity
+
+
+## The artifact's pristine value range: the scene-config override when set (non-zero), else the
+## data template's base_value_range.
+func _effective_value_range(template: ScrapObjectTemplate) -> Vector2i:
+	var override := _ArtifactCatalog.value_range_override(template.id)
+	if override.x > 0 or override.y > 0:
+		return override
+	return Vector2i(int(template.base_value_range.x), int(template.base_value_range.y))
 
 
 func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance:
@@ -262,6 +275,7 @@ func _inject_carriers(instances: Array[ObjectInstance], day: int, used_uids: Dic
 		inst.contents = ModelEnums.OpenResult.FRAGMENT
 		inst.assigned_anchor_id = container_id
 		_assign_random_conditions(inst, cond_rng)
+		_apply_initial_value(inst, template, cond_rng)
 		plan["carrier_instance_id"] = inst.uid
 		while used_uids.has(inst.uid):
 			inst.uid = _make_uid(day)

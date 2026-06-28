@@ -14,6 +14,9 @@ extends Node3D
 ## (plus durability values), reading only the data catalog for the condition images.
 
 const TOOL_SCENE := preload("res://scenes/restoration/restoration_tool.tscn")
+## Debug tools (draw brush / universal eraser) render with their own tinted prop scene.
+const DEBUG_TOOL_SCENE := preload("res://scenes/restoration/restoration_tool_debug.tscn")
+const DEBUG_ENABLES: Array[String] = ["debug_draw", "debug_erase"]
 
 ## Resting layout (object space, on the bench top in front of the object).
 const BENCH_Y: float = -0.7
@@ -57,7 +60,7 @@ func build_slots(slots: Array, durability: Dictionary = {}) -> void:
 		if tool_id.is_empty():
 			continue
 		var rest := Vector3(_slot_x(slot), BENCH_Y, FRONT_Z)
-		var prop: RestorationTool = TOOL_SCENE.instantiate()
+		var prop: RestorationTool = _scene_for_tool(repo, tool_id).instantiate()
 		prop.name = "ToolProp_%s" % tool_id
 		prop.position = rest
 		add_child(prop)
@@ -70,6 +73,16 @@ func build_slots(slots: Array, durability: Dictionary = {}) -> void:
 	if not _props.has(_selected):
 		_selected = ""
 	_apply_poses()
+
+
+## The prop scene for a tool: the debug variant for debug tools, else the standard prop.
+func _scene_for_tool(repo: DataRepository, tool_id: String) -> PackedScene:
+	var def := repo.get_tool(tool_id) if repo != null else null
+	if def != null:
+		for enable in DEBUG_ENABLES:
+			if def.enables.has(enable):
+				return DEBUG_TOOL_SCENE
+	return TOOL_SCENE
 
 
 ## World-space x of a fixed bench slot (slot 0 leftmost, SLOT_COUNT-1 rightmost).

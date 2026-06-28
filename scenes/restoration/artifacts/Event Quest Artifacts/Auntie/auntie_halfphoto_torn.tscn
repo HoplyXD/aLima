@@ -5,4 +5,10 @@
 [node name="AuntieHalfphotoTorn" type="Node3D" unique_id=735344398]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+artifact_template_id = null
+artifact_rarity = null
+base_value_min = null
+base_value_max = null
+is_quest_item = true
+quest_number = 3
 randomize_conditions_max = 2
