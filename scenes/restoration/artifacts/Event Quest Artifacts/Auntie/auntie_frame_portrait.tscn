@@ -16,6 +16,12 @@
 [node name="AuntieFramePortrait" type="Node3D" unique_id=1341802665]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+artifact_template_id = null
+artifact_rarity = null
+base_value_min = null
+base_value_max = null
+is_quest_item = true
+quest_number = 2
 randomize_conditions_min = 4
 randomize_conditions_max = 4
 model_mesh = ExtResource("2_7ev5v")

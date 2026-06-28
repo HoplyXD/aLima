@@ -848,6 +848,22 @@ func overlay_counts() -> Dictionary:
 	return {"total": total, "cleaned": cleaned}
 
 
+## condition_id -> REMAINING dirt fraction (0..1) across the artifact's active overlays, so the value
+## model can price the piece off how much of each condition is still present (full when dirty, 0 when
+## cleaned). Multiple overlays of the same condition take the max remaining. Empty overlays are skipped.
+func active_condition_coverage() -> Dictionary:
+	var out := {}
+	for overlay in _find_overlays(self):
+		if not overlay.is_built() or overlay.initial_keep_amount() <= 0.0:
+			continue
+		var cid := String(overlay.get_condition_id())
+		if cid.is_empty():
+			continue
+		var remaining := clampf(1.0 - overlay.cleaned_fraction(), 0.0, 1.0)
+		out[cid] = maxf(float(out.get(cid, 0.0)), remaining)
+	return out
+
+
 func _find_overlays(root: Node) -> Array:
 	# Duck-typed (build_with_fallback + clean_ray) so this @tool script needs no ArtifactOverlay ref.
 	var out: Array = []

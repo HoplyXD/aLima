@@ -680,7 +680,12 @@ func _remaining_decals(template: ScrapObjectTemplate, inst: ObjectInstance) -> i
 ## `cleaned_active` is how many are now removed; `finished_one` is true on the stroke that
 ## just removed a condition (so the value bonus is awarded once per condition).
 func register_authored_clean(
-	uid: String, tool_id: String, total_active: int, cleaned_active: int, finished_one: bool
+	uid: String,
+	tool_id: String,
+	total_active: int,
+	cleaned_active: int,
+	finished_one: bool,
+	market_value: int = -1
 ) -> AuthoredResult:
 	var result := AuthoredResult.new()
 	var inst := find_instance_by_id(uid)
@@ -698,7 +703,11 @@ func register_authored_clean(
 		inst.condition = clampf(
 			fraction * float(threshold) * _event_condition_multiplier(), 0.0, float(threshold)
 		)
-	if finished_one and template != null:
+	# Value: revamp pieces price off live coverage (passed in by the view, saved in THIS write so
+	# cleaning never triggers an extra disk save). Legacy pieces keep the per-condition clean bonus.
+	if market_value >= 0:
+		inst.value = market_value
+	elif finished_one and template != null:
 		inst.value = clampi(
 			inst.value + template.clean_value_bonus,
 			int(template.base_value_range.x),

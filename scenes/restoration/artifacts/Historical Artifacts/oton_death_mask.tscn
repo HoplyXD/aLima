@@ -1,12 +1,12 @@
 [gd_scene format=3 uid="uid://dtw2s33st1snx"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
+[ext_resource type="ArrayMesh" uid="uid://07mi84gv8xo" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask a.obj" id="2_vfcm3"]
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="3_tarnish"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="4_g88vq"]
-[ext_resource type="ArrayMesh" uid="uid://bn6egpeuc3n2o" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask Overlay.obj" id="5_8umpv"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="5_m1vn6"]
-[ext_resource type="ArrayMesh" uid="uid://ct8ji82etev0t" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask.obj" id="6_mask"]
+[ext_resource type="ArrayMesh" uid="uid://uthgdbt54a0k" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask Overlay a.obj" id="5_wneg4"]
 [ext_resource type="Texture2D" uid="uid://chkvi47klu3o1" path="res://assets/Artifacts/Oton Death Mask Texture.png" id="7_masktex"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_vfcm3"]
@@ -22,15 +22,21 @@ roughness = 0.45
 [node name="OtonDeathMask" type="Node3D" unique_id=1097946537]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
+artifact_template_id = null
+artifact_rarity = 4
+base_value_min = 800
+base_value_max = 1000
+quest_npc = null
+quest_number = null
 randomize_conditions_min = 5
 randomize_conditions_max = 5
-model_mesh = ExtResource("6_mask")
+model_mesh = ExtResource("2_vfcm3")
 model_material = SubResource("mask_gold")
 model_scale = 0.1
 
 [node name="CrackingOverlay" parent="." unique_id=125864302 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-overlay_mesh = ExtResource("5_8umpv")
+overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("5_m1vn6")
 opacity = 1.0
 layer_order = 10
@@ -41,7 +47,7 @@ uv2_tiling = 2.0
 
 [node name="TarnishOverlay" parent="." unique_id=175449661 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-overlay_mesh = ExtResource("5_8umpv")
+overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
 layer_order = 20
@@ -51,7 +57,7 @@ guaranteed_spawn = true
 
 [node name="RustOverlay" parent="." unique_id=1400501519 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 2.980231e-09, 0, -2.980231e-09, 0.1, 0, 0, 0)
-overlay_mesh = ExtResource("5_8umpv")
+overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("8_rust")
 opacity = 1.0
 layer_order = 25
@@ -62,7 +68,7 @@ auto_unwrap = true
 
 [node name="DustOverlay" parent="." unique_id=520816484 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-overlay_mesh = ExtResource("5_8umpv")
+overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
 coverage_min = 80.0
@@ -74,7 +80,7 @@ own_uv_tiling = 7.22
 
 [node name="WaterStainOverlay" parent="." unique_id=659790743 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-overlay_mesh = ExtResource("5_8umpv")
+overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("10_vfcm3")
 opacity = 1.0
 condition_id = "water_stain"
@@ -85,7 +91,7 @@ auto_unwrap = true
 
 [node name="GrimeOverlay" parent="." unique_id=1049705893 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-overlay_mesh = ExtResource("5_8umpv")
+overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("11_wneg4")
 opacity = 1.0
 condition_id = "dirt"
@@ -99,7 +105,7 @@ own_uv_tiling = 7.9
 [node name="TapeResidueOverlay" parent="." unique_id=1765282527 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 visible = false
-overlay_mesh = ExtResource("5_8umpv")
+overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("12_eb6n0")
 opacity = 1.0
 condition_id = "tape_residue"

@@ -1104,13 +1104,18 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_condition_bar.value = inst.condition
 		_condition_label.text = "Condition %d / %d" % [int(inst.condition), threshold]
 	_set_surface_meter_visible(not is_overlay)
-	# Show the coverage-based market value (true value minus live condition penalties) so the
-	# player watches the price climb as they clean. Pre-revamp instances fall back to inst.value.
-	var shown_value := (
-		ValueModel.current_value(inst, template, _service.get_repository())
-		if inst.true_value > 0
-		else inst.value
-	)
+	# Market value climbs as the player cleans. Authored-overlay artifacts price off the LIVE overlay
+	# coverage (so the number moves smoothly, per condition); other pieces use the instance's
+	# decal/condition state. Pre-revamp instances (no rolled true value) fall back to inst.value.
+	# DISPLAY ONLY — never persists here (this runs on every hover/rotate/stroke refresh). The sale
+	# value is written once per clean step inside register_authored_clean, so cleaning never saves
+	# to disk per frame.
+	var shown_value := inst.value
+	if inst.true_value > 0:
+		if is_overlay and _object.has_method("active_condition_coverage"):
+			shown_value = _overlay_market_value(inst)
+		else:
+			shown_value = ValueModel.current_value(inst, template, _service.get_repository())
 	_value_label.text = "Value: P%d" % shown_value
 
 	if _object.is_photo_mode():
@@ -1651,7 +1656,12 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 			_object.force_clean_overlays(["crack"])
 			var fc: Dictionary = _object.overlay_counts()
 			_service.register_authored_clean(
-				_selected_uid, _selected_tool_id, int(fc.get("total", 0)), int(fc.get("total", 0)), true
+				_selected_uid,
+				_selected_tool_id,
+				int(fc.get("total", 0)),
+				int(fc.get("total", 0)),
+				true,
+				_overlay_market_value(inst)
 			)
 			_feedback_label.text = "Spotless!"
 		else:
@@ -1661,7 +1671,8 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 				_selected_tool_id,
 				int(counts.get("total", 0)),
 				int(counts.get("cleaned", 0)),
-				bool(result.get("fully_cleaned", false))
+				bool(result.get("fully_cleaned", false)),
+				_overlay_market_value(inst)
 			)
 			_feedback_label.text = "Working off the %s..." % String(result.get("condition_id", "")).replace("_", " ")
 		var inst2 := _service.find_instance_by_id(_selected_uid)
@@ -1669,6 +1680,19 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 			_refresh(inst2, _service.get_repository().get_template(inst2.template_id))
 	elif result.get("wrong_tool", false):
 		_feedback_label.text = "Wrong tool for that layer — try another."
+
+
+## The coverage-based market value for an authored-overlay artifact, or -1 to leave it unchanged
+## (legacy / pre-revamp). Computed from the artifact's LIVE overlay coverage so the price tracks
+## cleaning. Passed into register_authored_clean so it's saved in that step's existing write.
+func _overlay_market_value(inst: ObjectInstance) -> int:
+	if inst == null or inst.true_value <= 0 or not _object.has_method("active_condition_coverage"):
+		return -1
+	var template := _service.get_repository().get_template(inst.template_id)
+	var floor_value := int(template.base_value_range.x) if template != null else 0
+	return ValueModel.value_from_coverage(
+		inst.true_value, _object.active_condition_coverage(), floor_value, _service.get_repository()
+	)
 
 
 ## The selected tool's cleaning params {cleans, radius}: the scene-authored ToolConfig if it lists

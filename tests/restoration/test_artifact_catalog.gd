@@ -34,12 +34,20 @@ func test_rarity_and_value_default_to_inherit() -> void:
 	assert_eq(range, Vector2i.ZERO, "value range inherits by default")
 
 
-func test_no_artifact_is_a_quest_item_by_default() -> void:
-	assert_false(ArtifactCatalog.is_quest_item("brass_hand_bell"))
+func test_non_quest_artifact_is_spawnable() -> void:
+	assert_false(ArtifactCatalog.is_quest_item("brass_hand_bell"), "the bell is not a quest item")
 	var spawnable := ArtifactCatalog.spawnable_template_ids()
 	assert_true(spawnable.has("brass_hand_bell"), "non-quest artifacts are spawnable")
 
 
-func test_quest_pool_is_empty_until_assigned() -> void:
-	assert_eq(ArtifactCatalog.quest_artifacts("auntie", 1).size(), 0)
-	assert_eq(ArtifactCatalog.random_quest_artifact("auntie", 1, null), "")
+func test_quest_items_are_excluded_from_the_spawn_pool() -> void:
+	# Any artifact flagged is_quest_item in its scene must NOT appear in the random delivery pool.
+	var spawnable := ArtifactCatalog.spawnable_template_ids()
+	for tid in spawnable:
+		assert_false(ArtifactCatalog.is_quest_item(tid), "%s is spawnable so must not be a quest item" % tid)
+
+
+func test_quest_pool_for_an_unassigned_step_is_empty() -> void:
+	# A step with no artifact assigned returns nothing (the random pick yields an empty id).
+	assert_eq(ArtifactCatalog.quest_artifacts("buyer", 99).size(), 0)
+	assert_eq(ArtifactCatalog.random_quest_artifact("buyer", 99, null), "")

@@ -33,6 +33,25 @@ static func current_value(
 	return clampi(current, mini(floor_value, base), base)
 
 
+## Current value from an explicit {condition_id: remaining_fraction 0..1} coverage map — used by the
+## restoration view to price authored-overlay artifacts off their LIVE overlay coverage, so the value
+## climbs smoothly as the player cleans. Floored at `floor_value`, capped at `true_value`.
+static func value_from_coverage(
+	true_value: int, coverage: Dictionary, floor_value: int, repo: DataRepository
+) -> int:
+	if true_value <= 0:
+		return maxi(true_value, 0)
+	if repo == null or coverage.is_empty():
+		return true_value
+	var reduction := 0.0
+	for condition_id in coverage.keys():
+		var condition := repo.get_surface_condition(condition_id)
+		if condition != null:
+			reduction += condition.value_reduction * clampf(float(coverage[condition_id]), 0.0, 1.0)
+	var current := int(round(float(true_value) * (1.0 - reduction / 100.0)))
+	return clampi(current, mini(floor_value, true_value), true_value)
+
+
 ## Total percent (0..100) of the true value removed by the instance's still-present conditions.
 static func _reduction_percent(inst: ObjectInstance, repo: DataRepository) -> float:
 	var counts := _condition_counts(inst)
