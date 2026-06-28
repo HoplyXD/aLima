@@ -799,6 +799,11 @@ func overlay_counts() -> Dictionary:
 	for overlay in _find_overlays(self):
 		if not overlay.is_built():
 			continue
+		# Only overlays that actually SPAWNED dirt are conditions. A never-spawned (empty) overlay
+		# reports cleaned_fraction() == 1.0, so counting it would inflate the condition above 0% on a
+		# freshly-delivered piece — the as-generated pattern must read 0% cleaned.
+		if overlay.initial_keep_amount() <= 0.0:
+			continue
 		total += 1
 		if overlay.cleaned_fraction() >= 0.999:
 			cleaned += 1

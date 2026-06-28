@@ -8,6 +8,9 @@ class_name DeliveryGenerator
 
 const DELIVERY_STREAM := "delivery_generator"
 const UID_PREFIX := "obj_"
+## Only templates with a real authored artifact scene (a model in scenes/restoration/artifacts/)
+## may spawn in random deliveries — no placeholder shapes. The registry is the source of truth.
+const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 
 var _repo: DataRepository
 var _game_state: GameState
@@ -47,6 +50,7 @@ func generate_day_delivery(
 			break
 		var inst := _create_instance(template, day)
 		_assign_random_conditions(inst, rng)
+		_apply_initial_value(inst, template, rng)
 		while used_uids.has(inst.uid):
 			inst.uid = _make_uid(day)
 		used_uids[inst.uid] = true
@@ -74,6 +78,9 @@ func _group_templates_by_rarity() -> Dictionary:
 		var template: ScrapObjectTemplate = _repo.scrap_object_templates[id]
 		if not template.deliverable:
 			# Quest/given items (e.g. Auntie's photos) never enter the random pool.
+			continue
+		if not _ArtifactScenes.has_scene(id):
+			# Only artifacts with a real authored model spawn — never placeholder shapes.
 			continue
 		var rarity_name := ModelEnums.rarity_name(template.base_rarity)
 		if not groups.has(rarity_name):
@@ -105,6 +112,15 @@ func _pick_template(
 		if roll <= 0.0:
 			return templates[rng.randi_range(0, templates.size() - 1)]
 	return null
+
+
+## Rolls the instance's pristine true value within the template range, then sets its current
+## value from the live condition coverage (a freshly-delivered, dirty piece spawns below true).
+func _apply_initial_value(
+	inst: ObjectInstance, template: ScrapObjectTemplate, rng: RandomNumberGenerator
+) -> void:
+	inst.true_value = ValueModel.roll_true_value(template, rng)
+	inst.value = ValueModel.current_value(inst, template, _repo)
 
 
 func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance:
@@ -239,6 +255,7 @@ func _inject_carriers(instances: Array[ObjectInstance], day: int, used_uids: Dic
 		inst.contents = ModelEnums.OpenResult.FRAGMENT
 		inst.assigned_anchor_id = container_id
 		_assign_random_conditions(inst, cond_rng)
+		_apply_initial_value(inst, template, cond_rng)
 		plan["carrier_instance_id"] = inst.uid
 		while used_uids.has(inst.uid):
 			inst.uid = _make_uid(day)

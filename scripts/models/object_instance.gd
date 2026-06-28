@@ -15,7 +15,10 @@ var authenticity: int = ModelEnums.Verdict.UNKNOWN
 var is_counterfeit_truth: bool = false
 var storage_cost: int = 1  ## Copied from the template at creation time.
 var assigned_anchor_id: String = ""  ## Container/placement anchor for this instance.
-var value: int = 0  ## Current assessed market value, initialized from the template.
+var value: int = 0  ## Current assessed market value = true_value minus live condition penalties.
+## The pristine market value rolled once at spawn, uniformly within the template's base value
+## range. Fixed for the instance's life; `value` is derived from it via ValueModel. 0 until rolled.
+var true_value: int = 0
 var removed_decals: Array[String] = []  ## Decal ids cleared so far (decal-based templates).
 var spawned_decals: Array = []  ## Random per-instance conditions; empty => use template decals.
 var is_joined: bool = false  ## True once a join-step object has been reassembled.
@@ -41,6 +44,8 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	inst.storage_cost = ModelUtils.as_int(data.get("storage_cost"), 1)
 	inst.assigned_anchor_id = ModelUtils.as_string(data.get("assigned_anchor_id"))
 	inst.value = ModelUtils.as_int(data.get("value"))
+	# Back-compat: pre-revamp saves have no true_value; fall back to the stored value.
+	inst.true_value = ModelUtils.as_int(data.get("true_value"), inst.value)
 	inst.removed_decals = ModelUtils.as_string_array(data.get("removed_decals"))
 	if data.get("spawned_decals") is Array:
 		for raw_decal in data["spawned_decals"]:
@@ -67,6 +72,7 @@ func to_dictionary() -> Dictionary:
 		"storage_cost": storage_cost,
 		"assigned_anchor_id": assigned_anchor_id,
 		"value": value,
+		"true_value": true_value,
 		"removed_decals": removed_decals.duplicate(),
 		"spawned_decals": spawned_decals.duplicate(true),
 		"is_joined": is_joined,

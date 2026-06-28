@@ -30,6 +30,10 @@ var category: String = "surface_soil"  ## One of CATEGORY_LABELS keys.
 var color: String = "#FFFFFF"  ## Placeholder swatch hex; swapped for a picture later.
 var cleaning_tool: String = ""  ## ToolDefinition id that treats this condition.
 var description: String = ""  ## Short guide blurb.
+## Max percent (0..100) of an artifact's true value this condition removes at 100% coverage. The
+## live penalty scales with the condition's current coverage on the instance, so cleaning it off
+## restores value. See the Artifact price revamp (docs/phase-task.md backlog).
+var value_reduction: float = 0.0
 
 
 func _init() -> void:
@@ -44,6 +48,7 @@ static func from_dictionary(data: Dictionary) -> SurfaceCondition:
 	c.color = ModelUtils.as_string(data.get("color"), "#FFFFFF")
 	c.cleaning_tool = ModelUtils.as_string(data.get("cleaning_tool"))
 	c.description = ModelUtils.as_string(data.get("description"))
+	c.value_reduction = ModelUtils.as_float(data.get("value_reduction"))
 	return c
 
 
@@ -55,6 +60,7 @@ func to_dictionary() -> Dictionary:
 		"color": color,
 		"cleaning_tool": cleaning_tool,
 		"description": description,
+		"value_reduction": value_reduction,
 	}
 
 
@@ -89,4 +95,8 @@ func validate(
 	var hex := color.trim_prefix("#")
 	if hex.length() != 6 or not hex.is_valid_hex_number(false):
 		result.add_field_error(file_path, id, "color", "color must be a #RRGGBB hex string")
+	if value_reduction < 0.0 or value_reduction > 100.0:
+		result.add_field_error(
+			file_path, id, "value_reduction", "value_reduction must be a percent in 0..100"
+		)
 	return result

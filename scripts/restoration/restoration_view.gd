@@ -98,6 +98,13 @@ var _dirt_cache: Dictionary = {}
 ## and returning keeps how much of each condition the player has cleaned (the spawn pattern itself
 ## regenerates deterministically from the instance seed).
 var _overlay_cache: Dictionary = {}
+## Auto-finish rule (REST): once the surface is ≥95% clean AND has been so for AUTO_FINISH_HOLD_S
+## real seconds, the next clean stroke snaps to 100%; ≥98% snaps immediately. This timestamps when
+## the CURRENT artifact first crossed 95% in the session (-1 = not yet / fell back below 95%).
+const AUTO_FINISH_HOLD_S: float = 30.0
+const AUTO_FINISH_NEAR: float = 0.95
+const AUTO_FINISH_SNAP: float = 0.98
+var _overlay_at95_ms: int = -1
 var _scanner_screen: ScannerScreen
 var _journal_viewport: BookViewport
 var _phone: Phone
@@ -495,6 +502,7 @@ func load_instance(uid: String) -> void:
 	# Per-instance seed so a shared placed decal scatters/cleans independently per
 	# artifact; folding in the loop index re-rolls which random conditions appear each loop.
 	var instance_seed := _artifact_seed(uid)
+	_overlay_at95_ms = -1  # the auto-finish 95%-hold timer is per-artifact-session
 	_object.visible = true
 	if _object.has_method("clear_paint"):
 		_object.clear_paint()  # drawn debug grime doesn't carry between artifacts
@@ -1087,7 +1095,14 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 		_condition_bar.value = inst.condition
 		_condition_label.text = "Condition %d / %d" % [int(inst.condition), threshold]
 	_set_surface_meter_visible(not is_overlay)
-	_value_label.text = "Value: P%d" % inst.value
+	# Show the coverage-based market value (true value minus live condition penalties) so the
+	# player watches the price climb as they clean. Pre-revamp instances fall back to inst.value.
+	var shown_value := (
+		ValueModel.current_value(inst, template, _service.get_repository())
+		if inst.true_value > 0
+		else inst.value
+	)
+	_value_label.text = "Value: P%d" % shown_value
 
 	if _object.is_photo_mode():
 		_refresh_photo(inst, template)
@@ -1607,9 +1622,23 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 			_object.clean_burst_at_world(hit_pt)
 		var inst := _service.find_instance_by_id(_selected_uid)
 		var pct: float = _object.overlay_clean_percent()
-		# Auto-finish: once the surface is ~spotless, snap to 100% and wipe every condition except
-		# crack/damage, so the player never has to chase the last few specks.
-		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and pct >= 0.98:
+		# Track how long the piece has been ≥95% clean this session (-1 once it drops back below).
+		if pct >= AUTO_FINISH_NEAR:
+			if _overlay_at95_ms < 0:
+				_overlay_at95_ms = Time.get_ticks_msec()
+		else:
+			_overlay_at95_ms = -1
+		var held_95_s := (
+			float(Time.get_ticks_msec() - _overlay_at95_ms) / 1000.0 if _overlay_at95_ms >= 0 else 0.0
+		)
+		# Auto-finish: snap to 100% immediately at ≥98%, or once the piece has held ≥95% for
+		# AUTO_FINISH_HOLD_S (this next stroke completes it) — so the player isn't chasing specks,
+		# but completion is no longer instant the moment the surface looks nearly done.
+		var should_finish := (
+			pct >= AUTO_FINISH_SNAP
+			or (pct >= AUTO_FINISH_NEAR and held_95_s >= AUTO_FINISH_HOLD_S)
+		)
+		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and should_finish:
 			_object.force_clean_overlays(["crack"])
 			var fc: Dictionary = _object.overlay_counts()
 			_service.register_authored_clean(

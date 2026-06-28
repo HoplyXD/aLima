@@ -218,6 +218,10 @@ func assessed_value(uid: String) -> int:
 		return 0
 	var inst: ObjectInstance = found["inst"]
 	var template: ScrapObjectTemplate = found["template"]
+	# Revamped pieces (a rolled true value) price off live condition coverage, so a
+	# partially-cleaned artifact sells for less. Pre-revamp/test instances keep the old path.
+	if inst.true_value > 0:
+		return ValueModel.current_value(inst, template, DataRepository.singleton())
 	if inst.value > 0:
 		return inst.value
 	if template == null:
