@@ -20,12 +20,12 @@ metallic = 0.55
 roughness = 0.45
 
 [node name="OtonDeathMask" type="Node3D" unique_id=1097946537]
-transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
+transform = Transform3D(2, 0, 0, 0, 1.9676874, 0.35805917, 0, -0.35805917, 1.9676874, 0, 0, 0)
 script = ExtResource("1_obj")
 artifact_template_id = null
 artifact_rarity = 4
-base_value_min = 800
-base_value_max = 1000
+base_value_min = 5000
+base_value_max = 10000
 quest_npc = null
 quest_number = null
 randomize_conditions_min = 5

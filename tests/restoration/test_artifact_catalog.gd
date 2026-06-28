@@ -27,11 +27,17 @@ func test_legacy_filename_alias_maps_to_template_id() -> void:
 	assert_true(ArtifactCatalog.has_scene("tarnished_pendant"))
 
 
-func test_rarity_and_value_default_to_inherit() -> void:
-	# No existing scene overrides rarity/value yet, so the catalog signals "inherit the data template".
-	assert_eq(ArtifactCatalog.rarity_override("brass_hand_bell"), -1, "rarity inherits by default")
-	var range := ArtifactCatalog.value_range_override("brass_hand_bell")
-	assert_eq(range, Vector2i.ZERO, "value range inherits by default")
+func test_rarity_and_value_overrides_are_valid() -> void:
+	# Designers set rarity/value per scene in the inspector, so the values vary; assert the catalog
+	# returns a valid override CONTRACT: rarity is inherit(-1) or 0..4, value range is (0,0) or min<=max.
+	for tid in ArtifactCatalog.spawnable_template_ids():
+		var rarity := ArtifactCatalog.rarity_override(tid)
+		assert_true(rarity == -1 or (rarity >= 0 and rarity <= 4), "%s rarity is inherit or 0..4" % tid)
+		var range := ArtifactCatalog.value_range_override(tid)
+		assert_true(
+			range == Vector2i.ZERO or (range.x >= 0 and range.y >= range.x),
+			"%s value range is inherit (0,0) or a valid min<=max" % tid
+		)
 
 
 func test_non_quest_artifact_is_spawnable() -> void:

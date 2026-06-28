@@ -74,8 +74,18 @@ static func _read_scene(scene_path: String) -> void:
 		"is_quest": obj.is_quest_item,
 		"npc": NPC_IDS[npc_idx],
 		"quest_number": obj.quest_number,
+		"scanner": _read_scanner_data(root),
 	}
 	root.free()
+
+
+## Captures the artifact's designer-authored scanner payload from an ArtifactScannerData child, or
+## an empty dict when none is present / authored.
+static func _read_scanner_data(root: Node) -> Dictionary:
+	for child in root.get_children():
+		if child is ArtifactScannerData:
+			return (child as ArtifactScannerData).to_response_dict()
+	return {}
 
 
 ## The authored scene for `template_id`, or null when none is mapped.
@@ -107,6 +117,13 @@ static func value_range_override(template_id: String) -> Vector2i:
 static func is_quest_item(template_id: String) -> bool:
 	_ensure_scanned()
 	return bool(_entries.get(template_id, {}).get("is_quest", false))
+
+
+## The designer-authored scanner-response payload for `template_id` from its scene's ArtifactScannerData
+## node, or an empty dict when none is authored (callers then fall back to the JSON scanner cache).
+static func scanner_response_for(template_id: String) -> Dictionary:
+	_ensure_scanned()
+	return (_entries.get(template_id, {}).get("scanner", {}) as Dictionary).duplicate(true)
 
 
 ## Template ids of artifacts the random delivery may spawn (everything with a scene that is NOT a

@@ -17,6 +17,13 @@
 [node name="Lamp" type="Node3D" unique_id=456840677]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, -0.11943139, 0)
 script = ExtResource("1_tgpoi")
+artifact_template_id = null
+artifact_rarity = 1
+base_value_min = 120
+base_value_max = 200
+is_quest_item = null
+quest_npc = null
+quest_number = null
 randomize_conditions_min = 2
 randomize_conditions_max = 5
 model_mesh = ExtResource("2_uh4xh")
