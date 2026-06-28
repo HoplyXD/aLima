@@ -74,6 +74,24 @@ func test_object_instance_spawned_decals_round_trip() -> void:
 	assert_eq(parsed[1].required_tool, "rust_brush")
 
 
+func test_object_instance_overlay_keep_and_true_value_round_trip() -> void:
+	# Overlay cleaning progress + rolled true value must survive save/load so an authored-overlay
+	# artifact stays cleaned across a full scene reload (the scrapyard round-trip fix).
+	var inst := ObjectInstance.new()
+	inst.template_id = "brass_hand_bell"
+	inst.uid = "inst_overlay"
+	inst.true_value = 155
+	inst.value = 120
+	inst.overlay_keep = {
+		"DustOverlay": "AAAA", "RustOverlay": "f39/fw=="
+	}
+	var round := ObjectInstance.from_dictionary(inst.to_dictionary())
+	assert_eq(round.true_value, 155, "rolled true value survives serialization")
+	assert_eq(round.overlay_keep.size(), 2, "overlay keep survives serialization")
+	assert_eq(round.overlay_keep.get("DustOverlay"), "AAAA")
+	assert_eq(round.overlay_keep.get("RustOverlay"), "f39/fw==")
+
+
 func test_carrier_instance_requires_fragment() -> void:
 	var data := {
 		"template_id": "tarnished_pendant",

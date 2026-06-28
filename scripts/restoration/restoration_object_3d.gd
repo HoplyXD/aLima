@@ -2,6 +2,38 @@
 class_name RestorationObject3D
 extends Node3D
 
+## --- Artifact catalog config (designer-set per artifact scene; read by ArtifactCatalog) ----------
+## These let the folder-scanning catalog treat each artifact SCENE as the source of truth for how it
+## spawns, so dropping a new scene in scenes/restoration/artifacts/ adds it to the game with no code.
+
+## Rarity tiers, plus INHERIT (= use the matching data template's rarity, so existing artifacts keep
+## their authored rarity until a designer overrides it on the scene).
+enum ArtifactRarity { INHERIT = -1, WHITE = 0, GREEN = 1, BLUE = 2, PURPLE = 3, GOLD = 4 }
+
+## The five quest-giving NPCs an artifact can be assigned to (ids match data/routes/routes.json).
+enum QuestNpc { AUNTIE, ARTISAN, SCAVENGER, ARCHEOLOGIST, BUYER }
+
+## The data template id this artifact instances as. Empty => derived from the scene filename by the
+## catalog (set this only when the file name differs from the template id).
+@export var artifact_template_id: String = ""
+## Rarity the randomizer spawns this artifact at. INHERIT keeps the data template's rarity.
+@export var artifact_rarity: ArtifactRarity = ArtifactRarity.INHERIT
+## Pristine value range; an instance rolls a true value uniformly in [min, max]. 0/0 => inherit the
+## data template's base_value_range.
+@export var base_value_min: int = 0
+@export var base_value_max: int = 0
+## When true this artifact is NOT in the random delivery pool — it is handed out for a specific NPC
+## quest step instead. Checking it reveals the NPC + quest-number fields below.
+@export var is_quest_item: bool = false:
+	set(value):
+		is_quest_item = value
+		notify_property_list_changed()
+## Which NPC's quest gives this artifact (only when is_quest_item). Two artifacts sharing the same NPC
+## + quest number are pooled, and one is picked at random for that step.
+@export var quest_npc: QuestNpc = QuestNpc.AUNTIE
+## The NPC's quest step this artifact belongs to (only when is_quest_item).
+@export var quest_number: int = 1
+
 ## CONDITION RANDOMIZER: how many conditions each instance of this artifact spawns with. Each instance
 ## rolls a count in [min, max] and that many SPAWNABLE overlays (coverage_max > 0) are made active; the
 ## rest render clean. Any overlay with `guaranteed_spawn` ON always takes a slot. max <= 0 disables the
@@ -187,6 +219,12 @@ var _authored: Dictionary = {}
 ## Per-instance layout randomisation phase so the same template's conditions land in
 ## different spots on different artifacts (seeded by the instance, set on enter_*_mode).
 var _layout_phase: float = 0.0
+
+
+## Hide the quest NPC/number fields in the inspector unless this is flagged as a quest item.
+func _validate_property(property: Dictionary) -> void:
+	if property.name in ["quest_npc", "quest_number"] and not is_quest_item:
+		property.usage &= ~PROPERTY_USAGE_EDITOR
 
 
 func _ready() -> void:

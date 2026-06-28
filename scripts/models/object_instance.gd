@@ -23,6 +23,10 @@ var removed_decals: Array[String] = []  ## Decal ids cleared so far (decal-based
 var spawned_decals: Array = []  ## Random per-instance conditions; empty => use template decals.
 var is_joined: bool = false  ## True once a join-step object has been reassembled.
 var dirt_mask: PackedByteArray = PackedByteArray()
+## Authored-overlay cleaning progress: overlay_name -> base64 of its per-vertex keep
+## (PackedFloat32Array). Empty => rebuild the spawn pattern from the deterministic seed. Persisting
+## this is what keeps overlay artifacts cleaned across a full scene reload (e.g. a scrapyard trip).
+var overlay_keep: Dictionary = {}
 ## PNG of the exact cleaned grime mask for condition-based objects; empty => rebuild from condition.
 
 
@@ -55,6 +59,8 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	var raw_mask: Variant = data.get("dirt_mask", "")
 	if raw_mask is String and not (raw_mask as String).is_empty():
 		inst.dirt_mask = Marshalls.base64_to_raw(raw_mask)
+	if data.get("overlay_keep") is Dictionary:
+		inst.overlay_keep = (data["overlay_keep"] as Dictionary).duplicate()
 	return inst
 
 
@@ -77,6 +83,7 @@ func to_dictionary() -> Dictionary:
 		"spawned_decals": spawned_decals.duplicate(true),
 		"is_joined": is_joined,
 		"dirt_mask": Marshalls.raw_to_base64(dirt_mask) if not dirt_mask.is_empty() else "",
+		"overlay_keep": overlay_keep.duplicate(),
 	}
 
 

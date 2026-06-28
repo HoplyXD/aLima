@@ -449,6 +449,32 @@ func persist_dirt_mask(uid: String, png_bytes: PackedByteArray) -> void:
 	SaveService.save_game()
 
 
+## Persists authored-overlay cleaning progress onto the instance so it survives a full scene
+## reload (e.g. stepping out to the scrapyard and back), not just an in-session artifact switch.
+## `raw_state` is {overlay_name: PackedFloat32Array keep} from RestorationObject3D.capture_overlay_keep().
+func persist_overlay_keep(uid: String, raw_state: Dictionary) -> void:
+	var inst := find_instance_by_id(uid)
+	if inst == null:
+		return
+	var encoded := {}
+	for key in raw_state.keys():
+		var arr: PackedFloat32Array = raw_state[key]
+		encoded[str(key)] = Marshalls.raw_to_base64(arr.to_byte_array())
+	inst.overlay_keep = encoded
+	_write_instance_back(inst)
+	SaveService.save_game()
+
+
+## Decodes a persisted overlay_keep dict back to {overlay_name: PackedFloat32Array} for
+## RestorationObject3D.apply_overlay_keep().
+func decode_overlay_keep(encoded: Dictionary) -> Dictionary:
+	var out := {}
+	for key in encoded.keys():
+		var bytes := Marshalls.base64_to_raw(str(encoded[key]))
+		out[str(key)] = bytes.to_float32_array()
+	return out
+
+
 func _write_instance_back(inst: ObjectInstance) -> void:
 	var inventory := _game_state.save_state.loop.inventory
 	for i in range(inventory.size()):

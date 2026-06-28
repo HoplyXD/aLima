@@ -77,13 +77,21 @@ static func _condition_counts(inst: ObjectInstance) -> Dictionary:
 static func roll_true_value(template: ScrapObjectTemplate, rng: RandomNumberGenerator) -> int:
 	if template == null:
 		return 0
-	var lo := int(template.base_value_range.x)
-	var hi := int(template.base_value_range.y)
-	if hi <= lo:
-		return lo
+	return roll_true_value_range(
+		int(template.base_value_range.x), int(template.base_value_range.y), rng
+	)
+
+
+## Rolls a pristine value uniformly within an explicit [lo, hi] range (used when an artifact scene
+## overrides its value range via ArtifactCatalog).
+static func roll_true_value_range(lo: int, hi: int, rng: RandomNumberGenerator) -> int:
+	var low := mini(lo, hi)
+	var high := maxi(lo, hi)
+	if high <= low:
+		return low
 	if rng == null:
-		return (lo + hi) / 2
-	return rng.randi_range(lo, hi)
+		return (low + high) / 2
+	return rng.randi_range(low, high)
 
 
 static func _template_mid(template: ScrapObjectTemplate) -> int:

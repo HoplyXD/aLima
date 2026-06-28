@@ -263,6 +263,9 @@ func _cache_current_dirt() -> void:
 		var state: Dictionary = _object.capture_overlay_keep()
 		if not state.is_empty():
 			_overlay_cache[_selected_uid] = state
+			# Persist onto the instance (save) so overlay cleaning survives a FULL scene reload
+			# (scrapyard trip), not just an in-session artifact switch held in _overlay_cache.
+			_service.persist_overlay_keep(_selected_uid, state)
 	if _selected_uid.is_empty() or _object.is_decal_mode():
 		return
 	var png := _object.snapshot_dirt_png()
@@ -517,9 +520,15 @@ func load_instance(uid: String) -> void:
 	if _object.has_method("build_overlays"):
 		_object.build_overlays(instance_seed)
 		# Restore prior cleaning progress for this artifact (the spawn pattern itself is deterministic
-		# from instance_seed, so only the player's cleaning needs caching).
-		if _overlay_cache.has(uid) and _object.has_method("apply_overlay_keep"):
-			_object.apply_overlay_keep(_overlay_cache[uid])
+		# from instance_seed, so only the player's cleaning needs caching). Prefer the in-session
+		# cache; otherwise fall back to the keep persisted on the instance (survives a scene reload).
+		if _object.has_method("apply_overlay_keep"):
+			if _overlay_cache.has(uid):
+				_object.apply_overlay_keep(_overlay_cache[uid])
+			elif not inst.overlay_keep.is_empty():
+				var restored: Dictionary = _service.decode_overlay_keep(inst.overlay_keep)
+				_object.apply_overlay_keep(restored)
+				_overlay_cache[uid] = restored
 	if not (_object.has_method("has_overlays") and _object.has_overlays()):
 		if _object.has_method("build_dust_overlay"):
 			_object.build_dust_overlay(instance_seed)

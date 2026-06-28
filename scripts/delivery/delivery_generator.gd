@@ -11,6 +11,7 @@ const UID_PREFIX := "obj_"
 ## Only templates with a real authored artifact scene (a model in scenes/restoration/artifacts/)
 ## may spawn in random deliveries — no placeholder shapes. The registry is the source of truth.
 const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const _ArtifactCatalog := preload("res://scripts/restoration/artifact_catalog.gd")
 
 var _repo: DataRepository
 var _game_state: GameState
@@ -82,7 +83,10 @@ func _group_templates_by_rarity() -> Dictionary:
 		if not _ArtifactScenes.has_scene(id):
 			# Only artifacts with a real authored model spawn — never placeholder shapes.
 			continue
-		var rarity_name := ModelEnums.rarity_name(template.base_rarity)
+		if _ArtifactCatalog.is_quest_item(id):
+			# Quest-bound artifacts are handed out for their NPC step, never randomly delivered.
+			continue
+		var rarity_name := ModelEnums.rarity_name(_effective_rarity(template))
 		if not groups.has(rarity_name):
 			groups[rarity_name] = []
 		groups[rarity_name].append(template)
@@ -119,8 +123,24 @@ func _pick_template(
 func _apply_initial_value(
 	inst: ObjectInstance, template: ScrapObjectTemplate, rng: RandomNumberGenerator
 ) -> void:
-	inst.true_value = ValueModel.roll_true_value(template, rng)
+	var value_range := _effective_value_range(template)
+	inst.true_value = ValueModel.roll_true_value_range(value_range.x, value_range.y, rng)
 	inst.value = ValueModel.current_value(inst, template, _repo)
+
+
+## The artifact's rarity: the scene-config override (ArtifactCatalog) when set, else the data template.
+func _effective_rarity(template: ScrapObjectTemplate) -> int:
+	var override := _ArtifactCatalog.rarity_override(template.id)
+	return override if override >= 0 else template.base_rarity
+
+
+## The artifact's pristine value range: the scene-config override when set (non-zero), else the
+## data template's base_value_range.
+func _effective_value_range(template: ScrapObjectTemplate) -> Vector2i:
+	var override := _ArtifactCatalog.value_range_override(template.id)
+	if override.x > 0 or override.y > 0:
+		return override
+	return Vector2i(int(template.base_value_range.x), int(template.base_value_range.y))
 
 
 func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance:
