@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "record_type": "evening_config",
+  "repair_cost_per_point": 2,
+  "min_repair_cost": 5,
+  "replace_cost_fallback": 30,
+  "storage_overage_penalty_per_slot": 10,
+  "storage_cap": 12,
+  "plan_options": [
+    {
+      "id": "plan_forage",
+      "label": "Plan to forage hard tomorrow",
+      "summary": "Prioritise the scrapyard at open — bias toward a richer haul."
+    },
+    {
+      "id": "plan_restore",
+      "label": "Plan a restoration day",
+      "summary": "Focus the bench: clean and judge what's already in storage."
+    },
+    {
+      "id": "plan_market",
+      "label": "Plan a market day",
+      "summary": "Work the phone — list, haggle, and dispose of restored pieces."
+    },
+    {
+      "id": "plan_rest",
+      "label": "Just rest",
+      "summary": "No special preparation; take the day as it comes."
+    }
+  ]
+}

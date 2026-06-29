@@ -91,6 +91,12 @@ class PersistentState:
 	var safe_code_known: bool = false
 	var drawer_unlocked: bool = false
 	var best_sale: Dictionary = {}  ## Best sale ever: {price, template_id, buyer_id, condition, day}.
+	## Completed return-to-owner outcomes (DISP-R3/DISP-R6, persistent story state).
+	## Each entry: {template_id, owner_route_id, reward_id, day}.
+	var returns: Array = []
+	## Upkeep knowledge the player has learned (e.g. a repair technique unlocked in the
+	## evening). Persistent so it survives the loop reset (P14.6).
+	var upkeep_learned: Array[String] = []
 
 	static func from_dictionary(data: Dictionary) -> PersistentState:
 		var p := PersistentState.new()
@@ -110,6 +116,8 @@ class PersistentState:
 		p.safe_code_known = ModelUtils.as_bool(data.get("safe_code_known"))
 		p.drawer_unlocked = ModelUtils.as_bool(data.get("drawer_unlocked"))
 		p.best_sale = ModelUtils.as_dictionary(data.get("best_sale"))
+		p.returns = SaveState._as_array(data.get("returns", []))
+		p.upkeep_learned = ModelUtils.as_string_array(data.get("upkeep_learned"))
 		return p
 
 	func to_dictionary() -> Dictionary:
@@ -130,6 +138,8 @@ class PersistentState:
 			"safe_code_known": safe_code_known,
 			"drawer_unlocked": drawer_unlocked,
 			"best_sale": best_sale.duplicate(true),
+			"returns": returns.duplicate(true),
+			"upkeep_learned": upkeep_learned.duplicate(),
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:
@@ -181,6 +191,18 @@ class LoopState:
 	var event_history: Array[String] = []  ## Event ids triggered this loop.
 	var event_caps: Dictionary = {}  ## category -> count this loop.
 	var event_outcomes: Array = []  ## Resolved outcomes for the future evening summary.
+	## Phase 14 disposition + evening state. All loop-scoped: cleared on loop_reset.
+	## Dispositions routed this loop (SELL/RETURN/PRESERVE/JOURNAL), for the evening
+	## summary. Each entry: {uid, template_id, disposition, outcome_id, price, day}.
+	var disposition_log: Array = []
+	## Formal marketplace listings for restored items (P14.1). MarketplaceListing dicts.
+	## (marketplace_listings above is the legacy field; listings is the typed model store.)
+	var listings: Array = []
+	## The committed next-day plan (P14.5 / EVE-R4): {plan_id, day, notes, prep}.
+	var evening_plan: Dictionary = {}
+	## Tool repair/replace upkeep performed this loop, for the summary. Each entry:
+	## {action, tool_id, uid, cost, day}.
+	var upkeep_actions: Array = []
 
 	static func from_dictionary(data: Dictionary) -> LoopState:
 		var l := LoopState.new()
@@ -209,6 +231,10 @@ class LoopState:
 		l.event_history = ModelUtils.as_string_array(data.get("event_history"))
 		l.event_caps = data.get("event_caps", {}) as Dictionary
 		l.event_outcomes = SaveState._as_array(data.get("event_outcomes", []))
+		l.disposition_log = SaveState._as_array(data.get("disposition_log", []))
+		l.listings = SaveState._as_array(data.get("listings", []))
+		l.evening_plan = ModelUtils.as_dictionary(data.get("evening_plan"))
+		l.upkeep_actions = SaveState._as_array(data.get("upkeep_actions", []))
 		return l
 
 	func to_dictionary() -> Dictionary:
@@ -238,6 +264,10 @@ class LoopState:
 			"event_history": event_history.duplicate(),
 			"event_caps": event_caps.duplicate(),
 			"event_outcomes": event_outcomes.duplicate(),
+			"disposition_log": disposition_log.duplicate(true),
+			"listings": listings.duplicate(true),
+			"evening_plan": evening_plan.duplicate(true),
+			"upkeep_actions": upkeep_actions.duplicate(true),
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:

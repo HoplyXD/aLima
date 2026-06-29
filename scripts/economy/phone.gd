@@ -338,6 +338,8 @@ var _picker_repaint: Timer = null
 ## even while the phone is closed. Test seam.
 func open_buyers(uid: String) -> void:
 	_sell_uid = uid
+	# Listing a piece makes it first-class loop state (P14.1, MKT-R1) before haggling.
+	MarketplaceService.list_for_sale(uid)
 	_market_view = "buyers"
 	_last_arrived_count = -1
 	_render_marketplace()
@@ -733,9 +735,12 @@ func _buyer_display() -> String:
 
 
 func _settle(price: int) -> void:
-	var result := MarketplaceService.complete_sale(_sell_uid, price, _buyer_id)
+	# The sale completes through the DispositionRouter (SELL disposition) so the sale is
+	# recorded consistently with the other dispositions; the router delegates the money/
+	# removal transaction to MarketplaceService.complete_sale.
+	var result := DispositionRouter.complete_sell(_sell_uid, price, _buyer_id)
 	if result.ok:
-		_feedback_label.text = "Sold for ₱%d." % result.price
+		_feedback_label.text = "Sold for ₱%d." % price
 	else:
 		_feedback_label.text = result.error
 	_back_to_market_home()

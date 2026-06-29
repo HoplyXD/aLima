@@ -40,6 +40,8 @@ PauseMenu="*res://scenes/ui/pause_menu.tscn"
 LocalAI="*res://scripts/economy/local_ai.gd"
 SpaceManager="*res://scripts/core/space_manager.gd"
 AylaService="*res://scripts/delivery/ayla_service.gd"
+DispositionRouter="*res://scripts/economy/disposition_router.gd"
+EveningService="*res://scripts/economy/evening_service.gd"
 
 [display]
 

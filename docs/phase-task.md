@@ -1515,38 +1515,47 @@ Manual: complete every restoration interaction with correct and wrong tools, the
 - `[-]` **P14.1 Build listing and negotiation state.**
   - **Buy side:** `MarketplaceService` (autoload) lists `buyable` tools, spends `loop.money`, and schedules shipments that arrive after `ship_hours` of in-game time (delivered on the hour tick into `loop.owned_tools`). The shop **Phone interactable** opens an authored phone scene (`scenes/ui/phone.tscn`, `Phone`, `DayClock.PAUSE_PHONE`) with a Marketplace app. Covered by `tests/economy/test_marketplace.gd`, `test_phone.gd`, shop smoke `test_phone_opens_without_pausing`, and `tests/restoration/test_bench_overlays.gd`.
   - **Sell/haggle side:** `MarketplaceService.get_sellable()` lists restored+judged inventory instances. `interested_buyers()` and `arrived_buyers()` produce a time-phased buyer set: Mr. Maverick is always instantly available; other buyers arrive 1-20 in-game minutes apart (seeded per item+loop). Per-loop buyer wallets seed from persona `starting_cash`/`daily_allowance` (Maverick is unlimited). `haggle_for()` returns a persistent same-day `Negotiation` session so the player can shop buyers and return. `complete_sale()` credits money, removes the instance, records `persistent.best_sale`, and emits `EventBus.sale_completed`. Covered by `tests/economy/test_marketplace.gd`, `test_phone.gd`, and `test_storage_screen.gd`.
-  - **Missing:** a formal listing object, the full four-way disposition router, and evening reconciliation. Selling currently happens directly from the Storage/Phone sell flow.
+  - **Implemented (2026-06-29, verification pending):** the formal `MarketplaceListing` model (`scripts/models/marketplace_listing.gd`, loop-scoped `LoopState.listings`) makes listings first-class loop state; `MarketplaceService.list_for_sale()/get_listing()/get_active_listings()/resolve_listing()` manage them, the phone's `open_buyers()` lists the item before haggling, and a completed sale resolves the listing to SOLD. Buyer arrival/wallet behaviour is unchanged.
 - `[x]` **P14.2 Implement buyer personas and fallback sets.**
   - `data/buyers/buyers.json` now contains **nine** authored buyer personas (collector, reseller, student, gift, hobbyist, appraiser, tourist, lola, suspicious/Mr. Maverick), each with budget, preferred categories, negotiation style, per-loop wallet tuning, and fallback line sets. The `BuyerPersona` model loads and validates them.
   - The deterministic offline haggle engine (`Negotiation`) uses persona tuning (`open_factor`, `concession_rate`, `patience`, `condition_weight`, `category_bonus`, `ignores_banter`) and fallback lines.
   - Backend persona prompts/guardrails are server-side in `server/src/services/negotiate_service.js`.
   - The Godot client now calls the backend `/api/negotiate` proxy as tier 2 of a 3-tier banter stack: on-device `LocalAI` (NobodyWho GGUF) → backend `NegotiationClient` → offline `BanterBot`. The LLM supplies only the spoken line + offended flag; all prices remain deterministic in the `Negotiation` engine.
   - Evidence (2026-06-22): `tests/economy/test_buyer_personas.gd` 3/3 passed; full economy suite 61/61 passed. Backend tier wiring and deterministic-price tests added 2026-06-24 (counts to be recorded below).
-- `[-]` **P14.3 Implement the disposition router.**
-  - `SELL` is reachable from the Storage/Phone sell flow and completes via `MarketplaceService.complete_sale()` (idempotent; cannot sell the same instance twice).
-  - `RETURN`, `PRESERVE`, and `JOURNAL` dispositions are not yet offered as explicit player choices. Journal routing already happens automatically for Purple-and-below on restoration/scan (Phase 9); museum routing happens on fragment seating (Phase 8).
-- `[ ]` **P14.4 Implement return-to-owner outcomes.** Resolve owner/route rewards and story flags without directly granting fragments.
-- `[ ]` **P14.5 Build the evening state.** Summarize outcomes, repair/replace tools, resolve storage, prepare requests/equipment, review journal changes, and commit the next-day plan.
+- `[-]` **P14.3 Implement the disposition router.** *(Implemented 2026-06-29; automated verification pending — see note below.)*
+  - `DispositionRouter` autoload (`scripts/economy/disposition_router.gd`) is the single typed entry point. `eligible_dispositions(uid)` / `can_dispose(uid, d)` validate eligibility (restored + judged + non-carrier; rarity/owner gates per disposition) and reject invalid dispositions with a player-facing reason (DISP-R1). `dispose(uid, d, params)` routes to `SELL`/`RETURN`/`PRESERVE`/`JOURNAL`, emits `EventBus.disposition_completed(instance_id, disposition, outcome_id)`, logs to `loop.disposition_log`, and is idempotent (the routed instance is removed, so it cannot be disposed twice — DISP-R5).
+  - Rarity routing reuses Phase 8/9 (§4-F): `PRESERVE` is offered only for Gold/historical and creates a persistent `MuseumEntry`; `JOURNAL` is offered only for Purple-and-below and reuses `JournalService.record_restoration()`.
+  - The existing Storage/Phone sell path was migrated **into** the router: the phone's `_settle()` and Storage's `sell_artifact()` now call `DispositionRouter.complete_sell()` (which delegates the money/removal transaction to `MarketplaceService.complete_sale()` and resolves the listing).
+- `[-]` **P14.4 Implement return-to-owner outcomes.** *(Implemented 2026-06-29; verification pending.)* `RETURN` is offered only when `data/marketplace/returns.json` identifies an owner for the template. `ReturnService` (`scripts/economy/return_service.gd`) resolves the authored non-fragment reward + story flag through `RouteService.grant_reward_ids()/set_dialogue_flag()`, records a persistent `persistent.returns` entry (DISP-R6), removes the instance, and emits `EventBus.object_returned(...)`. Carriers are refused and the reward is non-fragment by contract, so a return provably cannot grant a fragment (§4-B/C).
+- `[-]` **P14.5 Build the evening state.** *(Implemented 2026-06-29; verification pending.)* `EveningService` autoload (`scripts/economy/evening_service.gd`) runs at the 20:00 close: `LoopController._on_day_closed()` defers to `EveningService.handle_day_close()` in interactive mode (the live Shop) so the day does not advance until the player commits, and falls back to inline auto-advance in headless/test mode. It builds the day summary (EVE-R2), exposes tool repair/replace upkeep and storage-overage resolution (EVE-R3), and `commit_plan()` saves atomically then advances the day or performs the Day 5 reset (EVE-R5). `EveningScreen` (`scripts/ui/evening_screen.gd`, code-built like `ShowcaseScreen`, owns `DayClock.PAUSE_EVENING`) is opened by the Shop on `EventBus.evening_started`.
 - `[-]` **P14.6 Extend save and event contracts.**
-  - `EventBus.sale_completed(instance_id, buyer_id, price)` exists and is emitted by `MarketplaceService.complete_sale()`.
-  - `persistent.best_sale` records the highest sale price, template, buyer, condition, and day.
-  - Buyer ghosts, wallets, schedules, and haggle sessions are loop-scoped and cleared on `loop_reset`.
-  - Full disposition/evening event partition is pending P14.3-P14.5.
+  - `EventBus` now carries `disposition_completed`, `object_returned`, `evening_started`, and `evening_plan_committed` (ARCH-R6, matching the Stable Interfaces contract). `sale_completed` is still emitted by `MarketplaceService.complete_sale()`.
+  - Loop-scoped, cleared on `loop_reset`: `loop.disposition_log`, `loop.listings`, `loop.evening_plan`, `loop.upkeep_actions` (plus the existing buyer ghosts/wallets/schedules/haggle sessions).
+  - Persistent, survives the reset: `persistent.returns`, `persistent.upkeep_learned`, `persistent.best_sale`, and route rewards.
 - `[-]` **P14.7 Test economy and transaction safety.**
-  - Covered: duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, banter mood effects, and the 3-tier banter fallback (backend reply use, offline fallback, offended propagation, deterministic pricing).
-  - Evidence (2026-06-24): `tests/economy/` 92/92 passed (test_buyer_personas 3, test_marketplace 13, test_marketplace_banter 11, test_negotiation 21, test_phone 19, test_storage_screen 11, test_tool_durability 4, test_tool_loadout 10); full GUT suite 512/512 passed (1645 asserts); server `npm test` 24/24 passed.
-  - Pending: live-provider manual gate (Gemini/Ollama configured in `server/.env`), invalid disposition rejection, return/preserve/journal flow tests, and Day 5 evening advancement.
+  - Covered before (still present): duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, banter mood effects, and the 3-tier banter fallback.
+  - **Added 2026-06-29 (verification pending):** `tests/economy/test_disposition_router.gd` (eligibility, invalid-disposition rejection, journal/preserve/sell routing, idempotency, listing resolution), `tests/economy/test_return_to_owner.gd` (owner-gated eligibility, reward/flag/persistent return, **no fragment state change on return**, idempotency), and `tests/economy/test_evening_state.gd` (day-close handoff, commit advancement, Day 5 reset partition, repair/replace upkeep).
+  - **Verification status:** this machine (user `chuchuu`) has no Godot 4.7 executable, so GUT / `gdformat --check` / `gdlint` were **not run here**. The team/CI must run the commands below and record real results before any `[x]`.
 ### Acceptance
 
-- `[-]` Sell flow completes via Storage/Phone Marketplace; return, preserve, and journal flows are not yet explicit player choices.
+- `[-]` Sell flow completes through the `DispositionRouter`, and `RETURN`/`PRESERVE`/`JOURNAL` are now explicit player choices with rarity/owner routing and idempotent outcomes (implemented 2026-06-29; automated/manual verification pending — no Godot on this machine).
 - `[x]` Multiple personas produce distinct, constrained negotiations and prices respond to condition, category, honesty, and banter (automated tests verify this).
-- `[ ]` Every day ends through a useful evening screen and Day 5 preserves only the documented state.
+- `[-]` Every day ends through the evening screen and Day 5 preserves only the documented persistent state through the loop reset (implemented; on-screen + GUT verification pending).
 
 ### Verification
 
 ```powershell
-& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/economy
-# Result (2026-06-24): 92/92 passed.
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
+# Run on a machine with Godot 4.7 (CI / the dev box). These were NOT run for the
+# 2026-06-29 Phase 14 disposition/return/evening work — implemented on a machine
+# without a Godot binary; record real results here before marking any task [x].
+& $godot --headless --editor --path . --quit                                    # import check, expect exit 0
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/economy -gexit
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
+
+# Result (2026-06-24, pre-Phase-14-disposition): tests/economy 92/92 passed.
 
 Push-Location server
 npm test
