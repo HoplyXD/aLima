@@ -53,6 +53,10 @@ const ZOOM_FRONT: float = 2.45  ## Closest the artifact comes to the camera (cam
 const ZOOM_BACK: float = -1.5  ## Farthest the artifact pulls back (more zoom-out range too).
 const ZOOM_NEAR_MARGIN: float = 0.15  ## Gap kept between the artifact's nearest point and the camera.
 const ZOOM_WHEEL_STEP: float = 0.25  ## Distance one mouse-wheel notch moves the artifact.
+## Stage 2 — once the artifact can't come any closer, further zoom-in TIGHTENS the camera FOV (a lens
+## zoom) down to MIN_FOV; zooming back out widens the FOV before the artifact pulls away again.
+const MIN_FOV: float = 22.0  ## Tightest lens zoom (smaller = more magnified).
+const FOV_DEGREES_PER_UNIT: float = 26.0  ## FOV change per object-distance unit, so a notch ≈ 6.5°.
 const ZOOM_KEY_SPEED: float = 2.2  ## Distance/second for held keyboard/controller zoom.
 
 ## Temporary diagnostic logging for the restoration interaction. Flip to false
@@ -117,6 +121,9 @@ var _object_scene_path: String = "res://scenes/restoration/restoration_artifact.
 ## Clamped to [ZOOM_BACK, ZOOM_FRONT]; reset returns to the rest position.
 var _zoom_rest_z: float = 0.0
 var _zoom_z: float = 0.0
+## The camera's authored FOV (the widest / un-zoomed lens), captured on ready. Stage-2 lens zoom
+## tightens from here toward MIN_FOV.
+var _default_fov: float = 70.0
 var _highlight_time: float = 0.0  ## Drives the optional decal-highlight throb.
 var _overlay_highlight_time: float = 0.0  ## Drives the 3-second overlay glow pulse.
 ## Left-edge 2D tool rack (replaces the 3D bench tool props; see CLAUDE.md REST-R9). Built
@@ -172,6 +179,8 @@ func _ready() -> void:
 	# Remember the artifact's authored distance so zoom is relative to it and reset returns here.
 	_zoom_rest_z = _object.position.z
 	_zoom_z = _zoom_rest_z
+	if is_instance_valid(_camera):
+		_default_fov = _camera.fov  # the lens-zoom stage tightens FOV from here down to MIN_FOV
 	_scanner_screen = SCANNER_SCREEN_SCENE.instantiate()
 	add_child(_scanner_screen)
 	_scanner_screen.closed.connect(_on_scanner_closed)
@@ -287,8 +296,9 @@ func _on_scan_pressed() -> void:
 	if _selected_uid.is_empty():
 		return
 	var inst := _service.find_instance_by_id(_selected_uid)
-	if inst == null or inst.state != ModelEnums.ObjState.CLEAN:
+	if inst == null:
 		return
+	# Always open the scanner; it reports "too dirty" below the clean threshold, evidence above it.
 	_scanner_screen.open(inst)
 
 
@@ -1265,12 +1275,38 @@ func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
 	_object.rotate_view(delta_yaw, delta_pitch)
 
 
-## Moves the artifact toward the camera (amount > 0 = zoom in) or away (amount < 0). The near limit is
-## DYNAMIC: a big artifact stops sooner so its nearest point never pushes through the camera. The camera
-## never moves — only the artifact.
+## Two-stage zoom. STAGE 1: the artifact moves toward the camera (amount > 0 = in) up to the dynamic
+## near limit. STAGE 2: once it can't get closer, the leftover tightens the camera FOV (a lens zoom)
+## down to MIN_FOV. Zooming out reverses it — FOV widens back to default first, then the artifact pulls
+## away. The camera position never moves; only the artifact distance and the FOV change.
 func zoom_by(amount: float) -> void:
-	_zoom_z = clampf(_zoom_z + amount, ZOOM_BACK, _zoom_front_limit())
+	var front := _zoom_front_limit()
+	var remaining := amount
+	if remaining > 0.0:
+		# Zoom IN: spend on object distance first, then on tightening FOV.
+		var room := front - _zoom_z
+		if room > 0.0:
+			var used := minf(remaining, room)
+			_zoom_z += used
+			remaining -= used
+		if remaining > 0.0 and is_instance_valid(_camera):
+			_set_fov(_camera.fov - remaining * FOV_DEGREES_PER_UNIT)
+	else:
+		# Zoom OUT: widen FOV back to default first, then pull the artifact away.
+		if is_instance_valid(_camera) and _camera.fov < _default_fov:
+			var fov_units := (_default_fov - _camera.fov) / FOV_DEGREES_PER_UNIT
+			var used := minf(-remaining, fov_units)
+			_set_fov(_camera.fov + used * FOV_DEGREES_PER_UNIT)
+			remaining += used
+		if remaining < 0.0:
+			_zoom_z = maxf(ZOOM_BACK, _zoom_z + remaining)
 	_object.position.z = _zoom_z
+
+
+## Clamps and applies the camera FOV for the stage-2 lens zoom.
+func _set_fov(fov: float) -> void:
+	if is_instance_valid(_camera):
+		_camera.fov = clampf(fov, MIN_FOV, _default_fov)
 
 
 ## Nearest zoom position.z that keeps the artifact's front face clear of the camera. = camera.z minus a
@@ -1296,6 +1332,8 @@ func _reset_zoom() -> void:
 	_zoom_z = minf(_zoom_rest_z, _zoom_front_limit())
 	if is_instance_valid(_object):
 		_object.position.z = _zoom_z
+	if is_instance_valid(_camera):
+		_camera.fov = _default_fov  # drop the stage-2 lens zoom back to the wide default
 
 
 # --- Input -------------------------------------------------------------------

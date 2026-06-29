@@ -76,6 +76,15 @@ func test_offensive_loop_ghosts_a_normal_buyer() -> void:
 func test_maverick_arrives_at_once_others_arrive_over_time() -> void:
 	DayClock.reset()  # a fresh in-game clock (day 1, 07:00)
 	var uid := "arrival_test_item"
+	# A spotless, scanned piece so several gated buyers are also interested (they trickle in after).
+	var inst := ObjectInstance.new()
+	inst.template_id = "tarnished_pendant"
+	inst.uid = uid
+	inst.condition = 100.0
+	inst.state = ModelEnums.ObjState.CLEAN
+	inst.authenticity = ModelEnums.Verdict.AUTHENTIC
+	inst.value = 200
+	GameState.save_state.loop.inventory.append(inst.to_dictionary())
 	var arrived := MarketplaceService.arrived_buyers(uid)
 	var ids: Array = []
 	for persona in arrived:

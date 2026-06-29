@@ -39,6 +39,16 @@ var unlimited_cash: bool = false
 ## price — they value only the object's condition + category. Their AI replies stay terse.
 var ignores_banter: bool = false
 
+## --- Arrival gates (which artifacts this buyer will message you about) ----------------------------
+## Minimum restoration condition (0..100) before this buyer is interested (e.g. 100 = only spotless).
+var min_condition: float = 0.0
+## Only interested once the artifact is scanned (a committed verdict) — proof of value.
+var requires_scan: bool = false
+## Only interested in historical artifacts (gold rarity / `historical` tag) — e.g. a museum.
+var requires_historical: bool = false
+## Ignores all of the above gates and always shows up (the lowballer who'll take anything, dirty).
+var ignores_state_gates: bool = false
+
 
 func _init() -> void:
 	pass
@@ -66,6 +76,10 @@ static func from_dictionary(data: Dictionary) -> BuyerPersona:
 	b.daily_allowance = ModelUtils.as_int(data.get("daily_allowance"), 0)
 	b.unlimited_cash = bool(data.get("unlimited_cash", false))
 	b.ignores_banter = bool(data.get("ignores_banter", false))
+	b.min_condition = ModelUtils.as_float(data.get("min_condition"), 0.0)
+	b.requires_scan = bool(data.get("requires_scan", false))
+	b.requires_historical = bool(data.get("requires_historical", false))
+	b.ignores_state_gates = bool(data.get("ignores_state_gates", false))
 	b.fallback_lines = ModelUtils.as_dictionary(data.get("lines"))
 	return b
 
@@ -92,6 +106,10 @@ func to_dictionary() -> Dictionary:
 		"daily_allowance": daily_allowance,
 		"unlimited_cash": unlimited_cash,
 		"ignores_banter": ignores_banter,
+		"min_condition": min_condition,
+		"requires_scan": requires_scan,
+		"requires_historical": requires_historical,
+		"ignores_state_gates": ignores_state_gates,
 		"lines": fallback_lines.duplicate(true),
 	}
 

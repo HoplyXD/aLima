@@ -55,6 +55,17 @@ func _exit_tree() -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
+## Free the mouse while the game is paused (so the pause menu is clickable) and recapture it on
+## resume — the scrapyard otherwise keeps the cursor captured for mouse-look, hiding it during pause.
+func _notification(what: int) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	if what == NOTIFICATION_PAUSED:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	elif what == NOTIFICATION_UNPAUSED:
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+
 func set_input_enabled(enabled: bool) -> void:
 	_input_enabled = enabled
 

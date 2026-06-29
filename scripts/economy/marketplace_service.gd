@@ -194,20 +194,38 @@ func get_pending_shipments() -> Array:
 ## Inventory instances ready to sell: restored (CLEAN or OPEN) AND scanned & judged. The
 ## player must Scan & Judge a piece (commit a verdict) before it can be listed — that's
 ## why an item only appears in the Marketplace after scanning.
+## EVERY real artifact you own is listed (dirty or clean, scanned or not). An unscanned piece sells
+## for an unknown price (its value shows as "???" in the phone) and draws few or no buyers; scanning is
+## the proof of value that brings buyers out.
 func get_sellable() -> Array[ObjectInstance]:
 	var out: Array[ObjectInstance] = []
+	var repo := DataRepository.singleton()
 	for raw in GameState.save_state.loop.inventory:
 		if not (raw is Dictionary):
 			continue
 		var inst := ObjectInstance.from_dictionary(raw)
-		if _is_restored(inst) and _is_judged(inst):
+		if repo.get_template(inst.template_id) != null:
 			out.append(inst)
 	return out
 
 
-## True once the player has committed a scan verdict on the instance.
+## True once the player has committed a scan verdict on the instance (proof of identity/value).
 func _is_judged(inst: ObjectInstance) -> bool:
 	return inst.authenticity != ModelEnums.Verdict.UNKNOWN
+
+
+## True when the player has scanned + judged this item (so its price is known to buyers).
+func is_scanned(uid: String) -> bool:
+	var found := _find_instance(uid)
+	return not found.is_empty() and _is_judged(found["inst"])
+
+
+## True for historical artifacts (gold rarity / `historical` tag) — what the museum buys.
+func _is_historical(template: ScrapObjectTemplate) -> bool:
+	return (
+		template != null
+		and (template.tags.has("historical") or template.base_rarity == ModelEnums.Rarity.GOLD)
+	)
 
 
 ## The assessed value of an instance: its recorded value if set, else the template's
@@ -232,24 +250,40 @@ func assessed_value(uid: String) -> int:
 ## Buyers worth pitching this item to: those whose budget can make a meaningful offer.
 ## Falls back to every persona so the player can always try to sell something.
 func interested_buyers(uid: String) -> Array[BuyerPersona]:
+	# A missing/hypothetical item has no state, so only the always-on lowballer (Maverick) qualifies.
+	var found := _find_instance(uid)
+	var inst: ObjectInstance = found.get("inst")
+	var template: ScrapObjectTemplate = found.get("template")
 	var value := assessed_value(uid)
+	var condition := inst.condition if inst != null else 0.0
+	var scanned := inst != null and _is_judged(inst)
+	var historical := _is_historical(template)
 	var out: Array[BuyerPersona] = []
-	# Mr. Maverick shows up first — unless he's artifact-ghosted for THIS item (he never
-	# day/loop ghosts, but a failed banter / offence on a piece does block that piece).
-	var maverick := DataRepository.singleton().get_buyer(MAVERICK_ID)
-	if maverick != null and not is_ghosted(uid, MAVERICK_ID):
-		out.append(maverick)
 	for raw in DataRepository.singleton().get_buyers_sorted():
 		var persona := raw as BuyerPersona
-		if persona == null or persona.id == MAVERICK_ID:
+		if persona == null or is_ghosted(uid, persona.id):
 			continue
-		if is_ghosted(uid, persona.id):
-			continue  # a buyer you failed/ghosted won't return for this item
-		if persona.budget_range.y >= int(round(value * 0.35)):
+		if _buyer_interested(persona, condition, value, scanned, historical):
 			out.append(persona)
-	if out.is_empty() and maverick != null and not is_ghosted(uid, MAVERICK_ID):
-		out.append(maverick)
 	return out
+
+
+## Whether a persona will message the player about an item in this state. Mr. Maverick (and any buyer
+## with ignores_state_gates) always shows and lowballs anything; everyone else needs the piece scanned
+## (proof of value), and personas may require a minimum cleanliness, a historical piece, and the budget
+## to make a meaningful offer. This is what makes a dirty/unscanned artifact hard to sell.
+func _buyer_interested(
+	persona: BuyerPersona, condition: float, value: int, scanned: bool, historical: bool
+) -> bool:
+	if persona.ignores_state_gates:
+		return true
+	if persona.requires_scan and not scanned:
+		return false
+	if persona.requires_historical and not historical:
+		return false
+	if condition < persona.min_condition:
+		return false
+	return persona.budget_range.y >= int(round(value * 0.35))
 
 
 ## Buyers who have ACTUALLY shown up for `uid` so far. Mr. Maverick is here at once;
@@ -337,8 +371,6 @@ func start_negotiation(uid: String, persona_id: String) -> Negotiation:
 		return null
 	var inst: ObjectInstance = found["inst"]
 	var template: ScrapObjectTemplate = found["template"]
-	if not _is_restored(inst):
-		return null
 	var persona := DataRepository.singleton().get_buyer(persona_id)
 	if persona == null:
 		return null
@@ -383,8 +415,6 @@ func complete_sale(uid: String, price: int, buyer_id: String) -> Dictionary:
 		return {"ok": false, "error": "That item is no longer available.", "price": 0}
 	var inst: ObjectInstance = found["inst"]
 	var template: ScrapObjectTemplate = found["template"]
-	if not _is_restored(inst):
-		return {"ok": false, "error": "Only restored pieces can be sold.", "price": 0}
 
 	var loop := GameState.save_state.loop
 	loop.money += price

@@ -87,7 +87,7 @@ func _add_clean_item(uid: String, value: int = 200) -> void:
 	GameState.save_state.loop.inventory.append(inst.to_dictionary())
 
 
-func test_item_is_not_sellable_until_scanned_and_judged() -> void:
+func test_unscanned_item_lists_but_value_is_unknown_until_scanned() -> void:
 	var inst := ObjectInstance.new()
 	inst.template_id = "tarnished_pendant"
 	inst.uid = "unscanned1"
@@ -98,14 +98,14 @@ func test_item_is_not_sellable_until_scanned_and_judged() -> void:
 	var inv: Array = GameState.save_state.loop.inventory
 	inv.append(inst.to_dictionary())
 
-	assert_eq(
-		MarketplaceService.get_sellable().size(), 0, "a clean but unscanned item can't be sold"
-	)
+	# Every artifact is listed now; an unscanned one just has an unknown (???) value and few buyers.
+	assert_eq(MarketplaceService.get_sellable().size(), 1, "the item is listed even unscanned")
+	assert_false(MarketplaceService.is_scanned("unscanned1"), "unscanned => value is ???")
 
 	inst.authenticity = ModelEnums.Verdict.AUTHENTIC  # the player scans + commits a verdict
 	inv[inv.size() - 1] = inst.to_dictionary()
 
-	assert_eq(MarketplaceService.get_sellable().size(), 1, "scanning + judging unlocks selling")
+	assert_true(MarketplaceService.is_scanned("unscanned1"), "scanning reveals the value")
 
 
 func test_marketplace_sell_flow_accepts_an_offer() -> void:
