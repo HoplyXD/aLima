@@ -99,3 +99,13 @@ uv2_tiling = 2.0
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "carved wooden pipe"
+period = "early to mid-20th century"
+materials = Array[String](["wood"])
+markings = Array[String](["hand-carved bowl", "stem wear", "charred bowl"])
+condition_note = "Carved wooden pipe; the bowl is charred from use and the stem worn smooth."
+cultural_relevance = "A personal smoking pipe of a kind whittled and used in rural Panay homes. Sentimental rather than documented."
+price_min = 30
+price_max = 90
+confidence = 2
+uncertainty_notes = "Maker and owner are unknown; dating is from wear and carving style."

@@ -47,11 +47,31 @@ func create_request(instance: ObjectInstance) -> ScannerRequest:
 	return request
 
 
-## True when the instance is eligible to be scanned (CLEAN or OPEN, not DIRTY).
+## Minimum condition (percent) needed before the scanner can read a piece. Ordinary artifacts need a
+## decent clean; historical ones (gold rarity / `historical` tag) read through more grime.
+const SCAN_THRESHOLD: float = 50.0
+const SCAN_THRESHOLD_HISTORICAL: float = 25.0
+
+
+## The clean % this instance must reach before it can be scanned.
+func scan_threshold(instance: ObjectInstance) -> float:
+	if instance == null:
+		return SCAN_THRESHOLD
+	var template: ScrapObjectTemplate = _repo.get_template(instance.template_id)
+	var historical := (
+		template != null
+		and (template.tags.has("historical") or template.base_rarity == ModelEnums.Rarity.GOLD)
+	)
+	return SCAN_THRESHOLD_HISTORICAL if historical else SCAN_THRESHOLD
+
+
+## True when the instance is clean enough to scan (an OPEN piece is past the gate by definition).
 func can_scan(instance: ObjectInstance) -> bool:
 	if instance == null:
 		return false
-	return instance.state == ModelEnums.ObjState.CLEAN or instance.state == ModelEnums.ObjState.OPEN
+	if instance.state == ModelEnums.ObjState.OPEN:
+		return true
+	return instance.condition >= scan_threshold(instance)
 
 
 ## Scans the instance and returns a typed ScannerResult.
@@ -59,7 +79,9 @@ func scan(instance: ObjectInstance) -> ScannerResult:
 	if not can_scan(instance):
 		var blocked := ScannerResponse.new()
 		blocked.ok = false
-		blocked.transport_error = "Object must be cleaned before scanning."
+		blocked.transport_error = (
+			"Too dirty to be scanned — clean it to at least %d%%." % int(scan_threshold(instance))
+		)
 		blocked.request_id = _make_request_id(instance)
 		return ScannerResult.new(ScannerResult.Status.NOT_CLEAN, blocked)
 

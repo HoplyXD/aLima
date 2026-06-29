@@ -1951,6 +1951,30 @@ Captured design intents that are **not** part of any numbered phase above yet. P
 phase (with a requirement ID + acceptance) before implementing; until then they are direction,
 not committed scope.
 
+- [ ] **Scan gating by cleanliness.** The Scan action is ALWAYS available, but reports "Too dirty to
+  be scanned" until the piece is cleaned enough: **≥50% condition** for ordinary artifacts, **≥25%**
+  for historical ones (tag `historical` / gold rarity). Only at/above the threshold does it return the
+  identification/value evidence. Raised by the team 2026-06-29. *(Implemented this pass.)*
+
+- [ ] **Marketplace: list everything; value hidden until scanned.** Every owned artifact appears in
+  the sell list (not just scanned+judged ones), but an UNSCANNED piece shows its value as **"???"** —
+  scanning is the *proof of origin/value*. Buyers price off the scan: an unscanned, dirty piece is hard
+  to sell (few or no buyers message you; any that do flag it as dirty and lowball), while a scanned
+  piece draws buyers FASTER, scaled by how clean it is and how high its value. Raised 2026-06-29.
+
+- [ ] **Buyer personas / NPC personalities.** Each buyer has arrival rules tied to artifact state:
+  e.g. **Maya** and **the Collector** only appear once the piece is **100% cleaned**; a new **Museum**
+  buyer **always** appears for a CONFIRMED historical artifact even while it's dirty (and pays for
+  provenance). Generalise into per-persona gates (min condition, requires-scan, requires-historical,
+  value floor) on top of the existing wallet/ghost system. Raised 2026-06-29.
+
+- [ ] **Meet-to-sell handoff (out-of-shop sale).** FUTURE. After a sale is agreed, some buyers want to
+  **meet in person at a place** to pay — the player travels out to that location to collect the money —
+  while others **pay online and have it shipped** (money on delivery). UI shows "Meet me at (Place)"
+  after purchase; meeting them releases the payment. Per-persona `payment_mode` (online | meet) + a
+  meeting location/flow + a travel space. **For now every buyer accepts online money** (no meeting).
+  Raised by the team 2026-06-29.
+
 - [ ] **Trash-Goblin-style click-drag surface cleaning.** Replace/augment the current
   stroke-commit cleaning with a continuous *click-and-drag scrub*: the player holds the
   (cursor-following) tool down and drags it across the grime, which wears away progressively

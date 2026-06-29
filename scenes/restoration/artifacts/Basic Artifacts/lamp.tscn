@@ -114,3 +114,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "brass oil lamp"
+period = "late 19th to early 20th century"
+materials = Array[String](["brass"])
+markings = Array[String](["solder seams", "burner wear", "tarnish"])
+condition_note = "Tarnished brass body; burner and wick channel show use. Reservoir cap is removable."
+cultural_relevance = "A household oil lamp of a type used before rural electrification across the Philippines. The form is common; significance depends on provenance."
+price_min = 70
+price_max = 220
+confidence = 1
+uncertainty_notes = "No maker's mark; date estimated from construction and wear."

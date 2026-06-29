@@ -1139,7 +1139,7 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	if is_open:
 		_object.set_clasp_open(true)
 	_clasp_prompt.visible = is_clean
-	_scan_button.visible = is_clean
+	_scan_button.visible = true  # always available; the scan itself reports "too dirty" below the threshold
 	if is_clean:
 		_clasp_prompt.text = "Pendant is clean — scan and judge, or click the clasp to open."
 	elif is_open:
@@ -1154,7 +1154,7 @@ func _refresh_photo(inst: ObjectInstance, template: ScrapObjectTemplate) -> void
 	_surface_bar.value = (float(cleaned) / float(total) * 100.0) if total > 0 else 0.0
 
 	var is_clean := inst.state == ModelEnums.ObjState.CLEAN
-	_scan_button.visible = is_clean
+	_scan_button.visible = true  # always available; the scan itself reports "too dirty" below the threshold
 	var needs_join := template != null and template.requires_join and not inst.is_joined
 	_clasp_prompt.visible = is_clean
 	if is_clean and needs_join:

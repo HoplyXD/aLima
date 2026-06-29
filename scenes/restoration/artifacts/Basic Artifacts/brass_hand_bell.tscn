@@ -114,3 +114,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "brass hand bell"
+period = "early to mid-20th century"
+materials = Array[String](["brass"])
+markings = Array[String](["tarnish", "clapper wear", "cast seam"])
+condition_note = "Cast brass bell with overall tarnish; clapper swings freely and the tone is intact."
+cultural_relevance = "A common hand bell of the sort used in schools, chapels, and homes. The form is ordinary; any value rests on provenance rather than the object."
+price_min = 20
+price_max = 70
+confidence = 1
+uncertainty_notes = "No foundry mark; date estimated from casting and wear."

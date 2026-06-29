@@ -110,3 +110,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "framed portrait"
+period = "mid-20th century"
+materials = Array[String](["wood", "glass"])
+markings = Array[String](["molding tarnish", "glass dust", "cracked corner"])
+condition_note = "A portrait behind glass in a wooden frame; the molding is tarnished and one corner is cracked."
+cultural_relevance = "A framed family portrait of personal rather than public significance. Value rests on the sitter's identity and the family's story."
+price_min = 0
+price_max = 120
+confidence = 2
+uncertainty_notes = "Sitter and photographer are unknown without the owner's account."

@@ -116,3 +116,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "glazed ceramic vase"
+period = "20th century"
+materials = Array[String](["ceramic", "glaze"])
+markings = Array[String](["glaze crazing", "kiln spots"])
+condition_note = "Glazed vase with fine surface crazing; the rim is intact."
+cultural_relevance = "A domestic glazed vase of a common Visayan household form. No specific provenance is claimed."
+price_min = 60
+price_max = 180
+confidence = 1
+uncertainty_notes = "Glaze and form are not distinctive enough to attribute a kiln or date precisely."

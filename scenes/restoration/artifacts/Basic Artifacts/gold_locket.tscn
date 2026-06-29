@@ -113,3 +113,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "locket"
+period = "early 20th century"
+materials = Array[String](["brass", "silver"])
+markings = Array[String](["hinge wear", "tarnish"])
+condition_note = "Dusty and tarnished; hinge moves with slight resistance."
+cultural_relevance = "A personal locket similar to keepsake jewelry kept in families across the Visayas. Specific origin and owner are not recorded."
+price_min = 100
+price_max = 240
+confidence = 1
+uncertainty_notes = "Metal composition is inferred from surface color and tarnish, not assay."

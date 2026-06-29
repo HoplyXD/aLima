@@ -109,3 +109,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "family photograph"
+period = "mid-20th century"
+materials = Array[String](["paper"])
+markings = Array[String](["silver mirroring", "water blotch", "faded emulsion"])
+condition_note = "Faded gelatin-silver print with surface grime and a water blotch; image still legible."
+cultural_relevance = "A personal family photograph. Its meaning is sentimental and tied to a specific household rather than to a documented public record."
+price_min = 0
+price_max = 80
+confidence = 2
+uncertainty_notes = "People, place, and date are unknown without the owner's account."

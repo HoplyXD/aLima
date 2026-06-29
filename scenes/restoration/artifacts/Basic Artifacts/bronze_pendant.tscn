@@ -116,3 +116,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "pendant"
+period = "early to mid-20th century"
+materials = Array[String](["bronze"])
+markings = Array[String](["green patina", "clasp wear"])
+condition_note = "Bronze pendant with patina in the recesses; clasp functional but worn."
+cultural_relevance = "A common personal pendant of inexpensive material, of a kind kept as a family keepsake across the Visayas."
+price_min = 60
+price_max = 160
+confidence = 1
+uncertainty_notes = "Maker and owner are unknown."

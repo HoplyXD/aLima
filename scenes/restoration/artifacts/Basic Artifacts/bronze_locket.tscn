@@ -109,3 +109,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "locket"
+period = "early to mid-20th century"
+materials = Array[String](["bronze"])
+markings = Array[String](["green patina", "hinge wear"])
+condition_note = "Bronze with patches of green patina; hinge moves with resistance."
+cultural_relevance = "An everyday keepsake locket of modest material. Any historical value depends on provenance, not the metal itself."
+price_min = 60
+price_max = 160
+confidence = 1
+uncertainty_notes = "Date is estimated from wear and patina, not a maker's mark."

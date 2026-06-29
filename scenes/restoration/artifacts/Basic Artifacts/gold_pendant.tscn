@@ -120,3 +120,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "pendant"
+period = "early 20th century"
+materials = Array[String](["silver", "patina"])
+markings = Array[String](["clasp wear", "tarnish pattern"])
+condition_note = "Heavily tarnished; clasp mechanism intact but stiff."
+cultural_relevance = "A personal pendant in a style common to heirloom jewelry in the Panay region. Local families often kept similar pieces as keepsakes; no specific provenance is claimed."
+price_min = 120
+price_max = 280
+confidence = 1
+uncertainty_notes = "Exact maker and original owner are unknown."

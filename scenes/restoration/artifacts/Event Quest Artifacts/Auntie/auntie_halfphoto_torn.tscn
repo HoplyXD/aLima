@@ -16,3 +16,13 @@ randomize_conditions_max = 2
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "torn photograph"
+period = "mid-20th century"
+materials = Array[String](["paper"])
+markings = Array[String](["tear down the center", "tape residue", "surface dust"])
+condition_note = "A photograph torn in two and previously taped; residue remains along the join."
+cultural_relevance = "A personal photograph whose torn state is part of its story. Significance is sentimental and specific to the owner's family."
+price_min = 0
+price_max = 150
+confidence = 2
+uncertainty_notes = "The missing half and the people pictured are unknown without the owner's account."

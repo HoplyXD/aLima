@@ -120,3 +120,13 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="."]
 script = ExtResource("scannerdata_node")
+type = "gold burial mask"
+period = "pre-colonial (c. 14th-15th century, attributed)"
+materials = Array[String](["gold"])
+markings = Array[String](["repoussé facial features", "eye and mouth cutouts", "thin hammered sheet"])
+condition_note = "Thin gold sheet with surface tarnish, dust, and grime in the recessed features; fragile at the edges."
+cultural_relevance = "Gold death masks of this form are associated with pre-colonial burial practice in the Oton area of Iloilo, Panay. Such pieces are treated as historically significant; this is framed as folklore-adjacent context pending verified records, not an authenticated provenance."
+price_min = 800
+price_max = 1500
+confidence = 2
+uncertainty_notes = "Attribution and dating are tentative; a genuine piece of this kind would require expert authentication and is excluded from any folklore-as-fact claim."
