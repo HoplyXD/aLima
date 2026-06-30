@@ -57,6 +57,11 @@ const ZOOM_WHEEL_STEP: float = 0.25  ## Distance one mouse-wheel notch moves the
 ## zoom) down to MIN_FOV; zooming back out widens the FOV before the artifact pulls away again.
 const MIN_FOV: float = 22.0  ## Tightest lens zoom (smaller = more magnified).
 const FOV_DEGREES_PER_UNIT: float = 26.0  ## FOV change per object-distance unit, so a notch ≈ 6.5°.
+const FOV_LEAN_MAX: float = 0.55  ## Max camera offset (world units) toward the cursor at full lens zoom.
+## Middle-mouse pan: drag the (lens-zoomed) view around. Speed is world units of camera offset per pixel
+## dragged; the pan is clamped so the artifact can't be shoved off-screen.
+const CAMERA_PAN_SPEED: float = 0.004
+const CAMERA_PAN_MAX: float = 1.6
 const ZOOM_KEY_SPEED: float = 2.2  ## Distance/second for held keyboard/controller zoom.
 
 ## Temporary diagnostic logging for the restoration interaction. Flip to false
@@ -124,6 +129,12 @@ var _zoom_z: float = 0.0
 ## The camera's authored FOV (the widest / un-zoomed lens), captured on ready. Stage-2 lens zoom
 ## tightens from here toward MIN_FOV.
 var _default_fov: float = 70.0
+## Last cursor position (normalised -1..1 from viewport centre) used to bias the stage-2 lens zoom
+## toward where the mouse is, so it magnifies that spot rather than the screen centre.
+var _fov_lean_ndc: Vector2 = Vector2.ZERO
+## Manual camera pan (world-unit h/v offset) from middle-mouse dragging; added on top of the zoom lean.
+var _camera_pan: Vector2 = Vector2.ZERO
+var _pan_down: bool = false  ## Middle mouse held → dragging pans the view.
 var _highlight_time: float = 0.0  ## Drives the optional decal-highlight throb.
 var _overlay_highlight_time: float = 0.0  ## Drives the 3-second overlay glow pulse.
 ## Left-edge 2D tool rack (replaces the 3D bench tool props; see CLAUDE.md REST-R9). Built
@@ -1279,7 +1290,13 @@ func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
 ## near limit. STAGE 2: once it can't get closer, the leftover tightens the camera FOV (a lens zoom)
 ## down to MIN_FOV. Zooming out reverses it — FOV widens back to default first, then the artifact pulls
 ## away. The camera position never moves; only the artifact distance and the FOV change.
-func zoom_by(amount: float) -> void:
+func zoom_by(amount: float, cursor_pos: Vector2 = Vector2.INF) -> void:
+	# Remember where the cursor is so the stage-2 lens zoom magnifies that spot (not the centre).
+	if cursor_pos != Vector2.INF and is_instance_valid(_viewport):
+		var vp := _to_viewport(cursor_pos)
+		var size := Vector2(_viewport.size)
+		if size.x > 0.0 and size.y > 0.0:
+			_fov_lean_ndc = Vector2((vp.x / size.x) * 2.0 - 1.0, -((vp.y / size.y) * 2.0 - 1.0))
 	var front := _zoom_front_limit()
 	var remaining := amount
 	if remaining > 0.0:
@@ -1303,10 +1320,36 @@ func zoom_by(amount: float) -> void:
 	_object.position.z = _zoom_z
 
 
-## Clamps and applies the camera FOV for the stage-2 lens zoom.
+## Clamps and applies the camera FOV for the stage-2 lens zoom, then refreshes the camera offset.
 func _set_fov(fov: float) -> void:
-	if is_instance_valid(_camera):
-		_camera.fov = clampf(fov, MIN_FOV, _default_fov)
+	if not is_instance_valid(_camera):
+		return
+	_camera.fov = clampf(fov, MIN_FOV, _default_fov)
+	_apply_camera_offset()
+
+
+## Sets the camera's h/v offset from the zoom-to-cursor lean (scaled by how far the lens is zoomed)
+## plus the manual middle-mouse pan. At default FOV with no pan it's centred (zero offset).
+func _apply_camera_offset() -> void:
+	if not is_instance_valid(_camera):
+		return
+	var zoom_t := clampf(
+		(_default_fov - _camera.fov) / maxf(0.001, _default_fov - MIN_FOV), 0.0, 1.0
+	)
+	_camera.h_offset = _fov_lean_ndc.x * FOV_LEAN_MAX * zoom_t + _camera_pan.x
+	_camera.v_offset = _fov_lean_ndc.y * FOV_LEAN_MAX * zoom_t + _camera_pan.y
+
+
+## Middle-mouse drag: pan the (zoomed) view by moving the camera offset, clamped so the artifact stays
+## on-screen. Dragging right/up moves the view that way (the camera shifts opposite).
+func _pan_camera(relative: Vector2) -> void:
+	_camera_pan.x = clampf(
+		_camera_pan.x - relative.x * CAMERA_PAN_SPEED, -CAMERA_PAN_MAX, CAMERA_PAN_MAX
+	)
+	_camera_pan.y = clampf(
+		_camera_pan.y + relative.y * CAMERA_PAN_SPEED, -CAMERA_PAN_MAX, CAMERA_PAN_MAX
+	)
+	_apply_camera_offset()
 
 
 ## Nearest zoom position.z that keeps the artifact's front face clear of the camera. = camera.z minus a
@@ -1334,6 +1377,10 @@ func _reset_zoom() -> void:
 		_object.position.z = _zoom_z
 	if is_instance_valid(_camera):
 		_camera.fov = _default_fov  # drop the stage-2 lens zoom back to the wide default
+		_camera.h_offset = 0.0
+		_camera.v_offset = 0.0
+	_fov_lean_ndc = Vector2.ZERO
+	_camera_pan = Vector2.ZERO
 
 
 # --- Input -------------------------------------------------------------------
@@ -1456,11 +1503,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	# Mouse wheel zooms the artifact in/out. Fires as a pressed button event.
 	if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 		if event.pressed:
-			zoom_by(ZOOM_WHEEL_STEP)  # wheel up → artifact comes closer
+			zoom_by(ZOOM_WHEEL_STEP, pos)  # wheel up → artifact comes closer (lens zoom toward cursor)
 		return
 	if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 		if event.pressed:
-			zoom_by(-ZOOM_WHEEL_STEP)  # wheel down → artifact pulls back
+			zoom_by(-ZOOM_WHEEL_STEP, pos)  # wheel down → artifact pulls back
 		return
 	if event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
@@ -1518,11 +1565,16 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			_last_pointer = pos
 		else:
 			_right_down = false
+	elif event.button_index == MOUSE_BUTTON_MIDDLE:
+		# Hold middle-mouse to PAN the (lens-zoomed) view by dragging.
+		_pan_down = event.pressed and _pointer_over_viewport(pos)
 
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	var pos := event.position
-	if _left_down and _mode == Mode.CLEAN and _stroke_active:
+	if _pan_down:
+		_pan_camera(event.relative)
+	elif _left_down and _mode == Mode.CLEAN and _stroke_active:
 		if _paint_stroke:
 			_accumulate_paint_stroke(pos)
 		elif _overlay_stroke:

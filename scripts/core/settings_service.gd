@@ -111,7 +111,10 @@ func apply_display() -> void:
 	if fullscreen:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 		return
+	# Leave fullscreen cleanly: a bordered, correctly-sized, centred window. (Just setting WINDOWED can
+	# leave the window at the old fullscreen size / borderless on some platforms, so re-apply both.)
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
 	DisplayServer.window_set_size(resolution)
 	var screen_size := DisplayServer.screen_get_size()
 	DisplayServer.window_set_position((screen_size - resolution) / 2)
