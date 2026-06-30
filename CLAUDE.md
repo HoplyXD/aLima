@@ -41,7 +41,7 @@
 alima/
 ├── CLAUDE.md                  ← you are here
 ├── README.md                  ← GDD / narrative and design source
-├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService, SettingsService, PauseMenu, LocalAI, AylaService
+├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService, SettingsService, PauseMenu, LocalAI, AylaService, DispositionRouter, EveningService
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status

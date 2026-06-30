@@ -37,6 +37,21 @@ signal tool_arrived(tool_id: String, uid: String)
 
 # --- Marketplace / disposition events ---
 signal sale_completed(instance_id: String, buyer_id: String, price: int)
+## Emitted by the DispositionRouter when an eligible restored+judged instance is
+## routed to a final disposition (SELL/RETURN/PRESERVE/JOURNAL). outcome_id is the
+## disposition-specific result reference (buyer_id, reward_id, museum_entry_id, or
+## journal template id). Idempotent: a given instance disposes at most once.
+signal disposition_completed(instance_id: String, disposition: String, outcome_id: String)
+## Emitted when an object is returned to its identified owner/route. Never grants a
+## fragment (CLAUDE.md §4-B/C); reward_id is the authored non-fragment reward.
+signal object_returned(instance_id: String, owner_route_id: String, reward_id: String)
+
+# --- Evening events (Phase 14) ---
+## Emitted when the day-close boundary opens the explicit evening state (EVE-R1).
+signal evening_started(day: int)
+## Emitted when the player commits the evening plan; the day then advances or the
+## Day 5 loop reset runs (EVE-R5).
+signal evening_plan_committed(day: int, plan_id: String)
 
 # --- Scanner events ---
 signal scanner_response_received(instance_id: String, status: String)

@@ -63,6 +63,9 @@ const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
 @onready var _showcase: ShowcaseScreen = _create_showcase()
 ## DEBUG-only slice/placement demo overlay (F9). Excluded from normal progression.
 @onready var _demo_menu: DemoMenu = _create_demo_menu()
+## End-of-day evening summary/upkeep/plan screen (Phase 14, §4-N). Opened at the
+## 20:00 close via EventBus.evening_started; committing it advances the day.
+@onready var _evening_screen: EveningScreen = _create_evening_screen()
 
 # Diegetic 3D shop interactables. Each one fires the same controller handler as
 # its HUD fallback button, so the physical prop and the accessibility button are
@@ -121,6 +124,12 @@ func _ready() -> void:
 
 	AylaService.sort_ready.connect(_on_ayla_sort_ready)
 	EventBus.day_changed.connect(_on_day_changed)
+	# The evening runs interactively while the shop is the active scene; leaving the
+	# shop (to the yard/title) drops back to auto-advance so the clock never soft-locks
+	# waiting for an evening screen that isn't on screen.
+	EveningService.interactive = true
+	EventBus.evening_started.connect(_on_evening_started)
+	_evening_screen.closed.connect(_on_evening_closed)
 	_refresh_ayla_knock()
 
 	_refresh_ui()
@@ -153,6 +162,8 @@ func _exit_tree() -> void:
 	# shared autoload state when the menu is torn down to enter the game.
 	if backdrop_mode:
 		return
+	# Leaving the shop scene returns the evening to non-interactive auto-advance.
+	EveningService.interactive = false
 	# The clock is intentionally not reset here: the scrapyard keeps the same
 	# running session, and SpaceManager resets it only on return-to-title.
 	# Autosave on the way out so the exact day/hour/minute survives stepping into the
@@ -406,6 +417,29 @@ func _create_demo_menu() -> DemoMenu:
 	var menu := DemoMenu.new()
 	add_child(menu)
 	return menu
+
+
+func _create_evening_screen() -> EveningScreen:
+	var screen := EveningScreen.new()
+	add_child(screen)
+	return screen
+
+
+# --- Evening (Phase 14, §4-N) -------------------------------------------------
+
+
+## Opens the evening screen when the day closes (EVE-R1). Committing it advances the
+## day through EveningService -> LoopController.
+func _on_evening_started(day: int) -> void:
+	_hud.set_actions_visible(false)
+	_set_interactables_enabled(false)
+	_evening_screen.open(day)
+
+
+func _on_evening_closed() -> void:
+	_hud.set_actions_visible(true)
+	_set_interactables_enabled(true)
+	_refresh_ui()
 
 
 # --- Diegetic interactables ---------------------------------------------------

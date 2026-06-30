@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "return_owner",
+      "id": "return_rusted_tin",
+      "template_id": "rusted_tin",
+      "owner_route_id": "scavenger",
+      "owner_name": "Ayla",
+      "reward_id": "scavenger_gratitude_clue",
+      "story_flag": "returned_scavenger_tin",
+      "money_reward": 0,
+      "summary": "Return Ayla's rescued lunchbox instead of selling it. She remembers whose it was.",
+      "dialogue": "Ayla: Gin-uli mo gid? Salamat, ha — indi tanan nga daan basura."
+    },
+    {
+      "record_type": "return_owner",
+      "id": "return_wooden_rosary",
+      "template_id": "wooden_rosary",
+      "owner_route_id": "auntie",
+      "owner_name": "Nang Shine",
+      "reward_id": "auntie_blessing_clue",
+      "story_flag": "returned_auntie_rosary",
+      "money_reward": 0,
+      "summary": "Hand the worn rosary back to Nang Shine rather than selling it. A small grace passes between you.",
+      "dialogue": "Nang Shine: Ay, ang rosaryo ni Lola. Salamat, anak. Pagapadayaw ka sang Mahal nga Birhen."
+    },
+    {
+      "record_type": "return_owner",
+      "id": "return_brass_oil_lamp",
+      "template_id": "brass_oil_lamp",
+      "owner_route_id": "artisan",
+      "owner_name": "Nong Lave",
+      "reward_id": "artisan_workshop_clue",
+      "story_flag": "returned_artisan_lamp",
+      "money_reward": 0,
+      "summary": "Give the brass oil lamp back to Nong Lave's workshop instead of selling it. He nods, approving the restraint.",
+      "dialogue": "Nong Lave: Gin-uli mo, indi gin-baligya. Maayo nga kamot, maayo nga hunahuna."
+    }
+  ]
+}

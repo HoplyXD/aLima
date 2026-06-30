@@ -188,6 +188,76 @@ func get_pending_shipments() -> Array:
 	return GameState.save_state.loop.tool_shipments.duplicate()
 
 
+# --- Formal listings (P14.1, MKT-R1) -----------------------------------------
+
+
+## Lists a restored item for buyers as first-class loop state. Reuses an existing
+## active listing for the same instance (listing is idempotent). asking_price < 0
+## defaults to the assessed value; honest reflects an accurate description (DISP-R2).
+## Returns the listing, or null when the instance can't be found.
+func list_for_sale(uid: String, asking_price: int = -1, honest: bool = true) -> MarketplaceListing:
+	var found := _find_instance(uid)
+	if found.is_empty():
+		return null
+	var existing := get_listing(uid)
+	if existing != null and existing.is_active():
+		return existing
+	var inst: ObjectInstance = found["inst"]
+	var listing := MarketplaceListing.new()
+	listing.instance_uid = uid
+	listing.template_id = inst.template_id
+	listing.asking_price = asking_price if asking_price >= 0 else assessed_value(uid)
+	listing.listed_day = GameState.save_state.loop.current_day
+	listing.condition_at_listing = int(round(inst.condition))
+	listing.honest_description = honest
+	listing.status = MarketplaceListing.Status.LISTED
+	_upsert_listing(listing)
+	return listing
+
+
+## The listing for an instance, or null if none exists.
+func get_listing(uid: String) -> MarketplaceListing:
+	for raw in GameState.save_state.loop.listings:
+		if raw is Dictionary and raw.get("instance_uid") == uid:
+			return MarketplaceListing.from_dictionary(raw)
+	return null
+
+
+## All currently active (LISTED) listings.
+func get_active_listings() -> Array[MarketplaceListing]:
+	var out: Array[MarketplaceListing] = []
+	for raw in GameState.save_state.loop.listings:
+		if raw is Dictionary:
+			var listing := MarketplaceListing.from_dictionary(raw)
+			if listing.is_active():
+				out.append(listing)
+	return out
+
+
+## Resolves a listing to SOLD or WITHDRAWN. No-op when there is no listing. Does not
+## save (the caller owns persistence); idempotent.
+func resolve_listing(
+	uid: String, status: int, price: int = 0, buyer_id: String = ""
+) -> void:
+	var listing := get_listing(uid)
+	if listing == null:
+		return
+	listing.status = status
+	if status == MarketplaceListing.Status.SOLD:
+		listing.sold_price = price
+		listing.sold_buyer_id = buyer_id
+	_upsert_listing(listing)
+
+
+func _upsert_listing(listing: MarketplaceListing) -> void:
+	var listings: Array = GameState.save_state.loop.listings
+	for i in listings.size():
+		if listings[i] is Dictionary and listings[i].get("instance_uid") == listing.instance_uid:
+			listings[i] = listing.to_dictionary()
+			return
+	listings.append(listing.to_dictionary())
+
+
 # --- Selling (deterministic haggle) ------------------------------------------
 
 

@@ -82,6 +82,21 @@ func _on_day_closed(day: int) -> void:
 	# reset can never run twice. _resetting additionally guards re-entrancy.
 	if _resetting or not DayClock.is_closed():
 		return
+	# The mandatory evening runs before day advancement (EVE-R1, §4-N). In interactive
+	# mode the evening takes over and advances on commit (EveningService.commit_plan ->
+	# advance_day_or_reset); in non-interactive mode (headless/tests) it returns false
+	# and advancement proceeds inline exactly as before.
+	if EveningService.handle_day_close(day):
+		return
+	advance_day_or_reset(day)
+
+
+## Advances to the next day, or performs the Day 5 loop reset. Called inline at the
+## close in non-interactive mode, and by EveningService.commit_plan() once the player
+## has committed the evening plan (EVE-R5).
+func advance_day_or_reset(day: int) -> void:
+	if _resetting:
+		return
 	if day < DayClock.TOTAL_DAYS:
 		DayClock.start_day(day + 1)
 	else:
