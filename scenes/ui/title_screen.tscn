@@ -146,6 +146,45 @@ custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 text = "Back"
 
+[node name="NameMenu" type="VBoxContainer" parent="." unique_id=1082419700]
+visible = false
+layout_mode = 0
+offset_left = 50.0
+offset_top = 540.0
+offset_right = 500.0
+offset_bottom = 944.0
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="NameMenu" unique_id=1777390970]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "What's your name?"
+
+[node name="Hint" type="Label" parent="NameMenu" unique_id=1777390971]
+layout_mode = 2
+text = "Your uncle Yuyu is expecting you on Panay."
+
+[node name="NameEdit" type="LineEdit" parent="NameMenu" unique_id=129268526]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "Your name"
+max_length = 16
+
+[node name="Confirm" type="Button" parent="NameMenu" unique_id=1266561068]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+text = "Continue"
+
+[node name="Back" type="Button" parent="NameMenu" unique_id=1266561069]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+text = "Back"
+
+[node name="Status" type="Label" parent="NameMenu" unique_id=956113389]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.65, 0.65, 1)
+autowrap_mode = 3
+
 [node name="SeedMenu" type="VBoxContainer" parent="." unique_id=1082419699]
 visible = false
 layout_mode = 0

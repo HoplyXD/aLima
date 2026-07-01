@@ -50,6 +50,38 @@ func test_start_new_game_sets_seed_and_saves_to_slot() -> void:
 	assert_eq(GameState.save_state.loop_index, 1)
 
 
+func test_parse_player_name_trims_and_rejects_blank() -> void:
+	assert_eq(_title._parse_player_name("  Maverick  "), "Maverick")
+	assert_eq(_title._parse_player_name("   "), "")
+	assert_eq(_title._parse_player_name(""), "")
+
+
+func test_start_new_game_stamps_pending_player_name() -> void:
+	_title._pending_player_name = "Inday"
+	_title._start_new_game(0, 123)
+	assert_eq(GameState.save_state.persistent.player_name, "Inday")
+	assert_false(
+		GameState.save_state.persistent.tutorial_completed,
+		"A brand-new save starts with the Day 0 tutorial pending"
+	)
+	# The name survives the initial save + a reload.
+	GameState.initialize("someone-else")
+	_title._attempt_continue(0)
+	assert_eq(GameState.save_state.persistent.player_name, "Inday")
+
+
+func test_name_confirm_requires_non_blank_name() -> void:
+	_title._show_name_menu()
+	_title._name_edit.text = "   "
+	_title._on_name_confirm_pressed()
+	assert_true(_title._name_menu.visible, "Blank name keeps the name menu open")
+	assert_false(_title._name_status.text.is_empty(), "Status explains the rejection")
+	_title._name_edit.text = "Toto"
+	_title._on_name_confirm_pressed()
+	assert_true(_title._seed_menu.visible, "Valid name advances to the seed menu")
+	assert_eq(_title._pending_player_name, "Toto")
+
+
 func test_continue_loads_seed_from_slot() -> void:
 	_title._start_new_game(1, 77777)
 	GameState.initialize("someone-else")
