@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "speakers": {
+    "yuyu": {
+      "display_name": "Tito Yuyu",
+      "color": "#8C6A3F",
+      "portrait": ""
+    },
+    "ayla": {
+      "display_name": "Ayla",
+      "color": "#4F7A5B",
+      "portrait": ""
+    },
+    "inner": {
+      "display_name": "{player}",
+      "color": "#4A5568",
+      "portrait": ""
+    }
+  }
+}
