@@ -553,7 +553,7 @@ func load_instance(uid: String) -> void:
 	# Authored condition overlays (dust/rust/cracking nodes) take priority; artifacts without them
 	# fall back to the model-agnostic procedural dust shell.
 	if _object.has_method("build_overlays"):
-		_object.build_overlays(instance_seed)
+		_object.build_overlays(instance_seed, inst.allowed_conditions)
 		# Restore prior cleaning progress for this artifact (the spawn pattern itself is deterministic
 		# from instance_seed, so only the player's cleaning needs caching). Prefer the in-session
 		# cache; otherwise fall back to the keep persisted on the instance (survives a scene reload).

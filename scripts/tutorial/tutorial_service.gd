@@ -153,6 +153,8 @@ func advance_to(step_id: String) -> void:
 		return
 	GameState.save_state.persistent.tutorial_step = step_id
 	_apply_step_grants(get_step(step_id))
+	if step_id == "restoration_intro":
+		_ensure_restorable_artifact()
 	var result := SaveService.save_game()
 	if not result.ok:
 		push_warning("TutorialService: step save failed: %s" % result.get("error", ""))
@@ -206,6 +208,33 @@ func _apply_step_grants(step: Dictionary) -> void:
 			GameState.save_state.loop.tool_items.append(tool_id)
 		if not _owns_tool_instance(tool_id):
 			tools.grant_tool(tool_id)
+
+
+## Soft-lock guard: reaching the restoration step with nothing restorable (the
+## player recycled the whole taught batch) injects one seeded common artifact —
+## generated through the normal DeliveryGenerator path, so the tutorial's rarity
+## and condition constraints still apply — and targets the bench at it.
+func _ensure_restorable_artifact() -> void:
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary:
+			var existing := ObjectInstance.from_dictionary(raw)
+			if existing.state == ModelEnums.ObjState.DIRTY:
+				return
+	var repo := DataRepository.singleton()
+	if not repo.is_loaded():
+		return
+	var cfg := DeliveryConfig.new()
+	cfg.batch_min = 1
+	cfg.batch_max = 1
+	cfg.storage_cap = repo.get_delivery_config().storage_cap
+	cfg.rarity_weights = {ModelEnums.rarity_name(ModelEnums.Rarity.WHITE): 1.0}
+	var generator := DeliveryGenerator.new(repo, GameState)
+	var delivery := generator.generate_day_delivery(GameState.save_state.loop.current_day, cfg)
+	if delivery.is_empty():
+		return
+	var inst: ObjectInstance = delivery[0]
+	GameState.save_state.loop.inventory.append(inst.to_dictionary())
+	GameState.save_state.loop.restore_target_uid = inst.uid
 
 
 func _owns_tool_instance(tool_id: String) -> bool:

@@ -3,7 +3,7 @@
   "config": {
     "sort_hours": 0,
     "starter_tool_conditions": ["dust", "dirt"],
-    "artifact_pool": { "rarity": "common" },
+    "artifact_pool": { "rarity": "white" },
     "allowed_conditions": ["dust", "dirt"],
     "tutorial_buyer_id": "mysterious_buyer",
     "buyer_destination_id": "mall"

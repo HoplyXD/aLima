@@ -340,6 +340,10 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	var biased_cfg := event_cfg
 	if not is_free_daily:
 		biased_cfg = AylaService.get_biased_delivery_config(event_cfg)
+	# Day 0 (TUT): the taught batch is a random COMMON artifact (the generator also
+	# limits its conditions to the tutorial's grime+dust whitelist).
+	if TutorialService.is_tutorial_active():
+		biased_cfg.rarity_weights = {ModelEnums.rarity_name(ModelEnums.Rarity.WHITE): 1.0}
 	var extras := EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
 
 	var generator := DeliveryGenerator.new(repo, GameState)

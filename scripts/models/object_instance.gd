@@ -21,6 +21,11 @@ var value: int = 0  ## Current assessed market value = true_value minus live con
 var true_value: int = 0
 var removed_decals: Array[String] = []  ## Decal ids cleared so far (decal-based templates).
 var spawned_decals: Array = []  ## Random per-instance conditions; empty => use template decals.
+## When non-empty, ONLY these surface-condition ids may appear on this instance:
+## spawned conditions, authored decals, and overlays outside the list render clean.
+## Used by the Day 0 tutorial (grime+dust only) and future quest constraints (TUT).
+## A type filter only — it never moves or edits dev-placed decals (§4-R).
+var allowed_conditions: Array[String] = []
 var is_joined: bool = false  ## True once a join-step object has been reassembled.
 var dirt_mask: PackedByteArray = PackedByteArray()
 ## Authored-overlay cleaning progress: overlay_name -> base64 of its per-vertex keep
@@ -68,6 +73,7 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 		for raw_decal in data["spawned_decals"]:
 			if raw_decal is Dictionary:
 				inst.spawned_decals.append(raw_decal.duplicate())
+	inst.allowed_conditions = ModelUtils.as_string_array(data.get("allowed_conditions"))
 	inst.is_joined = ModelUtils.as_bool(data.get("is_joined"))
 	var raw_mask: Variant = data.get("dirt_mask", "")
 	if raw_mask is String and not (raw_mask as String).is_empty():
@@ -94,6 +100,7 @@ func to_dictionary() -> Dictionary:
 		"true_value": true_value,
 		"removed_decals": removed_decals.duplicate(),
 		"spawned_decals": spawned_decals.duplicate(true),
+		"allowed_conditions": allowed_conditions.duplicate(),
 		"is_joined": is_joined,
 		"dirt_mask": Marshalls.raw_to_base64(dirt_mask) if not dirt_mask.is_empty() else "",
 		"overlay_keep": overlay_keep.duplicate(),

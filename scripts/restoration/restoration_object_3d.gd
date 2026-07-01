@@ -657,7 +657,7 @@ func _clear_dust_overlay() -> void:
 
 ## Builds every authored ArtifactOverlay child from the model mesh, and caches the model's
 ## triangles+UVs for the ray->UV used to erase them. Runtime only.
-func build_overlays(seed_value: int = 0) -> void:
+func build_overlays(seed_value: int = 0, allowed_conditions: Array = []) -> void:
 	if Engine.is_editor_hint():
 		return
 	var mesh := _dust_source_mesh()
@@ -668,19 +668,33 @@ func build_overlays(seed_value: int = 0) -> void:
 		# artifact, while two different instances (different seed_value) differ overall.
 		var s: int = seed_value ^ (int(overlay.layer_order) * 73856093)
 		overlay.build_with_fallback(mesh, scale, s)
-	_apply_condition_randomizer(overlays, seed_value)
+	_apply_condition_randomizer(overlays, seed_value, allowed_conditions)
 
 
 ## Picks WHICH conditions this instance has: rolls a count in [randomize_conditions_min, max], keeps every
 ## guaranteed_spawn overlay, fills the rest at random from the other spawnable overlays, and clears the
 ## ones that didn't make the cut (they render clean). Deterministic per seed. Disabled when max <= 0.
-func _apply_condition_randomizer(overlays: Array, seed_value: int) -> void:
-	if randomize_conditions_max <= 0:
-		return
+func _apply_condition_randomizer(
+	overlays: Array, seed_value: int, allowed_conditions: Array = []
+) -> void:
 	var eligible: Array = []
 	for o in overlays:
-		if o.has_method("is_spawnable") and o.is_spawnable():
-			eligible.append(o)
+		if not (o.has_method("is_spawnable") and o.is_spawnable()):
+			continue
+		# Instance condition whitelist (Day 0 grime+dust, quest constraints): a
+		# disallowed condition type renders clean this run. Type filter only —
+		# never touches the overlay's authored setup (§4-R).
+		if (
+			not allowed_conditions.is_empty()
+			and o.has_method("get_condition_id")
+			and not allowed_conditions.has(str(o.get_condition_id()))
+		):
+			if o.has_method("clear_condition"):
+				o.clear_condition()
+			continue
+		eligible.append(o)
+	if randomize_conditions_max <= 0:
+		return
 	if eligible.is_empty():
 		return
 	var rng := RandomNumberGenerator.new()
@@ -1256,11 +1270,31 @@ func _clear_blemishes() -> void:
 ## Idempotent: safe to call again on reload (cleaned ones keep their removed flag).
 ## `seed_value` (instance uid + loop) only drives which decals are active this run
 ## (randomize_conditions_max) and resets dirt; it does NOT move the decals.
-func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> void:
+func register_authored_conditions(
+	repo: DataRepository, seed_value: int = 0, allowed_conditions: Array = []
+) -> void:
 	_authored.clear()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var all := _find_authored_decals(self)
+	# Instance condition whitelist (Day 0 grime+dust, quest constraints): decals of a
+	# disallowed TYPE are hidden and unregistered this run, exactly like decals that
+	# lose the randomiser roll. Their authored placement is never touched (§4-R).
+	if not allowed_conditions.is_empty():
+		var permitted: Array = []
+		for raw in all:
+			var candidate: Variant = raw
+			var candidate_condition := _match_condition(repo, candidate.condition_slug())
+			var resolved_id: String = (
+				candidate_condition.id
+				if candidate_condition != null
+				else str(candidate.condition_slug())
+			)
+			if allowed_conditions.has(resolved_id):
+				permitted.append(candidate)
+			else:
+				candidate.visible = false
+		all = permitted
 	# Randomly pick which placed conditions are live this run (seeded per save + loop).
 	var active := _choose_active_decals(all, rng)
 	for raw in all:

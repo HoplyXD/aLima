@@ -43,6 +43,7 @@ func generate_day_delivery(
 	var templates_by_rarity := _group_templates_by_rarity()
 	var total_weight := _total_rarity_weight(cfg, templates_by_rarity)
 
+	var allowed_conditions := _tutorial_allowed_conditions()
 	for i in batch_size:
 		if total_weight <= 0.0:
 			break
@@ -50,6 +51,7 @@ func generate_day_delivery(
 		if template == null:
 			break
 		var inst := _create_instance(template, day)
+		inst.allowed_conditions = allowed_conditions.duplicate()
 		_assign_random_conditions(inst, rng)
 		_apply_initial_value(inst, template, rng)
 		while used_uids.has(inst.uid):
@@ -168,6 +170,15 @@ func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance
 ## via the delivery RNG. Phase 18: active events may append extra conditions.
 func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator) -> void:
 	var catalog := _repo.get_surface_conditions_sorted()
+	# Instance-level condition filter (Day 0 grime+dust, quest constraints): only
+	# the allowed condition types may spawn on this piece (TUT).
+	if not inst.allowed_conditions.is_empty():
+		var filtered: Array = []
+		for raw in catalog:
+			var candidate: SurfaceCondition = raw
+			if inst.allowed_conditions.has(candidate.id):
+				filtered.append(candidate)
+		catalog = filtered
 	if catalog.is_empty():
 		return
 	var count := mini(rng.randi_range(2, 4), catalog.size())
@@ -191,6 +202,13 @@ func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator)
 	if EventDirector != null:
 		decals.append_array(EventDirector.get_extra_conditions_for_delivery())
 	inst.spawned_decals = decals
+
+
+## The Day 0 condition whitelist from the tutorial config, or [] in normal play.
+func _tutorial_allowed_conditions() -> Array[String]:
+	if TutorialService.is_tutorial_active():
+		return ModelUtils.as_string_array(TutorialService.get_config().get("allowed_conditions"))
+	return [] as Array[String]
 
 
 func _make_uid(day: int) -> String:

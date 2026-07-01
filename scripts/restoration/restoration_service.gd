@@ -594,7 +594,9 @@ func present_object(
 	obj: RestorationObject3D, inst: ObjectInstance, template: ScrapObjectTemplate, seed_value: int
 ) -> bool:
 	obj.configure(template, inst)
-	obj.register_authored_conditions(_repo, seed_value)
+	obj.register_authored_conditions(
+		_repo, seed_value, inst.allowed_conditions if inst != null else []
+	)
 	# Author-placed decals and data-driven decals are mutually exclusive: when a scene
 	# carries hand-placed conditions, THEY are the conditions — the medallion reads clean
 	# and the data-driven decals are skipped, so a stray placed decal can never linger
