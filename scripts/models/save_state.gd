@@ -4,7 +4,7 @@ class_name SaveState
 ## The save is split into persistent (Chronos-bound) and loop-scoped sections.
 ## See docs/phase-task.md "Save Contract" and PRD §5.
 
-const CURRENT_SCHEMA_VERSION: int = 2
+const CURRENT_SCHEMA_VERSION: int = 3
 
 var schema_version: int = CURRENT_SCHEMA_VERSION
 var player_id: String = "local-player"
@@ -75,6 +75,13 @@ func reset_loop_state() -> void:
 ## PersistentState
 ## ---------------------------------------------------------------------------
 class PersistentState:
+	## Player-chosen display name, typed at save creation. Used for {player}
+	## dialogue substitution. Persistent: identity survives every loop reset.
+	var player_name: String = ""
+	## Day 0 tutorial state (TUT). Persistent per §4-A: a save that finished (or
+	## skipped) the tutorial never re-enters Day 0, on any later loop.
+	var tutorial_completed: bool = false
+	var tutorial_step: String = ""
 	var journal_entries: Dictionary = {}  ## template_id -> JournalEntry.
 	var techniques_learned: Array[String] = []
 	var scanned_records: Dictionary = {}  ## template_id -> ScannedRecord.
@@ -100,6 +107,9 @@ class PersistentState:
 
 	static func from_dictionary(data: Dictionary) -> PersistentState:
 		var p := PersistentState.new()
+		p.player_name = ModelUtils.as_string(data.get("player_name"), "")
+		p.tutorial_completed = ModelUtils.as_bool(data.get("tutorial_completed"))
+		p.tutorial_step = ModelUtils.as_string(data.get("tutorial_step"), "")
 		p.journal_entries = SaveState._entry_dict(data.get("journal_entries", {}), JournalEntry)
 		p.techniques_learned = ModelUtils.as_string_array(data.get("techniques_learned"))
 		p.scanned_records = SaveState._entry_dict(data.get("scanned_records", {}), ScannedRecord)
@@ -122,6 +132,9 @@ class PersistentState:
 
 	func to_dictionary() -> Dictionary:
 		return {
+			"player_name": player_name,
+			"tutorial_completed": tutorial_completed,
+			"tutorial_step": tutorial_step,
 			"journal_entries": SaveState._dict_to_raw(journal_entries),
 			"techniques_learned": techniques_learned.duplicate(),
 			"scanned_records": SaveState._dict_to_raw(scanned_records),
