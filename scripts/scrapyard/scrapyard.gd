@@ -327,6 +327,10 @@ func _too_close_to_placed(pos: Vector3, placed: Array[Vector3]) -> bool:
 func _update_hud() -> void:
 	if _hud == null:
 		return
+	# Day 0 (tutorial) is clockless: show the day tag only (TUT).
+	if TutorialService.is_tutorial_active():
+		_hud.set_day_zero()
+		return
 	_hud.set_day(DayClock.get_day(), DayClock.TOTAL_DAYS)
 	_hud.set_time(DayClock.get_hour(), DayClock.get_minute())
 

@@ -39,6 +39,12 @@ func set_day(day: int, total_days: int) -> void:
 	_day_label.text = "Day %d of %d" % [day, total_days]
 
 
+## Day 0 (tutorial) presentation: time does not exist yet, so no clock readout.
+func set_day_zero() -> void:
+	_day_label.text = "Day 0"
+	_clock_label.text = ""
+
+
 ## hour: 24-hour value. minute: 0..59. Shown as H:MM AM/PM.
 func set_time(hour: int, minute: int = 0) -> void:
 	_clock_label.text = _format_time(hour, minute)

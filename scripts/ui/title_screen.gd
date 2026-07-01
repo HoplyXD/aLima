@@ -320,8 +320,10 @@ func _start_new_game(slot: int, seed: int) -> void:
 	SaveService.select_slot(slot)
 	GameState.initialize("local-player")
 	# After initialize (it rebuilds save_state), stamp the chosen identity so the
-	# very first save already carries the player's name.
+	# very first save already carries the player's name, and arm the Day 0
+	# tutorial: it runs exactly once per newly created save file (TUT).
 	GameState.save_state.persistent.player_name = _pending_player_name
+	GameState.save_state.persistent.tutorial_completed = false
 	GameState.new_run(seed)
 	var save_result := SaveService.save_game()
 	if not save_result.ok:

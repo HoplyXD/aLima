@@ -29,6 +29,10 @@ func initialize(new_player_id: String = "local-player") -> void:
 	debug_seed_override = -1
 	save_state = SaveState.new()
 	save_state.player_id = player_id
+	# Sessions and tests default to normal play; ONLY the title screen's New Game
+	# flow arms the Day 0 tutorial (TUT) by flipping this back to false. Loading a
+	# save replaces save_state wholesale, so a mid-tutorial save still resumes Day 0.
+	save_state.persistent.tutorial_completed = true
 	_load_fragment_definitions()
 	_update_run_context()
 	# A fresh session is a fresh loop: clear loop-scoped state in every subscriber

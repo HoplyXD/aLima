@@ -34,6 +34,18 @@ func _ready() -> void:
 func begin_session() -> void:
 	if DayClock.running:
 		return
+	# Day 0 (TUT): a freshly created save runs the clockless tutorial instead of
+	# the day loop. The clock never starts (running stays false) and a tutorial
+	# pause is held as belt-and-braces, so no tick/close/loop logic can fire.
+	# Yuyu hands over the starter tools mid-tutorial, so the starting kit is NOT
+	# granted here; graduation (complete_tutorial) grants it with the Day 1 reset.
+	if TutorialService.is_tutorial_active():
+		DayClock.reset()
+		DayClock.loop_index = GameState.loop_index
+		DayClock.request_pause(DayClock.PAUSE_TUTORIAL)
+		FragmentService.sync_repo_from_persistent()
+		TutorialService.begin_or_resume()
+		return
 	DayClock.reset()
 	DayClock.loop_index = GameState.loop_index
 	DayClock.running = true
@@ -101,6 +113,33 @@ func advance_day_or_reset(day: int) -> void:
 		DayClock.start_day(day + 1)
 	else:
 		_perform_loop_reset()
+
+
+## Graduates the Day 0 tutorial (played through or skipped) onto Day 1 of the
+## same first loop (TUT). Mirrors the Day 5 reset transaction — clear loop
+## state, grant the kit, plan placements, save atomically, announce loop_reset —
+## but WITHOUT incrementing the loop index: a fresh save is already loop 1, and
+## the tutorial happened inside it. The caller then reloads the shop
+## (SpaceManager.go_to_shop) so begin_session() starts the Day 1 clock normally.
+func complete_tutorial() -> void:
+	if GameState.save_state.persistent.tutorial_completed:
+		return
+	GameState.save_state.persistent.tutorial_completed = true
+	GameState.save_state.persistent.tutorial_step = ""
+	if DayClock.has_pause_owner(DayClock.PAUSE_TUTORIAL):
+		DayClock.release_pause(DayClock.PAUSE_TUTORIAL)
+	GameState.reset_loop_state()
+	_grant_starting_kit()
+	_plan_carrier_placements()
+	DayClock.reset()
+	DayClock.loop_index = GameState.loop_index
+	var save_result := SaveService.save_game()
+	if not save_result.ok:
+		push_error(
+			"LoopController: tutorial graduation save failed: %s" % save_result.get("error", "")
+		)
+	EventBus.loop_reset.emit(GameState.loop_index)
+	TutorialService.notify_completed()
 
 
 ## Day 5 reset, in a fixed, idempotent order (SAVE-R1..R6, CLAUDE.md §4-A/B):
