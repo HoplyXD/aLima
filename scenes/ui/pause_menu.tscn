@@ -277,6 +277,13 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Resume"
 
+[node name="SkipTutorialButton" type="Button" parent="Root/Center/Panel/Margin/VBox" unique_id=1266561070]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Skip Tutorial"
+
 [node name="SaveButton" type="Button" parent="Root/Center/Panel/Margin/VBox" unique_id=1266561068]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
@@ -300,3 +307,9 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Exit Game"
+
+[node name="SkipTutorialConfirm" type="ConfirmationDialog" parent="." unique_id=1240083629]
+unique_name_in_owner = true
+title = "Skip Tutorial"
+dialog_text = "Skip the rest of Day 0? You'll receive the starter tools and wake up on Day 1."
+ok_button_text = "Skip to Day 1"

@@ -11,6 +11,8 @@ extends CanvasLayer
 const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 
 @onready var _resume_button: Button = %ResumeButton
+@onready var _skip_tutorial_button: Button = %SkipTutorialButton
+@onready var _skip_tutorial_confirm: ConfirmationDialog = %SkipTutorialConfirm
 @onready var _save_button: Button = %SaveButton
 @onready var _save_and_quit_button: Button = %SaveAndQuitButton
 @onready var _return_button: Button = %ReturnToTitleButton
@@ -71,6 +73,8 @@ func _populate_resolutions() -> void:
 
 func _connect_signals() -> void:
 	_resume_button.pressed.connect(close)
+	_skip_tutorial_button.pressed.connect(_on_skip_tutorial_pressed)
+	_skip_tutorial_confirm.confirmed.connect(_on_skip_tutorial_confirmed)
 	_save_button.pressed.connect(_on_save_pressed)
 	_save_and_quit_button.pressed.connect(_on_save_and_quit_pressed)
 	_return_button.pressed.connect(_on_return_to_title)
@@ -143,8 +147,22 @@ func _on_return_to_title() -> void:
 	SpaceManager.return_to_title()
 
 
+## Skip Tutorial is offered only while Day 0 is active (TUT). Confirming grants
+## everything the tutorial would grant (the starting kit arrives with the Day 1
+## reset inside complete_tutorial) and reloads the shop as a normal Day 1.
+func _on_skip_tutorial_pressed() -> void:
+	_skip_tutorial_confirm.popup_centered()
+
+
+func _on_skip_tutorial_confirmed() -> void:
+	TutorialService.skip()
+	close()
+	SpaceManager.go_to_shop()
+
+
 ## Syncs the controls to the saved/effective settings each time the menu opens.
 func _refresh() -> void:
+	_skip_tutorial_button.visible = TutorialService.is_tutorial_active()
 	_res_option.select(SettingsService.resolution_index())
 	_fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
 	_online_check.set_pressed_no_signal(SettingsService.ai_mode_is_online())
