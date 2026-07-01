@@ -362,6 +362,26 @@ func set_fully_clean() -> void:
 	_dirt_texture.update(_dirt_image)
 
 
+## Debug-only: wipes every visible condition in one step — dirt mask, paint layer, authored
+## overlays, dust shell, authored decals, and data-driven blemishes. The service owns the
+## matching state write; this is purely presentation.
+func debug_clean_all_visuals() -> void:
+	set_fully_clean()
+	clear_paint()
+	if has_overlays():
+		force_clean_overlays([])
+	if has_dust_overlay():
+		for i in _dust_alive.size():
+			_dust_alive[i] = 0
+		_rebuild_dust_mesh()
+	if has_authored_conditions():
+		for condition_id in uncleaned_authored_ids():
+			apply_authored_clean(condition_id, 99999)
+	if is_decal_mode():
+		for blemish_id in get_visible_blemish_ids():
+			remove_blemish(blemish_id)
+
+
 # --- Runtime paint layer (DrawableTexture2D) ---------------------------------
 # A drawable grime/damage layer the player can draw onto via the dirt shader's paint_layer
 # sampler, at the SAME analytic surface UV ray_test_surface returns — so a drawn stamp lands

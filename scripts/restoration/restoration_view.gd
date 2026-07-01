@@ -34,6 +34,7 @@ const DECAL_STROKE_PIXEL_THRESHOLD: float = 40.0
 ## circular, radius-sized brush (the PNG fills the disc for draw; a clean disc for erase).
 const DRAW_TOOL_ID: String = "debug_brush"
 const ERASE_TOOL_ID: String = "debug_eraser"
+const CLEAN_ALL_TOOL_ID: String = "debug_clean_all"
 ## Drag distance between drawn stamps while painting with a debug brush.
 const PAINT_BRUSH_THROTTLE: float = 22.0
 ## Brush radius in paint-layer texels (the disc the PNG fills). The whole radius is textured by the
@@ -42,25 +43,36 @@ const PAINT_RADIUS: int = 48
 ## texture_blit shader that SUBTRACTS the brush alpha from the paint layer, so the eraser removes
 ## the drawn overlay (revealing the artifact's own texture) rather than painting a colour over it.
 ## (shader_type texture_blit / COLOR0 / hint_blit_source0 verified against the local 4.7 compiler.)
-const ERASE_BLIT_SHADER := "shader_type texture_blit;\nrender_mode blend_sub;\nuniform sampler2D src : hint_blit_source0;\nvoid blit() {\n\tCOLOR0 = texture(src, UV);\n}\n"
+const ERASE_BLIT_SHADER := (
+	"shader_type texture_blit;\nrender_mode blend_sub;\n"
+	+ "uniform sampler2D src : hint_blit_source0;\nvoid blit() {\n"
+	+ "\tCOLOR0 = texture(src, UV);\n}\n"
+)
 
 ## Artifact zoom — the ARTIFACT moves toward (zoom in) or away from (zoom out) the camera
 ## along its view axis, so the player can lean a piece in to inspect fine grime or push it
 ## back for the whole shape. The camera never moves. Presentation only; never touches game
 ## state. ZOOM_FRONT/BACK are the object's nearest/farthest position.z; the authored rest
 ## position is the starting point and what reset returns to.
-const ZOOM_FRONT: float = 2.45  ## Closest the artifact comes to the camera (camera sits at z≈2.6).
-const ZOOM_BACK: float = -1.5  ## Farthest the artifact pulls back (more zoom-out range too).
-const ZOOM_NEAR_MARGIN: float = 0.15  ## Gap kept between the artifact's nearest point and the camera.
-const ZOOM_WHEEL_STEP: float = 0.25  ## Distance one mouse-wheel notch moves the artifact.
-## Stage 2 — once the artifact can't come any closer, further zoom-in TIGHTENS the camera FOV (a lens
-## zoom) down to MIN_FOV; zooming back out widens the FOV before the artifact pulls away again.
-const MIN_FOV: float = 22.0  ## Tightest lens zoom (smaller = more magnified).
-const FOV_DEGREES_PER_UNIT: float = 26.0  ## FOV change per object-distance unit, so a notch ≈ 6.5°.
-const FOV_LEAN_MAX: float = 0.55  ## Max camera offset (world units) toward the cursor at full lens zoom.
-## Middle-mouse pan: drag the (lens-zoomed) view around. Speed is world units of camera offset per pixel
-## dragged; the pan is clamped so the artifact can't be shoved off-screen.
+## Closest the artifact comes to the camera (camera sits at z≈2.6).
+const ZOOM_FRONT: float = 2.45
+## Farthest the artifact pulls back (more zoom-out range too).
+const ZOOM_BACK: float = -1.5
+## Gap kept between the artifact's nearest point and the camera.
+const ZOOM_NEAR_MARGIN: float = 0.15
+## Distance one mouse-wheel notch moves the artifact.
+const ZOOM_WHEEL_STEP: float = 0.25
+## Stage 2 — once the artifact can't come any closer, further zoom-in TIGHTENS the camera FOV
+## (a lens zoom) down to MIN_FOV; zooming back out widens the FOV before the artifact pulls away.
+const MIN_FOV: float = 22.0
+## Tightest lens zoom (smaller = more magnified).
+const FOV_DEGREES_PER_UNIT: float = 26.0
+## FOV change per object-distance unit, so a notch ≈ 6.5°.
+const FOV_LEAN_MAX: float = 0.55
+## Middle-mouse pan: drag the (lens-zoomed) view around. Speed is world units of camera offset
+## per pixel dragged; the pan is clamped so the artifact can't be shoved off-screen.
 const CAMERA_PAN_SPEED: float = 0.004
+## Max manual pan in world units. Fixed and symmetric — does NOT vary with zoom or FOV.
 const CAMERA_PAN_MAX: float = 1.6
 const ZOOM_KEY_SPEED: float = 2.2  ## Distance/second for held keyboard/controller zoom.
 
@@ -103,9 +115,9 @@ var _instance_uids: Array[String] = []
 ## Decal photos persist their own removed_decals, so only condition-based masks
 ## are cached. Lives for the view's lifetime (survives close/reopen of the bench).
 var _dirt_cache: Dictionary = {}
-## Per-instance overlay cleaning progress (uid -> {overlay_name: keep array}), so switching artifacts
-## and returning keeps how much of each condition the player has cleaned (the spawn pattern itself
-## regenerates deterministically from the instance seed).
+## Per-instance overlay cleaning progress (uid -> {overlay_name: keep array}), so switching
+## artifacts and returning keeps how much of each condition the player has cleaned (the spawn
+## pattern itself regenerates deterministically from the instance seed).
 var _overlay_cache: Dictionary = {}
 ## Auto-finish rule (REST): once the surface is ≥95% clean AND has been so for AUTO_FINISH_HOLD_S
 ## real seconds, the next clean stroke snaps to 100%; ≥98% snaps immediately. This timestamps when
@@ -132,7 +144,7 @@ var _default_fov: float = 70.0
 ## Last cursor position (normalised -1..1 from viewport centre) used to bias the stage-2 lens zoom
 ## toward where the mouse is, so it magnifies that spot rather than the screen centre.
 var _fov_lean_ndc: Vector2 = Vector2.ZERO
-## Manual camera pan (world-unit h/v offset) from middle-mouse dragging; added on top of the zoom lean.
+## Manual camera pan (world-unit h/v offset) from middle-mouse dragging; added to the zoom lean.
 var _camera_pan: Vector2 = Vector2.ZERO
 var _pan_down: bool = false  ## Middle mouse held → dragging pans the view.
 var _highlight_time: float = 0.0  ## Drives the optional decal-highlight throb.
@@ -271,9 +283,10 @@ func close() -> void:
 	closed.emit()
 
 
-## Writes the current artifact's cleaning progress onto its instance and saves to DISK ONCE. This is
-## the single save point: cleaning strokes only update memory (no per-stroke disk save = no lag), and
-## this runs on every artifact switch and on leaving the bench, so progress survives a house exit/return.
+## Writes the current artifact's cleaning progress onto its instance and saves to DISK ONCE.
+## This is the single save point: cleaning strokes only update memory (no per-stroke disk save =
+## no lag), and this runs on every artifact switch and on leaving the bench, so progress survives
+## a house exit/return.
 func _cache_current_dirt() -> void:
 	if _selected_uid.is_empty():
 		return
@@ -289,7 +302,8 @@ func _cache_current_dirt() -> void:
 		if not png.is_empty():
 			_dirt_cache[_selected_uid] = png
 			_service.persist_dirt_mask(_selected_uid, png)
-	# THE disk write: one save per switch/close, covering condition/value/decals for every artifact type.
+	# THE disk write: one save per switch/close, covering condition/value/decals
+	# for every artifact type.
 	SaveService.save_game()
 
 
@@ -441,7 +455,9 @@ func _rebuild_artifact_bar() -> void:
 		if previews_on and template != null:
 			# Embed the real artifact (model + its condition decals) so the rotating
 			# preview shows the player exactly what they'll need to restore.
-			var preview_scene: PackedScene = ArtifactScenes.scene_for(template.id, ARTIFACT_OBJECT_SCENE)
+			var preview_scene: PackedScene = ArtifactScenes.scene_for(
+				template.id, ARTIFACT_OBJECT_SCENE
+			)
 			var preview: RestorationObject3D = preview_scene.instantiate()
 			card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
 			_present_object(preview, inst, template, _artifact_seed(uid))
@@ -449,9 +465,8 @@ func _rebuild_artifact_bar() -> void:
 
 ## Builds an artifact's visible presentation (model + condition decals) onto `obj`.
 ## Shared by the bench's main object and the rotating previews in the card bar.
-## Returns true when condition decals were applied (so callers can skip the dirt-mask
-## fallback). `obj` must already be in the tree so its geometry builds in the right
-## world.
+## Returns true when condition decals were applied (so callers can skip the dirt-mask fallback).
+## `obj` must already be in the tree so its geometry builds in the right world.
 func _present_object(
 	obj: RestorationObject3D, inst: ObjectInstance, template: ScrapObjectTemplate, seed_value: int
 ) -> bool:
@@ -614,7 +629,8 @@ func _rebuild_tool_sidebar() -> void:
 	if _tool_sidebar == null:
 		return
 	var repo := _service.get_repository()
-	var provider := func(tool_id: String) -> Array: return CleaningPower.conditions_for(repo, tool_id)
+	var provider := func(tool_id: String) -> Array:
+		return CleaningPower.conditions_for(repo, tool_id)
 	_tool_sidebar.build_slots(
 		_service.get_workbench_slots(), _service.get_workbench_durability(), provider
 	)
@@ -622,7 +638,6 @@ func _rebuild_tool_sidebar() -> void:
 
 
 # --- Cursor-following held tool (Trash-Goblin style) -------------------------
-
 
 const CURSOR_TOOL_SIZE: int = 100
 ## Velocity-based lean: the held tool tilts toward the direction of horizontal mouse movement
@@ -655,7 +670,9 @@ func _build_cursor_tool() -> void:
 	_cursor_tool.size = Vector2(CURSOR_TOOL_SIZE, CURSOR_TOOL_SIZE)
 	var preview_container := _cursor_tool.find_child("PreviewContainer", true, false)
 	if preview_container is Control:
-		(preview_container as Control).custom_minimum_size = Vector2(CURSOR_TOOL_SIZE, CURSOR_TOOL_SIZE)
+		(preview_container as Control).custom_minimum_size = Vector2(
+			CURSOR_TOOL_SIZE, CURSOR_TOOL_SIZE
+		)
 	var name_label := _cursor_tool.find_child("NameLabel", true, false)
 	if name_label is Control:
 		(name_label as Control).visible = false
@@ -792,6 +809,9 @@ func select_tool(tool_id: String) -> void:
 		return
 	if tool_id == ERASE_TOOL_ID:
 		_caption_label.text = "Debug eraser — drag across the surface to wipe it clean."
+		return
+	if tool_id == CLEAN_ALL_TOOL_ID:
+		_caption_label.text = "DEBUG: click the artifact to remove every condition at once."
 		return
 	var inst := _service.find_instance_by_id(_selected_uid)
 	if inst != null and inst.state == ModelEnums.ObjState.DIRTY:
@@ -999,12 +1019,18 @@ func commit_stroke(worked_uvs: PackedVector2Array) -> RestorationService.ToolRes
 		var state_name := "missing" if inst == null else ModelEnums.obj_state_name(inst.state)
 		_log("commit_stroke skipped: instance not DIRTY (state=%s)" % state_name)
 		return null
-	var result := _service.apply_tool(_selected_uid, _selected_tool_id)
-	if result.ok and result.compatible:
-		for uv in worked_uvs:
-			_object.clean_brush_at_uv(uv)
-		if result.reached_clean:
-			_object.set_fully_clean()
+	var result: RestorationService.ToolResult
+	if _selected_tool_id == CLEAN_ALL_TOOL_ID:
+		result = _service.debug_clean_all(_selected_uid)
+		if result.ok and result.reached_clean and is_instance_valid(_object):
+			_object.debug_clean_all_visuals()
+	else:
+		result = _service.apply_tool(_selected_uid, _selected_tool_id)
+		if result.ok and result.compatible:
+			for uv in worked_uvs:
+				_object.clean_brush_at_uv(uv)
+			if result.reached_clean:
+				_object.set_fully_clean()
 	_log(
 		(
 			"commit_stroke: tool=%s compatible=%s condition=%.0f->%.0f reached_clean=%s coverage=%.2f"
@@ -1095,8 +1121,8 @@ func _apply_action_feedback(result: RestorationService.ToolResult) -> void:
 		_refresh(inst, template)
 
 
-## Shows/hides the separate "Surface cleaned" caption + bar (hidden for overlay artifacts, whose clean
-## % lives in the Condition meter instead).
+## Shows/hides the separate "Surface cleaned" caption + bar (hidden for overlay artifacts,
+## whose clean % lives in the Condition meter instead).
 func _set_surface_meter_visible(show: bool) -> void:
 	_surface_bar.visible = show
 	var caption := get_node_or_null("HUD/RightSideBar/Margin/VBox/SurfaceCaption")
@@ -1132,7 +1158,11 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	# to disk per frame.
 	var shown_value := inst.value
 	if inst.true_value > 0:
-		if is_overlay and _object.has_method("active_condition_coverage"):
+		if (
+			is_overlay
+			and _object.has_method("active_condition_coverage")
+			and _should_price_by_overlay(template)
+		):
 			shown_value = _overlay_market_value(inst)
 		else:
 			shown_value = ValueModel.current_value(inst, template, _service.get_repository())
@@ -1160,7 +1190,8 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	if is_open:
 		_object.set_clasp_open(true)
 	_clasp_prompt.visible = is_clean
-	_scan_button.visible = true  # always available; the scan itself reports "too dirty" below the threshold
+	# The scan button is always available; the scan itself reports "too dirty" below the threshold.
+	_scan_button.visible = true
 	if is_clean:
 		_clasp_prompt.text = "Pendant is clean — scan and judge, or click the clasp to open."
 	elif is_open:
@@ -1175,7 +1206,8 @@ func _refresh_photo(inst: ObjectInstance, template: ScrapObjectTemplate) -> void
 	_surface_bar.value = (float(cleaned) / float(total) * 100.0) if total > 0 else 0.0
 
 	var is_clean := inst.state == ModelEnums.ObjState.CLEAN
-	_scan_button.visible = true  # always available; the scan itself reports "too dirty" below the threshold
+	# The scan button is always available; the scan itself reports "too dirty" below the threshold.
+	_scan_button.visible = true
 	var needs_join := template != null and template.requires_join and not inst.is_joined
 	_clasp_prompt.visible = is_clean
 	if is_clean and needs_join:
@@ -1288,8 +1320,9 @@ func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
 
 ## Two-stage zoom. STAGE 1: the artifact moves toward the camera (amount > 0 = in) up to the dynamic
 ## near limit. STAGE 2: once it can't get closer, the leftover tightens the camera FOV (a lens zoom)
-## down to MIN_FOV. Zooming out reverses it — FOV widens back to default first, then the artifact pulls
-## away. The camera position never moves; only the artifact distance and the FOV change.
+## down to MIN_FOV. Zooming out reverses it — FOV widens back to default first, then the
+## artifact pulls away. The camera position never moves; only the artifact distance and the FOV
+## change.
 func zoom_by(amount: float, cursor_pos: Vector2 = Vector2.INF) -> void:
 	# Remember where the cursor is so the stage-2 lens zoom magnifies that spot (not the centre).
 	if cursor_pos != Vector2.INF and is_instance_valid(_viewport):
@@ -1318,6 +1351,8 @@ func zoom_by(amount: float, cursor_pos: Vector2 = Vector2.INF) -> void:
 		if remaining < 0.0:
 			_zoom_z = maxf(ZOOM_BACK, _zoom_z + remaining)
 	_object.position.z = _zoom_z
+	_clamp_pan()
+	_apply_camera_offset()
 
 
 ## Clamps and applies the camera FOV for the stage-2 lens zoom, then refreshes the camera offset.
@@ -1325,7 +1360,14 @@ func _set_fov(fov: float) -> void:
 	if not is_instance_valid(_camera):
 		return
 	_camera.fov = clampf(fov, MIN_FOV, _default_fov)
+	_clamp_pan()
 	_apply_camera_offset()
+
+
+## Stage 2 = lens zoom active (FOV tighter than the authored default). Used for the zoom-to-
+## cursor lean bias; pan itself is no longer gated by stage.
+func _is_zoom_stage_2() -> bool:
+	return is_instance_valid(_camera) and _camera.fov < _default_fov
 
 
 ## Sets the camera's h/v offset from the zoom-to-cursor lean (scaled by how far the lens is zoomed)
@@ -1340,21 +1382,32 @@ func _apply_camera_offset() -> void:
 	_camera.v_offset = _fov_lean_ndc.y * FOV_LEAN_MAX * zoom_t + _camera_pan.y
 
 
-## Middle-mouse drag: pan the (zoomed) view by moving the camera offset, clamped so the artifact stays
-## on-screen. Dragging right/up moves the view that way (the camera shifts opposite).
+## Clamps the manual pan to a fixed, symmetric world-unit radius around the camera's original centre.
+## The limit does NOT vary with zoom or FOV.
+func _clamp_pan() -> void:
+	if not is_instance_valid(_camera):
+		return
+	if _camera_pan.length() > CAMERA_PAN_MAX:
+		_camera_pan = _camera_pan.normalized() * CAMERA_PAN_MAX
+	_camera_pan.x = clampf(_camera_pan.x, -CAMERA_PAN_MAX, CAMERA_PAN_MAX)
+	_camera_pan.y = clampf(_camera_pan.y, -CAMERA_PAN_MAX, CAMERA_PAN_MAX)
+
+
+## Middle-mouse drag: pan the view by moving the camera offset, clamped to a fixed world-unit
+## limit so the artifact can always be nudged but never pushed entirely off-screen.
 func _pan_camera(relative: Vector2) -> void:
-	_camera_pan.x = clampf(
-		_camera_pan.x - relative.x * CAMERA_PAN_SPEED, -CAMERA_PAN_MAX, CAMERA_PAN_MAX
-	)
-	_camera_pan.y = clampf(
-		_camera_pan.y + relative.y * CAMERA_PAN_SPEED, -CAMERA_PAN_MAX, CAMERA_PAN_MAX
-	)
+	_camera_pan.x -= relative.x * CAMERA_PAN_SPEED
+	_camera_pan.y += relative.y * CAMERA_PAN_SPEED
+	_clamp_pan()
 	_apply_camera_offset()
 
 
-## Nearest zoom position.z that keeps the artifact's front face clear of the camera. = camera.z minus a
-## small near-plane margin minus the artifact's bounding radius (so its closest point can't reach the
-## camera at any rotation). Capped at ZOOM_FRONT so small artifacts still have a sane closest distance.
+## Nearest zoom position.z that keeps the artifact's front face clear of the camera. = camera.z
+## minus a
+## small near-plane margin minus the artifact's bounding radius (so its closest point can't reach
+## the
+## camera at any rotation). Capped at ZOOM_FRONT so small artifacts still have a sane closest
+## distance.
 func _zoom_front_limit() -> float:
 	if not is_instance_valid(_camera) or not is_instance_valid(_object):
 		return ZOOM_FRONT
@@ -1369,8 +1422,9 @@ func zoom_offset() -> float:
 	return _zoom_z
 
 
-## Returns the artifact to its authored rest position (on reset and artifact swap), but never closer than
-## the dynamic near limit — so a big artifact doesn't start out clipping into the camera.
+## Returns the artifact to its authored rest position (on reset and artifact swap), but never
+## closer than the dynamic near limit — so a big artifact doesn't start out clipping into the
+## camera.
 func _reset_zoom() -> void:
 	_zoom_z = minf(_zoom_rest_z, _zoom_front_limit())
 	if is_instance_valid(_object):
@@ -1381,6 +1435,9 @@ func _reset_zoom() -> void:
 		_camera.v_offset = 0.0
 	_fov_lean_ndc = Vector2.ZERO
 	_camera_pan = Vector2.ZERO
+	_pan_down = false
+	_clamp_pan()
+	_apply_camera_offset()
 
 
 # --- Input -------------------------------------------------------------------
@@ -1427,7 +1484,8 @@ func _update_decal_highlight(delta: float) -> void:
 
 
 ## Pulses the artifact's condition overlays the held tool can clean — a brief glow every ~3 seconds
-## so the player can spot, say, dust on a silver artifact (same colour) when a dust tool is equipped.
+## so the player can spot, say, dust on a silver artifact (same colour) when a dust tool is
+## equipped.
 func _update_overlay_highlight(delta: float) -> void:
 	if not is_instance_valid(_object) or not _object.has_method("highlight_overlays"):
 		return
@@ -1526,6 +1584,10 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			if not _pointer_over_viewport(pos):
 				return
 			if _try_clasp_at_pointer(pos):
+				return
+			# The debug clean-all tool is one click: anywhere on the artifact wipes it.
+			if _mode == Mode.CLEAN and _selected_tool_id == CLEAN_ALL_TOOL_ID:
+				_debug_clean_all_at_pointer(pos)
 				return
 			# Picking up a bench tool prop selects it (off to the side of the object,
 			# so it never competes with a cleaning stroke or a rotate drag).
@@ -1629,6 +1691,9 @@ func _controller_clean() -> void:
 	if _selected_tool_id.is_empty():
 		_caption_label.text = "Select a tool first."
 		return
+	if _selected_tool_id == CLEAN_ALL_TOOL_ID:
+		_debug_clean_all()
+		return
 	if _object.is_decal_mode():
 		var blemish_id := _object.auto_target_blemish_id()
 		if blemish_id.is_empty():
@@ -1640,6 +1705,38 @@ func _controller_clean() -> void:
 	if inst == null or inst.state != ModelEnums.ObjState.DIRTY:
 		return
 	clean_stroke_at_uv(_object.auto_target_dirty_uv())
+
+
+## Debug-only one-click clean-all. Works on a pointer hit or via the controller
+## clean action when the debug tool is selected.
+func _debug_clean_all_at_pointer(pos: Vector2) -> void:
+	if _selected_uid.is_empty() or _selected_tool_id != CLEAN_ALL_TOOL_ID:
+		return
+	if not _pointer_over_viewport(pos):
+		return
+	var hit := _ray_at_pointer(pos)
+	if not hit.get("hit", false):
+		return
+	_debug_clean_all()
+
+
+func _debug_clean_all() -> void:
+	if _selected_uid.is_empty() or _selected_tool_id != CLEAN_ALL_TOOL_ID:
+		return
+	var result := _service.debug_clean_all(_selected_uid)
+	if not result.ok:
+		_feedback_label.text = result.feedback
+		return
+	if is_instance_valid(_object):
+		_object.debug_clean_all_visuals()
+	_feedback_label.text = result.feedback
+	_caption_label.text = "DEBUG: artifact is spotless."
+	var inst := _service.find_instance_by_id(_selected_uid)
+	var template := (
+		_service.get_repository().get_template(inst.template_id) if inst != null else null
+	)
+	if inst != null:
+		_refresh(inst, template)
 
 
 ## Keyboard/controller "open" action: opens the clasp on an openable object, or
@@ -1687,8 +1784,8 @@ func _begin_paint_stroke(pos: Vector2) -> void:
 # --- Real tools cleaning the authored condition overlays ----------------------
 
 
-## Begins a press-drag where the selected REAL tool cleans the artifact's condition overlays. The tool
-## removes only the conditions its config lists (each at its Power), at its clean_radius.
+## Begins a press-drag where the selected REAL tool cleans the artifact's condition overlays.
+## The tool removes only the conditions its config lists (each at its Power), at its clean_radius.
 func _begin_overlay_stroke(pos: Vector2) -> void:
 	_overlay_stroke = true
 	_paint_stroke = false
@@ -1707,9 +1804,10 @@ func _accumulate_overlay_stroke(pos: Vector2) -> void:
 		_clean_overlay_with_tool(pos)
 
 
-## One step of overlay cleaning with the selected tool: cleans the outermost layer under the pointer
-## the tool can fix, then routes durability + condition/value through register_authored_clean (reused
-## from the authored-decal path) so the clean->open gate, tool wear, and value all work unchanged.
+## One step of overlay cleaning with the selected tool: cleans the outermost layer under the
+## pointer the tool can fix, then routes durability + condition/value through
+## register_authored_clean (reused from the authored-decal path) so the clean->open gate, tool
+## wear, and value all work unchanged.
 func _clean_overlay_with_tool(pos: Vector2) -> void:
 	if _selected_tool_id.is_empty():
 		_caption_label.text = "Pick up a tool from the bench first."
@@ -1732,14 +1830,15 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 		else:
 			_overlay_at95_ms = -1
 		var held_95_s := (
-			float(Time.get_ticks_msec() - _overlay_at95_ms) / 1000.0 if _overlay_at95_ms >= 0 else 0.0
+			float(Time.get_ticks_msec() - _overlay_at95_ms) / 1000.0
+			if _overlay_at95_ms >= 0
+			else 0.0
 		)
 		# Auto-finish: snap to 100% immediately at ≥98%, or once the piece has held ≥95% for
 		# AUTO_FINISH_HOLD_S (this next stroke completes it) — so the player isn't chasing specks,
 		# but completion is no longer instant the moment the surface looks nearly done.
 		var should_finish := (
-			pct >= AUTO_FINISH_SNAP
-			or (pct >= AUTO_FINISH_NEAR and held_95_s >= AUTO_FINISH_HOLD_S)
+			pct >= AUTO_FINISH_SNAP or (pct >= AUTO_FINISH_NEAR and held_95_s >= AUTO_FINISH_HOLD_S)
 		)
 		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and should_finish:
 			_object.force_clean_overlays(["crack"])
@@ -1763,7 +1862,9 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 				bool(result.get("fully_cleaned", false)),
 				_overlay_market_value(inst)
 			)
-			_feedback_label.text = "Working off the %s..." % String(result.get("condition_id", "")).replace("_", " ")
+			_feedback_label.text = (
+				"Working off the %s..." % String(result.get("condition_id", "")).replace("_", " ")
+			)
 		var inst2 := _service.find_instance_by_id(_selected_uid)
 		if inst2 != null:
 			_refresh(inst2, _service.get_repository().get_template(inst2.template_id))
@@ -1778,6 +1879,15 @@ func _overlay_market_value(inst: ObjectInstance) -> int:
 	if inst == null or inst.true_value <= 0 or not _object.has_method("active_condition_coverage"):
 		return -1
 	return ValueModel.value_from_coverage(inst.true_value, _object.active_condition_coverage())
+
+
+## True for scene-only overlay artifacts that have no data-driven condition threshold.
+## Condition-threshold pieces (e.g. the Gold Locket) price off the instance condition so the value
+## readout rises smoothly with each compatible stroke; pure overlays price off live coverage.
+func _should_price_by_overlay(template: ScrapObjectTemplate) -> bool:
+	if template == null:
+		return true
+	return template.required_clean_tool.is_empty()
 
 
 ## The selected tool's cleaning params {cleans, radius}: the scene-authored ToolConfig if it lists

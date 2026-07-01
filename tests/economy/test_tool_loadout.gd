@@ -128,3 +128,22 @@ func test_remove_and_restore_target() -> void:
 
 	_tools.set_restore_target("obj_42")
 	assert_eq(_tools.get_restore_target(), "obj_42")
+
+
+func test_debug_clean_all_is_grantable_in_debug() -> void:
+	var tool_def := _repo.get_tool("debug_clean_all")
+	assert_not_null(tool_def)
+	assert_true(tool_def.debug_only)
+
+	var inst := _tools.grant_tool("debug_clean_all")
+	assert_eq(inst.tool_id, "debug_clean_all")
+
+	var owned_ids: Array = []
+	for owned in _tools.get_owned_tools():
+		owned_ids.append(owned.tool_id)
+	assert_true(owned_ids.has("debug_clean_all"), "debug tool appears in owned tools")
+
+	var loaded_ids: Array = []
+	for loaded in _tools.get_workbench_loadout():
+		loaded_ids.append(loaded.tool_id)
+	assert_true(loaded_ids.has("debug_clean_all"), "debug tool auto-equips onto the bench")

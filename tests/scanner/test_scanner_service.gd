@@ -102,6 +102,67 @@ func test_clean_object_can_be_scanned() -> void:
 	assert_true(result.is_ok())
 
 
+func test_non_decal_openable_at_96_percent_is_scannable() -> void:
+	var inst := _make_instance("dusty_locket", ModelEnums.ObjState.DIRTY)
+	inst.condition = 96.0
+	assert_true(_service.can_scan(inst), "a 96%%-clean openable meets the 50%% scanner threshold")
+	var result := _service.scan(inst)
+	assert_eq(result.status, ScannerResult.Status.SUCCESS)
+
+
+func test_dirty_non_decal_openable_below_threshold_is_blocked() -> void:
+	var inst := _make_instance("dusty_locket", ModelEnums.ObjState.DIRTY)
+	inst.condition = 30.0
+	assert_false(
+		_service.can_scan(inst), "a 30%%-clean openable is below the 50%% scanner threshold"
+	)
+	var result := _service.scan(inst)
+	assert_eq(result.status, ScannerResult.Status.NOT_CLEAN)
+
+
+func test_scanner_message_hides_threshold() -> void:
+	var inst := _make_instance("dusty_locket", ModelEnums.ObjState.DIRTY)
+	inst.condition = 10.0
+	var result := _service.scan(inst)
+	assert_eq(result.status, ScannerResult.Status.NOT_CLEAN)
+	assert_eq(result.response.transport_error, "Too dirty to be scanned — clean it more first.")
+	assert_false(result.response.transport_error.contains("%"), "message must not show a percent")
+	assert_true(
+		result.response.transport_error.find("[0-9]") < 0, "message must not contain digits"
+	)
+
+
+func test_scanner_price_derived_from_template_range() -> void:
+	var inst := _make_instance("dusty_locket", ModelEnums.ObjState.CLEAN)
+	var result := _service.scan(inst)
+	assert_true(result.is_ok())
+	var template: ScrapObjectTemplate = _repo.get_template("dusty_locket")
+	assert_eq(result.response.price_range_min, int(template.base_value_range.x))
+	assert_eq(result.response.price_range_max, int(template.base_value_range.y))
+
+
+func test_scanner_conditions_derived_from_spawned_decals() -> void:
+	var inst := _make_instance("dusty_locket", ModelEnums.ObjState.CLEAN)
+	inst.spawned_decals = [
+		{"id": "dust_1", "type": "dust", "color": "#C9C2B0", "required_tool": "soft_brush"},
+		{
+			"id": "tarnish_1",
+			"type": "tarnish",
+			"color": "#4A5240",
+			"required_tool": "polishing_cloth"
+		}
+	]
+	var result := _service.scan(inst)
+	assert_true(result.is_ok())
+	assert_true(result.response.markings.has("Dust"), "markings should include spawned condition")
+	assert_true(
+		result.response.markings.has("Tarnish"), "markings should include spawned condition"
+	)
+	assert_true(
+		result.response.condition_note.contains("Dust"), "condition note should describe conditions"
+	)
+
+
 func test_scanner_output_does_not_set_authenticity() -> void:
 	var inst := _make_instance("tarnished_pendant", ModelEnums.ObjState.CLEAN)
 	_add_to_inventory(inst)

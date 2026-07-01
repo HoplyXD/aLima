@@ -14,25 +14,75 @@ extends Node3D
 ## @tool: the shell builds in the editor too, so the overlay is visible while you position it. The
 ## inner OverlayShell is an INTERNAL child (never saved/duplicated into the .tscn).
 
-## condition_tex * per-vertex keep (COLOR.a) * opacity. No UV is used for cleaning, only for the look.
-const SHADER := "shader_type spatial;\nrender_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;\nuniform sampler2D condition_tex : source_color, filter_linear;\nuniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;\nuniform float highlight = 0.0;\nuniform vec4 highlight_color : source_color = vec4(1.0, 0.85, 0.3, 1.0);\nuniform int uv_mode = 0;\nuniform float uv2_tiling = 2.0;\nuniform float uv2_aspect = 1.0;\nuniform float own_uv_tiling = 3.0;\nuniform float own_uv_aspect = 1.0;\nuniform float triplanar_scale = 0.5;\nvarying vec3 v_pos;\nvarying vec3 v_norm;\nvoid vertex() {\n\tv_pos = VERTEX;\n\tv_norm = NORMAL;\n}\nvec4 sample_tri(vec3 p, vec3 n) {\n\tvec3 b = pow(abs(normalize(n)), vec3(4.0));\n\tb /= (b.x + b.y + b.z + 1e-5);\n\tvec4 cx = texture(condition_tex, p.zy * triplanar_scale);\n\tvec4 cy = texture(condition_tex, p.xz * triplanar_scale);\n\tvec4 cz = texture(condition_tex, p.xy * triplanar_scale);\n\treturn cx * b.x + cy * b.y + cz * b.z;\n}\nvoid fragment() {\n\tvec4 c = (uv_mode == 2) ? sample_tri(v_pos, v_norm) : ((uv_mode == 1) ? texture(condition_tex, UV2 * vec2(uv2_tiling, uv2_tiling * uv2_aspect)) : texture(condition_tex, UV * vec2(own_uv_tiling, own_uv_tiling * own_uv_aspect)));\n\tfloat base = c.a * COLOR.a;\n\tALBEDO = c.rgb;\n\tEMISSION = highlight_color.rgb * highlight * base;\n\tALPHA = clamp(base * overlay_opacity + highlight * base * 0.6, 0.0, 1.0);\n}\n"
+## condition_tex * per-vertex keep (COLOR.a) * opacity. No UV is used for cleaning, only for the
+## look.
+const SHADER := """shader_type spatial;
+render_mode blend_mix, cull_back, depth_draw_opaque, diffuse_lambert;
+uniform sampler2D condition_tex : source_color, filter_linear;
+uniform float overlay_opacity : hint_range(0.0, 1.0) = 0.9;
+uniform float highlight = 0.0;
+uniform vec4 highlight_color : source_color = vec4(1.0, 0.85, 0.3, 1.0);
+uniform int uv_mode = 0;
+uniform float uv2_tiling = 2.0;
+uniform float uv2_aspect = 1.0;
+uniform float own_uv_tiling = 3.0;
+uniform float own_uv_aspect = 1.0;
+uniform float triplanar_scale = 0.5;
+varying vec3 v_pos;
+varying vec3 v_norm;
+void vertex() {
+    v_pos = VERTEX;
+    v_norm = NORMAL;
+}
+vec4 sample_tri(vec3 p, vec3 n) {
+    vec3 b = pow(abs(normalize(n)), vec3(4.0));
+    b /= (b.x + b.y + b.z + 1e-5);
+    vec4 cx = texture(condition_tex, p.zy * triplanar_scale);
+    vec4 cy = texture(condition_tex, p.xz * triplanar_scale);
+    vec4 cz = texture(condition_tex, p.xy * triplanar_scale);
+    return cx * b.x + cy * b.y + cz * b.z;
+}
+void fragment() {
+    vec4 c;
+    if (uv_mode == 2) {
+        c = sample_tri(v_pos, v_norm);
+    } else if (uv_mode == 1) {
+        c = texture(condition_tex, UV2 * vec2(uv2_tiling, uv2_tiling * uv2_aspect));
+    } else {
+        c = texture(condition_tex, UV * vec2(own_uv_tiling, own_uv_tiling * own_uv_aspect));
+    }
+    float base = c.a * COLOR.a;
+    ALBEDO = c.rgb;
+    EMISSION = highlight_color.rgb * highlight * base;
+    ALPHA = clamp(base * overlay_opacity + highlight * base * 0.6, 0.0, 1.0);
+}
+"""
 const PATTERN_BLOB_RADIUS: float = 0.16  ## Dirt-blob radius as a fraction of the mesh extent.
 const PATTERN_BLOB_CORE: float = 0.35  ## Solid-core fraction of each blob; the rest is a soft edge.
 const MAX_BLOBS: int = 8000  ## Safety cap on blob stamps while filling toward the target coverage.
 ## Low-poly meshes (e.g. the 260-vert death mask) clean/pattern too coarsely (linear, not round), so
-## the shell is subdivided at build until it has at least this many vertices (capped at 2 levels). Higher
-## = smoother dirt blobs but heavier (cleaning loops every vertex) — 2 levels keeps it ~4-8k, smooth but
+## the shell is subdivided at build until it has at least this many vertices (capped at 2 levels).
+## Higher
+## = smoother dirt blobs but heavier (cleaning loops every vertex) — 2 levels keeps it ~4-8k, smooth
+##  but
 ## not so dense it lags. (6000 + 3 levels overshot to ~20k and stuttered.)
 const MIN_VERTS: int = 4000
-## Brush radius (fraction of overlay size) used ONLY when no tool radius is supplied — i.e. the debug
-## eraser. Real cleaning passes the TOOL's clean_radius (see ToolConfig); the overlay no longer owns one.
+## Brush radius (fraction of overlay size) used ONLY when no tool radius is supplied — i.e. the
+## debug
+## eraser. Real cleaning passes the TOOL's clean_radius (see ToolConfig); the overlay no longer owns
+##  one.
 const DEFAULT_CLEAN_RADIUS: float = 0.12
-## In-engine UV repair: when a mesh's own UVs are broken (collapsed/overlapping — common in free packs),
-## we lightmap_unwrap() a fresh non-overlapping UV2 so the grime maps cleanly without touching Blender.
+## In-engine UV repair: when a mesh's own UVs are broken (collapsed/overlapping — common in free
+## packs),
+## we lightmap_unwrap() a fresh non-overlapping UV2 so the grime maps cleanly without touching
+## Blender.
 ## lightmap_unwrap's texel size is computed PER MESH as (average triangle edge × this). Tracking the
-## TRIANGLE size (not just the model's overall extent) makes the unwrap robust to BOTH a tiny model AND
-## a finely-subdivided one: a texel larger than the triangles collapses the unwrap (that's why a 0.07u
-## chain broke, and also why subdividing a model broke it). With this you never have to scale models up
+## TRIANGLE size (not just the model's overall extent) makes the unwrap robust to BOTH a tiny model
+## AND
+## a finely-subdivided one: a texel larger than the triangles collapses the unwrap (that's why a
+## 0.07u
+## chain broke, and also why subdividing a model broke it). With this you never have to scale models
+##  up
 ## or watch their poly count for the repair to work.
 const UNWRAP_TEXEL_EDGE_FRAC: float = 0.75
 ## The mesh to show as the overlay shell. Leave null to fall back to the artifact's own mesh.
@@ -67,22 +117,32 @@ const UNWRAP_TEXEL_EDGE_FRAC: float = 0.75
 ## moderate random range so overlays that don't set it still spawn partial/varied (tune per layer).
 @export_range(0.0, 100.0) var coverage_min: float = 20.0
 @export_range(0.0, 100.0) var coverage_max: float = 60.0
-## CONDITION RANDOMIZER: if ON, this condition is GUARANTEED on every instance of the artifact (it takes a
+## CONDITION RANDOMIZER: if ON, this condition is GUARANTEED on every instance of the artifact (it
+## takes a
 ## reserved slot); the rest of the artifact's randomized [min,max] conditions are filled from the
 ## non-guaranteed spawnable ones. (The artifact's randomize_conditions_min/max drives the count.)
 @export var guaranteed_spawn: bool = false
-## "Fake-it" distance gate (mesh-local metres): vertices farther than this from the mesh origin get NO
-## condition AND don't count toward the artifact's size. Lets the overlay mesh carry clean DECOY geometry
-## parked far away (e.g. a torus strip with perfect UVs) without it getting dirt or skewing blob/clean
-## radius. <= 0 disables. Normal artifacts are tiny (< a few metres local) so the default never affects them.
+## "Fake-it" distance gate (mesh-local metres): vertices farther than this from the mesh origin get
+## NO
+## condition AND don't count toward the artifact's size. Lets the overlay mesh carry clean DECOY
+## geometry
+## parked far away (e.g. a torus strip with perfect UVs) without it getting dirt or skewing
+## blob/clean
+## radius. <= 0 disables. Normal artifacts are tiny (< a few metres local) so the default never
+## affects them.
 @export var condition_max_distance: float = 100.0
-## How this overlay maps the grime — pick ONE (priority: triplanar > use_own_uvs > auto_unwrap > default).
-##   none ticked (default) = TRIPLANAR: projects from object axes, no UVs. Best for BLOCKY meshes; can
+## How this overlay maps the grime — pick ONE (priority: triplanar > use_own_uvs > auto_unwrap >
+## default).
+##   none ticked (default) = TRIPLANAR: projects from object axes, no UVs. Best for BLOCKY meshes;
+##   can
 ##     stretch on curved/diagonal surfaces.
-##   use_own_uvs = the mesh's authored UVs, untouched. Best for meshes YOU unwrapped well in Blender;
+##   use_own_uvs = the mesh's authored UVs, untouched. Best for meshes YOU unwrapped well in
+##   Blender;
 ##     stretches if the UVs are uneven/bad.
-##   auto_unwrap = generate fresh EVEN UVs in-engine (lightmap_unwrap). No stretch ANYWHERE, no re-export
-##     — the fix for pack/import meshes whose UVs are bad AND non-uniform (where own_uv_aspect can't win).
+##   auto_unwrap = generate fresh EVEN UVs in-engine (lightmap_unwrap). No stretch ANYWHERE, no re-
+##   export
+##     — the fix for pack/import meshes whose UVs are bad AND non-uniform (where own_uv_aspect can't
+##      win).
 ##     Trade-off: faint seams where the generated UV charts meet.
 @export var use_own_uvs: bool = false:
 	set(value):
@@ -101,32 +161,40 @@ const UNWRAP_TEXEL_EDGE_FRAC: float = 0.75
 		triplanar = value
 		if is_inside_tree() and _shell != null:
 			_rebuild()  # uv mode is resolved at build; re-resolve so the toggle previews live
-## Triplanar grime grain: higher = smaller, denser patches; lower = bigger. The default works for most
+## Triplanar grime grain: higher = smaller, denser patches; lower = bigger. The default works for
+## most
 ## meshes; bump it up if the grime looks too zoomed/blobby on a big artifact.
 @export var triplanar_tiling: float = 6.0
-## AUTO_UNWRAP grain: how many times the grime tiles across the generated UVs. Higher = smaller, finer
+## AUTO_UNWRAP grain: how many times the grime tiles across the generated UVs. Higher = smaller,
+## finer
 ## grain; lower = bigger, blobbier. THE knob if auto_unwrap grime looks too big.
 @export var uv2_tiling: float = 5.0:
 	set(value):
 		uv2_tiling = value
 		if _material != null:
 			_material.set_shader_parameter("uv2_tiling", value)
-## AUTO_UNWRAP stretch: squashes the grime on one axis (like own_uv_aspect) if it ever reads uneven. 1 = even.
+## AUTO_UNWRAP stretch: squashes the grime on one axis (like own_uv_aspect) if it ever reads uneven.
+##  1 = even.
 @export var uv2_aspect: float = 1.0:
 	set(value):
 		uv2_aspect = value
 		if _material != null:
 			_material.set_shader_parameter("uv2_aspect", value)
-## Grime grain when use_own_uvs is ON: how many times the condition texture tiles across the mesh's UVs.
-## 1 = maps once (big blobby smears); higher = finer, denser grime. THE knob to make own-UV look good.
+## Grime grain when use_own_uvs is ON: how many times the condition texture tiles across the mesh's
+## UVs.
+## 1 = maps once (big blobby smears); higher = finer, denser grime. THE knob to make own-UV look
+## good.
 @export var own_uv_tiling: float = 3.0:
 	set(value):
 		own_uv_tiling = value
 		if _material != null:
 			_material.set_shader_parameter("own_uv_tiling", value)
-## Fixes a one-way STRETCH on use_own_uvs meshes whose UV islands aren't square (the texture looks fine
-## on one axis, smeared on the other). 1 = even. Raise/lower until the grime grain looks square: if it's
-## stretched tall, go above 1; if stretched wide, below 1. (Proper fix is an even unwrap in Blender.)
+## Fixes a one-way STRETCH on use_own_uvs meshes whose UV islands aren't square (the texture looks
+## fine
+## on one axis, smeared on the other). 1 = even. Raise/lower until the grime grain looks square: if
+## it's
+## stretched tall, go above 1; if stretched wide, below 1. (Proper fix is an even unwrap in
+## Blender.)
 @export var own_uv_aspect: float = 1.0:
 	set(value):
 		own_uv_aspect = value
@@ -134,8 +202,10 @@ const UNWRAP_TEXEL_EDGE_FRAC: float = 0.75
 			_material.set_shader_parameter("own_uv_aspect", value)
 
 ## ONE shared compiled Shader for every overlay. Previously each overlay did Shader.new() with the
-## same code, so the GPU compiled a fresh shader per overlay — a triage pile / storage grid with many
-## overlays caused a burst of compilations (the load lag spike). ShaderMaterials still hold their own
+## same code, so the GPU compiled a fresh shader per overlay — a triage pile / storage grid with
+## many
+## overlays caused a burst of compilations (the load lag spike). ShaderMaterials still hold their
+## own
 ## per-overlay parameters; only the compiled program is shared, so it compiles exactly once.
 static var _shared_shader: Shader
 
@@ -150,7 +220,8 @@ static func _overlay_shader() -> Shader:
 
 ## Cached rebuilt overlay GEOMETRY keyed by the source mesh. The merge + UV-repair + subdivide is
 ## identical for the same mesh and is the bulk of the per-overlay build cost — caching it makes
-## artifact loads, bench switches, and the triage pile far cheaper (only the per-instance dirt colours
+## artifact loads, bench switches, and the triage pile far cheaper (only the per-instance dirt
+## colours
 ## are rebuilt). mesh RID id -> {arrays, verts, tris, uv_mode, extent}.
 static var _geo_cache: Dictionary = {}
 
@@ -158,6 +229,7 @@ static var _geo_cache: Dictionary = {}
 ## Clears the geometry cache (tests / after reimporting artifact meshes).
 static func clear_geometry_cache() -> void:
 	_geo_cache.clear()
+
 
 var _shell: MeshInstance3D
 var _uv_mode: int = 0  ## 0 = mesh UV1, 1 = generated UV2 (UV repair), 2 = triplanar.
@@ -178,7 +250,8 @@ func _ready() -> void:
 		_rebuild()
 
 
-## Called by RestorationObject3D for the bench's active artifact: builds the shell now and rolls this
+## Called by RestorationObject3D for the bench's active artifact: builds the shell now and rolls
+## this
 ## instance's random coverage pattern from `seed` (so each artifact instance differs). When no
 ## overlay_mesh is authored, falls back to the artifact mesh (matched to its scale).
 func build_with_fallback(source_mesh: Mesh, source_scale: float, seed: int = 0) -> void:
@@ -203,7 +276,8 @@ func _apply_pattern(seed: int) -> void:
 	# system exists), so it never spawns regardless of its configured range.
 	if get_condition_id() == "crack":
 		coverage = 0.0
-	# Only vertices within the distance gate are eligible for a condition (far decoy geometry stays clean).
+	# Only vertices within the distance gate are eligible for a condition (far decoy geometry stays
+	# clean).
 	var limit_sq := (
 		(condition_max_distance * condition_max_distance) if condition_max_distance > 0.0 else INF
 	)
@@ -253,7 +327,7 @@ func get_keep() -> PackedFloat32Array:
 	var out := PackedFloat32Array()
 	if _arrays.is_empty():
 		return out
-	for c in (_arrays[Mesh.ARRAY_COLOR] as PackedColorArray):
+	for c in _arrays[Mesh.ARRAY_COLOR] as PackedColorArray:
 		out.append(c.a)
 	return out
 
@@ -306,26 +380,32 @@ func _rebuild() -> void:
 	add_child(_shell, false, Node.INTERNAL_MODE_BACK)
 
 
-## Fills _arrays/_verts/_tris/_uv_mode/_extent for this overlay's mesh, reusing the cached build when
-## the same mesh was processed before. The geometry slots are shared read-only (only the per-instance
-## ARRAY_COLOR is replaced afterwards, and cleaning only fades colours), so sharing is safe and cheap.
+## Fills _arrays/_verts/_tris/_uv_mode/_extent for this overlay's mesh, reusing the cached build
+## when
+## the same mesh was processed before. The geometry slots are shared read-only (only the per-
+## instance
+## ARRAY_COLOR is replaced afterwards, and cleaning only fades colours), so sharing is safe and
+## cheap.
 ## Returns false when the mesh can't be merged. This is the artifact-load / bench-switch lag fix.
 func _load_geometry() -> bool:
 	# In the EDITOR, always rebuild fresh so designers see UV/subdivide/own-uv changes live — the cache
 	# is a RUNTIME optimisation only (a stale cache would ignore inspector edits).
 	var use_cache := not Engine.is_editor_hint()
-	var key := overlay_mesh.get_rid().get_id()
+	if not _build_merged_arrays():
+		return false
+	# Resolve the mode for THIS overlay before keying the cache: two overlays can share the same
+	# mesh but request different UV modes (e.g. the Wood Pipe's WaterStainOverlay uses authored UVs
+	# while another overlay on the same mesh uses triplanar). The geometry built for each mode can
+	# differ (subdivision, UV2 unwrap), so the cache key must include the resolved mode.
+	_resolve_uv_mode()  # pick UV1 / repaired-UV2 / triplanar; repairs broken UVs in-engine
+	var key := str(overlay_mesh.get_rid().get_id()) + ":" + str(_uv_mode)
 	if use_cache and _geo_cache.has(key):
 		var cached: Dictionary = _geo_cache[key]
 		_arrays = (cached["arrays"] as Array).duplicate()  # ARRAY_COLOR is overwritten per instance
 		_verts = cached["verts"]
 		_tris = cached["tris"]
-		_uv_mode = int(cached["uv_mode"])
 		_extent = float(cached["extent"])
 		return true
-	if not _build_merged_arrays():
-		return false
-	_resolve_uv_mode()  # pick UV1 / repaired-UV2 / triplanar; repairs broken UVs in-engine (no Blender)
 	_subdivide_if_sparse()  # densify low-poly meshes so cleaning reads as smooth circles
 	_extent = _measure_extent(_verts)
 	if use_cache:
@@ -341,8 +421,10 @@ func _load_geometry() -> bool:
 
 ## Cleans where a world-space ray meets the shell: fades the keep alpha (opacity) of vertices within
 ## the tool radius of the 3D hit (smooth falloff). The geometry is left intact — only the per-vertex
-## opacity drops — so cleaning never mutates the mesh shape (robust). `power` scales how much opacity
-## is removed per stroke (1.0 = a full fade at the centre; a tool's per-condition power maps here, e.g.
+## opacity drops — so cleaning never mutates the mesh shape (robust). `power` scales how much
+## opacity
+## is removed per stroke (1.0 = a full fade at the centre; a tool's per-condition power maps here,
+## e.g.
 ## 0.5 = remove ~50% opacity). Returns true when anything faded.
 func clean_ray(
 	world_origin: Vector3, world_dir: Vector3, power: float = 1.0, radius_frac: float = -1.0
@@ -381,15 +463,18 @@ func is_built() -> bool:
 
 
 ## True when this overlay can actually put a condition on the surface — so the artifact's condition
-## randomizer knows which overlays are in the pool. False for disabled overlays (coverage_max == 0) and
+## randomizer knows which overlays are in the pool. False for disabled overlays (coverage_max == 0)
+## and
 ## crack (off until the damage system). guaranteed_spawn overlays still must be spawnable to count.
 func is_spawnable() -> bool:
 	return coverage_max > 0.0 and get_condition_id() != "crack"
 
 
-## The condition id a tool must be able to clean: the explicit `condition_id`, or one derived from the
+## The condition id a tool must be able to clean: the explicit `condition_id`, or one derived from
+## the
 ## condition texture's file name (Cracking.png -> crack, Rust.png -> rust, Dust(2).png -> dust). The
-## file-name slug is normalised to the catalog id where they differ (data/journal/surface_conditions.json):
+## file-name slug is normalised to the catalog id where they differ
+## (data/journal/surface_conditions.json):
 ## "Grime.png" -> "dirt" (the catalog stores Grime under id "dirt", cleaned by damp_cloth).
 func get_condition_id() -> String:
 	if not condition_id.is_empty():
@@ -407,7 +492,8 @@ func get_condition_id() -> String:
 	return slug
 
 
-## True when a world-space ray meets this overlay's shell (no cleaning). Used to find which layer the
+## True when a world-space ray meets this overlay's shell (no cleaning). Used to find which layer
+## the
 ## tool is over, for tool/condition matching and wrong-tool feedback.
 func ray_hits(world_origin: Vector3, world_dir: Vector3) -> bool:
 	if _runtime_mesh == null or _shell == null:
@@ -416,7 +502,8 @@ func ray_hits(world_origin: Vector3, world_dir: Vector3) -> bool:
 	return _ray_hit(inv * world_origin, (inv.basis * world_dir).normalized()) != null
 
 
-## The WORLD-space point where the ray meets this overlay (for spawning a clean puff there), or null.
+## The WORLD-space point where the ray meets this overlay (for spawning a clean puff there), or
+## null.
 func ray_hit_point(world_origin: Vector3, world_dir: Vector3) -> Variant:
 	if _runtime_mesh == null or _shell == null:
 		return null
@@ -427,7 +514,8 @@ func ray_hit_point(world_origin: Vector3, world_dir: Vector3) -> Variant:
 	return _shell.global_transform * (hit as Vector3)
 
 
-## Fraction of the SPAWNED condition that has been cleaned (0 = untouched, 1 = spotless), relative to
+## Fraction of the SPAWNED condition that has been cleaned (0 = untouched, 1 = spotless), relative
+## to
 ## the random coverage this instance rolled — so a fresh overlay reads 0 regardless of coverage.
 func cleaned_fraction() -> float:
 	if _initial_keep <= 0.0:
@@ -472,10 +560,13 @@ func set_highlight(intensity: float) -> void:
 		_material.set_shader_parameter("highlight", clampf(intensity, 0.0, 1.0))
 
 
-## Instantly clears this condition (the randomizer drops non-selected conditions, and the auto-finish
-## wipes the last specks). Resetting _initial_keep to 0 is essential: otherwise a cleared overlay still
+## Instantly clears this condition (the randomizer drops non-selected conditions, and the auto-
+## finish
+## wipes the last specks). Resetting _initial_keep to 0 is essential: otherwise a cleared overlay
+## still
 ## reports its old dirt as "cleaned", which inflates overlay_clean_percent / condition above 0% on a
-## freshly-delivered piece. With it zeroed, a cleared condition contributes nothing (the as-generated
+## freshly-delivered piece. With it zeroed, a cleared condition contributes nothing (the as-
+## generated
 ## pattern reads 0% cleaned, and a fully auto-finished piece reads 100%).
 func clear_condition() -> void:
 	if _arrays.is_empty():
@@ -511,7 +602,8 @@ func _ray_hit(lo: Vector3, ld: Vector3) -> Variant:
 	return best
 
 
-## Combines every surface of overlay_mesh into one indexed set in _arrays (+ _verts/_tris). Per-vertex
+## Combines every surface of overlay_mesh into one indexed set in _arrays (+ _verts/_tris). Per-
+## vertex
 ## normals/UVs are kept only when every surface provides them, so the merged arrays stay consistent.
 func _build_merged_arrays() -> bool:
 	var all_verts := PackedVector3Array()
@@ -522,7 +614,10 @@ func _build_merged_arrays() -> bool:
 	var has_uvs := true
 	for s in overlay_mesh.get_surface_count():
 		var arrays := overlay_mesh.surface_get_arrays(s)
-		if arrays.size() <= Mesh.ARRAY_VERTEX or not (arrays[Mesh.ARRAY_VERTEX] is PackedVector3Array):
+		if (
+			arrays.size() <= Mesh.ARRAY_VERTEX
+			or not (arrays[Mesh.ARRAY_VERTEX] is PackedVector3Array)
+		):
 			continue
 		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		if verts.is_empty():
@@ -541,7 +636,7 @@ func _build_merged_arrays() -> bool:
 			has_uvs = false
 		var raw_i: Variant = arrays[Mesh.ARRAY_INDEX]
 		if raw_i is PackedInt32Array and not (raw_i as PackedInt32Array).is_empty():
-			for i in (raw_i as PackedInt32Array):
+			for i in raw_i as PackedInt32Array:
 				all_indices.append(base + i)
 		else:
 			for i in verts.size():
@@ -574,9 +669,12 @@ func _resolve_uv_mode() -> void:
 		_uv_mode = 2
 
 
-## Generates fresh non-overlapping UV2 for the current merged geometry via ArrayMesh.lightmap_unwrap.
-## The unwrap may split verts at seams, so we re-read the POST-unwrap geometry into _verts/_tris/_arrays
-## (the per-vertex keep + raycast are rebuilt from these afterwards). Returns false if unwrap failed.
+## Generates fresh non-overlapping UV2 for the current merged geometry via
+## ArrayMesh.lightmap_unwrap.
+## The unwrap may split verts at seams, so we re-read the POST-unwrap geometry into
+## _verts/_tris/_arrays
+## (the per-vertex keep + raycast are rebuilt from these afterwards). Returns false if unwrap
+## failed.
 func _unwrap_to_uv2() -> bool:
 	var src: Array = []
 	src.resize(Mesh.ARRAY_MAX)
@@ -613,13 +711,17 @@ func _unwrap_to_uv2() -> bool:
 	return true
 
 
-## Splits each triangle into 4 (midpoint subdivision) until the shell has >= MIN_VERTS vertices, so a
+## Splits each triangle into 4 (midpoint subdivision) until the shell has >= MIN_VERTS vertices, so
+## a
 ## coarse mesh cleans/patterns smoothly. Independent per-triangle split (duplicate midpoints) — fine
 ## for the per-vertex shader, and cheap at these sizes.
 ##
-## Densify a coarse mesh so cleaning reads as smooth circles. SKIPPED when use_own_uvs (mode 0): splitting
-## triangles re-interpolates the authored UVs and would smear them across the artist's seams — so we leave
-## a "use my own UVs" mesh exactly as authored (its density is the artist's call). Modes 1 (generated UV2,
+## Densify a coarse mesh so cleaning reads as smooth circles. SKIPPED when use_own_uvs (mode 0):
+## splitting
+## triangles re-interpolates the authored UVs and would smear them across the artist's seams — so we
+##  leave
+## a "use my own UVs" mesh exactly as authored (its density is the artist's call). Modes 1
+## (generated UV2,
 ## chart-split) and 2 (triplanar, no UV dependence) are safe to subdivide.
 func _subdivide_if_sparse() -> void:
 	if _uv_mode == 0:
@@ -635,9 +737,15 @@ func _subdivide_once() -> void:
 	var raw_n: Variant = _arrays[Mesh.ARRAY_NORMAL]
 	var raw_u: Variant = _arrays[Mesh.ARRAY_TEX_UV]
 	var raw_u2: Variant = _arrays[Mesh.ARRAY_TEX_UV2]
-	var has_n := raw_n is PackedVector3Array and (raw_n as PackedVector3Array).size() == verts.size()
-	var has_u := raw_u is PackedVector2Array and (raw_u as PackedVector2Array).size() == verts.size()
-	var has_u2 := raw_u2 is PackedVector2Array and (raw_u2 as PackedVector2Array).size() == verts.size()
+	var has_n := (
+		raw_n is PackedVector3Array and (raw_n as PackedVector3Array).size() == verts.size()
+	)
+	var has_u := (
+		raw_u is PackedVector2Array and (raw_u as PackedVector2Array).size() == verts.size()
+	)
+	var has_u2 := (
+		raw_u2 is PackedVector2Array and (raw_u2 as PackedVector2Array).size() == verts.size()
+	)
 	var norms: PackedVector3Array = raw_n if has_n else PackedVector3Array()
 	var uvs: PackedVector2Array = raw_u if has_u else PackedVector2Array()
 	var uvs2: PackedVector2Array = raw_u2 if has_u2 else PackedVector2Array()
@@ -700,8 +808,10 @@ func _add_tri(ni: PackedInt32Array, base: int, i: int, j: int, k: int) -> void:
 
 
 func _measure_extent(verts: PackedVector3Array) -> float:
-	# Only verts within the distance gate count, so far decoy geometry doesn't blow up the size (and with
-	# it the blob/clean radius). With the default gate and a normal near-origin artifact this is all verts.
+	# Only verts within the distance gate count, so far decoy geometry doesn't blow up the size (and
+	# with
+	# it the blob/clean radius). With the default gate and a normal near-origin artifact this is all
+	# verts.
 	var limit_sq := (
 		(condition_max_distance * condition_max_distance) if condition_max_distance > 0.0 else INF
 	)
@@ -719,8 +829,10 @@ func _measure_extent(verts: PackedVector3Array) -> float:
 	return maxf(0.001, (hi - lo).length() * 0.5)
 
 
-## Mean triangle edge length — the natural "feature size" of the mesh, used to size the unwrap texel so
-## it tracks how dense the geometry is (a finely-subdivided mesh has tiny edges → needs a tiny texel).
+## Mean triangle edge length — the natural "feature size" of the mesh, used to size the unwrap texel
+##  so
+## it tracks how dense the geometry is (a finely-subdivided mesh has tiny edges → needs a tiny
+## texel).
 func _avg_edge_length() -> float:
 	if _tris.size() < 3:
 		return _measure_extent(_verts)

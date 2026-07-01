@@ -12,7 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_tape"]
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="11_water"]
 [ext_resource type="Texture2D" uid="uid://dfjm4i3j7utu1" path="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/gltf/woodpipe01_castletexture.png" id="12_pipetex"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="WoodPipe" type="Node3D" unique_id=229666069]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
@@ -58,6 +58,7 @@ uv2_tiling = 2.0
 
 [node name="DustOverlay" parent="." unique_id=1961040203 instance=ExtResource("4_iah84")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("8_b6n8a")
 opacity = 0.3
@@ -77,6 +78,7 @@ uv2_tiling = 2.0
 
 [node name="GrimeOverlay" parent="." unique_id=1669138805 instance=ExtResource("4_iah84")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("9_grime")
 condition_id = "dirt"
@@ -97,7 +99,7 @@ coverage_min = 0.0
 coverage_max = 0.0
 uv2_tiling = 2.0
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=501798477]
 script = ExtResource("scannerdata_node")
 type = "carved wooden pipe"
 period = "early to mid-20th century"

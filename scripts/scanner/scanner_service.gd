@@ -66,12 +66,24 @@ func scan_threshold(instance: ObjectInstance) -> float:
 
 
 ## True when the instance is clean enough to scan (an OPEN piece is past the gate by definition).
+## Compares the *effective* clean percent (condition / clean_completion_threshold * 100) against
+## the threshold, matching the percent the bench displays for non-decal openables.
 func can_scan(instance: ObjectInstance) -> bool:
 	if instance == null:
 		return false
 	if instance.state == ModelEnums.ObjState.OPEN:
 		return true
-	return instance.condition >= scan_threshold(instance)
+	return _effective_clean_percent(instance) >= scan_threshold(instance)
+
+
+## Effective clean percent for the threshold check. For pieces whose clean_completion_threshold
+## differs from 100, this normalises progress so the scanner gate matches the bench meter.
+func _effective_clean_percent(instance: ObjectInstance) -> float:
+	var template: ScrapObjectTemplate = _repo.get_template(instance.template_id)
+	var threshold := template.clean_completion_threshold if template != null else 100
+	if threshold <= 0:
+		threshold = 100
+	return (instance.condition / float(threshold)) * 100.0
 
 
 ## Scans the instance and returns a typed ScannerResult.
@@ -79,9 +91,7 @@ func scan(instance: ObjectInstance) -> ScannerResult:
 	if not can_scan(instance):
 		var blocked := ScannerResponse.new()
 		blocked.ok = false
-		blocked.transport_error = (
-			"Too dirty to be scanned — clean it to at least %d%%." % int(scan_threshold(instance))
-		)
+		blocked.transport_error = "Too dirty to be scanned — clean it more first."
 		blocked.request_id = _make_request_id(instance)
 		return ScannerResult.new(ScannerResult.Status.NOT_CLEAN, blocked)
 
@@ -103,6 +113,7 @@ func scan(instance: ObjectInstance) -> ScannerResult:
 		return ScannerResult.new(status, response)
 
 	response.request_id = request.request_id
+	_apply_instance_data_to_response(response, instance)
 	return ScannerResult.new(status, response)
 
 
@@ -129,7 +140,7 @@ func commit_verdict(instance_id: String, verdict: int) -> bool:
 	record.instance_id = inst.uid
 	record.verdict = verdict
 	record.scanned_at_loop = _game_state.loop_index
-	record.response_snapshot = _snapshot_for_record(inst.template_id, display_type)
+	record.response_snapshot = _snapshot_for_record(inst, display_type)
 
 	# Preserve the latest response snapshot if one exists in memory.
 	var existing: ScannedRecord = _game_state.save_state.persistent.scanned_records.get(
@@ -179,21 +190,65 @@ func _make_request_id(instance: ObjectInstance) -> String:
 	return "scan_%s_%d_%d" % [instance.uid, _game_state.loop_index, seed]
 
 
-func _snapshot_for_record(template_id: String, display_type: String) -> Dictionary:
-	var entry: ScannerCacheEntry = _repo.get_scanner_cache(template_id)
+## Replaces placeholder scanner response fields with values derived from the artifact itself:
+## - price_range comes from template.base_value_range.
+## - markings / condition_note come from the active surface conditions (spawned or authored decals).
+func _apply_instance_data_to_response(response: ScannerResponse, inst: ObjectInstance) -> void:
+	var template: ScrapObjectTemplate = _repo.get_template(inst.template_id)
+	if template != null:
+		response.price_range_min = int(template.base_value_range.x)
+		response.price_range_max = int(template.base_value_range.y)
+
+	var active := _active_surface_decals(inst, template)
+	var labels: Array[String] = []
+	for decal in active:
+		var condition := _repo.get_surface_condition(decal.type)
+		var label := condition.display_name if condition != null else decal.type.capitalize()
+		if not labels.has(label):
+			labels.append(label)
+	response.markings = labels
+	response.condition_note = _condition_note_for_active(labels)
+
+
+## Active surface decals for the instance: spawned conditions win, then template-authored decals,
+## minus any the player has already removed.
+func _active_surface_decals(
+	inst: ObjectInstance, template: ScrapObjectTemplate
+) -> Array[SurfaceDecal]:
+	var all: Array[SurfaceDecal] = []
+	if inst != null and not inst.spawned_decals.is_empty():
+		all = inst.get_spawned_decals()
+	elif template != null:
+		all = template.decals
+	var out: Array[SurfaceDecal] = []
+	for decal in all:
+		if inst == null or not inst.removed_decals.has(decal.id):
+			out.append(decal)
+	return out
+
+
+## Player-facing condition note built from active condition labels.
+func _condition_note_for_active(labels: Array[String]) -> String:
+	if labels.is_empty():
+		return "No significant surface conditions remain."
+	if labels.size() == 1:
+		return "Shows %s." % labels[0]
+	if labels.size() == 2:
+		return "Shows %s and %s." % [labels[0], labels[1]]
+	return "Shows %s, and %s." % [", ".join(labels.slice(0, labels.size() - 1)), labels[-1]]
+
+
+func _snapshot_for_record(inst: ObjectInstance, display_type: String) -> Dictionary:
+	var response := ScannerResponse.new()
+	var entry: ScannerCacheEntry = _repo.get_scanner_cache(inst.template_id)
 	if entry != null:
-		return entry.response.duplicate()
-	# Minimal fallback snapshot for records created before scanning.
-	return {
-		"type": display_type,
-		"period": "unknown",
-		"materials": [],
-		"markings": [],
-		"condition_note": "No scanner response recorded.",
-		"cultural_relevance": "",
-		"price_range": [0, 0],
-		"modification_signs": [],
-		"confidence": "uncertain",
-		"source_references": [],
-		"fallback": true,
-	}
+		response = ScannerResponse.from_dictionary(entry.response.duplicate())
+	else:
+		# Minimal fallback snapshot for records created before scanning.
+		response.type = display_type
+		response.period = "unknown"
+		response.condition_note = "No scanner response recorded."
+		response.confidence = "uncertain"
+		response.fallback = true
+	_apply_instance_data_to_response(response, inst)
+	return response.to_dictionary()

@@ -12,12 +12,12 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_f6erv"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_wjxse"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_jtcju"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="Vase" type="Node3D" unique_id=456840677]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, -0.11943139, 0)
 script = ExtResource("1_fif85")
-artifact_rarity = 0
+artifact_rarity = 1
 base_value_min = 100
 base_value_max = 200
 randomize_conditions_min = 2
@@ -114,7 +114,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=1972231018]
 script = ExtResource("scannerdata_node")
 type = "glazed ceramic vase"
 period = "20th century"
@@ -124,5 +124,4 @@ condition_note = "Glazed vase with fine surface crazing; the rim is intact."
 cultural_relevance = "A domestic glazed vase of a common Visayan household form. No specific provenance is claimed."
 price_min = 60
 price_max = 180
-confidence = 1
 uncertainty_notes = "Glaze and form are not distinctive enough to attribute a kiln or date precisely."

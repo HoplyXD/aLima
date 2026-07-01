@@ -48,8 +48,21 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	inst.storage_cost = ModelUtils.as_int(data.get("storage_cost"), 1)
 	inst.assigned_anchor_id = ModelUtils.as_string(data.get("assigned_anchor_id"))
 	inst.value = ModelUtils.as_int(data.get("value"))
-	# Back-compat: pre-revamp saves have no true_value; fall back to the stored value.
-	inst.true_value = ModelUtils.as_int(data.get("true_value"), inst.value)
+	# Pre-revamp saves have no true_value; leave it at 0 so assessed value falls back to the stored
+	# instance value. When true_value is present it is clamped to the template range below.
+	inst.true_value = ModelUtils.as_int(data.get("true_value"), 0)
+	# Clamp out-of-range legacy values to the current template range so a corrupt save (e.g. 500
+	# on a Gold Locket whose range is [100, 240]) cannot permanently break the value display.
+	# Guarded so repository bootstrapping does not recurse; only clamp when the key is actually
+	# present, otherwise a missing true_value would be raised to the template minimum.
+	if inst.true_value > 0 and DataRepository.is_singleton_loaded():
+		var template: ScrapObjectTemplate = DataRepository.singleton().get_template(
+			inst.template_id
+		)
+		if template != null and template.base_value_range.y > template.base_value_range.x:
+			inst.true_value = clampi(
+				inst.true_value, int(template.base_value_range.x), int(template.base_value_range.y)
+			)
 	inst.removed_decals = ModelUtils.as_string_array(data.get("removed_decals"))
 	if data.get("spawned_decals") is Array:
 		for raw_decal in data["spawned_decals"]:

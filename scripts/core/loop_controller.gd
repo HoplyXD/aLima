@@ -159,6 +159,13 @@ func _grant_starting_kit() -> void:
 		# and can be dragged onto the bench. Idempotent within a loop.
 		if not _owns_tool_instance(tool_id):
 			tools.grant_tool(tool_id)
+	# Debug-only quality-of-life tools are granted automatically in debug/editor builds
+	# and never leak into release saves.
+	if OS.is_debug_build():
+		var debug_clean_all := "debug_clean_all"
+		var debug_tool := repo.get_tool(debug_clean_all)
+		if debug_tool != null and not _owns_tool_instance(debug_clean_all):
+			tools.grant_tool(debug_clean_all)
 
 
 ## True if a durability-tracked instance of the tool already exists this loop.
