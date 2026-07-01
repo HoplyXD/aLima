@@ -93,8 +93,13 @@ func _ready() -> void:
 	_spawn_scrap_items()
 	EventBus.day_changed.connect(_on_yard_day_changed)
 
-	# Keep the day clock running; the shop will resume driving it on return.
-	DayClock.running = true
+	# Day 0 (TUT): the yard hosts the forage/hand-off steps with the tutorial
+	# glue on top, and the clock stays off (time starts on Day 1).
+	if TutorialService.is_tutorial_active():
+		_create_tutorial_glue()
+	else:
+		# Keep the day clock running; the shop will resume driving it on return.
+		DayClock.running = true
 
 
 func _process(delta: float) -> void:
@@ -121,6 +126,19 @@ func _spawn_player() -> void:
 		_player.scrap_prompt_changed.connect(_hud.set_prompt)
 	if _player_spawn != null:
 		_player.global_position = _player_spawn.global_position
+
+
+func _create_tutorial_glue() -> TutorialGlue:
+	var glue := TutorialGlue.new()
+	glue.setup(
+		"YARD",
+		{
+			"ayla": _ayla_anchor,
+			"door": _door_return,
+		}
+	)
+	add_child(glue)
+	return glue
 
 
 func _connect_return_door() -> void:

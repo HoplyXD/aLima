@@ -34,11 +34,21 @@ func submit_scrap(selection: Dictionary) -> bool:
 	_deduct_scrap(loop.scrap_pool, selection)
 	loop.pending_sort = {
 		"submitted": selection.duplicate(),
-		"ready_index": _now_index() + SORT_HOURS,
+		"ready_index": _now_index() + sort_duration_hours(),
 		"active": true,
 	}
 	SaveService.save_game()
+	EventBus.scrap_submitted.emit(selection.duplicate())
 	return true
+
+
+## In-game hours Ayla needs to sort a batch. Day 0 (TUT) shortens this via the
+## tutorial config (default 0) because the clock is frozen and the normal
+## 1-hour wait could never elapse.
+func sort_duration_hours() -> int:
+	if TutorialService.is_tutorial_active():
+		return ModelUtils.as_int(TutorialService.get_config().get("sort_hours"), 0)
+	return SORT_HOURS
 
 
 ## True while Ayla is busy sorting a submitted batch (including after it is ready).

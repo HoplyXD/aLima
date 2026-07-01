@@ -25,6 +25,61 @@ var _config: Dictionary = {}
 var _loaded: bool = false
 
 
+func _ready() -> void:
+	# Completion wiring: each authored step declares the EventBus signal that
+	# finishes it (complete_on). Connections are unconditional; _signal_fired is
+	# a no-op outside Day 0.
+	EventBus.scrap_submitted.connect(func(_sel: Dictionary) -> void: _signal_fired("scrap_submitted"))
+	# Untyped params: some emitters pass plain Arrays where the signal declares
+	# Array[String]; a typed lambda would reject those at call time.
+	EventBus.triage_completed.connect(
+		func(_kept: Variant, _recycled: Variant) -> void: _signal_fired("triage_completed")
+	)
+	EventBus.restoration_opened.connect(
+		func(_uid: String) -> void: _signal_fired("restoration_opened")
+	)
+	EventBus.restoration_completed.connect(
+		func(_uid: String, _condition: float, _tool_id: String) -> void:
+			_signal_fired("restoration_completed")
+	)
+	EventBus.scanner_verdict_committed.connect(
+		func(_uid: String, _verdict: String) -> void: _signal_fired("scanner_verdict_committed")
+	)
+	EventBus.sale_completed.connect(
+		func(_uid: String, _buyer: String, _price: int) -> void: _signal_fired("sale_completed")
+	)
+	EventBus.meet_scheduled.connect(
+		func(_uid: String, _buyer: String, _dest: String) -> void:
+			_signal_fired("meet_scheduled")
+	)
+	EventBus.meet_handoff_completed.connect(
+		func(_uid: String, _buyer: String, _price: int, _dest: String) -> void:
+			_signal_fired("meet_handoff_completed")
+	)
+	SpaceManager.space_changed.connect(_on_space_changed)
+
+
+func _on_space_changed(space: SpaceManager.Space) -> void:
+	_signal_fired("space_changed", SpaceManager.Space.keys()[space])
+
+
+## Advances the tutorial when the current step's authored completion signal
+## fires (optionally constrained to a target space name for space_changed).
+func _signal_fired(signal_name: String, space_name: String = "") -> void:
+	if not is_tutorial_active():
+		return
+	var step := current_step()
+	if step.is_empty():
+		return
+	var complete_on := ModelUtils.as_dictionary(step.get("complete_on"))
+	if ModelUtils.as_string(complete_on.get("signal")) != signal_name:
+		return
+	var wanted_space := ModelUtils.as_string(complete_on.get("space"))
+	if not wanted_space.is_empty() and wanted_space != space_name:
+		return
+	advance()
+
+
 ## True while this save is still inside Day 0.
 func is_tutorial_active() -> bool:
 	return not GameState.save_state.persistent.tutorial_completed
@@ -81,6 +136,9 @@ func begin_or_resume() -> void:
 	if step_id.is_empty() or not _steps_by_id.has(step_id):
 		advance_to(first_step_id())
 	else:
+		# Re-entering a step (scene change / reload): grants are idempotent, so
+		# re-applying keeps a resume from ever losing the step's handouts.
+		_apply_step_grants(get_step(step_id))
 		step_changed.emit(step_id)
 
 
@@ -94,6 +152,7 @@ func advance_to(step_id: String) -> void:
 		push_warning("TutorialService.advance_to: unknown step '%s' ignored" % step_id)
 		return
 	GameState.save_state.persistent.tutorial_step = step_id
+	_apply_step_grants(get_step(step_id))
 	var result := SaveService.save_game()
 	if not result.ok:
 		push_warning("TutorialService: step save failed: %s" % result.get("error", ""))
@@ -118,6 +177,42 @@ func skip() -> void:
 ## Called by LoopController.complete_tutorial() once graduation is saved.
 func notify_completed() -> void:
 	tutorial_finished.emit()
+
+
+## Applies a step's authored grants. Idempotent so resume/replay is safe.
+## grants.tools_for_conditions: for each surface-condition id, hand over the
+## tool that cleans it (SurfaceCondition.cleaning_tool) — Yuyu's starter tools.
+func _apply_step_grants(step: Dictionary) -> void:
+	var grants := ModelUtils.as_dictionary(step.get("grants"))
+	if grants.is_empty():
+		return
+	var repo := DataRepository.singleton()
+	if not repo.is_loaded():
+		return
+	var tools := ToolService.new(GameState, repo)
+	for condition_id in ModelUtils.as_string_array(grants.get("tools_for_conditions")):
+		var condition: SurfaceCondition = repo.get_surface_condition(condition_id)
+		if condition == null:
+			push_warning("TutorialService: unknown condition '%s' in grants" % condition_id)
+			continue
+		var tool_id := condition.cleaning_tool
+		var tool := repo.get_tool(tool_id)
+		if tool == null:
+			push_warning("TutorialService: no tool cleans condition '%s'" % condition_id)
+			continue
+		if tool.is_legacy and not GameState.save_state.persistent.legacy_items.has(tool_id):
+			GameState.save_state.persistent.legacy_items.append(tool_id)
+		if not GameState.save_state.loop.tool_items.has(tool_id):
+			GameState.save_state.loop.tool_items.append(tool_id)
+		if not _owns_tool_instance(tool_id):
+			tools.grant_tool(tool_id)
+
+
+func _owns_tool_instance(tool_id: String) -> bool:
+	for raw in GameState.save_state.loop.owned_tools:
+		if raw is Dictionary and raw.get("tool_id") == tool_id:
+			return true
+	return false
 
 
 ## Test seam: (re)load the step script from an explicit path.

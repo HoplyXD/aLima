@@ -103,7 +103,7 @@
         }
       ],
       "hint": { "speaker": "yuyu", "text": "List the artifact on the marketplace and accept a buyer.", "anchor": "phone" },
-      "complete_on": { "signal": "sale_completed" }
+      "complete_on": { "signal": "meet_scheduled" }
     },
     {
       "id": "ride_to_mall",

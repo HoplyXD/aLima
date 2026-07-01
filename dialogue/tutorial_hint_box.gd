@@ -114,7 +114,14 @@ func is_pointing() -> bool:
 	return _arrow_visible
 
 
-func _resolve_speaker(speaker_id: String) -> Dictionary:
+## Resolved display name for a speaker id ({player}-substituted). Shared with
+## other tutorial presentation (e.g. TutorialGlue's dialogue lines).
+static func speaker_display_name(speaker_id: String) -> String:
+	var speaker := _resolve_speaker(speaker_id)
+	return DialogueVars.format(str(speaker.get("display_name", speaker_id)))
+
+
+static func _resolve_speaker(speaker_id: String) -> Dictionary:
 	_ensure_speakers_loaded()
 	var speaker: Variant = _speakers.get(speaker_id)
 	if speaker is Dictionary:

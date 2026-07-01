@@ -132,6 +132,11 @@ func _ready() -> void:
 	_evening_screen.closed.connect(_on_evening_closed)
 	_refresh_ayla_knock()
 
+	# Day 0 (TUT): the tutorial glue presents Yuyu's dialogue and hint arrows on
+	# top of the normal shop. Created only while the tutorial is active.
+	if TutorialService.is_tutorial_active():
+		_create_tutorial_glue()
+
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
 
@@ -222,6 +227,11 @@ func _on_door_pressed() -> void:
 			]
 		_open_dialogue(lines, true)
 		return
+	# Day 0 (TUT): no scheduled route visitors exist yet — the door always steps
+	# out to the yard while the tutorial is running.
+	if TutorialService.is_tutorial_active():
+		SpaceManager.go_to_yard()
+		return
 	# Authored dialogue + portraits live in data/routes/routes.json. The door shows
 	# whichever character RouteService schedules for the current in-game day/hour,
 	# branching their lines on whether the player has met them before.
@@ -245,6 +255,7 @@ func _on_door_pressed() -> void:
 func _on_workbench_pressed() -> void:
 	_set_interactables_enabled(false)
 	_restoration_view.open()
+	EventBus.restoration_opened.emit(GameState.save_state.loop.restore_target_uid)
 
 
 func _on_journal_pressed() -> void:
@@ -370,6 +381,10 @@ func _refresh_ayla_knock() -> void:
 		_visitor2.texture = ALYA_PORTRAIT
 		_visitor2.visible = true
 		return
+	# Day 0 (TUT): only the taught forage -> hand-off -> sort flow may knock; the
+	# daily free drop starts with the normal days.
+	if TutorialService.is_tutorial_active():
+		return
 	if GameState.save_state.loop.last_delivery_day != GameState.save_state.loop.current_day:
 		_ayla_source = AylaSource.DAILY
 		_alya_waiting = true
@@ -427,6 +442,22 @@ func _create_evening_screen() -> EveningScreen:
 	var screen := EveningScreen.new()
 	add_child(screen)
 	return screen
+
+
+func _create_tutorial_glue() -> TutorialGlue:
+	var glue := TutorialGlue.new()
+	glue.setup(
+		"SHOP",
+		{
+			"door": _door_interactable,
+			"workbench": _workbench_interactable,
+			"journal": _journal_interactable,
+			"phone": _phone_interactable,
+			"storage": _delivery_interactable,
+		}
+	)
+	add_child(glue)
+	return glue
 
 
 # --- Evening (Phase 14, §4-N) -------------------------------------------------

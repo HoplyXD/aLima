@@ -74,6 +74,21 @@ signal event_expired(event_id: String, display_name: String)
 ## summary; the evening summary UI itself is a future Phase 14 dependency.
 signal event_outcome_resolved(event_id: String, outcome_type: String, outcome_data: Dictionary)
 
+# --- Tutorial / travel events (TUT) ---
+## Emitted when the player hands a scrap selection to Ayla (drives the Day 0
+## forage step and any future scrap-flow listeners).
+signal scrap_submitted(selection: Dictionary)
+## Emitted when the restoration bench opens (Day 0 workbench step).
+signal restoration_opened(instance_id: String)
+## Emitted when a sale is accepted with a meet-in-person payment: the item is
+## handed to the player to deliver; money arrives at the handoff.
+signal meet_scheduled(instance_id: String, buyer_id: String, destination_id: String)
+## Emitted when the player hands the item to the buyer at the meet location and
+## the deferred payment is credited.
+signal meet_handoff_completed(
+	instance_id: String, buyer_id: String, price: int, destination_id: String
+)
+
 # --- Discovery events ---
 signal carrier_activated(instance_id: String, fragment_id: String)
 signal echo_proximity_changed(instance_id: String, proximity: float, band: String)
