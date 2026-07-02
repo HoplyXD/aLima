@@ -90,7 +90,7 @@
       ],
       "hint": {
         "speaker": "yuyu",
-        "text": "Answer the door and sort the delivery: Keep or Recycle.",
+        "text": "Keep one artifact, recycle the other.",
         "anchor": "door"
       },
       "complete_on": {

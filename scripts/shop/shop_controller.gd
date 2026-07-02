@@ -13,6 +13,11 @@ const PHONE_SCENE := preload("res://scenes/ui/phone.tscn")
 const STORAGE_SCREEN_SCENE := preload("res://scenes/ui/storage_screen.tscn")
 const RESTORATION_ARTIFACT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
 const ShopArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
+
+## Day 0 finale reading state (TUT): the player opens Yuyu's journal, reads his
+## last letter, and only then does the blackout into Day 1 fire.
+enum Day0Finale { INACTIVE, VIEWER_OPEN, CASE_SHOWN, LETTER_SHOWN }
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector (e.g. 0.1) to watch the clock move faster while
@@ -60,6 +65,10 @@ const YUYU_PORTRAIT := preload("res://assets/Characters/Uncle.png")
 var _yuyu_sprite: Sprite3D
 ## Restored-artifact 3D inspection overlay (created on first card click).
 var _artifact_viewer: ArtifactViewer
+## Day 0 finale reading state + its inner-monologue dialogue (over the book).
+var _day0_finale: Day0Finale = Day0Finale.INACTIVE
+var _finale_dialogue: DialogueBox
+var _finale_cb: Callable = Callable()
 @onready var _triage_screen: TriageController = $TriageScreen
 @onready var _book_viewport: BookViewport = $BookViewport
 @onready var _restoration_view: RestorationView = _create_restoration_view()
@@ -149,6 +158,12 @@ func _ready() -> void:
 	if TutorialService.is_tutorial_active():
 		_create_tutorial_glue()
 		_create_yuyu_sprite()
+		# The journal only appears at the Day 0 finale; re-gate it on every step.
+		TutorialService.step_changed.connect(func(_id: String) -> void: _apply_day0_journal_gate())
+		_apply_day0_journal_gate()
+		# Day 0 finale reading: react to the book opening and its page turns.
+		_book_viewport.book_opened.connect(_on_day0_book_opened)
+		_book_viewport.page_changed.connect(_on_day0_page_changed)
 	else:
 		var yuyu_node := get_node_or_null("YuyuNpc") as Sprite3D
 		if yuyu_node != null:
@@ -378,9 +393,13 @@ func _on_restored_card_selected(uid: String) -> void:
 
 
 func _on_journal_pressed() -> void:
-	# Day 0 ending (TUT): on the finale step, touching the journal triggers the
-	# blackout into Day 1 instead of opening the book.
-	if TutorialService.run_finale():
+	# Day 0 ending (TUT): touching the journal on the finale step opens Yuyu's book
+	# to be READ — the blackout into Day 1 only fires after his letter.
+	if (
+		TutorialService.is_tutorial_active()
+		and TutorialService.current_step_id() == "journal_finale"
+	):
+		_begin_day0_finale_reading()
 		return
 	# The journal is the book rendered in its own viewport overlay. Opening it covers
 	# the shop; it closes via Esc, the Close button, or clicking off the book.
@@ -392,6 +411,82 @@ func _on_journal_pressed() -> void:
 func _on_journal_closed() -> void:
 	_set_interactables_enabled(true)
 	_hud.set_journal_open(false)
+	# Closing the journal AFTER reading Yuyu's letter ends Day 0.
+	if _day0_finale == Day0Finale.LETTER_SHOWN:
+		_finish_day0_finale()
+
+
+# --- Day 0 finale reading (TUT) ----------------------------------------------
+
+
+func _begin_day0_finale_reading() -> void:
+	_day0_finale = Day0Finale.VIEWER_OPEN
+	_set_interactables_enabled(false)
+	_book_viewport.open()  # shows the closed cover
+	_hud.set_journal_open(true)
+	_play_inner_monologue(["Tito Yuyu's journal... it wasn't here this morning. Let me open it."])
+
+
+## The book's cover just opened onto the Fragment Case (the "big slot" spread).
+func _on_day0_book_opened() -> void:
+	if _day0_finale == Day0Finale.INACTIVE:
+		return
+	_day0_finale = Day0Finale.CASE_SHOWN
+	_play_inner_monologue(
+		["A case, cut with five empty slots... like something is meant to fit inside each one."]
+	)
+
+
+## Watches the reading progress: page 5 is Yuyu's letter; turning away from it (or
+## closing) once read ends Day 0.
+func _on_day0_page_changed(page_number: int) -> void:
+	if _day0_finale == Day0Finale.INACTIVE:
+		return
+	if page_number == Page.CONDITION_PAGE_NUMBER:
+		_day0_finale = Day0Finale.LETTER_SHOWN
+	elif _day0_finale == Day0Finale.LETTER_SHOWN:
+		_finish_day0_finale()
+
+
+## The player has read Yuyu's letter — the last monologue, then the blackout.
+func _finish_day0_finale() -> void:
+	if _day0_finale == Day0Finale.INACTIVE:
+		return
+	_day0_finale = Day0Finale.INACTIVE
+	_book_viewport.close()
+	_hud.set_journal_open(false)
+	_play_inner_monologue(
+		[
+			"Tito Yuyu is really gone.",
+			"Five fragments. Five people he trusted. I have to find every one.",
+			"I'll bring him back. However many times these days repeat.",
+		],
+		func() -> void: TutorialService.run_finale()
+	)
+
+
+## Plays inner-monologue lines in a DialogueBox layered above the book, then runs
+## `on_finished` (if given). The speaker is the player ({player}).
+func _play_inner_monologue(lines: Array, on_finished: Callable = Callable()) -> void:
+	if _finale_dialogue == null:
+		var layer := CanvasLayer.new()
+		layer.layer = 120  # above the book viewport
+		add_child(layer)
+		_finale_dialogue = DIALOGUE_BOX_SCENE.instantiate()
+		layer.add_child(_finale_dialogue)
+		_finale_dialogue.finished.connect(_on_finale_monologue_finished)
+	var formatted: Array = []
+	for line in lines:
+		formatted.append({"name": "{player}", "text": str(line)})
+	_finale_cb = on_finished
+	_finale_dialogue.start(formatted)
+
+
+func _on_finale_monologue_finished() -> void:
+	var cb := _finale_cb
+	_finale_cb = Callable()
+	if cb.is_valid():
+		cb.call()
 
 
 func _on_phone_pressed() -> void:
@@ -650,6 +745,19 @@ func _set_interactables_enabled(value: bool) -> void:
 		entry.set_enabled(value)
 	if not value:
 		_hud.set_prompt("")
+	else:
+		_apply_day0_journal_gate()
+
+
+## Day 0 (TUT): the journal only exists at the END of Day 0 — it appears on the
+## table once Yuyu has gone. Keep the journal prop hidden/off until the finale
+## step, so it can't be opened during the earlier lessons.
+func _apply_day0_journal_gate() -> void:
+	if not TutorialService.is_tutorial_active():
+		return
+	var at_finale := TutorialService.current_step_id() == "journal_finale"
+	_journal_interactable.set_enabled(at_finale)
+	_journal_interactable.visible = at_finale
 
 
 func _count_inventory_by_glow(restored_only: bool) -> Dictionary:

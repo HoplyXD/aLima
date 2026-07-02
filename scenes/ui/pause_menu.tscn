@@ -184,64 +184,10 @@ text = "Artifact 3D previews"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="DecalHighlightRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=1393413827]
-custom_minimum_size = Vector2(100, 0)
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/DecalHighlightRow" unique_id=1207059436]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "Highlight what a tool can clean"
-
-[node name="DecalHighlightCheck" type="CheckButton" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/DecalHighlightRow" unique_id=1999199478]
-unique_name_in_owner = true
-layout_mode = 2
-
 [node name="Separator4" type="HSeparator" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=2056843491]
 layout_mode = 2
 size_flags_stretch_ratio = 2.2
 theme_override_constants/separation = 13
-
-[node name="RendererSection" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=1863086424]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
-theme_override_font_sizes/font_size = 30
-text = "Renderer"
-
-[node name="RendererRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=1894913692]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/RendererRow" unique_id=277923103]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "Mode"
-
-[node name="RendererOption" type="OptionButton" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/RendererRow" unique_id=438022432]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-theme_override_constants/arrow_margin = 8
-selected = 0
-item_count = 2
-popup/item_0/text = "Mobile (decals)"
-popup/item_0/id = 0
-popup/item_1/text = "Compatibility (lite)"
-popup/item_1/id = 1
-
-[node name="Separator5" type="HSeparator" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=370074760]
-layout_mode = 2
-size_flags_stretch_ratio = 2.2
-theme_override_constants/separation = 13
-
-[node name="ApplyRendererButton" type="Button" parent="Root/Center/Panel/Margin/VBox" unique_id=1256197753]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Apply renderer (restarts game)"
 
 [node name="StatusLabel" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=956113385]
 unique_name_in_owner = true

@@ -18,6 +18,7 @@ signal closed  ## Emitted after triage is confirmed and applied.
 const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
 const ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
+const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
 
 const KEEP_ZONE_NAME := "KeepZone"
 const RECYCLE_ZONE_NAME := "RecycleZone"
@@ -99,6 +100,10 @@ var _recycle_ring: MeshInstance3D = null
 @onready var _fallback_confirm_button: Button = (
 	$HudLayer/FallbackPanel/Panel/Margin/VBox/ConfirmButton as Button
 )
+
+
+## Day 0 nudge shown with the shared NPC dialogue box (Tito Yuyu speaking).
+var _tutorial_dialogue: DialogueBox
 
 
 func _ready() -> void:
@@ -714,10 +719,15 @@ func _on_confirm() -> void:
 			_show_validation("Over capacity. Recycle more items.")
 		return
 	# Day 0 (TUT): the lesson IS the trade-off — exactly one kept, one recycled.
-	# Keeping both or recycling both doesn't commit.
-	if TutorialService.is_tutorial_active() and not _tutorial_split_is_valid():
-		_show_validation("Keep one and recycle the other — Yuyu's orders.")
-		return
+	# Keeping both or recycling both pops a nudge instead of committing.
+	if TutorialService.is_tutorial_active():
+		var kept := _tutorial_kept_count()
+		if kept == 2:
+			_show_tutorial_notice("Storage is tight — keep only ONE. Send the other to Recycle.")
+			return
+		if kept == 0 and _state.instances.size() == 2:
+			_show_tutorial_notice("Don't recycle both! Keep ONE artifact to restore.")
+			return
 	if _service.apply_triage(_state):
 		if _is_free_daily:
 			GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
@@ -725,16 +735,23 @@ func _on_confirm() -> void:
 		close()
 
 
-## Day 0 rule: with the taught two-piece batch, exactly one item is kept and one
-## recycled. (Falls back to true for other batch sizes so nothing can dead-end.)
-func _tutorial_split_is_valid() -> bool:
-	if _state.instances.size() != 2:
-		return true
+## Shows the Day 0 keep-one nudge through the same DialogueBox every NPC uses
+## (created lazily under the triage HUD layer so it renders on top).
+func _show_tutorial_notice(message: String) -> void:
+	if _tutorial_dialogue == null:
+		_tutorial_dialogue = DIALOGUE_BOX_SCENE.instantiate()
+		_tutorial_dialogue.process_mode = Node.PROCESS_MODE_ALWAYS
+		_hud_layer.add_child(_tutorial_dialogue)
+	_tutorial_dialogue.start([{"name": "Tito Yuyu", "text": message}])
+
+
+## Number of kept items in the taught two-piece batch (0..2).
+func _tutorial_kept_count() -> int:
 	var kept := 0
 	for inst in _state.instances:
 		if _state.decisions.get(inst.uid, TriageState.Decision.UNDECIDED) == TriageState.Decision.KEEP:
 			kept += 1
-	return kept == 1
+	return kept
 
 
 # --- List-view fallback (keyboard/controller/touch parity) -------------------

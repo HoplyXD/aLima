@@ -1,0 +1,132 @@
+[gd_scene format=3 uid="uid://ckjx3ywx0sil3"]
+
+[ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_rgejq"]
+[ext_resource type="ArrayMesh" uid="uid://ddxx83pt1r1xp" path="res://assets/3d Assets/Artifacts/Modified Artifacts Assets/Glasses/Glasses.obj" id="2_0p5al"]
+[ext_resource type="Material" uid="uid://c4q2f3a1xevhx" path="res://assets/3d Assets/Plants/mat23.tres" id="3_5gqiw"]
+[ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="4_xfokt"]
+[ext_resource type="ArrayMesh" uid="uid://c5old25g24avj" path="res://assets/3d Assets/Artifacts/Modified Artifacts Assets/Glasses/Glasses Overlay.obj" id="5_32n1f"]
+[ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="6_4dvoe"]
+[ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="7_1jsxb"]
+[ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_p25i5"]
+[ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="9_12pdb"]
+[ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_juwhr"]
+[ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_d523m"]
+[ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_mp268"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="13_twm7o"]
+
+[node name="Alya Bag" type="Node3D" unique_id=456840677]
+transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, -0.11943139, 0)
+script = ExtResource("1_rgejq")
+artifact_rarity = 3
+base_value_min = 300
+base_value_max = 500
+is_quest_item = true
+quest_npc = 2
+quest_number = 3
+randomize_conditions_min = 3
+randomize_conditions_max = 3
+model_mesh = ExtResource("2_0p5al")
+model_material = ExtResource("3_5gqiw")
+model_materials = Array[Material]([null, null])
+model_scale = 3.0
+
+[node name="CrackingOverlay" parent="." unique_id=816983379 instance=ExtResource("4_xfokt")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_32n1f")
+condition_texture = ExtResource("6_4dvoe")
+opacity = 1.0
+layer_order = 10
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
+
+[node name="TarnishOverlay" parent="." unique_id=1505952178 instance=ExtResource("4_xfokt")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_32n1f")
+condition_texture = ExtResource("7_1jsxb")
+opacity = 1.0
+layer_order = 20
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+
+[node name="RustOverlay" parent="." unique_id=40732597 instance=ExtResource("4_xfokt")]
+transform = Transform3D(3, 0, 0, 0, 3, 8.940693e-08, 0, -8.940693e-08, 3, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_32n1f")
+condition_texture = ExtResource("8_p25i5")
+layer_order = 25
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+
+[node name="DustOverlay" parent="." unique_id=1195122582 instance=ExtResource("4_xfokt")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_32n1f")
+condition_texture = ExtResource("9_12pdb")
+opacity = 0.5
+coverage_min = 70.0
+coverage_max = 100.0
+use_own_uvs = true
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 7.22
+
+[node name="WaterStainOverlay" parent="." unique_id=348099890 instance=ExtResource("4_xfokt")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_32n1f")
+condition_texture = ExtResource("10_juwhr")
+opacity = 1.0
+condition_id = "water_stain"
+layer_order = 35
+coverage_min = 50.0
+coverage_max = 100.0
+use_own_uvs = true
+own_uv_tiling = 0.895
+
+[node name="GrimeOverlay" parent="." unique_id=1539316648 instance=ExtResource("4_xfokt")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_32n1f")
+condition_texture = ExtResource("11_d523m")
+opacity = 1.0
+condition_id = "dirt"
+layer_order = 28
+coverage_min = 70.0
+coverage_max = 100.0
+auto_unwrap = true
+triplanar_tiling = 6.415
+uv2_tiling = 2.95
+own_uv_tiling = 7.9
+
+[node name="TapeResidueOverlay" parent="." unique_id=1817624610 instance=ExtResource("4_xfokt")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+visible = false
+overlay_mesh = ExtResource("5_32n1f")
+condition_texture = ExtResource("12_mp268")
+opacity = 1.0
+condition_id = "tape_residue"
+layer_order = 36
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
+uv2_tiling = 2.0
+own_uv_tiling = 20.0
+own_uv_aspect = 0.09
+
+[node name="ScannerData" type="Node" parent="." unique_id=1906226984]
+script = ExtResource("13_twm7o")
+type = "plate"
+period = "early to mid-20th century"
+materials = Array[String](["brass"])
+markings = Array[String](["tarnish", "clapper wear", "cast seam"])
+condition_note = "Cast brass bell with overall tarnish; clapper swings freely and the tone is intact."
+cultural_relevance = "A common hand bell of the sort used in schools, chapels, and homes. The form is ordinary; any value rests on provenance rather than the object."
+price_min = 20
+price_max = 70
+uncertainty_notes = "No foundry mark; date estimated from casting and wear."

@@ -169,7 +169,9 @@ func _spawn_player() -> void:
 		_player.global_position = _player_spawn.global_position
 		# The spawn marker's yaw decides where the player faces on arrival, so the
 		# designer can aim the Day 0 opening shot at Yuyu/the yard in the editor.
-		_player.global_rotation.y = _player_spawn.global_rotation.y
+		# Must go through set_look_yaw so the mouse-look target matches (otherwise
+		# the controller snaps back to facing -Z on the first physics frame).
+		_player.face_like(_player_spawn)
 
 
 func _create_tutorial_glue() -> TutorialGlue:
@@ -719,6 +721,9 @@ func _on_yard_overlay_closed() -> void:
 
 func _on_handoff_closed() -> void:
 	_exit_overlay()
+	# The scrap the player handed to Ayla left the pool, so the carry inventory
+	# must drop it from the hotbar.
+	_refresh_hud_hotbar()
 
 
 func _on_item_inspected(_slot_index: int, data: Dictionary) -> void:

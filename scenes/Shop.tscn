@@ -2,7 +2,6 @@
 
 [ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="2_eo1la"]
 [ext_resource type="PackedScene" uid="uid://bknplbqbtus21" path="res://dialogue/dialogue_box.tscn" id="3_dlgbox"]
-[ext_resource type="PackedScene" path="res://scenes/npc/yuyu_npc.tscn" id="40_yuyu"]
 [ext_resource type="PackedScene" uid="uid://bfqbkodx08ut5" path="res://assets/3d Assets/Walls and Floors/Door.glb" id="3_gxht3"]
 [ext_resource type="PackedScene" uid="uid://ccw18fb4d26lu" path="res://assets/3d Assets/Table.glb" id="4_w7765"]
 [ext_resource type="Script" uid="uid://di0p8nxl41kvn" path="res://scenes/ui/shop_hud.gd" id="4_yltc6"]
@@ -43,6 +42,7 @@
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_yh0ut"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_6tp7w"]
 [ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="36_yh0ut"]
+[ext_resource type="PackedScene" path="res://scenes/npc/yuyu_npc.tscn" id="40_yuyu"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4uftm"]
 size = Vector3(1.5947266, 2.9886718, 0.15)
@@ -340,7 +340,7 @@ billboard = 1
 texture = ExtResource("31_ep7b0")
 
 [node name="YuyuNpc" parent="." unique_id=550226126 instance=ExtResource("40_yuyu")]
-transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0.6, 1.64, -2.6)
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -2.9355662, 1.64, -2.6)
 pixel_size = 0.0015
 billboard = 1
 

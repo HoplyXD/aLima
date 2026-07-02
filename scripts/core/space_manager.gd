@@ -16,8 +16,8 @@ enum Space { SHOP, YARD, MALL }
 signal space_changed(space: Space)
 
 const SHOP_SCENE := "res://scenes/Shop.tscn"
-const YARD_SCENE := "res://scenes/scrapyard/Scrapyard.tscn"
-const MALL_SCENE := "res://scenes/mall/Mall.tscn"
+const YARD_SCENE := "res://scenes/locations/Scrapyard.tscn"
+const MALL_SCENE := "res://scenes/locations/Mall.tscn"
 const TITLE_SCENE := "res://scenes/ui/title_screen.tscn"
 
 ## Scene path per space, for the generic go_to() transition.

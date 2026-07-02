@@ -70,7 +70,7 @@ func test_go_to_mall_loads_the_mall_scene() -> void:
 	watch_signals(SpaceManager)
 	SpaceManager.go_to(SpaceManager.Space.MALL)
 	assert_eq(SpaceManager.current_space, SpaceManager.Space.MALL)
-	assert_eq(_loaded_paths, ["res://scenes/mall/Mall.tscn"] as Array[String])
+	assert_eq(_loaded_paths, ["res://scenes/locations/Mall.tscn"] as Array[String])
 	assert_signal_emitted(SpaceManager, "space_changed")
 	# Duplicate transition is guarded.
 	SpaceManager.go_to(SpaceManager.Space.MALL)

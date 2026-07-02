@@ -3,7 +3,7 @@ extends GutTest
 ## Headless tests for the Ayla interaction branch: empty scrap -> dialogue,
 ## non-empty scrap -> hand-off.
 
-const YARD_SCENE := preload("res://scenes/scrapyard/Scrapyard.tscn")
+const YARD_SCENE := preload("res://scenes/locations/Scrapyard.tscn")
 
 var _yard: Node3D
 

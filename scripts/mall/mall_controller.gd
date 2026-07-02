@@ -44,7 +44,7 @@ func _spawn_player() -> void:
 	add_child(_player)
 	if _player_spawn != null:
 		_player.global_position = _player_spawn.global_position
-		_player.global_rotation.y = _player_spawn.global_rotation.y
+		_player.face_like(_player_spawn)
 
 
 ## One buyer per pending meet at this destination, placed on the spawn markers

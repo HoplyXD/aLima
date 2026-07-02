@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://duypha7bbdp6v"]
 
 ; Default bench object — a plain pendant used for data-driven artifacts (dirt mask /
-; spawned-decal cleaning). It ships with NO author-placed conditions on purpose: a
-; placed decal here would become THE condition (see RestorationService.present_object).
+; spawned-overlay cleaning). It ships with NO author-placed conditions on purpose: a
+; placed overlay here would become THE condition (see RestorationService.present_object).
 ; To author conditions onto a relic, use the per-category scenes under
 ; scenes/restoration/artifacts/ instead.
 

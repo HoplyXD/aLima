@@ -1,12 +1,8 @@
 extends CanvasLayer
 ## Global pause + settings overlay.
 ##
-## The layout lives in pause_menu.tscn so every control is visible/editable in the
-## editor; this script is presentation wiring + input only. Opens on the "pause"
-## action (Space or Esc) when nothing else consumed it (uses _unhandled_input so
-## it never fights an open overlay's Esc-to-close). Pauses the game tree while
-## open. Hosts display settings that apply live, and a renderer choice that
-## applies on relaunch. All persistence/rules live in SettingsService.
+## Settings overlay. Opens on the "pause" action (Space or Esc).
+## Pauses the game tree while open. All persistence/rules live in SettingsService.
 
 const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 
@@ -21,9 +17,6 @@ const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 @onready var _fullscreen_check: CheckButton = %FullscreenCheck
 @onready var _online_check: CheckButton = %OnlineCheck
 @onready var _previews_check: CheckButton = %PreviewsCheck
-@onready var _decal_highlight_check: CheckButton = %DecalHighlightCheck
-@onready var _renderer_option: OptionButton = %RendererOption
-@onready var _apply_renderer_button: Button = %ApplyRendererButton
 @onready var _status_label: Label = %StatusLabel
 @onready var _seed_label: Label = %SeedLabel
 @onready var _slot_label: Label = %SlotLabel
@@ -83,8 +76,6 @@ func _connect_signals() -> void:
 	_fullscreen_check.toggled.connect(_on_fullscreen_toggled)
 	_online_check.toggled.connect(_on_online_toggled)
 	_previews_check.toggled.connect(_on_previews_toggled)
-	_decal_highlight_check.toggled.connect(_on_decal_highlight_toggled)
-	_apply_renderer_button.pressed.connect(_on_apply_renderer)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -167,18 +158,8 @@ func _refresh() -> void:
 	_fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
 	_online_check.set_pressed_no_signal(SettingsService.ai_mode_is_online())
 	_previews_check.set_pressed_no_signal(SettingsService.artifact_previews)
-	_decal_highlight_check.set_pressed_no_signal(SettingsService.decal_highlight)
 
-	var mobile_ok: bool = SettingsService.mobile_supported()
-	_renderer_option.set_item_disabled(0, not mobile_ok)
-	var want_mobile: bool = SettingsService.renderer == SettingsService.RENDERER_MOBILE
-	_renderer_option.select(0 if (want_mobile and mobile_ok) else 1)
-
-	var effective: String = SettingsService.effective_renderer()
-	var pretty := "Mobile" if effective == SettingsService.RENDERER_MOBILE else "Compatibility"
-	_status_label.text = "Now running: %s." % pretty
-	if not mobile_ok:
-		_status_label.text += " This device can't run Mobile — locked to Compatibility."
+	_status_label.text = "Settings applied."
 
 	var seed_text := "Seed: %d" % GameState.run_seed
 	var slot := SaveService.get_selected_slot()
@@ -203,35 +184,6 @@ func _on_online_toggled(pressed: bool) -> void:
 	)
 
 
+## Toggles the optional "highlight the conditions a selected tool can clean" learning aid.
 func _on_previews_toggled(pressed: bool) -> void:
 	SettingsService.set_artifact_previews(pressed)
-
-
-## Toggles the optional "highlight the conditions a selected tool can clean" learning aid.
-func _on_decal_highlight_toggled(pressed: bool) -> void:
-	SettingsService.set_decal_highlight(pressed)
-
-
-func _on_apply_renderer() -> void:
-	var method := (
-		SettingsService.RENDERER_MOBILE
-		if _renderer_option.get_selected_id() == 0
-		else SettingsService.RENDERER_COMPAT
-	)
-	var pretty := "Mobile" if method == SettingsService.RENDERER_MOBILE else "Compatibility"
-	if method == SettingsService.effective_renderer():
-		_status_label.text = "Already running %s." % pretty
-		return
-	# In an exported build request_renderer closes and reopens the game in the new
-	# renderer. In the editor it can't relaunch a play session, so it just saves.
-	if not SettingsService.request_renderer(method):
-		if SettingsService.running_in_editor():
-			_status_label.text = (
-				(
-					"Saved as %s. The editor can't switch renderers live — run the exported game "
-					+ "(or change the default and restart the editor) to see it."
-				)
-				% pretty
-			)
-		else:
-			_status_label.text = "Saved. Restart the game to switch to %s." % pretty

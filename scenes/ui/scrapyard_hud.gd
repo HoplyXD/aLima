@@ -69,6 +69,9 @@ func _build_top_left_buttons() -> void:
 	_journal_button.custom_minimum_size = Vector2(120, 48)
 	_journal_button.focus_mode = Control.FOCUS_ALL
 	_journal_button.pressed.connect(func() -> void: journal_pressed.emit())
+	# Day 0 (TUT): the journal doesn't exist yet — the player only finds it at the
+	# end of Day 0, in the shop. Hide the outdoor Journal button until then.
+	_journal_button.visible = not TutorialService.is_tutorial_active()
 	row.add_child(_journal_button)
 
 

@@ -146,7 +146,6 @@ var _fov_lean_ndc: Vector2 = Vector2.ZERO
 ## Manual camera pan (world-unit h/v offset) from middle-mouse dragging; added to the zoom lean.
 var _camera_pan: Vector2 = Vector2.ZERO
 var _pan_down: bool = false  ## Middle mouse held → dragging pans the view.
-var _highlight_time: float = 0.0  ## Drives the optional decal-highlight throb.
 var _overlay_highlight_time: float = 0.0  ## Drives the 3-second overlay glow pulse.
 ## Left-edge 2D tool rack (replaces the 3D bench tool props; see CLAUDE.md REST-R9). Built
 ## in code and added to the HUD on ready.
@@ -1475,22 +1474,8 @@ func _process(delta: float) -> void:
 	)
 	if zoom != 0.0:
 		zoom_by(zoom * ZOOM_KEY_SPEED * delta)
-	_update_decal_highlight(delta)
 	_update_overlay_highlight(delta)
 	_update_cursor_tool(delta)
-
-
-## Optional learning aid (settings, default off): throbs the conditions the selected tool
-## can clean. When the setting is off or no tool is held, conditions are left calm.
-func _update_decal_highlight(delta: float) -> void:
-	if not is_instance_valid(_object) or not _object.has_method("highlight_for_tool"):
-		return
-	if not SettingsService.decal_highlight_enabled() or _selected_tool_id.is_empty():
-		_object.highlight_for_tool("", 0.0)
-		return
-	_highlight_time += delta
-	var pulse := 0.5 + 0.5 * sin(_highlight_time * 5.0)
-	_object.highlight_for_tool(_selected_tool_id, pulse)
 
 
 ## Pulses the artifact's condition overlays the held tool can clean — a brief glow every ~3 seconds
