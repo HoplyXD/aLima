@@ -20,6 +20,9 @@ const SCRAP_ITEM_SCENE := preload("res://scenes/scrapyard/scrap_item.tscn")
 const AYLA_HANDOFF_SCENE := preload("res://scenes/scrapyard/ayla_handoff_screen.tscn")
 const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
 const INTERACTABLE_SCRIPT := preload("res://scripts/shop/interactable_3d.gd")
+const PHONE_SCENE := preload("res://scenes/ui/phone.tscn")
+const BOOK_SCENE := preload("res://scenes/Book/BookViewport.tscn")
+const STORAGE_SCREEN_SCENE := preload("res://scenes/ui/storage_screen.tscn")
 
 ## Drop a Blender-exported .glb scene here to replace the placeholder MapRoot
 ## geometry. The anchors and collision live outside MapRoot and stay intact.
@@ -56,6 +59,18 @@ var _ayla_interactable: Interactable3D
 var _scrap_items_root: Node3D
 var _dialogue_box: DialogueBox
 var _overlay_open: bool = false
+## Day 0 (TUT) presentation: the tutorial glue overlay and the placeholder
+## Yuyu sprite standing beside Ayla while he teaches the forage step.
+var _tutorial_glue: TutorialGlue
+var _yuyu_sprite: Sprite3D
+## Outdoor quick-action overlays (phone/journal from the yard HUD) and the
+## outdoor storage crate the artifacts live in.
+var _phone: Phone
+var _book_viewport: BookViewport
+var _storage_screen: StorageScreen
+var _storage_interactable: Interactable3D
+
+const YUYU_PORTRAIT := preload("res://assets/Characters/Uncle.png")
 
 const SUNRISE_HOUR: float = 6.0
 const SUNSET_HOUR: float = 20.0
@@ -91,6 +106,10 @@ func _ready() -> void:
 	AylaService.sort_ready.connect(_on_ayla_sort_ready_yard)
 	_setup_scrap_items_root()
 	_spawn_scrap_items()
+	_setup_outdoor_storage()
+	if _hud != null:
+		_hud.phone_pressed.connect(_open_phone_overlay)
+		_hud.journal_pressed.connect(_open_journal_overlay)
 	EventBus.day_changed.connect(_on_yard_day_changed)
 
 	# Day 0 (TUT): the yard hosts the forage/hand-off steps with the tutorial
@@ -107,6 +126,7 @@ func _process(delta: float) -> void:
 		DayClock.tick(delta)
 	_update_hud()
 	_update_sun()
+	_update_tutorial_targets()
 
 
 func _maybe_swap_map() -> void:
@@ -135,10 +155,67 @@ func _create_tutorial_glue() -> TutorialGlue:
 		{
 			"ayla": _ayla_anchor,
 			"door": _door_return,
+			"scrap": _ayla_anchor,  # re-targeted per frame to the nearest scrap
+			"tricycle": get_node_or_null("Anchors/Tricycle"),
 		}
 	)
 	add_child(glue)
+	_tutorial_glue = glue
+	_create_yuyu_sprite()
 	return glue
+
+
+## Places the placeholder Yuyu (Uncle.png) beside Ayla for the Day 0 forage
+## lesson, mirroring her sprite setup. Presentation only.
+func _create_yuyu_sprite() -> void:
+	if _ayla_sprite == null:
+		return
+	_yuyu_sprite = _ayla_sprite.duplicate() as Sprite3D
+	_yuyu_sprite.name = "YuyuNpc"
+	_yuyu_sprite.texture = YUYU_PORTRAIT
+	_yuyu_sprite.visible = false
+	_ayla_anchor.add_child(_yuyu_sprite)
+	_yuyu_sprite.position = _ayla_sprite.position + Vector3(1.4, 0.0, 0.0)
+
+
+## Per-frame Day 0 presentation: Yuyu's presence follows the step data, and the
+## hint arrow tracks the nearest un-foraged scrap until the player holds some,
+## then re-aims at Ayla for the hand-off.
+func _update_tutorial_targets() -> void:
+	if _tutorial_glue == null:
+		return
+	var step := TutorialService.current_step()
+	if _yuyu_sprite != null:
+		_yuyu_sprite.visible = (
+			TutorialService.is_tutorial_active()
+			and ModelUtils.as_string(step.get("space")) == "YARD"
+			and ModelUtils.as_string_array(step.get("npcs")).has("yuyu")
+		)
+	var holding := false
+	for count in GameState.save_state.loop.scrap_pool.values():
+		if int(count) > 0:
+			holding = true
+			break
+	if holding:
+		_tutorial_glue.update_anchor("scrap", _ayla_anchor)
+		return
+	var nearest := _nearest_scrap_item()
+	_tutorial_glue.update_anchor("scrap", nearest if nearest != null else _ayla_anchor)
+
+
+func _nearest_scrap_item() -> Node3D:
+	if _player == null or _scrap_items_root == null:
+		return null
+	var best: Node3D = null
+	var best_distance := INF
+	for child in _scrap_items_root.get_children():
+		if child is Node3D and (child as Node3D).visible:
+			var offset := (child as Node3D).global_position - _player.global_position
+			var distance := offset.length_squared()
+			if distance < best_distance:
+				best_distance = distance
+				best = child
+	return best
 
 
 func _connect_return_door() -> void:
@@ -256,6 +333,10 @@ func _spawn_scrap_items() -> void:
 	var weights: Array[float] = []
 	for rarity_name in rarity_names:
 		weights.append(float(scrap_cfg.yard_scatter_rarity_weights.get(rarity_name, 0.0)))
+	# Day 0 (TUT): the taught forage only scatters common scrap.
+	if TutorialService.is_tutorial_active():
+		for i in weights.size():
+			weights[i] = 1.0 if i == ModelEnums.Rarity.WHITE else 0.0
 
 	var bounds := scrap_cfg.scatter_bounds
 	var center_x := float(bounds.get("center_x", 0.0))
@@ -478,7 +559,41 @@ func _on_scrap_collected(_rarity: String) -> void:
 func _refresh_hud_hotbar() -> void:
 	if _hud == null:
 		return
-	_hud.set_hotbar(GameState.save_state.loop.scrap_pool)
+	_hud.set_inventory(GameState.save_state.loop.scrap_pool, _restored_inventory_entries())
+	_hud.set_quest_count(_count_seated_fragments())
+
+
+## Restored artifacts shown in the carry inventory ({display_name, color}).
+func _restored_inventory_entries() -> Array:
+	var out: Array = []
+	var repo := DataRepository.singleton()
+	for raw in GameState.save_state.loop.inventory:
+		if not (raw is Dictionary):
+			continue
+		var inst := ObjectInstance.from_dictionary(raw)
+		if inst.state != ModelEnums.ObjState.CLEAN and inst.state != ModelEnums.ObjState.OPEN:
+			continue
+		var template := repo.get_template(inst.template_id)
+		var rarity: int = template.base_rarity if template != null else 0
+		out.append(
+			{
+				"display_name": template.display_name if template != null else inst.template_id,
+				"color":
+				ScrapyardHud.RARITY_COLORS.get(
+					ModelEnums.rarity_name(rarity), ScrapyardHud.RARITY_COLORS["white"]
+				),
+			}
+		)
+	return out
+
+
+func _count_seated_fragments() -> int:
+	var count := 0
+	for fragment_id in GameState.save_state.persistent.fragments.keys():
+		var fragment: Fragment = GameState.save_state.persistent.fragments[fragment_id]
+		if fragment.state == ModelEnums.FragmentState.SEATED:
+			count += 1
+	return count
 
 
 func _total_scrap_count() -> int:
@@ -510,6 +625,72 @@ func _on_yard_day_changed(_day: int) -> void:
 	for child in _scrap_items_root.get_children():
 		child.queue_free()
 	_spawn_scrap_items()
+
+
+## Outdoor storage crate beside the shop door: all owned artifacts live here;
+## interacting opens the same Storage screen the shop's delivery box uses, so
+## the player can pick what to bring to the bench. Scrap can sit in storage too
+## but never reaches the bench — Ayla has to sort it first.
+func _setup_outdoor_storage() -> void:
+	var area := Area3D.new()
+	area.name = "OutdoorStorage"
+	area.set_script(INTERACTABLE_SCRIPT)
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(1.4, 1.0, 1.0)
+	mesh.mesh = box
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.55, 0.4, 0.24)
+	mesh.material_override = material
+	mesh.position = Vector3(0, 0.5, 0)
+	area.add_child(mesh)
+	var shape := CollisionShape3D.new()
+	var shape_box := BoxShape3D.new()
+	shape_box.size = Vector3(2.2, 1.8, 2.0)
+	shape.shape = shape_box
+	shape.position = Vector3(0, 0.9, 0)
+	area.add_child(shape)
+	add_child(area)
+	area.global_position = _door_return.global_position + Vector3(2.4, 0.0, 0.4)
+	_storage_interactable = area as Interactable3D
+	_storage_interactable.prompt_text = "Open storage"
+	_storage_interactable.proximity_prompt_text = "Press E to open storage"
+	_storage_interactable.use_proximity = true
+	_storage_interactable.activated.connect(_open_storage_overlay)
+	if _hud != null:
+		_storage_interactable.prompt_changed.connect(_hud.set_prompt)
+
+
+func _open_storage_overlay() -> void:
+	if _storage_screen == null:
+		_storage_screen = STORAGE_SCREEN_SCENE.instantiate()
+		add_child(_storage_screen)
+		_storage_screen.closed.connect(_on_yard_overlay_closed)
+	_enter_overlay()
+	_storage_screen.open()
+
+
+func _open_phone_overlay() -> void:
+	if _phone == null:
+		_phone = PHONE_SCENE.instantiate()
+		add_child(_phone)
+		_phone.closed.connect(_on_yard_overlay_closed)
+	_enter_overlay()
+	_phone.open()
+
+
+func _open_journal_overlay() -> void:
+	if _book_viewport == null:
+		_book_viewport = BOOK_SCENE.instantiate()
+		add_child(_book_viewport)
+		_book_viewport.closed.connect(_on_yard_overlay_closed)
+	_enter_overlay()
+	_book_viewport.open()
+
+
+func _on_yard_overlay_closed() -> void:
+	_exit_overlay()
+	_refresh_hud_hotbar()
 
 
 func _on_handoff_closed() -> void:
@@ -547,6 +728,8 @@ func _set_yard_interactables_enabled(enabled: bool) -> void:
 		_door_return.set_enabled(enabled)
 	if _ayla_interactable != null:
 		_ayla_interactable.set_enabled(enabled)
+	if _storage_interactable != null:
+		_storage_interactable.set_enabled(enabled)
 	if _scrap_items_root != null:
 		for child in _scrap_items_root.get_children():
 			var interactable := child as Interactable3D

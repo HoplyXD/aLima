@@ -41,7 +41,7 @@
 alima/
 ├── CLAUDE.md                  ← you are here
 ├── README.md                  ← GDD / narrative and design source
-├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService, SettingsService, PauseMenu, LocalAI, AylaService, DispositionRouter, EveningService
+├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService, SettingsService, PauseMenu, LocalAI, AylaService, DispositionRouter, EveningService, TutorialService
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
@@ -50,13 +50,16 @@ alima/
 │   ├── sources/               ← verified historical-source records (referenced by the content manifest; Phase 12+)
 │   ├── reviews/               ← cultural / native-speaker review records (Phase 12+)
 │   └── provenance/            ← asset/content provenance records (Phase 12+)
-├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration view: restoration_view.tscn + restoration_dirt.gdshader; the manipulable artifact model lives in its own reusable restoration_artifact.tscn — an @tool RestorationObject3D devs can open standalone to view/iterate models — instanced under restoration_view's World; the old 2D placeholder scenes/ui/restoration_screen.* was retired in P4.7), scrapyard/ (Scrapyard.tscn + scrap_item.tscn + ayla_handoff_screen.tscn)
+├── scenes/                    ← production .tscn scenes (Shop.tscn) + ui/, restoration/ (focused 3D restoration view: restoration_view.tscn + restoration_dirt.gdshader; the manipulable artifact model lives in its own reusable restoration_artifact.tscn — an @tool RestorationObject3D devs can open standalone to view/iterate models — instanced under restoration_view's World; the old 2D placeholder scenes/ui/restoration_screen.* was retired in P4.7), scrapyard/ (Scrapyard.tscn + scrap_item.tscn + ayla_handoff_screen.tscn), mall/ (Mall.tscn + buyer_npc.tscn — meet-to-sell handoff space), travel/ (tricycle.tscn + destination_panel.tscn)
 ├── scripts/                   ← shop, core, models, delivery, discovery, restoration, scanner, journal, portal
 │   ├── core/                  ← EventBus, GameState, SaveService, DataRepository, DayClock, LoopController, SpaceManager
 │   ├── models/                ← typed data contracts + enums + validation
 │   ├── delivery/              ← DeliveryGenerator, SpawnDirector v1, glow mapping, triage logic, AylaService
+│   ├── tutorial/              ← TutorialService (Day 0 step machine), TutorialGlue, DialogueVars, BlackoutOverlay
+│   ├── travel/                ← TravelService (data-driven destinations), TricycleInteractable, DestinationPanel
+│   ├── mall/                  ← MallController, BuyerHandoff (meet-to-sell payment)
 │   └── scrapyard/             ← Scrapyard controller, ScrapItem, AylaHandoffScreen, PlayerController
-├── dialogue/                  ← reusable dialogue scene and script
+├── dialogue/                  ← reusable dialogue scene and script + tutorial_hint_box (quest panel: text + face + pointer arrow)
 ├── addons/gut/                ← vendored GUT 9.6.0 (Godot Unit Test) runner
 ├── resources/                 ← Godot .tres definitions
 ├── assets/                    ← original art/audio only
@@ -70,7 +73,7 @@ alima/
 ├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
 ├── server/                    ← Express: LLM proxy + portal client (Phase 8; cached `/api/scan`, `/api/portal/discovery` proxy, `.env.example`, Jest tests)
 ├── mock-portal/               ← mock City-Wide Portal API (Phase 8; deterministic fact cards, Jest tests)
-└── data/                      ← objects, artifacts (+ packets/ artifact-lock), echoes, routes (+ beats/), scanner-cache, delivery, journal, buyers, events, scrap, design (§23 decisions), content-manifest.json, and full-game contract stubs: marketplace, counterfeits, temporal-echoes, evening, museum (JSON; artifact-agnostic)
+└── data/                      ← objects, artifacts (+ packets/ artifact-lock), echoes, routes (+ beats/), scanner-cache, delivery, journal, buyers, events, scrap, design (§23 decisions), tutorial/ (day0_script.json + speakers.json — the Day 0 step/dialogue data), travel/ (destinations.json), content-manifest.json, and full-game contract stubs: marketplace, counterfeits, temporal-echoes, evening, museum (JSON; artifact-agnostic)
 ```
 
 **Content manifest (Phase 12+, CLAUDE.md §4-M).** `data/content-manifest.json` is the versioned
@@ -114,7 +117,7 @@ Save/reset code must honor this split exactly. Persistent data is keyed to the p
 
 **I. Echoes run only for a `RELEASED` carrier in the current scene (the scrapyard).** The four-band proximity hunt plays only while that carrier is **unfound**; on pickup the heartbeat resolves into a soft carried-resonance that persists until the fragment is seated, then silence. Otherwise, silence. The **Heartbeat band is gated to `is_carrier == true`** — it must be physically impossible for it to sound on a decoy.
 
-**J. Daily clock:** 1 real minute = 1 in-game hour; shop day 07:00–20:00 (~13 min real); ~1 hour per loop. NPCs knock only in fixed windows (per-character in GDD §9.7); an unanswered visitor moves on and may open/close a route.
+**J. Daily clock:** 1 real minute = 1 in-game hour; shop day 07:00–20:00 (~13 min real); ~1 hour per loop. NPCs knock only in fixed windows (per-character in GDD §9.7); an unanswered visitor moves on and may open/close a route. **Day 0 (TUT) is clockless:** the tutorial exists only on a newly created save while `persistent.tutorial_completed` is false (persistent per §4-A, so later loops can never re-enter it); the DayClock never starts during it, and the daily clock begins on Day 1 when the journal blackout graduates the save onto the SAME first loop (no loop increment).
 
 **K. Security (non-negotiable).** All LLM/API keys and calls live in the **backend only** — never embedded in the Godot client. Backend rate-limits LLM calls and ships **cached fallbacks** so the exhibit build never depends on venue internet.
 

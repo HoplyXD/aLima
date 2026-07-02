@@ -249,6 +249,81 @@ gdlint scripts scenes dialogue tests
 & $godot --headless --path . --export-release "Web" "build/web/aLima.html"
 ```
 
+## Phase RV3 - Day 0 Tutorial, Travel System, and UI Revamp (2026-07-02)
+
+**Goal:** a one-time, clockless guided Day 0 on every newly created save — Yuyu (the uncle,
+canonically the Phase 19 finale character) teaches forage → hand-off → triage → restore → scan →
+sell, then sends the player on a solo tricycle delivery to the Mall; the shop is empty on return
+and touching the journal blacks out into Day 1 of the same first loop. Includes the travel
+system groundwork for the meet-to-sell backlog item and the shop/scrapyard UI revamps.
+
+**Requirements:** TUT (new), §4-A/§4-J/§4-R compliance
+**Dependencies:** RV2-A..D
+**Subsystems:** save schema v3, TutorialService/TutorialGlue, travel, mall, HUD revamps
+
+### Tasks (all implemented this pass; runtime acceptance still needs an on-screen playthrough)
+
+- `[-]` **RV3.1 Save schema v3 + name entry.** `persistent.player_name`, `tutorial_completed`,
+  `tutorial_step`; v2→v3 migration marks existing saves completed; New Game flow is
+  slot → name → seed; `{player}` token substitution via `DialogueVars`.
+- `[-]` **RV3.2 Day 0 gating + skip.** `TutorialService` autoload (data-driven step machine from
+  `data/tutorial/day0_script.json`, resume-on-reload); `LoopController.begin_session()` tutorial
+  branch (clock never starts, `PAUSE_TUTORIAL` held); `complete_tutorial()` graduates onto Day 1
+  of the SAME loop; pause-menu Skip Tutorial with confirm grants the same end state.
+- `[-]` **RV3.3 Presentation.** `TutorialGlue` per-scene overlay (auto-plays step dialogue once,
+  keeps the `TutorialHintBox` quest panel — text + circular face + bobbing arrow — top-right);
+  Yuyu placeholder sprite (assets/Characters/Uncle.png) in shop and yard per step data; yard
+  scatters common-only scrap during Day 0 with the arrow tracking the nearest piece.
+- `[-]` **RV3.4 Constrained lesson piece.** `ObjectInstance.allowed_conditions` whitelist
+  (delivery conditions, authored decals, and overlays outside the list render clean — type filter
+  only, dev-placed decals untouched per §4-R); the Day 0 batch is EXACTLY ONE common artifact
+  whose scene carries both grime and dust (ArtifactCatalog now records per-scene condition types).
+- `[-]` **RV3.5 Meet-to-collect sales + travel.** `meet_required` sales defer payment into
+  `loop.pending_meets` (paid by `complete_meet_handoff`, emits `meet_scheduled` /
+  `meet_handoff_completed`); `SpaceManager.go_to()` + `Space.MALL`; data-driven
+  `data/travel/destinations.json`; tricycle interactable + "Where to go?" panel with (!)
+  recommendation marks; Mall blockout scene with buyer NPCs per pending meet.
+- `[-]` **RV3.6 Finale.** Journal interact on the finale step → `BlackoutOverlay` → graduation at
+  full darkness → normal Day 1 session.
+- `[-]` **RV3.7 UI revamps.** Shop top bar shows unrestored/restored artifact CARD strips
+  (click unrestored → bench on that piece; click restored → spin/zoom `ArtifactViewer`, click
+  outside exits); quest count moved top-right; scrapyard/mall HUD gains top-left Phone/Journal
+  quick actions, top-right quest count, a 5-slot carry inventory (unsorted scrap bundles into one
+  slot; restored artifacts listed), and an outdoor storage crate opening the Storage screen.
+- `[x]` **RV3.8 Fixes found in playtest.** Scanner Close button was dead (the full-rect content
+  VBox was declared after the Buttons row inside the MarginContainer and swallowed its clicks —
+  reordered); the Day 0 whitelist could wipe every condition off an artifact whose scene had no
+  grime/dust (loads at "100% but Dirty", uncompletable) — the tutorial pool now requires both.
+
+### Acceptance (runtime — perform on screen before flipping to [x])
+
+- `[ ]` New save (name entry) plays Day 0 end-to-end: forage → Ayla → triage → clean the single
+  grime+dust artifact → scan → list/sell → tricycle → mall handoff (paid at handoff) → return →
+  empty shop → journal blackout → Day 1 07:00, Loop unchanged, starting kit granted.
+- `[ ]` Skip Tutorial from the pause menu lands in the identical Day 1 state.
+- `[ ]` Quit/reload mid-Day-0 resumes at the persisted step; a pre-existing save loads straight
+  into normal play (migration marks it tutorial-completed).
+- `[ ]` Day 5 close still loops to Day 1; Day 0 never reappears on any later loop.
+
+### Backlog — story canon locked with the team (2026-07-02, implement in Phases 15/17)
+
+- **Sam is female, an archeologist, and never visits the shop.** Her place is a separate location
+  unlocked after Alya's route ending; on Day 5 of that route the player sells her the salakot at
+  her place and receives a **dirty fragment** that must be cleaned before seating (§4-D spirit).
+  Next loop, the Dump Site and Sam's place stay unlocked (persistent leads). If asked about the
+  fragment afterwards, Sam has no memory of it (it sits outside time in the journal).
+- **Alya quest 1:** Alya mentions finding Yuyu's glasses somewhere in the scrapyard — and that she
+  saw him meeting a woman before he vanished; the player finds the glasses in the yard and cleans
+  them (the `allowed_conditions` instance filter from RV3.4 serves this).
+- **Alya quest 2:** unlocks a new **Dump Site** map (one `data/travel/destinations.json` entry +
+  a scene, per RV3.5); the player finds a clue about Yuyu there. The quest artifact is a
+  **salakot hat**: clean it, sell it, and Sam ALWAYS appears as the buyer asking to meet at her
+  place (the `meet_required`/persona-forced buyer seam from RV3.5 serves this).
+- **Deferred from the RV3 UI pass:** the drag-based "choose what to carry" storage flow (5-slot
+  hard carry limit enforced across triage/restoration/marketplace). The 5-slot inventory HUD and
+  the outdoor storage crate are in; enforcing the carry limit game-wide changes triage/selling
+  rules and needs a team design call first.
+
 ## Status Markers
 
 - `[x]` verified complete under Godot 4.7, or verified by the applicable non-runtime command for documentation/repository-only work

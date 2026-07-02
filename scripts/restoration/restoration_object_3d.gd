@@ -687,12 +687,16 @@ func _apply_condition_randomizer(
 		if (
 			not allowed_conditions.is_empty()
 			and o.has_method("get_condition_id")
-			and not allowed_conditions.has(str(o.get_condition_id()))
+			and not _condition_id_allowed(str(o.get_condition_id()), allowed_conditions)
 		):
 			if o.has_method("clear_condition"):
 				o.clear_condition()
 			continue
 		eligible.append(o)
+	# A whitelist means "exactly these conditions": every allowed overlay spawns,
+	# so the taught piece reliably shows each condition the lesson covers.
+	if not allowed_conditions.is_empty():
+		return
 	if randomize_conditions_max <= 0:
 		return
 	if eligible.is_empty():
@@ -725,6 +729,15 @@ func _apply_condition_randomizer(
 	for o in eligible:
 		if not active.has(o) and o.has_method("clear_condition"):
 			o.clear_condition()
+
+
+## True when a raw overlay condition slug (e.g. "grime") resolves into the
+## whitelist ("dirt"). Runtime only (the randomizer never runs in the editor).
+func _condition_id_allowed(raw_type: String, allowed: Array) -> bool:
+	if allowed.has(raw_type):
+		return true
+	var condition := _match_condition(DataRepository.singleton(), _slug(raw_type))
+	return condition != null and allowed.has(condition.id)
 
 
 func has_overlays() -> bool:
@@ -1296,7 +1309,8 @@ func register_authored_conditions(
 				candidate.visible = false
 		all = permitted
 	# Randomly pick which placed conditions are live this run (seeded per save + loop).
-	var active := _choose_active_decals(all, rng)
+	# A whitelist means "exactly these conditions": every permitted decal is live.
+	var active := all if not allowed_conditions.is_empty() else _choose_active_decals(all, rng)
 	for raw in all:
 		var decal: Variant = raw
 		# Inactive decals (this run rolled fewer than were placed) are hidden and not

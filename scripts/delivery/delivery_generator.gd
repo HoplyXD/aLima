@@ -79,6 +79,7 @@ func _group_templates_by_rarity() -> Dictionary:
 	var groups := {}
 	# Make sure scene-only artifacts are synthesized + registered before we snapshot the template keys.
 	_ArtifactCatalog.ensure_ready()
+	var required_conditions := _tutorial_allowed_conditions()
 	for id in _repo.scrap_object_templates.keys():
 		var template: ScrapObjectTemplate = _repo.scrap_object_templates[id]
 		if not template.deliverable:
@@ -89,6 +90,11 @@ func _group_templates_by_rarity() -> Dictionary:
 			continue
 		if _ArtifactCatalog.is_quest_item(id):
 			# Quest-bound artifacts are handed out for their NPC step, never randomly delivered.
+			continue
+		# Day 0 (TUT): the taught piece must actually CARRY every whitelisted
+		# condition in its authored scene, otherwise the whitelist would render it
+		# spotless at the bench and the cleaning lesson could never complete.
+		if not required_conditions.is_empty() and not _scene_has_conditions(id, required_conditions):
 			continue
 		var rarity_name := ModelEnums.rarity_name(_effective_rarity(template))
 		if not groups.has(rarity_name):
@@ -209,6 +215,30 @@ func _tutorial_allowed_conditions() -> Array[String]:
 	if TutorialService.is_tutorial_active():
 		return ModelUtils.as_string_array(TutorialService.get_config().get("allowed_conditions"))
 	return [] as Array[String]
+
+
+## True when the artifact's authored scene carries EVERY condition id in `required`.
+## Scene slugs may be display-name based (e.g. "grime"); normalize them to journal
+## condition ids before comparing.
+func _scene_has_conditions(template_id: String, required: Array[String]) -> bool:
+	var present := {}
+	for raw_type in _ArtifactCatalog.condition_types_for(template_id):
+		present[_normalize_condition_id(raw_type)] = true
+	for condition_id in required:
+		if not present.has(condition_id):
+			return false
+	return true
+
+
+## Resolves a raw scene slug ("grime", "Water Stain") to its journal condition id.
+func _normalize_condition_id(raw_type: String) -> String:
+	var slug := raw_type.to_lower().replace(" ", "_").replace("-", "_")
+	for raw in _repo.get_surface_conditions_sorted():
+		var condition: SurfaceCondition = raw
+		var display_slug := condition.display_name.to_lower().replace(" ", "_").replace("-", "_")
+		if slug == condition.id or slug == display_slug:
+			return condition.id
+	return slug
 
 
 func _make_uid(day: int) -> String:

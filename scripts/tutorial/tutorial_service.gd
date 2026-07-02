@@ -181,6 +181,26 @@ func notify_completed() -> void:
 	tutorial_finished.emit()
 
 
+## Day 0 ending beat: touching the Chronos journal blacks the screen out, the
+## tutorial graduates at full darkness (atomic save inside complete_tutorial),
+## and the shop reloads as a normal Day 1 before the fade back in. The overlay
+## lives under this autoload so it survives the scene change. Returns true when
+## the finale actually ran (the caller then skips opening the journal).
+func run_finale() -> bool:
+	if not is_tutorial_active() or current_step_id() != "journal_finale":
+		return false
+	var overlay := BlackoutOverlay.new()
+	add_child(overlay)
+	overlay.blacked_out.connect(
+		func() -> void:
+			LoopController.complete_tutorial()
+			SpaceManager.go_to_shop()
+			overlay.fade_out()
+	)
+	overlay.begin()
+	return true
+
+
 ## Applies a step's authored grants. Idempotent so resume/replay is safe.
 ## grants.tools_for_conditions: for each surface-condition id, hand over the
 ## tool that cleans it (SurfaceCondition.cleaning_tool) — Yuyu's starter tools.

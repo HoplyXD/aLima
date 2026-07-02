@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "destinations": [
+    {
+      "id": "shop",
+      "display_name": "Yuyu's Junkshop",
+      "space": "YARD"
+    },
+    {
+      "id": "mall",
+      "display_name": "Mall",
+      "space": "MALL"
+    }
+  ]
+}

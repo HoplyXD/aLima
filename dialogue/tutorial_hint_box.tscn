@@ -33,19 +33,20 @@ script = ExtResource("1_hintbox")
 [node name="HintPanel" type="PanelContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 40.0
-offset_top = -170.0
-offset_right = 620.0
-offset_bottom = -70.0
-grow_vertical = 0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -616.0
+offset_top = 64.0
+offset_right = -16.0
+offset_bottom = 196.0
+grow_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_hint_panel")
 
 [node name="HBox" type="HBoxContainer" parent="HintPanel"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 14
 
 [node name="PortraitCircle" type="Panel" parent="HintPanel/HBox"]
@@ -85,6 +86,7 @@ stretch_mode = 5
 [node name="VBox" type="VBoxContainer" parent="HintPanel/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 theme_override_constants/separation = 4
 
 [node name="SpeakerLabel" type="Label" parent="HintPanel/HBox/VBox"]

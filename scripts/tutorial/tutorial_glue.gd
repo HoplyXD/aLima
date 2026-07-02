@@ -52,6 +52,20 @@ func setup(space_name: String, anchors: Dictionary) -> void:
 	_anchors = anchors
 
 
+## Replaces a named anchor at runtime (e.g. the yard re-targets "scrap" to the
+## nearest un-foraged piece). Re-aims the arrow when that anchor is active.
+func update_anchor(anchor_name: String, node: Node) -> void:
+	_anchors[anchor_name] = node
+	var step := TutorialService.current_step()
+	var hint := ModelUtils.as_dictionary(step.get("hint"))
+	if ModelUtils.as_string(hint.get("anchor")) == anchor_name and _hint_box.visible:
+		_anchor_node = node
+		if node is Control:
+			_hint_box.point_at_control(node as Control)
+		elif not (node is Node3D):
+			_hint_box.clear_pointer()
+
+
 func _process(_delta: float) -> void:
 	# 3D anchors track the camera; Control anchors are static.
 	if _anchor_node is Node3D and _hint_box != null and _hint_box.visible:

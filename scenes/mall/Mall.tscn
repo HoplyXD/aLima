@@ -1,0 +1,90 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/mall/mall_controller.gd" id="1_mall"]
+[ext_resource type="PackedScene" path="res://scenes/travel/tricycle.tscn" id="2_tricycle"]
+[ext_resource type="PackedScene" path="res://scenes/ui/scrapyard_hud.tscn" id="3_hud"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_mall"]
+sky_top_color = Color(0.35, 0.55, 0.85, 1)
+sky_horizon_color = Color(0.75, 0.8, 0.85, 1)
+
+[sub_resource type="Sky" id="SkyRes_mall"]
+sky_material = SubResource("Sky_mall")
+
+[sub_resource type="Environment" id="Env_mall"]
+background_mode = 2
+sky = SubResource("SkyRes_mall")
+ambient_light_source = 3
+tonemap_mode = 2
+
+[sub_resource type="PlaneMesh" id="Mesh_mall_ground"]
+size = Vector2(60, 60)
+
+[sub_resource type="StandardMaterial3D" id="Mat_mall_ground"]
+albedo_color = Color(0.55, 0.55, 0.58, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_mall_ground"]
+size = Vector3(60, 0.2, 60)
+
+[sub_resource type="BoxMesh" id="Mesh_mall_building"]
+size = Vector3(26, 10, 12)
+
+[sub_resource type="StandardMaterial3D" id="Mat_mall_building"]
+albedo_color = Color(0.85, 0.8, 0.7, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_mall_building"]
+size = Vector3(26, 10, 12)
+
+[node name="Mall" type="Node3D"]
+script = ExtResource("1_mall")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_mall")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.86, -0.25, 0.44, 0, 0.87, 0.5, -0.5, -0.43, 0.75, 0, 12, 0)
+shadow_enabled = true
+light_energy = 1.4
+
+[node name="Ground" type="StaticBody3D" parent="."]
+collision_layer = 1
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("Mesh_mall_ground")
+surface_material_override/0 = SubResource("Mat_mall_ground")
+
+[node name="GroundShape" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("Shape_mall_ground")
+
+[node name="MallBuilding" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -18)
+collision_layer = 1
+
+[node name="BuildingMesh" type="MeshInstance3D" parent="MallBuilding"]
+mesh = SubResource("Mesh_mall_building")
+surface_material_override/0 = SubResource("Mat_mall_building")
+
+[node name="BuildingShape" type="CollisionShape3D" parent="MallBuilding"]
+shape = SubResource("Shape_mall_building")
+
+[node name="Anchors" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 14)
+
+[node name="Tricycle" parent="Anchors" instance=ExtResource("2_tricycle")]
+transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, 8, 0, 16)
+
+[node name="BuyerSpawns" type="Node3D" parent="Anchors"]
+
+[node name="BuyerSpawn1" type="Marker3D" parent="Anchors/BuyerSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -8)
+
+[node name="BuyerSpawn2" type="Marker3D" parent="Anchors/BuyerSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -6)
+
+[node name="BuyerSpawn3" type="Marker3D" parent="Anchors/BuyerSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
+
+[node name="MallHud" parent="." instance=ExtResource("3_hud")]

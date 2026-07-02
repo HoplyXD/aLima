@@ -12,6 +12,7 @@
     {
       "id": "intro_greeting",
       "space": "SHOP",
+      "npcs": ["yuyu"],
       "dialogue": [
         {
           "speaker": "yuyu",
@@ -23,7 +24,7 @@
         },
         {
           "speaker": "yuyu",
-          "text": "Come — step out the front door with me. The scrapyard is where every find begins."
+          "text": "Come - step out the front door with me. The scrapyard is where every find begins."
         }
       ],
       "hint": { "speaker": "yuyu", "text": "Head out the front door to the scrapyard.", "anchor": "door" },
@@ -32,6 +33,7 @@
     {
       "id": "forage_scrap",
       "space": "YARD",
+      "npcs": ["yuyu"],
       "dialogue": [
         {
           "speaker": "yuyu",
@@ -39,19 +41,20 @@
         },
         {
           "speaker": "yuyu",
-          "text": "When your hands are full, bring the scrap to Ayla over there. She hauls and sorts for me — best eyes on the island."
+          "text": "When your hands are full, bring the scrap to Ayla over there. She hauls and sorts for me - best eyes on the island."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "Forage some scrap, then hand it to Ayla.", "anchor": "ayla" },
+      "hint": { "speaker": "yuyu", "text": "Forage some scrap, then hand it to Ayla.", "anchor": "scrap" },
       "complete_on": { "signal": "scrap_submitted" }
     },
     {
       "id": "triage_delivery",
       "space": "SHOP",
+      "npcs": ["yuyu"],
       "dialogue": [
         {
           "speaker": "yuyu",
-          "text": "Ayla will knock when the batch is sorted. Storage is small, so keep only what looks promising — the rest goes back to the recycler."
+          "text": "Ayla will knock when the batch is sorted. Storage is small, so keep only what looks promising - the rest goes back to the recycler."
         }
       ],
       "hint": { "speaker": "yuyu", "text": "Answer the door and sort the delivery: Keep or Recycle.", "anchor": "door" },
@@ -60,11 +63,12 @@
     {
       "id": "restoration_intro",
       "space": "SHOP",
+      "npcs": ["yuyu"],
       "grants": { "tools_for_conditions": ["dust", "dirt"] },
       "dialogue": [
         {
           "speaker": "yuyu",
-          "text": "Now the real work. Take these — my old soft brush for dust, and a damp cloth for grime. They were my first tools too."
+          "text": "Now the real work. Take these - my old soft brush for dust, and a damp cloth for grime. They were my first tools too."
         },
         {
           "speaker": "yuyu",
@@ -77,6 +81,7 @@
     {
       "id": "restore_artifact",
       "space": "SHOP",
+      "npcs": ["yuyu"],
       "dialogue": [],
       "hint": { "speaker": "yuyu", "text": "Pick the right tool for each condition and work the surface clean.", "anchor": "tool_sidebar" },
       "complete_on": { "signal": "restoration_completed" }
@@ -84,10 +89,11 @@
     {
       "id": "scan_artifact",
       "space": "SHOP",
+      "npcs": ["yuyu"],
       "dialogue": [
         {
           "speaker": "yuyu",
-          "text": "Clean! Now scan it with the phone. The scanner suggests what a thing is — but the final say is always yours, {player}. Never forget that."
+          "text": "Clean! Now scan it with the phone. The scanner suggests what a thing is - but the final say is always yours, {player}. Never forget that."
         }
       ],
       "hint": { "speaker": "yuyu", "text": "Scan the artifact and set your own verdict.", "anchor": "phone" },
@@ -96,10 +102,11 @@
     {
       "id": "list_and_sell",
       "space": "SHOP",
+      "npcs": ["yuyu"],
       "dialogue": [
         {
           "speaker": "yuyu",
-          "text": "Good judgment. List it on the marketplace — buyers message you, you haggle, you decide."
+          "text": "Good judgment. List it on the marketplace - buyers message you, you haggle, you decide."
         }
       ],
       "hint": { "speaker": "yuyu", "text": "List the artifact on the marketplace and accept a buyer.", "anchor": "phone" },
@@ -108,6 +115,7 @@
     {
       "id": "ride_to_mall",
       "space": "SHOP",
+      "npcs": ["yuyu"],
       "dialogue": [
         {
           "speaker": "yuyu",
@@ -115,15 +123,24 @@
         },
         {
           "speaker": "yuyu",
-          "text": "Take the tricycle out front. And {player} — whatever you find in this shop, take care of it for me."
+          "text": "Take the tricycle out front. And {player} - whatever you find in this shop, take care of it for me."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "Ride the tricycle to the mall.", "anchor": "tricycle" },
+      "hint": { "speaker": "yuyu", "text": "Head outside to the tricycle.", "anchor": "door" },
+      "complete_on": { "signal": "space_changed", "space": "YARD" }
+    },
+    {
+      "id": "board_tricycle",
+      "space": "YARD",
+      "npcs": [],
+      "dialogue": [],
+      "hint": { "speaker": "inner", "text": "Ride the tricycle to the mall.", "anchor": "tricycle" },
       "complete_on": { "signal": "space_changed", "space": "MALL" }
     },
     {
       "id": "deliver_to_buyer",
       "space": "MALL",
+      "npcs": [],
       "dialogue": [],
       "hint": { "speaker": "inner", "text": "Find the buyer and hand over the artifact.", "anchor": "buyer" },
       "complete_on": { "signal": "meet_handoff_completed" }
@@ -131,13 +148,23 @@
     {
       "id": "return_to_shop",
       "space": "MALL",
+      "npcs": [],
       "dialogue": [],
-      "hint": { "speaker": "inner", "text": "Take the tricycle back to the shop.", "anchor": "tricycle" },
+      "hint": { "speaker": "inner", "text": "Take the tricycle back home.", "anchor": "tricycle" },
+      "complete_on": { "signal": "space_changed", "space": "YARD" }
+    },
+    {
+      "id": "enter_the_shop",
+      "space": "YARD",
+      "npcs": [],
+      "dialogue": [],
+      "hint": { "speaker": "inner", "text": "Head back inside the shop.", "anchor": "door" },
       "complete_on": { "signal": "space_changed", "space": "SHOP" }
     },
     {
       "id": "journal_finale",
       "space": "SHOP",
+      "npcs": [],
       "dialogue": [
         { "speaker": "inner", "text": "...Tito Yuyu? Ayla? The shop is empty." },
         { "speaker": "inner", "text": "He said he had somewhere to be. But his tools are still on the bench..." },

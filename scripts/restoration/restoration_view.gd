@@ -64,16 +64,15 @@ const ZOOM_NEAR_MARGIN: float = 0.15
 const ZOOM_WHEEL_STEP: float = 0.25
 ## Stage 2 — once the artifact can't come any closer, further zoom-in TIGHTENS the camera FOV
 ## (a lens zoom) down to MIN_FOV; zooming back out widens the FOV before the artifact pulls away.
-const MIN_FOV: float = 22.0
-## Tightest lens zoom (smaller = more magnified).
-const FOV_DEGREES_PER_UNIT: float = 26.0
-## FOV change per object-distance unit, so a notch ≈ 6.5°.
-const FOV_LEAN_MAX: float = 0.55
+## Exported so they can be drag-tuned live in the inspector while the scene plays.
+@export var MIN_FOV: float = 22.0  ## Tightest lens zoom (smaller = more magnified).
+@export var FOV_DEGREES_PER_UNIT: float = 26.0  ## FOV change per notch; higher = snappier lens zoom.
+@export var FOV_LEAN_MAX: float = 0.55  ## How far the view leans toward the cursor at full lens zoom.
 ## Middle-mouse pan: drag the (lens-zoomed) view around. Speed is world units of camera offset
 ## per pixel dragged; the pan is clamped so the artifact can't be shoved off-screen.
 const CAMERA_PAN_SPEED: float = 0.004
 ## Max manual pan in world units. Fixed and symmetric — does NOT vary with zoom or FOV.
-const CAMERA_PAN_MAX: float = 1.6
+const CAMERA_PAN_MAX: float = 0.8
 const ZOOM_KEY_SPEED: float = 2.2  ## Distance/second for held keyboard/controller zoom.
 
 ## Temporary diagnostic logging for the restoration interaction. Flip to false
@@ -1360,12 +1359,16 @@ func _set_fov(fov: float) -> void:
 	if not is_instance_valid(_camera):
 		return
 	_camera.fov = clampf(fov, MIN_FOV, _default_fov)
+	# Pan is a stage-2-only affordance: the moment the lens widens all the way back to the
+	# default FOV (dropping to stage 1), snap the camera home by clearing any manual pan.
+	if _camera.fov >= _default_fov:
+		_camera_pan = Vector2.ZERO
 	_clamp_pan()
 	_apply_camera_offset()
 
 
-## Stage 2 = lens zoom active (FOV tighter than the authored default). Used for the zoom-to-
-## cursor lean bias; pan itself is no longer gated by stage.
+## Stage 2 = lens zoom active (FOV tighter than the authored default). Gates BOTH the zoom-to-
+## cursor lean bias and the manual middle-mouse pan — neither exists in stage 1.
 func _is_zoom_stage_2() -> bool:
 	return is_instance_valid(_camera) and _camera.fov < _default_fov
 
@@ -1378,8 +1381,10 @@ func _apply_camera_offset() -> void:
 	var zoom_t := clampf(
 		(_default_fov - _camera.fov) / maxf(0.001, _default_fov - MIN_FOV), 0.0, 1.0
 	)
-	_camera.h_offset = _fov_lean_ndc.x * FOV_LEAN_MAX * zoom_t + _camera_pan.x
-	_camera.v_offset = _fov_lean_ndc.y * FOV_LEAN_MAX * zoom_t + _camera_pan.y
+	# Manual pan only applies during the stage-2 lens zoom; in stage 1 the camera stays centred.
+	var pan := _camera_pan if _is_zoom_stage_2() else Vector2.ZERO
+	_camera.h_offset = _fov_lean_ndc.x * FOV_LEAN_MAX * zoom_t + pan.x
+	_camera.v_offset = _fov_lean_ndc.y * FOV_LEAN_MAX * zoom_t + pan.y
 
 
 ## Clamps the manual pan to a fixed, symmetric world-unit radius around the camera's original centre.
@@ -1396,6 +1401,8 @@ func _clamp_pan() -> void:
 ## Middle-mouse drag: pan the view by moving the camera offset, clamped to a fixed world-unit
 ## limit so the artifact can always be nudged but never pushed entirely off-screen.
 func _pan_camera(relative: Vector2) -> void:
+	if not _is_zoom_stage_2():
+		return  # panning only exists in the stage-2 lens zoom
 	_camera_pan.x -= relative.x * CAMERA_PAN_SPEED
 	_camera_pan.y += relative.y * CAMERA_PAN_SPEED
 	_clamp_pan()

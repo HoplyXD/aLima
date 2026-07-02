@@ -1,7 +1,11 @@
 [configuration]
 entry_symbol = "gdext_rust_init"
 compatibility_minimum = 4.5
-reloadable = true
+# reloadable=false: these are prebuilt release binaries we never hot-reload. With true,
+# Godot copies the 78MB DLL to a ~lib...TMP on every launch; a locked leftover copy then
+# fails ("Error copying library") and the editor can't attach ("Connection impossible to
+# the game process"). Loading in-place avoids the copy entirely.
+reloadable = false
 
 [libraries]
 linux.debug.x86_64 =     "res://addons/nobodywho/libnobodywho-godot-x86_64-unknown-linux-gnu-debug.so"

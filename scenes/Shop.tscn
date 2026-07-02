@@ -473,7 +473,7 @@ visible = false
 anchors_preset = 10
 anchor_right = 1.0
 offset_right = -1.0
-offset_bottom = 104.0
+offset_bottom = 200.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_ni0rq")
 
@@ -497,7 +497,7 @@ theme_override_constants/separation = 80
 
 [node name="Unrestored" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=18342938]
 layout_mode = 2
-theme_override_constants/separation = -11
+theme_override_constants/separation = 0
 
 [node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Unrestored" unique_id=1773867073]
 layout_mode = 2
@@ -505,63 +505,40 @@ theme_override_fonts/font = ExtResource("36_yh0ut")
 theme_override_font_sizes/font_size = 40
 text = "Unrestored"
 
-[node name="UnrestoredCounts" type="RichTextLabel" parent="HUD/TopPanel2/Margin/Bar/Unrestored" unique_id=737087263]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 26)
+[node name="UnrestoredScroll" type="ScrollContainer" parent="HUD/TopPanel2/Margin/Bar/Unrestored" unique_id=737087264]
+custom_minimum_size = Vector2(560, 116)
 layout_mode = 2
-theme_override_fonts/normal_font = ExtResource("36_yh0ut")
-theme_override_font_sizes/normal_font_size = 38
-theme_override_font_sizes/bold_font_size = 38
-bbcode_enabled = true
-text = "W 0   G 0   B 0   P 0   Gd 0"
-fit_content = true
-scroll_active = false
-autowrap_mode = 0
+horizontal_scroll_mode = 2
+vertical_scroll_mode = 0
+
+[node name="UnrestoredCards" type="HBoxContainer" parent="HUD/TopPanel2/Margin/Bar/Unrestored/UnrestoredScroll" unique_id=737087265]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="Sep1" type="VSeparator" parent="HUD/TopPanel2/Margin/Bar" unique_id=516100664]
 layout_mode = 2
 
 [node name="Restored" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=546177771]
 layout_mode = 2
-theme_override_constants/separation = -11
+theme_override_constants/separation = 0
 
 [node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Restored" unique_id=2121423419]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("36_yh0ut")
 theme_override_font_sizes/font_size = 40
-text = "Restored (sell via phone)"
+text = "Restored (click to view)"
 
-[node name="RestoredCounts" type="RichTextLabel" parent="HUD/TopPanel2/Margin/Bar/Restored" unique_id=1567502995]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 26)
+[node name="RestoredScroll" type="ScrollContainer" parent="HUD/TopPanel2/Margin/Bar/Restored" unique_id=1567502996]
+custom_minimum_size = Vector2(560, 116)
 layout_mode = 2
-theme_override_fonts/normal_font = ExtResource("36_yh0ut")
-theme_override_font_sizes/normal_font_size = 38
-theme_override_font_sizes/bold_font_size = 38
-bbcode_enabled = true
-text = "W 0   G 0   B 0   P 0   Gd 0"
-fit_content = true
-scroll_active = false
-autowrap_mode = 0
+horizontal_scroll_mode = 2
+vertical_scroll_mode = 0
 
-[node name="Sep2" type="VSeparator" parent="HUD/TopPanel2/Margin/Bar" unique_id=196134297]
-layout_mode = 2
-
-[node name="Quest" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=1285818467]
-layout_mode = 2
-theme_override_constants/separation = -11
-
-[node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Quest" unique_id=851278566]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("36_yh0ut")
-theme_override_font_sizes/font_size = 40
-text = "Quest"
-
-[node name="QuestCount" type="Label" parent="HUD/TopPanel2/Margin/Bar/Quest" unique_id=43241348]
+[node name="RestoredCards" type="HBoxContainer" parent="HUD/TopPanel2/Margin/Bar/Restored/RestoredScroll" unique_id=1567502997]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 38
-text = "0"
+theme_override_constants/separation = 10
 
 [node name="Spacer" type="Control" parent="HUD/TopPanel2/Margin/Bar" unique_id=1020011671]
 layout_mode = 2
@@ -570,6 +547,13 @@ size_flags_horizontal = 3
 [node name="Clock" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=490636225]
 layout_mode = 2
 theme_override_constants/separation = 12
+
+[node name="QuestCount" type="Label" parent="HUD/TopPanel2/Margin/Bar/Clock" unique_id=43241348]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Quest: 0"
+horizontal_alignment = 2
 
 [node name="DayLabel" type="Label" parent="HUD/TopPanel2/Margin/Bar/Clock" unique_id=767463733]
 unique_name_in_owner = true

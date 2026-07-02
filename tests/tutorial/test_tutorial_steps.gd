@@ -96,8 +96,15 @@ func test_full_signal_chain_reaches_the_finale() -> void:
 	EventBus.restoration_completed.emit("uid_1", 1.0, "soft_brush")
 	EventBus.scanner_verdict_committed.emit("uid_1", "AUTHENTIC")
 	EventBus.meet_scheduled.emit("uid_1", "mysterious_buyer", "mall")
-	SpaceManager.space_changed.emit(SpaceManager.Space.YARD)  # wrong space for mall step
 	assert_eq(TutorialService.current_step_id(), "ride_to_mall")
+	SpaceManager.space_changed.emit(SpaceManager.Space.YARD)  # step outside
+	assert_eq(TutorialService.current_step_id(), "board_tricycle")
+	SpaceManager.space_changed.emit(SpaceManager.Space.MALL)  # ride out
+	assert_eq(TutorialService.current_step_id(), "deliver_to_buyer")
+	EventBus.meet_handoff_completed.emit("uid_1", "mysterious_buyer", 100, "mall")
+	SpaceManager.space_changed.emit(SpaceManager.Space.YARD)  # ride home
+	SpaceManager.space_changed.emit(SpaceManager.Space.SHOP)  # walk back in
+	assert_eq(TutorialService.current_step_id(), "journal_finale")
 
 
 func test_tutorial_sort_is_instant() -> void:

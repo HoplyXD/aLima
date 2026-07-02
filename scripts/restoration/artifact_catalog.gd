@@ -145,8 +145,31 @@ static func _read_scene(scene_path: String) -> void:
 		"npc": NPC_IDS[npc_idx],
 		"quest_number": obj.quest_number,
 		"scanner": _read_scanner_data(root),
+		"condition_types": _read_condition_types(root),
 	}
 	root.free()
+
+
+## Collects the RAW condition type slugs the scene carries: every ArtifactOverlay's
+## condition id and every ArtifactConditionDecal's slug (duck-typed). Raw values may
+## be display-name slugs (e.g. "grime"); resolve against the journal catalog before
+## comparing to condition ids.
+static func _read_condition_types(node: Node) -> Array[String]:
+	var out: Array[String] = []
+	_collect_condition_types(node, out)
+	return out
+
+
+static func _collect_condition_types(node: Node, out: Array[String]) -> void:
+	for child in node.get_children():
+		var found := ""
+		if child.has_method("get_condition_id"):
+			found = str(child.call("get_condition_id"))
+		elif child.has_method("condition_slug"):
+			found = str(child.call("condition_slug"))
+		if not found.is_empty() and not out.has(found):
+			out.append(found)
+		_collect_condition_types(child, out)
 
 
 ## Captures the artifact's designer-authored scanner payload from an ArtifactScannerData child, or
@@ -194,6 +217,19 @@ static func is_quest_item(template_id: String) -> bool:
 static func scanner_response_for(template_id: String) -> Dictionary:
 	_ensure_scanned()
 	return (_entries.get(template_id, {}).get("scanner", {}) as Dictionary).duplicate(true)
+
+
+## The RAW condition type slugs authored in the artifact's scene (overlays + placed
+## decals), or [] when unknown. Raw slugs; normalize via the journal catalog.
+static func condition_types_for(template_id: String) -> Array[String]:
+	_ensure_scanned()
+	var e: Dictionary = _entries.get(template_id, {})
+	var raw: Variant = e.get("condition_types", [])
+	var out: Array[String] = []
+	if raw is Array:
+		for value in raw:
+			out.append(str(value))
+	return out
 
 
 ## Template ids of artifacts the random delivery may spawn (everything with a scene that is NOT a

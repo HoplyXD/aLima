@@ -216,6 +216,10 @@ class LoopState:
 	## Tool repair/replace upkeep performed this loop, for the summary. Each entry:
 	## {action, tool_id, uid, cost, day}.
 	var upkeep_actions: Array = []
+	## Accepted meet-in-person sales awaiting handoff (TUT / meet-to-sell). Each
+	## entry: {uid, template_id, buyer_id, price, destination_id, condition}.
+	## Loop-scoped: an undelivered meet dies with the loop (§4-A).
+	var pending_meets: Array = []
 
 	static func from_dictionary(data: Dictionary) -> LoopState:
 		var l := LoopState.new()
@@ -248,6 +252,7 @@ class LoopState:
 		l.listings = SaveState._as_array(data.get("listings", []))
 		l.evening_plan = ModelUtils.as_dictionary(data.get("evening_plan"))
 		l.upkeep_actions = SaveState._as_array(data.get("upkeep_actions", []))
+		l.pending_meets = SaveState._as_array(data.get("pending_meets", []))
 		return l
 
 	func to_dictionary() -> Dictionary:
@@ -281,6 +286,7 @@ class LoopState:
 			"listings": listings.duplicate(true),
 			"evening_plan": evening_plan.duplicate(true),
 			"upkeep_actions": upkeep_actions.duplicate(true),
+			"pending_meets": pending_meets.duplicate(true),
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:

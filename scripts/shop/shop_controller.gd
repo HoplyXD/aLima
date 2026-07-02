@@ -11,6 +11,8 @@ extends Node3D
 const RESTORATION_VIEW_SCENE := preload("res://scenes/restoration/restoration_view.tscn")
 const PHONE_SCENE := preload("res://scenes/ui/phone.tscn")
 const STORAGE_SCREEN_SCENE := preload("res://scenes/ui/storage_screen.tscn")
+const RESTORATION_ARTIFACT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
+const ShopArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector (e.g. 0.1) to watch the clock move faster while
@@ -48,10 +50,16 @@ var _ayla_source: AylaSource = AylaSource.NONE
 
 ## Alya (the morning-delivery courier) portrait, shown when she knocks.
 const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
+## Yuyu (the uncle), standing in the shop through Day 0 until he vanishes (TUT).
+const YUYU_PORTRAIT := preload("res://assets/Characters/Uncle.png")
 
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
 @onready var _visitor2: Sprite3D = $Visitor2  ## Alya (scavenger) waiting at the door.
+## Day 0 placeholder Yuyu sprite (created at runtime while the tutorial runs).
+var _yuyu_sprite: Sprite3D
+## Restored-artifact 3D inspection overlay (created on first card click).
+var _artifact_viewer: ArtifactViewer
 @onready var _triage_screen: TriageController = $TriageScreen
 @onready var _book_viewport: BookViewport = $BookViewport
 @onready var _restoration_view: RestorationView = _create_restoration_view()
@@ -100,6 +108,8 @@ func _ready() -> void:
 	_hud.storage_pressed.connect(_on_storage_pressed)
 	_hud.morning_delivery_pressed.connect(_on_morning_delivery_pressed)
 	_hud.dialogue_finished.connect(_on_dialogue_finished)
+	_hud.unrestored_card_selected.connect(_on_unrestored_card_selected)
+	_hud.restored_card_selected.connect(_on_restored_card_selected)
 
 	_connect_interactables()
 
@@ -133,9 +143,11 @@ func _ready() -> void:
 	_refresh_ayla_knock()
 
 	# Day 0 (TUT): the tutorial glue presents Yuyu's dialogue and hint arrows on
-	# top of the normal shop. Created only while the tutorial is active.
+	# top of the normal shop, and Yuyu himself stands in the room per step data.
+	# Created only while the tutorial is active.
 	if TutorialService.is_tutorial_active():
 		_create_tutorial_glue()
+		_create_yuyu_sprite()
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -186,21 +198,100 @@ func is_day_running() -> bool:
 
 
 func _refresh_ui() -> void:
-	var unrestored := _count_inventory_by_glow(false)
-	var restored := _count_inventory_by_glow(true)
-	_hud.set_unrestored(unrestored)
-	_hud.set_restored(restored)
+	_hud.set_artifact_cards(
+		_artifact_card_entries(false),
+		_artifact_card_entries(true),
+		SettingsService.previews_enabled(),
+		_attach_card_preview
+	)
 	_hud.set_quest_count(_count_seated_fragments())
 	_update_clock_display()
+
+
+## Card entries ({uid, display_name, color}) for one strip of the top bar.
+func _artifact_card_entries(restored_only: bool) -> Array:
+	var out: Array = []
+	var repo := DataRepository.singleton()
+	for raw in GameState.save_state.loop.inventory:
+		if not (raw is Dictionary):
+			continue
+		var inst := ObjectInstance.from_dictionary(raw)
+		var template := repo.get_template(inst.template_id)
+		if template == null:
+			continue
+		var is_restored := (
+			inst.state == ModelEnums.ObjState.CLEAN or inst.state == ModelEnums.ObjState.OPEN
+		)
+		if is_restored != restored_only:
+			continue
+		out.append(
+			{
+				"uid": inst.uid,
+				"display_name": template.display_name,
+				"color": _rarity_color(template.base_rarity),
+			}
+		)
+	return out
+
+
+func _rarity_color(rarity: int) -> Color:
+	var index := clampi(rarity, 0, ShopHud.RARITY.size() - 1)
+	return Color.from_string(str(ShopHud.RARITY[index]["color"]), Color.WHITE)
+
+
+## Embeds the rotating 3D preview (model + live conditions) into a top-bar card,
+## mirroring the bench's artifact bar presentation.
+func _attach_card_preview(uid: String, card: ArtifactCard) -> void:
+	var service := RestorationService.new()
+	var inst := service.find_instance_by_id(uid)
+	if inst == null:
+		return
+	var template := service.get_repository().get_template(inst.template_id)
+	if template == null:
+		return
+	var scene: PackedScene = ShopArtifactScenes.scene_for(
+		template.id, RESTORATION_ARTIFACT_SCENE
+	)
+	var preview: RestorationObject3D = scene.instantiate()
+	card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
+	service.present_object(preview, inst, template, uid.hash())
 
 
 func _update_clock_display() -> void:
 	# Day 0 (tutorial) is clockless: show the day tag only (TUT).
 	if TutorialService.is_tutorial_active():
 		_hud.set_day_zero()
+		_refresh_yuyu_presence()
 		return
 	_hud.set_day(DayClock.get_day(), DayClock.TOTAL_DAYS)
 	_hud.set_time(DayClock.get_hour(), DayClock.get_minute())
+
+
+## Yuyu stands in the shop on the steps whose data lists him (npcs: ["yuyu"]);
+## he is gone by the finale — the empty shop IS the story beat (TUT).
+func _refresh_yuyu_presence() -> void:
+	if _yuyu_sprite == null:
+		return
+	var step := TutorialService.current_step()
+	_yuyu_sprite.visible = (
+		TutorialService.is_tutorial_active()
+		and ModelUtils.as_string(step.get("space")) == "SHOP"
+		and ModelUtils.as_string_array(step.get("npcs")).has("yuyu")
+	)
+
+
+## Places the placeholder Yuyu sprite beside the visitor spot, mirroring the
+## door-visitor presentation. Presentation only.
+func _create_yuyu_sprite() -> void:
+	if _visitor == null:
+		return
+	_yuyu_sprite = _visitor.duplicate() as Sprite3D
+	_yuyu_sprite.name = "YuyuNpc"
+	_yuyu_sprite.texture = YUYU_PORTRAIT
+	_yuyu_sprite.visible = false
+	add_child(_yuyu_sprite)
+	_yuyu_sprite.transform = _visitor.transform
+	_yuyu_sprite.translate(Vector3(1.4, 0.0, 0.0))
 
 
 # --- HUD intent ---------------------------------------------------------
@@ -258,7 +349,29 @@ func _on_workbench_pressed() -> void:
 	EventBus.restoration_opened.emit(GameState.save_state.loop.restore_target_uid)
 
 
+## Top-bar card click on an UNRESTORED artifact: load exactly that piece onto
+## the bench and open restoration on it.
+func _on_unrestored_card_selected(uid: String) -> void:
+	GameState.save_state.loop.restore_target_uid = uid
+	_on_workbench_pressed()
+
+
+## Top-bar card click on a RESTORED artifact: open the spin/zoom 3D viewer
+## (viewing only — clicking outside the model exits).
+func _on_restored_card_selected(uid: String) -> void:
+	if _artifact_viewer == null:
+		_artifact_viewer = ArtifactViewer.new()
+		add_child(_artifact_viewer)
+		_artifact_viewer.closed.connect(func() -> void: _set_interactables_enabled(true))
+	_set_interactables_enabled(false)
+	_artifact_viewer.open(uid)
+
+
 func _on_journal_pressed() -> void:
+	# Day 0 ending (TUT): on the finale step, touching the journal triggers the
+	# blackout into Day 1 instead of opening the book.
+	if TutorialService.run_finale():
+		return
 	# The journal is the book rendered in its own viewport overlay. Opening it covers
 	# the shop; it closes via Esc, the Close button, or clicking off the book.
 	_set_interactables_enabled(false)
@@ -340,10 +453,13 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	var biased_cfg := event_cfg
 	if not is_free_daily:
 		biased_cfg = AylaService.get_biased_delivery_config(event_cfg)
-	# Day 0 (TUT): the taught batch is a random COMMON artifact (the generator also
-	# limits its conditions to the tutorial's grime+dust whitelist).
+	# Day 0 (TUT): the taught batch is EXACTLY ONE random common artifact carrying
+	# both whitelisted conditions (the generator constrains the pool and stamps
+	# the grime+dust whitelist on the instance).
 	if TutorialService.is_tutorial_active():
 		biased_cfg.rarity_weights = {ModelEnums.rarity_name(ModelEnums.Rarity.WHITE): 1.0}
+		biased_cfg.batch_min = 1
+		biased_cfg.batch_max = 1
 	var extras := EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
 
 	var generator := DeliveryGenerator.new(repo, GameState)

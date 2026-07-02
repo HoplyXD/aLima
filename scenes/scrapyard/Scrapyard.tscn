@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://c8g1y868fsx8g" path="res://assets/3d Assets/Scrapyard/scrapyard.glb" id="4_map"]
 [ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="5_ayla"]
 [ext_resource type="PackedScene" uid="uid://bqjvxv1p5t2cc" path="res://scenes/scrapyard/ayla_handoff_screen.tscn" id="6_handoff"]
+[ext_resource type="PackedScene" path="res://scenes/travel/tricycle.tscn" id="7_tricycle"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(46, 0.1, 40)
@@ -107,6 +108,9 @@ use_proximity = true
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Anchors/DoorReturn" unique_id=2013270549]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 shape = SubResource("BoxShape3D_door_return")
+
+[node name="Tricycle" parent="Anchors" instance=ExtResource("7_tricycle")]
+transform = Transform3D(0.7071, 0, -0.7071, 0, 1, 0, 0.7071, 0, 0.7071, -4, 0, 3)
 
 [node name="AylaAnchor" type="Marker3D" parent="Anchors" unique_id=1478725153]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 1)
