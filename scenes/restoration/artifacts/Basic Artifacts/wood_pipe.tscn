@@ -58,7 +58,6 @@ uv2_tiling = 2.0
 
 [node name="DustOverlay" parent="." unique_id=1961040203 instance=ExtResource("4_iah84")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("8_b6n8a")
 opacity = 0.3
@@ -78,7 +77,6 @@ uv2_tiling = 2.0
 
 [node name="GrimeOverlay" parent="." unique_id=1669138805 instance=ExtResource("4_iah84")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("9_grime")
 condition_id = "dirt"

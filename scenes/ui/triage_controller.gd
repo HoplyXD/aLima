@@ -713,11 +713,28 @@ func _on_confirm() -> void:
 		elif not _state.within_capacity():
 			_show_validation("Over capacity. Recycle more items.")
 		return
+	# Day 0 (TUT): the lesson IS the trade-off — exactly one kept, one recycled.
+	# Keeping both or recycling both doesn't commit.
+	if TutorialService.is_tutorial_active() and not _tutorial_split_is_valid():
+		_show_validation("Keep one and recycle the other — Yuyu's orders.")
+		return
 	if _service.apply_triage(_state):
 		if _is_free_daily:
 			GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
 			SaveService.save_game()
 		close()
+
+
+## Day 0 rule: with the taught two-piece batch, exactly one item is kept and one
+## recycled. (Falls back to true for other batch sizes so nothing can dead-end.)
+func _tutorial_split_is_valid() -> bool:
+	if _state.instances.size() != 2:
+		return true
+	var kept := 0
+	for inst in _state.instances:
+		if _state.decisions.get(inst.uid, TriageState.Decision.UNDECIDED) == TriageState.Decision.KEEP:
+			kept += 1
+	return kept == 1
 
 
 # --- List-view fallback (keyboard/controller/touch parity) -------------------

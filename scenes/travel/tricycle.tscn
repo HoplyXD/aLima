@@ -1,18 +1,40 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/travel/tricycle_interactable.gd" id="1_tricycle"]
 
-[sub_resource type="BoxMesh" id="Mesh_trike_body"]
-size = Vector3(1.2, 0.9, 2.0)
+[sub_resource type="BoxMesh" id="Mesh_trike_sidecar"]
+size = Vector3(0.9, 0.7, 1.5)
+
+[sub_resource type="BoxMesh" id="Mesh_trike_bike"]
+size = Vector3(0.22, 0.5, 1.9)
+
+[sub_resource type="CylinderMesh" id="Mesh_trike_wheel"]
+top_radius = 0.32
+bottom_radius = 0.32
+height = 0.14
 
 [sub_resource type="BoxMesh" id="Mesh_trike_roof"]
-size = Vector3(1.1, 0.08, 1.4)
+size = Vector3(1.7, 0.06, 1.7)
 
-[sub_resource type="StandardMaterial3D" id="Mat_trike"]
+[sub_resource type="CylinderMesh" id="Mesh_trike_pole"]
+top_radius = 0.03
+bottom_radius = 0.03
+height = 1.0
+
+[sub_resource type="BoxMesh" id="Mesh_trike_handlebar"]
+size = Vector3(0.6, 0.06, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="Mat_trike_red"]
 albedo_color = Color(0.85, 0.25, 0.2, 1)
 
+[sub_resource type="StandardMaterial3D" id="Mat_trike_dark"]
+albedo_color = Color(0.15, 0.15, 0.17, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_trike_roof"]
+albedo_color = Color(0.95, 0.85, 0.4, 1)
+
 [sub_resource type="BoxShape3D" id="Shape_trike"]
-size = Vector3(2.2, 1.6, 3.0)
+size = Vector3(2.2, 1.8, 2.6)
 
 [node name="Tricycle" type="Area3D"]
 collision_layer = 4
@@ -22,16 +44,51 @@ prompt_text = "Ride the tricycle"
 proximity_prompt_text = "Press E to ride the tricycle"
 use_proximity = true
 
-[node name="Body" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-mesh = SubResource("Mesh_trike_body")
-surface_material_override/0 = SubResource("Mat_trike")
+[node name="Sidecar" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.65, 0.1)
+mesh = SubResource("Mesh_trike_sidecar")
+surface_material_override/0 = SubResource("Mat_trike_red")
+
+[node name="Bike" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.75, 0)
+mesh = SubResource("Mesh_trike_bike")
+surface_material_override/0 = SubResource("Mat_trike_red")
+
+[node name="Handlebar" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.1, -0.85)
+mesh = SubResource("Mesh_trike_handlebar")
+surface_material_override/0 = SubResource("Mat_trike_dark")
+
+[node name="WheelFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0.35, 0.32, -0.85)
+mesh = SubResource("Mesh_trike_wheel")
+surface_material_override/0 = SubResource("Mat_trike_dark")
+
+[node name="WheelBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0.35, 0.32, 0.85)
+mesh = SubResource("Mesh_trike_wheel")
+surface_material_override/0 = SubResource("Mat_trike_dark")
+
+[node name="WheelSidecar" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -0.95, 0.32, 0.4)
+mesh = SubResource("Mesh_trike_wheel")
+surface_material_override/0 = SubResource("Mat_trike_dark")
+
+[node name="RoofPoleFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.5, -0.6)
+mesh = SubResource("Mesh_trike_pole")
+surface_material_override/0 = SubResource("Mat_trike_dark")
+
+[node name="RoofPoleBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.5, 0.75)
+mesh = SubResource("Mesh_trike_pole")
+surface_material_override/0 = SubResource("Mat_trike_dark")
 
 [node name="Roof" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 2.02, 0.05)
 mesh = SubResource("Mesh_trike_roof")
-surface_material_override/0 = SubResource("Mat_trike")
+surface_material_override/0 = SubResource("Mat_trike_roof")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 0.9, 0)
 shape = SubResource("Shape_trike")

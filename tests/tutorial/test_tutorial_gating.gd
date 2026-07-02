@@ -97,7 +97,7 @@ func test_advance_to_rejects_unknown_step() -> void:
 
 func test_step_order_follows_authored_script() -> void:
 	assert_eq(TutorialService.first_step_id(), "intro_greeting")
-	assert_eq(TutorialService.next_step_id("intro_greeting"), "forage_scrap")
+	assert_eq(TutorialService.next_step_id("intro_greeting"), "head_inside")
 	assert_eq(TutorialService.next_step_id("journal_finale"), "", "Last step has no successor")
 	assert_eq(TutorialService.next_step_id("bogus"), "")
 

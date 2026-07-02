@@ -28,11 +28,11 @@ func _arm_fresh_save() -> void:
 	LoopController.begin_session()
 
 
-func test_space_change_completes_the_greeting_step() -> void:
+func test_scrap_handoff_completes_the_greeting_step() -> void:
 	_arm_fresh_save()
 	assert_eq(TutorialService.current_step_id(), "intro_greeting")
-	SpaceManager.space_changed.emit(SpaceManager.Space.YARD)
-	assert_eq(TutorialService.current_step_id(), "forage_scrap")
+	EventBus.scrap_submitted.emit({"white": 1})
+	assert_eq(TutorialService.current_step_id(), "head_inside")
 
 
 func test_wrong_signal_does_not_advance() -> void:
@@ -43,8 +43,9 @@ func test_wrong_signal_does_not_advance() -> void:
 
 func test_wrong_space_does_not_advance() -> void:
 	_arm_fresh_save()
-	SpaceManager.space_changed.emit(SpaceManager.Space.SHOP)
-	assert_eq(TutorialService.current_step_id(), "intro_greeting")
+	TutorialService.advance_to("head_inside")
+	SpaceManager.space_changed.emit(SpaceManager.Space.MALL)
+	assert_eq(TutorialService.current_step_id(), "head_inside")
 
 
 func test_signals_are_ignored_outside_the_tutorial() -> void:
@@ -56,8 +57,8 @@ func test_signals_are_ignored_outside_the_tutorial() -> void:
 
 func test_forage_and_triage_chain_grants_starter_tools() -> void:
 	_arm_fresh_save()
-	SpaceManager.space_changed.emit(SpaceManager.Space.YARD)
 	EventBus.scrap_submitted.emit({"white": 2})
+	SpaceManager.space_changed.emit(SpaceManager.Space.SHOP)
 	assert_eq(TutorialService.current_step_id(), "triage_delivery")
 
 	assert_false(
@@ -89,8 +90,8 @@ func test_step_grants_are_idempotent_on_resume() -> void:
 
 func test_full_signal_chain_reaches_the_finale() -> void:
 	_arm_fresh_save()
-	SpaceManager.space_changed.emit(SpaceManager.Space.YARD)
-	EventBus.scrap_submitted.emit({})
+	EventBus.scrap_submitted.emit({})  # grab scrap + hand to Ayla
+	SpaceManager.space_changed.emit(SpaceManager.Space.SHOP)  # head inside
 	EventBus.triage_completed.emit([] as Array[String], [] as Array[String])
 	EventBus.restoration_opened.emit("uid_1")
 	EventBus.restoration_completed.emit("uid_1", 1.0, "soft_brush")

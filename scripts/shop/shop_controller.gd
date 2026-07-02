@@ -144,10 +144,15 @@ func _ready() -> void:
 
 	# Day 0 (TUT): the tutorial glue presents Yuyu's dialogue and hint arrows on
 	# top of the normal shop, and Yuyu himself stands in the room per step data.
-	# Created only while the tutorial is active.
+	# Created only while the tutorial is active; outside it the hand-placed node
+	# stays hidden (he vanished with Day 0).
 	if TutorialService.is_tutorial_active():
 		_create_tutorial_glue()
 		_create_yuyu_sprite()
+	else:
+		var yuyu_node := get_node_or_null("YuyuNpc") as Sprite3D
+		if yuyu_node != null:
+			yuyu_node.visible = false
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -280,9 +285,14 @@ func _refresh_yuyu_presence() -> void:
 	)
 
 
-## Places the placeholder Yuyu sprite beside the visitor spot, mirroring the
-## door-visitor presentation. Presentation only.
+## Resolves the hand-placed Yuyu node (Shop.tscn/YuyuNpc — move him in the
+## editor); falls back to a runtime duplicate beside the visitor spot when the
+## scene lacks one. Presentation only; step data decides when he is visible.
 func _create_yuyu_sprite() -> void:
+	_yuyu_sprite = get_node_or_null("YuyuNpc") as Sprite3D
+	if _yuyu_sprite != null:
+		_yuyu_sprite.visible = false
+		return
 	if _visitor == null:
 		return
 	_yuyu_sprite = _visitor.duplicate() as Sprite3D
@@ -446,21 +456,26 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	# Suspicious Antique) before generating the batch so their modifiers and injected
 	# instances are included. Scrap bias is layered on top of the event-adjusted weights
 	# and only touches rarity weights, so event batch-size/storage effects remain intact.
-	EventDirector.roll_morning_event(GameState.save_state.loop.current_day)
+	# Day 0 (TUT) never rolls events: their injected extras bypass the tutorial's
+	# rarity/condition constraints (that's where the odd uncommon artifact came from).
+	var tutorial_active := TutorialService.is_tutorial_active()
+	if not tutorial_active:
+		EventDirector.roll_morning_event(GameState.save_state.loop.current_day)
 	var event_cfg := EventDirector.modify_delivery_config(repo.get_delivery_config())
 	# The daily free drop uses the event-adjusted base config; only scrap-sort
 	# returns get the scrap-bias layer applied.
 	var biased_cfg := event_cfg
 	if not is_free_daily:
 		biased_cfg = AylaService.get_biased_delivery_config(event_cfg)
-	# Day 0 (TUT): the taught batch is EXACTLY ONE random common artifact carrying
-	# both whitelisted conditions (the generator constrains the pool and stamps
-	# the grime+dust whitelist on the instance).
-	if TutorialService.is_tutorial_active():
+	# Day 0 (TUT): the taught batch is EXACTLY TWO random common artifacts carrying
+	# both whitelisted conditions. Yuyu tells you to keep one and recycle the other.
+	if tutorial_active:
 		biased_cfg.rarity_weights = {ModelEnums.rarity_name(ModelEnums.Rarity.WHITE): 1.0}
-		biased_cfg.batch_min = 1
-		biased_cfg.batch_max = 1
-	var extras := EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
+		biased_cfg.batch_min = 2
+		biased_cfg.batch_max = 2
+	var extras: Array[ObjectInstance] = []
+	if not tutorial_active:
+		extras = EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(

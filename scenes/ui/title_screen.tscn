@@ -158,11 +158,12 @@ theme_override_constants/separation = 20
 [node name="Title" type="Label" parent="NameMenu" unique_id=1777390970]
 layout_mode = 2
 theme_override_font_sizes/font_size = 48
-text = "What's your name?"
+text = "New Game"
 
-[node name="Hint" type="Label" parent="NameMenu" unique_id=1777390971]
+[node name="NameLabel" type="Label" parent="NameMenu" unique_id=1777390972]
 layout_mode = 2
-text = "Your uncle Yuyu is expecting you on Panay."
+theme_override_font_sizes/font_size = 30
+text = "Name"
 
 [node name="NameEdit" type="LineEdit" parent="NameMenu" unique_id=129268526]
 custom_minimum_size = Vector2(200, 0)
@@ -170,10 +171,33 @@ layout_mode = 2
 placeholder_text = "Your name"
 max_length = 16
 
-[node name="Confirm" type="Button" parent="NameMenu" unique_id=1266561068]
+[node name="SeedLabel" type="Label" parent="NameMenu" unique_id=1777390973]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Seed"
+
+[node name="SeedHint" type="Label" parent="NameMenu" unique_id=1777390974]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Same seed = same world. Leave blank for random."
+
+[node name="SeedRow" type="HBoxContainer" parent="NameMenu" unique_id=639529966]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SeedEdit" type="LineEdit" parent="NameMenu/SeedRow" unique_id=129268524]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "12345"
+
+[node name="Randomize" type="Button" parent="NameMenu/SeedRow" unique_id=129268525]
+layout_mode = 2
+text = "Randomize"
+
+[node name="Start" type="Button" parent="NameMenu" unique_id=1266561066]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
-text = "Continue"
+text = "Start"
 
 [node name="Back" type="Button" parent="NameMenu" unique_id=1266561069]
 custom_minimum_size = Vector2(0, 70)
@@ -181,52 +205,6 @@ layout_mode = 2
 text = "Back"
 
 [node name="Status" type="Label" parent="NameMenu" unique_id=956113389]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.65, 0.65, 1)
-autowrap_mode = 3
-
-[node name="SeedMenu" type="VBoxContainer" parent="." unique_id=1082419699]
-visible = false
-layout_mode = 0
-offset_left = 50.0
-offset_top = 540.0
-offset_right = 500.0
-offset_bottom = 944.0
-theme_override_constants/separation = 20
-
-[node name="Title" type="Label" parent="SeedMenu" unique_id=1777390968]
-layout_mode = 2
-theme_override_font_sizes/font_size = 48
-text = "Enter a Seed"
-
-[node name="Hint" type="Label" parent="SeedMenu" unique_id=1777390969]
-layout_mode = 2
-text = "Same seed = same world. Leave blank for random."
-
-[node name="SeedRow" type="HBoxContainer" parent="SeedMenu" unique_id=639529966]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="SeedEdit" type="LineEdit" parent="SeedMenu/SeedRow" unique_id=129268524]
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 2
-placeholder_text = "12345"
-
-[node name="Randomize" type="Button" parent="SeedMenu/SeedRow" unique_id=129268525]
-layout_mode = 2
-text = "Randomize"
-
-[node name="Start" type="Button" parent="SeedMenu" unique_id=1266561066]
-custom_minimum_size = Vector2(0, 90)
-layout_mode = 2
-text = "Start"
-
-[node name="Back" type="Button" parent="SeedMenu" unique_id=1266561067]
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-text = "Back"
-
-[node name="Status" type="Label" parent="SeedMenu" unique_id=956113386]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.65, 0.65, 1)
 autowrap_mode = 3

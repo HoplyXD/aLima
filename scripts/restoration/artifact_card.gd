@@ -33,13 +33,17 @@ func _ready() -> void:
 ## artifact object (model + condition decals).
 func configure(uid: String, display_name: String, rarity_color: Color, previews_on: bool) -> void:
 	_uid = uid
-	_name_label.text = display_name
-	_name_label.add_theme_color_override("font_color", rarity_color)
+	if _name_label != null:
+		_name_label.text = display_name
+		_name_label.add_theme_color_override("font_color", rarity_color)
 	tooltip_text = display_name
-	_preview_container.visible = previews_on
-	_swatch.visible = not previews_on
+	if _preview_container != null:
+		_preview_container.visible = previews_on
+	if _swatch != null:
+		_swatch.visible = not previews_on
+		if not previews_on:
+			_swatch.color = rarity_color
 	if not previews_on:
-		_swatch.color = rarity_color
 		set_process(false)
 
 
@@ -47,6 +51,8 @@ func configure(uid: String, display_name: String, rarity_color: Color, previews_
 ## the preview viewport. It auto-spins so the player can see every decal — i.e. what
 ## still needs restoring — before choosing it.
 func attach_preview(obj: Node3D) -> void:
+	if _mesh_holder == null:
+		return
 	for child in _mesh_holder.get_children():
 		child.queue_free()
 	# Scale the holder (not the object) — the object resets its own basis when it

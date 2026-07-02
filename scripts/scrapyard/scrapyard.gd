@@ -23,6 +23,9 @@ const INTERACTABLE_SCRIPT := preload("res://scripts/shop/interactable_3d.gd")
 const PHONE_SCENE := preload("res://scenes/ui/phone.tscn")
 const BOOK_SCENE := preload("res://scenes/Book/BookViewport.tscn")
 const STORAGE_SCREEN_SCENE := preload("res://scenes/ui/storage_screen.tscn")
+const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
+const ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const INSPECTION_OVERLAY_SCENE := preload("res://scenes/ui/item_inspection_overlay.tscn")
 
 ## Drop a Blender-exported .glb scene here to replace the placeholder MapRoot
 ## geometry. The anchors and collision live outside MapRoot and stay intact.
@@ -69,6 +72,7 @@ var _phone: Phone
 var _book_viewport: BookViewport
 var _storage_screen: StorageScreen
 var _storage_interactable: Interactable3D
+var _inspection_overlay: ItemInspectionOverlay
 
 const YUYU_PORTRAIT := preload("res://assets/Characters/Uncle.png")
 
@@ -110,15 +114,32 @@ func _ready() -> void:
 	if _hud != null:
 		_hud.phone_pressed.connect(_open_phone_overlay)
 		_hud.journal_pressed.connect(_open_journal_overlay)
+		_hud.item_inspected.connect(_on_item_inspected)
 	EventBus.day_changed.connect(_on_yard_day_changed)
 
+	# A fresh save now opens in the YARD (Day 0 starts at the gate with Yuyu), so
+	# the yard must start the session too — begin_session() is idempotent (the
+	# DayClock.running guard skips it on ordinary shop->yard round trips).
+	LoopController.begin_session()
+
 	# Day 0 (TUT): the yard hosts the forage/hand-off steps with the tutorial
-	# glue on top, and the clock stays off (time starts on Day 1).
+	# glue on top, and the clock stays off (time starts on Day 1). Outside the
+	# tutorial the hand-placed Yuyu node stays hidden (he vanished with Day 0).
 	if TutorialService.is_tutorial_active():
 		_create_tutorial_glue()
 	else:
+		var yuyu_node := get_node_or_null("Anchors/YuyuNpc") as Sprite3D
+		if yuyu_node != null:
+			yuyu_node.visible = false
 		# Keep the day clock running; the shop will resume driving it on return.
 		DayClock.running = true
+
+	_inspection_overlay = INSPECTION_OVERLAY_SCENE.instantiate()
+	_inspection_overlay.closed.connect(_on_yard_overlay_closed)
+	if _hud != null:
+		_hud.add_child(_inspection_overlay)
+	else:
+		add_child(_inspection_overlay)
 
 
 func _process(delta: float) -> void:
@@ -146,6 +167,9 @@ func _spawn_player() -> void:
 		_player.scrap_prompt_changed.connect(_hud.set_prompt)
 	if _player_spawn != null:
 		_player.global_position = _player_spawn.global_position
+		# The spawn marker's yaw decides where the player faces on arrival, so the
+		# designer can aim the Day 0 opening shot at Yuyu/the yard in the editor.
+		_player.global_rotation.y = _player_spawn.global_rotation.y
 
 
 func _create_tutorial_glue() -> TutorialGlue:
@@ -165,9 +189,14 @@ func _create_tutorial_glue() -> TutorialGlue:
 	return glue
 
 
-## Places the placeholder Yuyu (Uncle.png) beside Ayla for the Day 0 forage
-## lesson, mirroring her sprite setup. Presentation only.
+## Resolves the hand-placed Yuyu node (Anchors/YuyuNpc — move him in the
+## editor); falls back to a runtime duplicate beside Ayla when the scene lacks
+## one. Presentation only; step data decides when he is visible.
 func _create_yuyu_sprite() -> void:
+	_yuyu_sprite = get_node_or_null("Anchors/YuyuNpc") as Sprite3D
+	if _yuyu_sprite != null:
+		_yuyu_sprite.visible = false
+		return
 	if _ayla_sprite == null:
 		return
 	_yuyu_sprite = _ayla_sprite.duplicate() as Sprite3D
@@ -559,13 +588,15 @@ func _on_scrap_collected(_rarity: String) -> void:
 func _refresh_hud_hotbar() -> void:
 	if _hud == null:
 		return
-	_hud.set_inventory(GameState.save_state.loop.scrap_pool, _restored_inventory_entries())
+	var scrap_total := _total_scrap_count()
+	_hud.set_inventory(scrap_total, _restored_inventory_entries())
 	_hud.set_quest_count(_count_seated_fragments())
 
 
-## Restored artifacts shown in the carry inventory ({display_name, color}).
-func _restored_inventory_entries() -> Array:
-	var out: Array = []
+## Restored artifacts shown in the carry inventory as rich dictionaries with
+## a 3D preview, display name, glow color, and description.
+func _restored_inventory_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	var repo := DataRepository.singleton()
 	for raw in GameState.save_state.loop.inventory:
 		if not (raw is Dictionary):
@@ -575,16 +606,29 @@ func _restored_inventory_entries() -> Array:
 			continue
 		var template := repo.get_template(inst.template_id)
 		var rarity: int = template.base_rarity if template != null else 0
+		var color := GlowMapper.get_instance_glow_color(rarity, inst.is_carrier, false)
+		var preview := _create_preview_for_instance(inst)
 		out.append(
 			{
+				"preview": preview,
 				"display_name": template.display_name if template != null else inst.template_id,
-				"color":
-				ScrapyardHud.RARITY_COLORS.get(
-					ModelEnums.rarity_name(rarity), ScrapyardHud.RARITY_COLORS["white"]
-				),
+				"color": color,
+				"description": template.description if template != null else "",
+				"is_scrap": false,
 			}
 		)
 	return out
+
+
+func _create_preview_for_instance(inst: ObjectInstance) -> RestorationObject3D:
+	var repo := DataRepository.singleton()
+	var template := repo.get_template(inst.template_id)
+	var scene: PackedScene = ArtifactScenes.scene_for(inst.template_id, ARTIFACT_OBJECT_SCENE)
+	var obj: RestorationObject3D = scene.instantiate()
+	var service := RestorationService.new()
+	var seed := inst.uid.hash() ^ (GameState.loop_index * 104729)
+	service.present_object(obj, inst, template, seed)
+	return obj
 
 
 func _count_seated_fragments() -> int:
@@ -630,32 +674,12 @@ func _on_yard_day_changed(_day: int) -> void:
 ## Outdoor storage crate beside the shop door: all owned artifacts live here;
 ## interacting opens the same Storage screen the shop's delivery box uses, so
 ## the player can pick what to bring to the bench. Scrap can sit in storage too
-## but never reaches the bench — Ayla has to sort it first.
+## but never reaches the bench — Ayla has to sort it first. The crate is a
+## hand-placed scene node (Anchors/StorageCrate — move it in the editor).
 func _setup_outdoor_storage() -> void:
-	var area := Area3D.new()
-	area.name = "OutdoorStorage"
-	area.set_script(INTERACTABLE_SCRIPT)
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(1.4, 1.0, 1.0)
-	mesh.mesh = box
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.55, 0.4, 0.24)
-	mesh.material_override = material
-	mesh.position = Vector3(0, 0.5, 0)
-	area.add_child(mesh)
-	var shape := CollisionShape3D.new()
-	var shape_box := BoxShape3D.new()
-	shape_box.size = Vector3(2.2, 1.8, 2.0)
-	shape.shape = shape_box
-	shape.position = Vector3(0, 0.9, 0)
-	area.add_child(shape)
-	add_child(area)
-	area.global_position = _door_return.global_position + Vector3(2.4, 0.0, 0.4)
-	_storage_interactable = area as Interactable3D
-	_storage_interactable.prompt_text = "Open storage"
-	_storage_interactable.proximity_prompt_text = "Press E to open storage"
-	_storage_interactable.use_proximity = true
+	_storage_interactable = get_node_or_null("Anchors/StorageCrate") as Interactable3D
+	if _storage_interactable == null:
+		return
 	_storage_interactable.activated.connect(_open_storage_overlay)
 	if _hud != null:
 		_storage_interactable.prompt_changed.connect(_hud.set_prompt)
@@ -695,6 +719,16 @@ func _on_yard_overlay_closed() -> void:
 
 func _on_handoff_closed() -> void:
 	_exit_overlay()
+
+
+func _on_item_inspected(_slot_index: int, data: Dictionary) -> void:
+	_open_inspection_overlay(data)
+
+
+func _open_inspection_overlay(data: Dictionary) -> void:
+	if _inspection_overlay != null:
+		_inspection_overlay.open(data)
+		_enter_overlay()
 
 
 func _on_dialogue_finished() -> void:

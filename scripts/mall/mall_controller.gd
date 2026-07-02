@@ -21,6 +21,8 @@ var _tutorial_glue: TutorialGlue
 
 func _ready() -> void:
 	get_viewport().physics_object_picking = true
+	# Safe re-entry point (idempotent): a mid-tutorial save can resume here.
+	LoopController.begin_session()
 	_spawn_player()
 	_spawn_buyers()
 	if _hud != null and _tricycle != null:
@@ -42,6 +44,7 @@ func _spawn_player() -> void:
 	add_child(_player)
 	if _player_spawn != null:
 		_player.global_position = _player_spawn.global_position
+		_player.global_rotation.y = _player_spawn.global_rotation.y
 
 
 ## One buyer per pending meet at this destination, placed on the spawn markers

@@ -2,21 +2,35 @@
   "schema_version": 1,
   "config": {
     "sort_hours": 0,
-    "starter_tool_conditions": ["dust", "dirt"],
-    "artifact_pool": { "rarity": "white" },
-    "allowed_conditions": ["dust", "dirt"],
+    "starter_tool_conditions": [
+      "dust",
+      "dirt"
+    ],
+    "artifact_pool": {
+      "rarity": "white"
+    },
+    "allowed_conditions": [
+      "dust",
+      "dirt"
+    ],
     "tutorial_buyer_id": "mysterious_buyer",
     "buyer_destination_id": "mall"
   },
   "steps": [
     {
       "id": "intro_greeting",
-      "space": "SHOP",
-      "npcs": ["yuyu"],
+      "space": "YARD",
+      "npcs": [
+        "yuyu"
+      ],
       "dialogue": [
         {
+          "speaker": "inner",
+          "text": "I'm finally here in Panay Island... and finally I get to meet with Uncle Yuyu."
+        },
+        {
           "speaker": "yuyu",
-          "text": "{player}! You made it to Panay in one piece. Welcome to my little junkshop."
+          "text": "{player}! You made it! Welcome to my little junkshop."
         },
         {
           "speaker": "yuyu",
@@ -24,47 +38,77 @@
         },
         {
           "speaker": "yuyu",
-          "text": "Come - step out the front door with me. The scrapyard is where every find begins."
+          "text": "Walk around the scrapyard and grab a piece of scrap. The shinier the tier, the better the odds of a real find."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "Head out the front door to the scrapyard.", "anchor": "door" },
-      "complete_on": { "signal": "space_changed", "space": "YARD" }
+      "hint": {
+        "speaker": "yuyu",
+        "text": "Grab a piece of scrap, then hand it to Ayla.",
+        "anchor": "scrap"
+      },
+      "complete_on": {
+        "signal": "scrap_submitted"
+      }
     },
     {
-      "id": "forage_scrap",
+      "id": "head_inside",
       "space": "YARD",
-      "npcs": ["yuyu"],
+      "npcs": [
+        "yuyu"
+      ],
       "dialogue": [
         {
           "speaker": "yuyu",
-          "text": "See those piles? Walk up to a piece of scrap and grab it. The shinier the tier, the better the odds of a real find."
-        },
-        {
-          "speaker": "yuyu",
-          "text": "When your hands are full, bring the scrap to Ayla over there. She hauls and sorts for me - best eyes on the island."
+          "text": "Good eye! Ayla will have that sorted in no time — she hauls and sorts for me, best eyes on the island. Let's head inside the shop."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "Forage some scrap, then hand it to Ayla.", "anchor": "scrap" },
-      "complete_on": { "signal": "scrap_submitted" }
+      "hint": {
+        "speaker": "yuyu",
+        "text": "Head inside the shop.",
+        "anchor": "door"
+      },
+      "complete_on": {
+        "signal": "space_changed",
+        "space": "SHOP"
+      }
     },
     {
       "id": "triage_delivery",
       "space": "SHOP",
-      "npcs": ["yuyu"],
+      "npcs": [
+        "yuyu"
+      ],
       "dialogue": [
         {
           "speaker": "yuyu",
-          "text": "Ayla will knock when the batch is sorted. Storage is small, so keep only what looks promising - the rest goes back to the recycler."
+          "text": "Ayla sorted your scrap into two pieces. Storage is small, so keep only one — the other goes back to the recycler."
+        },
+        {
+          "speaker": "yuyu",
+          "text": "Pick the one that looks more promising. Don't worry, you'll get plenty more chances to find treasures."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "Answer the door and sort the delivery: Keep or Recycle.", "anchor": "door" },
-      "complete_on": { "signal": "triage_completed" }
+      "hint": {
+        "speaker": "yuyu",
+        "text": "Answer the door and sort the delivery: Keep or Recycle.",
+        "anchor": "door"
+      },
+      "complete_on": {
+        "signal": "triage_completed"
+      }
     },
     {
       "id": "restoration_intro",
       "space": "SHOP",
-      "npcs": ["yuyu"],
-      "grants": { "tools_for_conditions": ["dust", "dirt"] },
+      "npcs": [
+        "yuyu"
+      ],
+      "grants": {
+        "tools_for_conditions": [
+          "dust",
+          "dirt"
+        ]
+      },
       "dialogue": [
         {
           "speaker": "yuyu",
@@ -75,47 +119,79 @@
           "text": "Sit at the workbench and let's wake this piece up."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "Open the workbench to start restoring.", "anchor": "workbench" },
-      "complete_on": { "signal": "restoration_opened" }
+      "hint": {
+        "speaker": "yuyu",
+        "text": "Open the workbench to start restoring.",
+        "anchor": "workbench"
+      },
+      "complete_on": {
+        "signal": "restoration_opened"
+      }
     },
     {
       "id": "restore_artifact",
       "space": "SHOP",
-      "npcs": ["yuyu"],
+      "npcs": [
+        "yuyu"
+      ],
       "dialogue": [],
-      "hint": { "speaker": "yuyu", "text": "Pick the right tool for each condition and work the surface clean.", "anchor": "tool_sidebar" },
-      "complete_on": { "signal": "restoration_completed" }
+      "hint": {
+        "speaker": "yuyu",
+        "text": "Pick the right tool for each condition and work the surface clean.",
+        "anchor": "tool_sidebar"
+      },
+      "complete_on": {
+        "signal": "restoration_completed"
+      }
     },
     {
       "id": "scan_artifact",
       "space": "SHOP",
-      "npcs": ["yuyu"],
+      "npcs": [
+        "yuyu"
+      ],
       "dialogue": [
         {
           "speaker": "yuyu",
           "text": "Clean! Now scan it with the phone. The scanner suggests what a thing is - but the final say is always yours, {player}. Never forget that."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "Scan the artifact and set your own verdict.", "anchor": "phone" },
-      "complete_on": { "signal": "scanner_verdict_committed" }
+      "hint": {
+        "speaker": "yuyu",
+        "text": "Scan the artifact and set your own verdict.",
+        "anchor": "phone"
+      },
+      "complete_on": {
+        "signal": "scanner_verdict_committed"
+      }
     },
     {
       "id": "list_and_sell",
       "space": "SHOP",
-      "npcs": ["yuyu"],
+      "npcs": [
+        "yuyu"
+      ],
       "dialogue": [
         {
           "speaker": "yuyu",
           "text": "Good judgment. List it on the marketplace - buyers message you, you haggle, you decide."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "List the artifact on the marketplace and accept a buyer.", "anchor": "phone" },
-      "complete_on": { "signal": "meet_scheduled" }
+      "hint": {
+        "speaker": "yuyu",
+        "text": "List the artifact on the marketplace and accept a buyer.",
+        "anchor": "phone"
+      },
+      "complete_on": {
+        "signal": "meet_scheduled"
+      }
     },
     {
       "id": "ride_to_mall",
       "space": "SHOP",
-      "npcs": ["yuyu"],
+      "npcs": [
+        "yuyu"
+      ],
       "dialogue": [
         {
           "speaker": "yuyu",
@@ -126,52 +202,101 @@
           "text": "Take the tricycle out front. And {player} - whatever you find in this shop, take care of it for me."
         }
       ],
-      "hint": { "speaker": "yuyu", "text": "Head outside to the tricycle.", "anchor": "door" },
-      "complete_on": { "signal": "space_changed", "space": "YARD" }
+      "hint": {
+        "speaker": "yuyu",
+        "text": "Head outside to the tricycle.",
+        "anchor": "door"
+      },
+      "complete_on": {
+        "signal": "space_changed",
+        "space": "YARD"
+      }
     },
     {
       "id": "board_tricycle",
       "space": "YARD",
       "npcs": [],
       "dialogue": [],
-      "hint": { "speaker": "inner", "text": "Ride the tricycle to the mall.", "anchor": "tricycle" },
-      "complete_on": { "signal": "space_changed", "space": "MALL" }
+      "hint": {
+        "speaker": "inner",
+        "text": "Ride the tricycle to the mall.",
+        "anchor": "tricycle"
+      },
+      "complete_on": {
+        "signal": "space_changed",
+        "space": "MALL"
+      }
     },
     {
       "id": "deliver_to_buyer",
       "space": "MALL",
       "npcs": [],
       "dialogue": [],
-      "hint": { "speaker": "inner", "text": "Find the buyer and hand over the artifact.", "anchor": "buyer" },
-      "complete_on": { "signal": "meet_handoff_completed" }
+      "hint": {
+        "speaker": "inner",
+        "text": "Find the buyer and hand over the artifact.",
+        "anchor": "buyer"
+      },
+      "complete_on": {
+        "signal": "meet_handoff_completed"
+      }
     },
     {
       "id": "return_to_shop",
       "space": "MALL",
       "npcs": [],
       "dialogue": [],
-      "hint": { "speaker": "inner", "text": "Take the tricycle back home.", "anchor": "tricycle" },
-      "complete_on": { "signal": "space_changed", "space": "YARD" }
+      "hint": {
+        "speaker": "inner",
+        "text": "Take the tricycle back home.",
+        "anchor": "tricycle"
+      },
+      "complete_on": {
+        "signal": "space_changed",
+        "space": "YARD"
+      }
     },
     {
       "id": "enter_the_shop",
       "space": "YARD",
       "npcs": [],
       "dialogue": [],
-      "hint": { "speaker": "inner", "text": "Head back inside the shop.", "anchor": "door" },
-      "complete_on": { "signal": "space_changed", "space": "SHOP" }
+      "hint": {
+        "speaker": "inner",
+        "text": "Head back inside the shop.",
+        "anchor": "door"
+      },
+      "complete_on": {
+        "signal": "space_changed",
+        "space": "SHOP"
+      }
     },
     {
       "id": "journal_finale",
       "space": "SHOP",
       "npcs": [],
       "dialogue": [
-        { "speaker": "inner", "text": "...Tito Yuyu? Ayla? The shop is empty." },
-        { "speaker": "inner", "text": "He said he had somewhere to be. But his tools are still on the bench..." },
-        { "speaker": "inner", "text": "There's a journal on the table. That wasn't there this morning." }
+        {
+          "speaker": "inner",
+          "text": "...Tito Yuyu? Ayla? The shop is empty."
+        },
+        {
+          "speaker": "inner",
+          "text": "He said he had somewhere to be. But his tools are still on the bench..."
+        },
+        {
+          "speaker": "inner",
+          "text": "There's a journal on the table. That wasn't there this morning."
+        }
       ],
-      "hint": { "speaker": "inner", "text": "Read the journal on the table.", "anchor": "journal" },
-      "complete_on": { "signal": "journal_finale_triggered" }
+      "hint": {
+        "speaker": "inner",
+        "text": "Read the journal on the table.",
+        "anchor": "journal"
+      },
+      "complete_on": {
+        "signal": "journal_finale_triggered"
+      }
     }
   ]
 }

@@ -563,6 +563,9 @@ func load_instance(uid: String) -> void:
 				var restored: Dictionary = _service.decode_overlay_keep(inst.overlay_keep)
 				_object.apply_overlay_keep(restored)
 				_overlay_cache[uid] = restored
+			# Recovery: a save that reloads spotless but still DIRTY (written
+			# before the completion fix) finishes immediately instead of soft-locking.
+			_finish_overlay_artifact(inst)
 	if not (_object.has_method("has_overlays") and _object.has_overlays()):
 		if _object.has_method("build_dust_overlay"):
 			_object.build_dust_overlay(instance_seed)
@@ -1848,16 +1851,7 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 			pct >= AUTO_FINISH_SNAP or (pct >= AUTO_FINISH_NEAR and held_95_s >= AUTO_FINISH_HOLD_S)
 		)
 		if inst != null and inst.state == ModelEnums.ObjState.DIRTY and should_finish:
-			_object.force_clean_overlays(["crack"])
-			var fc: Dictionary = _object.overlay_counts()
-			_service.register_authored_clean(
-				_selected_uid,
-				_selected_tool_id,
-				int(fc.get("total", 0)),
-				int(fc.get("total", 0)),
-				true,
-				_overlay_market_value(inst)
-			)
+			_finish_overlay_artifact(inst, true)
 			_feedback_label.text = "Spotless!"
 		else:
 			var counts: Dictionary = _object.overlay_counts()
@@ -1876,7 +1870,40 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 		if inst2 != null:
 			_refresh(inst2, _service.get_repository().get_template(inst2.template_id))
 	elif result.get("wrong_tool", false):
-		_feedback_label.text = "Wrong tool for that layer — try another."
+		# Recovery: a stroke on an already-spotless surface that is somehow still
+		# DIRTY (e.g. a save written before the completion fix) finishes it now
+		# instead of reporting a wrong tool forever.
+		var stuck := _service.find_instance_by_id(_selected_uid)
+		if (
+			stuck != null
+			and stuck.state == ModelEnums.ObjState.DIRTY
+			and _object.overlay_clean_percent() >= AUTO_FINISH_SNAP
+		):
+			_finish_overlay_artifact(stuck, true)
+			_feedback_label.text = "Spotless!"
+			_refresh(stuck, _service.get_repository().get_template(stuck.template_id))
+		else:
+			_feedback_label.text = "Wrong tool for that layer — try another."
+
+
+## Completes an overlay artifact: counts its conditions BEFORE force-cleaning
+## (clear_condition zeroes each overlay's initial keep, so counting afterwards
+## reads 0 and the CLEAN flip would never fire), wipes the remaining specks, and
+## registers the completed clean (restoration_completed, scanner gate, Day 0
+## step). `force` skips the near-clean check for the auto-finish path.
+func _finish_overlay_artifact(inst: ObjectInstance, force: bool = false) -> void:
+	if inst == null or inst.state != ModelEnums.ObjState.DIRTY:
+		return
+	if not (_object.has_method("has_overlays") and _object.has_overlays()):
+		return
+	if not force and _object.overlay_clean_percent() < AUTO_FINISH_SNAP:
+		return
+	var fc: Dictionary = _object.overlay_counts()
+	var fc_total: int = maxi(1, int(fc.get("total", 0)))
+	_object.force_clean_overlays(["crack"])
+	_service.register_authored_clean(
+		_selected_uid, _selected_tool_id, fc_total, fc_total, true, _overlay_market_value(inst)
+	)
 
 
 ## The coverage-based market value for an authored-overlay artifact, or -1 to leave it unchanged

@@ -125,6 +125,20 @@ func next_step_id(step_id: String) -> String:
 	return _step_ids[index + 1]
 
 
+## The space the game should open into for this save: during Day 0 it is the
+## current (or first) step's authored space, so a fresh save starts at the
+## scrapyard gate and a mid-tutorial save resumes where its step lives.
+func entry_space() -> SpaceManager.Space:
+	if not is_tutorial_active():
+		return SpaceManager.Space.SHOP
+	_ensure_loaded()
+	var step := current_step()
+	if step.is_empty() and not _steps.is_empty():
+		step = _steps[0]
+	var index: int = SpaceManager.Space.keys().find(ModelUtils.as_string(step.get("space")))
+	return (index if index >= 0 else SpaceManager.Space.SHOP) as SpaceManager.Space
+
+
 ## Idempotent session entry: called by LoopController.begin_session() every time
 ## a scene starts while Day 0 is active. Starts at the first step on a fresh
 ## save, or re-announces the persisted step so the new scene can catch up.

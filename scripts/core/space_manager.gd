@@ -47,8 +47,8 @@ func go_to(space: Space) -> void:
 			"SpaceManager.go_to: already in %s" % str(Space.keys()[space]).to_lower()
 		)
 		return
-	if space == Space.SHOP:
-		_on_title = false
+	# Any gameplay space leaves the title (a fresh save can open in the yard).
+	_on_title = false
 	current_space = space
 	_load(SPACE_SCENES[space])
 	space_changed.emit(current_space)
