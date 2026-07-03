@@ -4,10 +4,10 @@ extends EditorScript
 ## Run from the Godot Script editor: open this script, then press the "Run" play button
 ## (or Ctrl+Shift+X). It will export every embedded MeshInstance3D mesh into
 ## assets/3d Assets/Scrapyard/meshes/ and save the scene as
-## scenes/scrapyard/ScrapyardMap.tscn.
+## scenes/locations/scrapyard/ScrapyardMap.tscn.
 
 const GLB_PATH := "res://assets/3d Assets/Scrapyard/scrapyard.glb"
-const TSCN_PATH := "res://scenes/scrapyard/ScrapyardMap.tscn"
+const TSCN_PATH := "res://scenes/locations/scrapyard/ScrapyardMap.tscn"
 const MESH_FOLDER := "res://assets/3d Assets/Scrapyard/meshes/"
 
 

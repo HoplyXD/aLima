@@ -65,7 +65,6 @@ auto_unwrap = true
 
 [node name="DustOverlay" parent="." unique_id=1195122582 instance=ExtResource("4_fqwh3")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_cjr7o")
 condition_texture = ExtResource("9_iy6wf")
 opacity = 0.5
@@ -78,7 +77,6 @@ own_uv_tiling = 7.22
 
 [node name="WaterStainOverlay" parent="." unique_id=348099890 instance=ExtResource("4_fqwh3")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_cjr7o")
 condition_texture = ExtResource("10_sak8r")
 opacity = 1.0
@@ -86,12 +84,11 @@ condition_id = "water_stain"
 layer_order = 35
 coverage_min = 50.0
 coverage_max = 100.0
-use_own_uvs = true
+auto_unwrap = true
 own_uv_tiling = 0.895
 
 [node name="GrimeOverlay" parent="." unique_id=1539316648 instance=ExtResource("4_fqwh3")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_cjr7o")
 condition_texture = ExtResource("11_enxoq")
 opacity = 1.0

@@ -36,9 +36,11 @@ func _record_load(path: String) -> void:
 
 func test_destinations_load_from_data() -> void:
 	var travel := TravelService.new()
-	assert_eq(travel.destinations().size(), 2)
+	assert_eq(travel.destinations().size(), 4)
 	assert_eq(travel.space_for("mall"), SpaceManager.Space.MALL)
 	assert_eq(travel.space_for("shop"), SpaceManager.Space.YARD)
+	assert_eq(travel.space_for("dump_site"), SpaceManager.Space.DUMP_SITE)
+	assert_eq(travel.space_for("archeologist_house"), SpaceManager.Space.ARCHEOLOGIST_HOUSE)
 	assert_eq(travel.space_for("nowhere"), -1)
 
 
@@ -70,7 +72,7 @@ func test_go_to_mall_loads_the_mall_scene() -> void:
 	watch_signals(SpaceManager)
 	SpaceManager.go_to(SpaceManager.Space.MALL)
 	assert_eq(SpaceManager.current_space, SpaceManager.Space.MALL)
-	assert_eq(_loaded_paths, ["res://scenes/locations/Mall.tscn"] as Array[String])
+	assert_eq(_loaded_paths, ["res://scenes/locations/mall/Mall.tscn"] as Array[String])
 	assert_signal_emitted(SpaceManager, "space_changed")
 	# Duplicate transition is guarded.
 	SpaceManager.go_to(SpaceManager.Space.MALL)

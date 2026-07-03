@@ -10,6 +10,16 @@
       "id": "mall",
       "display_name": "Mall",
       "space": "MALL"
+    },
+    {
+      "id": "dump_site",
+      "display_name": "Dump Site",
+      "space": "DUMP_SITE"
+    },
+    {
+      "id": "archeologist_house",
+      "display_name": "Archeologist House",
+      "space": "ARCHEOLOGIST_HOUSE"
     }
   ]
 }

@@ -4,8 +4,8 @@ extends Node3D
 ## buyer NPC per pending meet-in-person sale waiting at the "mall" destination.
 ## Drives the day clock while active (frozen during Day 0 via PAUSE_TUTORIAL).
 
-const PLAYER_SCENE := preload("res://scenes/scrapyard/player.tscn")
-const BUYER_NPC_SCENE := preload("res://scenes/mall/buyer_npc.tscn")
+const PLAYER_SCENE := preload("res://scenes/locations/scrapyard/player.tscn")
+const BUYER_NPC_SCENE := preload("res://scenes/locations/mall/buyer_npc.tscn")
 
 const DESTINATION_ID := "mall"
 

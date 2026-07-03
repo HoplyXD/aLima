@@ -161,9 +161,12 @@ func set_inventory(scrap_total: int, restored_data: Array[Dictionary]) -> void:
 				preview.queue_free()
 			continue
 		var entry: Dictionary = raw
+		var display_name: String = str(entry.get("display_name", "?"))
+		if entry.get("is_quest", false):
+			display_name = "⭐ " + display_name
 		_set_slot(
 			slot_index,
-			str(entry.get("display_name", "?")),
+			display_name,
 			entry.get("color", RARITY_COLORS["white"]),
 			entry.get("preview") as Node3D
 		)

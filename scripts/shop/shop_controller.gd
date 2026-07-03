@@ -168,6 +168,9 @@ func _ready() -> void:
 		var yuyu_node := get_node_or_null("YuyuNpc") as Sprite3D
 		if yuyu_node != null:
 			yuyu_node.visible = false
+		# Day 1 intro: trigger the scripted blackout sequence when entering the shop.
+		if Day1Service.is_day1_intro_active():
+			_day1_intro_start()
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -184,6 +187,67 @@ func _enter_backdrop_mode() -> void:
 	var menu_cam := get_node_or_null("Title Screen cam")
 	if menu_cam is Camera3D:
 		(menu_cam as Camera3D).make_current()
+
+
+## Starts the Day 1 intro sequence: inner monologue about blacking out, then guides
+## the player to exit the house and meet Alya at the scrapyard gate.
+func _day1_intro_start() -> void:
+	Day1Service.step_changed.connect(_on_day1_step_changed)
+	Day1Service.day1_intro_finished.connect(_on_day1_intro_finished)
+	# If resuming, re-announce the current step; otherwise start at the first step.
+	var step_id := Day1Service.current_step_id()
+	if step_id.is_empty():
+		Day1Service.advance()
+	else:
+		Day1Service.step_changed.emit(step_id)
+
+
+func _on_day1_step_changed(step_id: String) -> void:
+	var step := Day1Service.get_step(step_id)
+	if step.is_empty():
+		return
+	# Present the step's dialogue lines.
+	var dialogue: Array = SaveState._as_array(step.get("dialogue"))
+	if dialogue.size() > 0:
+		_show_dialogue_lines(dialogue)
+	# Update the HUD hint.
+	var hint := ModelUtils.as_dictionary(step.get("hint"))
+	if not hint.is_empty():
+		var speaker := ModelUtils.as_string(hint.get("speaker"))
+		var text := ModelUtils.as_string(hint.get("text"))
+		var anchor := ModelUtils.as_string(hint.get("anchor"))
+		_hud.set_hint(speaker, text, anchor)
+	else:
+		_hud.clear_hint()
+
+
+func _on_day1_intro_finished() -> void:
+	_hud.clear_hint()
+	# Start the normal day clock.
+	DayClock.start_day(1)
+	DayClock.running = true
+
+
+## Shows a sequence of dialogue lines from a step.
+func _show_dialogue_lines(lines: Array) -> void:
+	if lines.is_empty():
+		return
+	var box: DialogueBox = DIALOGUE_BOX_SCENE.instantiate()
+	add_child(box)
+	var formatted_lines: Array = []
+	for line in lines:
+		if line is Dictionary:
+			var speaker := ModelUtils.as_string(line.get("speaker"))
+			var text := ModelUtils.as_string(line.get("text"))
+			if speaker == "inner":
+				# Inner monologue hides the speaker name label.
+				formatted_lines.append({"name": "", "text": text})
+			else:
+				formatted_lines.append({"name": speaker, "text": text})
+		else:
+			formatted_lines.append(str(line))
+	box.start(formatted_lines)
+	box.finished.connect(func() -> void: box.queue_free())
 
 
 func _process(delta: float) -> void:
@@ -248,7 +312,10 @@ func _artifact_card_entries(restored_only: bool) -> Array:
 			{
 				"uid": inst.uid,
 				"display_name": template.display_name,
-				"color": _rarity_color(template.base_rarity),
+				# Quest items read ORANGE everywhere; ordinary pieces use their rarity.
+				"color": GlowMapper.get_instance_glow_color(
+					template.base_rarity, inst.is_carrier, false, inst.is_quest_item
+				),
 			}
 		)
 	return out
@@ -351,7 +418,14 @@ func _on_door_pressed() -> void:
 	# Authored dialogue + portraits live in data/routes/routes.json. The door shows
 	# whichever character RouteService schedules for the current in-game day/hour,
 	# branching their lines on whether the player has met them before.
-	var route := RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
+	# QUEST PRIORITY: If the player has the salakot, Sam appears first.
+	var route: CharacterRoute = null
+	if _has_quest_item_in_inventory("salakot"):
+		var sam_route := DataRepository.singleton().get_route("sam")
+		if sam_route != null and not RouteService.is_visit_consumed("sam", DayClock.get_day()):
+			route = sam_route
+	if route == null:
+		route = RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
 	if route == null:
 		# No visitor waiting: step outside into the walkable scrapyard.
 		SpaceManager.go_to_yard()
@@ -379,6 +453,13 @@ func _on_workbench_pressed() -> void:
 func _on_unrestored_card_selected(uid: String) -> void:
 	GameState.save_state.loop.restore_target_uid = uid
 	_on_workbench_pressed()
+
+
+func _has_quest_item_in_inventory(template_id: String) -> bool:
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary and raw.get("template_id") == template_id:
+			return true
+	return false
 
 
 ## Top-bar card click on a RESTORED artifact: open the spin/zoom 3D viewer
@@ -615,6 +696,12 @@ func _refresh_ayla_knock() -> void:
 	# daily free drop starts with the normal days.
 	if TutorialService.is_tutorial_active():
 		return
+	# Day 1 intro: no morning delivery; player finds scrap in the yard instead.
+	if DayClock.get_day() == 1 and not Day1Service.is_day1_intro_active():
+		return
+	# Day 1 intro active: no daily delivery either; scrap-sort only.
+	if Day1Service.is_day1_intro_active():
+		return
 	if GameState.save_state.loop.last_delivery_day != GameState.save_state.loop.current_day:
 		_ayla_source = AylaSource.DAILY
 		_alya_waiting = true
@@ -820,6 +907,10 @@ func _on_dialogue_finished() -> void:
 	# After a route's door conversation, open its scripted showcase if a beat is due.
 	if not finished_route_id.is_empty():
 		_maybe_open_showcase(finished_route_id)
+	# Sam quest: after talking to Sam with the salakot, unlock archeologist house
+	if finished_route_id == "sam":
+		QuestService.unlock_location("archeologist_house")
+		SpaceManager.go_to_archeologist_house()
 
 
 ## Opens the route's scripted showcase when a beat is authored and ready for the

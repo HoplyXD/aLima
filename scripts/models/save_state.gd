@@ -104,6 +104,14 @@ class PersistentState:
 	## Upkeep knowledge the player has learned (e.g. a repair technique unlocked in the
 	## evening). Persistent so it survives the loop reset (P14.6).
 	var upkeep_learned: Array[String] = []
+	## Locations unlocked across loops (e.g. "dump_site", "archeologist_house").
+	var unlocked_locations: Array[String] = []
+	## Quest IDs that have been completed (persist across loops).
+	var completed_quests: Array[String] = []
+	## Quest progress: quest_id -> progress string (e.g. "started", "found_item", "completed").
+	var quest_progress: Dictionary = {}
+	var day1_intro_completed: bool = false
+	var day1_step: String = ""
 
 	static func from_dictionary(data: Dictionary) -> PersistentState:
 		var p := PersistentState.new()
@@ -128,6 +136,11 @@ class PersistentState:
 		p.best_sale = ModelUtils.as_dictionary(data.get("best_sale"))
 		p.returns = SaveState._as_array(data.get("returns", []))
 		p.upkeep_learned = ModelUtils.as_string_array(data.get("upkeep_learned"))
+		p.unlocked_locations = ModelUtils.as_string_array(data.get("unlocked_locations"))
+		p.completed_quests = ModelUtils.as_string_array(data.get("completed_quests"))
+		p.quest_progress = data.get("quest_progress", {}) as Dictionary
+		p.day1_intro_completed = ModelUtils.as_bool(data.get("day1_intro_completed"))
+		p.day1_step = ModelUtils.as_string(data.get("day1_step"), "")
 		return p
 
 	func to_dictionary() -> Dictionary:
@@ -153,6 +166,11 @@ class PersistentState:
 			"best_sale": best_sale.duplicate(true),
 			"returns": returns.duplicate(true),
 			"upkeep_learned": upkeep_learned.duplicate(),
+			"unlocked_locations": unlocked_locations.duplicate(),
+			"completed_quests": completed_quests.duplicate(),
+			"quest_progress": quest_progress.duplicate(),
+			"day1_intro_completed": day1_intro_completed,
+			"day1_step": day1_step,
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:
@@ -198,6 +216,8 @@ class LoopState:
 	var pending_sort: Dictionary = {}
 	## Pieces of scrap still scattered in the yard today. -1 means "not spawned yet".
 	var yard_scrap_remaining: int = -1
+	## Pieces of scrap still scattered in the dump site today. -1 means "not spawned yet".
+	var dump_site_scrap_remaining: int = -1
 	## Phase 18 mini-event state. All reset on loop_reset; persistent knowledge untouched.
 	var event_active: Array = []  ## Active event states: {event_id, day, hour,
 	## expires_hour, resolved}.
@@ -244,6 +264,7 @@ class LoopState:
 		l.scrap_pool = ModelUtils.as_dictionary(data.get("scrap_pool"))
 		l.pending_sort = ModelUtils.as_dictionary(data.get("pending_sort"))
 		l.yard_scrap_remaining = ModelUtils.as_int(data.get("yard_scrap_remaining"), -1)
+		l.dump_site_scrap_remaining = ModelUtils.as_int(data.get("dump_site_scrap_remaining"), -1)
 		l.event_active = SaveState._as_array(data.get("event_active", []))
 		l.event_history = ModelUtils.as_string_array(data.get("event_history"))
 		l.event_caps = data.get("event_caps", {}) as Dictionary
@@ -278,6 +299,7 @@ class LoopState:
 			"scrap_pool": scrap_pool.duplicate(),
 			"pending_sort": pending_sort.duplicate(true),
 			"yard_scrap_remaining": yard_scrap_remaining,
+			"dump_site_scrap_remaining": dump_site_scrap_remaining,
 			"event_active": event_active.duplicate(),
 			"event_history": event_history.duplicate(),
 			"event_caps": event_caps.duplicate(),

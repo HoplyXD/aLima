@@ -5,12 +5,12 @@
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="3_sorb4"]
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="4_tarnish"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="4_ue6o7"]
-[ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Locket.obj" id="5_locket"]
+[ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Locket/Locket.obj" id="5_locket"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="8_wx8kf"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_e4ea5"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_xyj3r"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [sub_resource type="StandardMaterial3D" id="locket_bronze"]
 albedo_color = Color(0.6, 0.4, 0.2, 1)
@@ -107,7 +107,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=702183728]
 script = ExtResource("scannerdata_node")
 type = "locket"
 period = "early to mid-20th century"
@@ -117,5 +117,4 @@ condition_note = "Bronze with patches of green patina; hinge moves with resistan
 cultural_relevance = "An everyday keepsake locket of modest material. Any historical value depends on provenance, not the metal itself."
 price_min = 60
 price_max = 160
-confidence = 1
 uncertainty_notes = "Date is estimated from wear and patina, not a maker's mark."

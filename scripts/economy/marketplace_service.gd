@@ -335,6 +335,13 @@ func interested_buyers(uid: String) -> Array[BuyerPersona]:
 			continue
 		if _buyer_interested(persona, condition, value, scanned, historical):
 			out.append(persona)
+	# Quest items: normal buyers refuse them; only state-gate-ignoring buyers (Maverick) show up.
+	if inst != null and inst.is_quest_item:
+		var quest_only: Array[BuyerPersona] = []
+		for persona in out:
+			if persona.ignores_state_gates:
+				quest_only.append(persona)
+		return quest_only
 	return out
 
 

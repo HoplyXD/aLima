@@ -1,18 +1,18 @@
 [gd_scene format=3 uid="uid://dtw2s33st1snx"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
-[ext_resource type="ArrayMesh" uid="uid://07mi84gv8xo" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask a.obj" id="2_vfcm3"]
+[ext_resource type="ArrayMesh" uid="uid://07mi84gv8xo" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask/Oton Death Mask a.obj" id="2_vfcm3"]
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="3_tarnish"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="4_g88vq"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="5_m1vn6"]
-[ext_resource type="ArrayMesh" uid="uid://uthgdbt54a0k" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask Overlay a.obj" id="5_wneg4"]
+[ext_resource type="ArrayMesh" uid="uid://uthgdbt54a0k" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Oton Death Mask/Oton Death Mask Overlay a.obj" id="5_wneg4"]
 [ext_resource type="Texture2D" uid="uid://chkvi47klu3o1" path="res://assets/Artifacts/Oton Death Mask Texture.png" id="7_masktex"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_vfcm3"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_wneg4"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_eb6n0"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [sub_resource type="StandardMaterial3D" id="mask_gold"]
 albedo_color = Color(0.85, 0.7, 0.3, 1)
@@ -23,12 +23,9 @@ roughness = 0.45
 [node name="OtonDeathMask" type="Node3D" unique_id=1097946537]
 transform = Transform3D(2, 0, 0, 0, 1.9676874, 0.35805917, 0, -0.35805917, 1.9676874, 0, 0, 0)
 script = ExtResource("1_obj")
-artifact_template_id = null
 artifact_rarity = 4
 base_value_min = 5000
 base_value_max = 10000
-quest_npc = null
-quest_number = null
 randomize_conditions_min = 5
 randomize_conditions_max = 5
 model_mesh = ExtResource("2_vfcm3")
@@ -118,7 +115,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=544675497]
 script = ExtResource("scannerdata_node")
 type = "gold burial mask"
 period = "pre-colonial (c. 14th-15th century, attributed)"

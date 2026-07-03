@@ -5,12 +5,12 @@
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="3_waa2k"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="4_77ino"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="4_dust"]
-[ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Pendant.obj" id="5_pendant"]
+[ext_resource type="ArrayMesh" uid="uid://dvdufpnewctuw" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Pendant/Pendant.obj" id="5_pendant"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="6_rust"]
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="8_im5t2"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_gqyvn"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_oip4t"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [sub_resource type="StandardMaterial3D" id="pendant_silver"]
 albedo_color = Color(0.9, 0.91, 0.93, 1)
@@ -51,13 +51,9 @@ roughness = 0.3
 [node name="SilverPendant" type="Node3D" unique_id=1843766839]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-artifact_template_id = null
 artifact_rarity = 2
 base_value_min = 400
 base_value_max = 500
-is_quest_item = null
-quest_npc = null
-quest_number = null
 randomize_conditions_min = 3
 randomize_conditions_max = 5
 model_mesh = ExtResource("5_pendant")
@@ -142,7 +138,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=1052591576]
 script = ExtResource("scannerdata_node")
 type = "pendant"
 period = "early 20th century"
@@ -152,5 +148,4 @@ condition_note = "Silver pendant darkened by tarnish; the clasp is intact but st
 cultural_relevance = "A personal pendant in a style common to heirloom jewelry in the Panay region. No specific provenance is claimed."
 price_min = 80
 price_max = 200
-confidence = 1
 uncertainty_notes = "Exact maker and original owner are unknown."

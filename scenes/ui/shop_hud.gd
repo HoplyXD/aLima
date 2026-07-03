@@ -52,6 +52,7 @@ var _storage_button: Button
 @onready var _day_label: Label = %DayLabel
 @onready var _clock_label: Label = %ClockLabel
 @onready var _prompt_label: Label = $PromptLabel
+@onready var _hint_label: Label = $FallbackHint
 
 
 func _ready() -> void:
@@ -187,6 +188,24 @@ func set_journal_open(open: bool) -> void:
 ## side effects; this only displays.
 func start_dialogue(lines: Array) -> void:
 	_dialogue.start(lines)
+
+
+## Show a persistent HUD hint (e.g. for tutorial guidance).  Empty text clears.
+func set_hint(speaker: String, text: String, _anchor: String = "") -> void:
+	if text.is_empty():
+		_hint_label.text = ""
+		_hint_label.hide()
+	else:
+		if speaker.is_empty():
+			_hint_label.text = text
+		else:
+			_hint_label.text = "%s: %s" % [speaker, text]
+		_hint_label.show()
+
+
+func clear_hint() -> void:
+	_hint_label.text = ""
+	_hint_label.hide()
 
 
 func _format_time(hour: int, minute: int = 0) -> String:

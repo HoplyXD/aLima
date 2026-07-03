@@ -768,6 +768,11 @@ func _validate_container_compatibility() -> void:
 		return
 	for template_id in scrap_object_templates.keys():
 		var template: ScrapObjectTemplate = scrap_object_templates[template_id]
+		# Non-deliverable items (quest/given items like the salakot) are placed by
+		# bespoke code, never by the spawn director into a delivery container, so they
+		# do not require a compatible container.
+		if not template.deliverable:
+			continue
 		var candidate_tags := template.tags.duplicate()
 		candidate_tags.append(template.category)
 		if not template.openable_type.is_empty():

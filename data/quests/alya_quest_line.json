@@ -1,0 +1,46 @@
+{
+  "id": "alya_quest_line",
+  "display_name": "Alya's Journey",
+  "description": "Help Alya uncover her past and find the truth about Yuyu's disappearance.",
+  "prerequisite_quests": [],
+  "prerequisite_locations": [],
+  "prerequisite_day": 1,
+  "is_repeatable": false,
+  "beats": [
+    {
+      "id": "q1_glasses",
+      "day": 1,
+      "summary": "Find Yuyu's lost glasses in the scrapyard.",
+      "object_template": "yuyu_glasses"
+    },
+    {
+      "id": "q2_bag",
+      "day": 1,
+      "summary": "Find the cute bag Alya's father gave her in the Dump Site.",
+      "object_template": "cute_bag"
+    },
+    {
+      "id": "q3_salakot",
+      "day": 5,
+      "summary": "Find the salakot in the forbidden Dump Site area and deliver it to Sam.",
+      "object_template": "salakot"
+    }
+  ],
+  "rewards": [
+    {
+      "type": "location_unlock",
+      "value": "dump_site",
+      "id": "q1_reward"
+    },
+    {
+      "type": "money",
+      "value": 1000,
+      "id": "q2_reward"
+    },
+    {
+      "type": "fragment",
+      "value": "fragment_04",
+      "id": "q3_reward"
+    }
+  ]
+}

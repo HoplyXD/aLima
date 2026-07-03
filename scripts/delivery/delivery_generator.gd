@@ -165,6 +165,7 @@ func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance
 	inst.authenticity = ModelEnums.Verdict.UNKNOWN
 	inst.is_counterfeit_truth = false
 	inst.storage_cost = template.storage_cost
+	inst.is_quest_item = template.is_quest_item
 	inst.value = int(template.base_value_range.x)
 	inst.assigned_anchor_id = _fallback_anchor(template)
 	return inst

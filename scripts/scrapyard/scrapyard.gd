@@ -15,9 +15,10 @@ extends Node3D
 ## opens the hand-off UI, which moves scrap into a pending sort. AylaService
 ## knocks at the shop door ~1 in-game hour later with the sorted batch.
 
-const PLAYER_SCENE := preload("res://scenes/scrapyard/player.tscn")
-const SCRAP_ITEM_SCENE := preload("res://scenes/scrapyard/scrap_item.tscn")
-const AYLA_HANDOFF_SCENE := preload("res://scenes/scrapyard/ayla_handoff_screen.tscn")
+const PLAYER_SCENE := preload("res://scenes/locations/scrapyard/player.tscn")
+const SCRAP_ITEM_SCENE := preload("res://scenes/locations/scrapyard/scrap_item.tscn")
+const QUEST_ITEM_SCENE := preload("res://scenes/locations/scrapyard/quest_item.tscn")
+const AYLA_HANDOFF_SCENE := preload("res://scenes/locations/scrapyard/ayla_handoff_screen.tscn")
 const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
 const INTERACTABLE_SCRIPT := preload("res://scripts/shop/interactable_3d.gd")
 const PHONE_SCENE := preload("res://scenes/ui/phone.tscn")
@@ -62,6 +63,8 @@ var _ayla_interactable: Interactable3D
 var _scrap_items_root: Node3D
 var _dialogue_box: DialogueBox
 var _overlay_open: bool = false
+var _quest_item_spawned: Dictionary = {}
+var _pending_dialogue_action: String = ""
 ## Day 0 (TUT) presentation: the tutorial glue overlay and the placeholder
 ## Yuyu sprite standing beside Ayla while he teaches the forage step.
 var _tutorial_glue: TutorialGlue
@@ -110,6 +113,7 @@ func _ready() -> void:
 	AylaService.sort_ready.connect(_on_ayla_sort_ready_yard)
 	_setup_scrap_items_root()
 	_spawn_scrap_items()
+	_spawn_pending_quest_items()
 	_setup_outdoor_storage()
 	if _hud != null:
 		_hud.phone_pressed.connect(_open_phone_overlay)
@@ -305,6 +309,31 @@ func _setup_scrap_items_root() -> void:
 
 
 func _open_handoff() -> void:
+	var quest_progress := QuestService.get_progress("alya_quest_line")
+
+	# Next-loop welcome: Alya greets returning players who completed the quest line
+	if QuestService.is_completed("alya_quest_line"):
+		_dialogue_box.start(_ayla_lines("yard_welcome_back", "Ayla: Welcome back! The Dump Site is open if you want to visit."))
+		_pending_dialogue_action = "yard_welcome_back"
+		_enter_overlay()
+		return
+
+	# Quest 1: Start dialogue when Day 1 intro is complete
+	if quest_progress.is_empty() and GameState.save_state.persistent.day1_intro_completed:
+		if not QuestService.is_completed("alya_quest_line"):
+			_dialogue_box.start(_ayla_lines("q1_start", "Ayla: Hey, can I tell you something about Yuyu?"))
+			_pending_dialogue_action = "q1_start"
+			_enter_overlay()
+			return
+
+	# Quest 1: Player found Yuyu's glasses
+	if quest_progress == "q1_glasses" and _has_quest_item_in_inventory("yuyu_glasses"):
+		_dialogue_box.start(_ayla_lines("q1_glasses_found", "Ayla: These are Tito's glasses! Thank you so much!"))
+		_pending_dialogue_action = "q1_glasses_found"
+		_enter_overlay()
+		return
+
+	# Existing scrap handoff logic
 	if AylaService.is_sort_ready():
 		_dialogue_box.start(
 			_ayla_lines(
@@ -604,11 +633,12 @@ func _restored_inventory_entries() -> Array[Dictionary]:
 		if not (raw is Dictionary):
 			continue
 		var inst := ObjectInstance.from_dictionary(raw)
-		if inst.state != ModelEnums.ObjState.CLEAN and inst.state != ModelEnums.ObjState.OPEN:
+		# Include quest items regardless of restoration state
+		if not inst.is_quest_item and inst.state != ModelEnums.ObjState.CLEAN and inst.state != ModelEnums.ObjState.OPEN:
 			continue
 		var template := repo.get_template(inst.template_id)
 		var rarity: int = template.base_rarity if template != null else 0
-		var color := GlowMapper.get_instance_glow_color(rarity, inst.is_carrier, false)
+		var color := GlowMapper.get_instance_glow_color(rarity, inst.is_carrier, false, inst.is_quest_item)
 		var preview := _create_preview_for_instance(inst)
 		out.append(
 			{
@@ -617,6 +647,7 @@ func _restored_inventory_entries() -> Array[Dictionary]:
 				"color": color,
 				"description": template.description if template != null else "",
 				"is_scrap": false,
+				"is_quest": inst.is_quest_item,
 			}
 		)
 	return out
@@ -669,7 +700,8 @@ func _refresh_ayla_presence() -> void:
 func _on_yard_day_changed(_day: int) -> void:
 	GameState.save_state.loop.yard_scrap_remaining = -1
 	for child in _scrap_items_root.get_children():
-		child.queue_free()
+		if child is ScrapItem:
+			child.queue_free()
 	_spawn_scrap_items()
 
 
@@ -737,7 +769,26 @@ func _open_inspection_overlay(data: Dictionary) -> void:
 
 
 func _on_dialogue_finished() -> void:
-	_exit_overlay()
+	match _pending_dialogue_action:
+		"q1_start":
+			QuestService.start_quest("alya_quest_line")
+			QuestService.advance_quest("alya_quest_line", "q1_glasses")
+			_spawn_quest_item("yuyu_glasses", _get_scrap_bounds())
+			_pending_dialogue_action = ""
+			_exit_overlay()
+		"q1_glasses_found":
+			_remove_quest_item_from_inventory("yuyu_glasses")
+			QuestService.advance_quest("alya_quest_line", "q1_completed")
+			QuestService.unlock_location("dump_site")
+			_pending_dialogue_action = ""
+			_exit_overlay()
+		"yard_welcome_back":
+			_pending_dialogue_action = ""
+			_exit_overlay()
+		_:
+			_pending_dialogue_action = ""
+			_exit_overlay()
+	_refresh_hud_hotbar()
 
 
 func _enter_overlay() -> void:
@@ -774,3 +825,70 @@ func _set_yard_interactables_enabled(enabled: bool) -> void:
 			var interactable := child as Interactable3D
 			if interactable != null:
 				interactable.set_enabled(enabled)
+
+
+# --- Quest helpers -----------------------------------------------------------
+
+
+func _has_quest_item_in_inventory(template_id: String) -> bool:
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary and raw.get("template_id") == template_id:
+			return true
+	return false
+
+
+func _find_quest_item_in_inventory(template_id: String) -> ObjectInstance:
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary and raw.get("template_id") == template_id:
+			return ObjectInstance.from_dictionary(raw)
+	return null
+
+
+func _remove_quest_item_from_inventory(template_id: String) -> void:
+	var inventory := GameState.save_state.loop.inventory
+	for i in range(inventory.size()):
+		var raw = inventory[i]
+		if raw is Dictionary and raw.get("template_id") == template_id:
+			inventory.remove_at(i)
+			return
+
+
+func _get_scrap_bounds() -> Dictionary:
+	var scrap_cfg := DataRepository.singleton().get_scrap_config()
+	var bounds := scrap_cfg.scatter_bounds
+	return {
+		"center_x": float(bounds.get("center_x", 0.0)),
+		"center_z": float(bounds.get("center_z", -7.0)),
+		"size_x": float(bounds.get("size_x", 40.0)),
+		"size_z": float(bounds.get("size_z", 34.0)),
+	}
+
+
+func _spawn_quest_item(template_id: String, bounds: Dictionary) -> void:
+	if _quest_item_spawned.get(template_id, false):
+		return
+	var template := DataRepository.singleton().get_template(template_id)
+	if template == null:
+		return
+	_quest_item_spawned[template_id] = true
+
+	var rng := GameState.make_rng("quest_item_%s_day_%d" % [template_id, DayClock.get_day()])
+	var space := get_world_3d().direct_space_state
+	var placed: Array[Vector3] = []
+	var pos := _find_scrap_spawn_position(rng, bounds, space, placed)
+
+	var item: QuestItem = QUEST_ITEM_SCENE.instantiate()
+	item.set_template_id(template_id)
+	item.position = pos
+	item.collected.connect(_on_quest_item_collected)
+	_scrap_items_root.add_child(item)
+
+
+func _on_quest_item_collected(_template_id: String) -> void:
+	_refresh_hud_hotbar()
+
+
+func _spawn_pending_quest_items() -> void:
+	var progress := QuestService.get_progress("alya_quest_line")
+	if progress == "q1_glasses" and not _has_quest_item_in_inventory("yuyu_glasses"):
+		_spawn_quest_item("yuyu_glasses", _get_scrap_bounds())

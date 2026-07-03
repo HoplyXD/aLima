@@ -22,6 +22,13 @@ signal fragment_released(fragment_id: String)
 ## answering the door (the visit is consumed). owner is the route id.
 signal visit_missed(route_id: String, day: int)
 
+# --- Quest events ---
+signal quest_started(quest_id: String, display_name: String)
+signal quest_advanced(quest_id: String, progress: String)
+signal quest_completed(quest_id: String, display_name: String)
+signal quest_failed(quest_id: String)
+signal location_unlocked(location_id: String)
+
 # --- Delivery and triage events ---
 signal delivery_generated(day: int, instance_ids: Array[String])
 signal triage_completed(kept_ids: Array[String], recycled_ids: Array[String])

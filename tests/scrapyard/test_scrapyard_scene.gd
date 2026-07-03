@@ -4,7 +4,7 @@ extends GutTest
 ## instantiates, exposes the anchors the rest of the game expects, and wires
 ## the player controller and return-door interactable.
 
-const YARD_SCENE := preload("res://scenes/locations/Scrapyard.tscn")
+const YARD_SCENE := preload("res://scenes/locations/scrapyard/Scrapyard.tscn")
 
 var _yard: Node3D
 

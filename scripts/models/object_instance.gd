@@ -26,6 +26,7 @@ var spawned_decals: Array = []  ## Random per-instance conditions; empty => use 
 ## Used by the Day 0 tutorial (grime+dust only) and future quest constraints (TUT).
 ## A type filter only — it never moves or edits dev-placed decals (§4-R).
 var allowed_conditions: Array[String] = []
+var is_quest_item: bool = false  ## True for quest-essential items (orange UI, unsellable to normal buyers).
 var is_joined: bool = false  ## True once a join-step object has been reassembled.
 var dirt_mask: PackedByteArray = PackedByteArray()
 ## Authored-overlay cleaning progress: overlay_name -> base64 of its per-vertex keep
@@ -75,6 +76,7 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 				inst.spawned_decals.append(raw_decal.duplicate())
 	inst.allowed_conditions = ModelUtils.as_string_array(data.get("allowed_conditions"))
 	inst.is_joined = ModelUtils.as_bool(data.get("is_joined"))
+	inst.is_quest_item = ModelUtils.as_bool(data.get("is_quest_item"))
 	var raw_mask: Variant = data.get("dirt_mask", "")
 	if raw_mask is String and not (raw_mask as String).is_empty():
 		inst.dirt_mask = Marshalls.base64_to_raw(raw_mask)
@@ -102,6 +104,7 @@ func to_dictionary() -> Dictionary:
 		"spawned_decals": spawned_decals.duplicate(true),
 		"allowed_conditions": allowed_conditions.duplicate(),
 		"is_joined": is_joined,
+		"is_quest_item": is_quest_item,
 		"dirt_mask": Marshalls.raw_to_base64(dirt_mask) if not dirt_mask.is_empty() else "",
 		"overlay_keep": overlay_keep.duplicate(),
 	}
