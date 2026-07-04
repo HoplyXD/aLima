@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://bp4j70g2j482i"]
+
+; Debug tool prop: an inherited variant of restoration_tool.tscn used by the bench tray for
+; the debug tools (the draw brush and the universal eraser). It reuses the RestorationTool
+; script and layout, but tints the name label orange so debug tools read as non-shippable.
+
+[ext_resource type="PackedScene" uid="uid://bsaqyty17nhpv" path="res://scenes/restoration/restoration_tool.tscn" id="1_base"]
+
+[node name="RestorationToolDebug" instance=ExtResource("1_base")]
+
+[node name="ToolNameLabel" parent="InfoPanel/InfoViewport/Panel/VBox" index="0"]
+modulate = Color(1, 0.65, 0.2, 1)

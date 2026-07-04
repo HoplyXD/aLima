@@ -15,12 +15,24 @@ var authenticity: int = ModelEnums.Verdict.UNKNOWN
 var is_counterfeit_truth: bool = false
 var storage_cost: int = 1  ## Copied from the template at creation time.
 var assigned_anchor_id: String = ""  ## Container/placement anchor for this instance.
-var value: int = 0  ## Current assessed market value, initialized from the template.
-var recorded_damage: int = 0  ## Accumulated damage from wrong tools; persists with the instance.
+var value: int = 0  ## Current assessed market value = true_value minus live condition penalties.
+## The pristine market value rolled once at spawn, uniformly within the template's base value
+## range. Fixed for the instance's life; `value` is derived from it via ValueModel. 0 until rolled.
+var true_value: int = 0
 var removed_decals: Array[String] = []  ## Decal ids cleared so far (decal-based templates).
 var spawned_decals: Array = []  ## Random per-instance conditions; empty => use template decals.
+## When non-empty, ONLY these surface-condition ids may appear on this instance:
+## spawned conditions, authored decals, and overlays outside the list render clean.
+## Used by the Day 0 tutorial (grime+dust only) and future quest constraints (TUT).
+## A type filter only — it never moves or edits dev-placed decals (§4-R).
+var allowed_conditions: Array[String] = []
+var is_quest_item: bool = false  ## True for quest-essential items (orange UI, unsellable to normal buyers).
 var is_joined: bool = false  ## True once a join-step object has been reassembled.
 var dirt_mask: PackedByteArray = PackedByteArray()
+## Authored-overlay cleaning progress: overlay_name -> base64 of its per-vertex keep
+## (PackedFloat32Array). Empty => rebuild the spawn pattern from the deterministic seed. Persisting
+## this is what keeps overlay artifacts cleaned across a full scene reload (e.g. a scrapyard trip).
+var overlay_keep: Dictionary = {}
 ## PNG of the exact cleaned grime mask for condition-based objects; empty => rebuild from condition.
 
 
@@ -42,16 +54,34 @@ static func from_dictionary(data: Dictionary) -> ObjectInstance:
 	inst.storage_cost = ModelUtils.as_int(data.get("storage_cost"), 1)
 	inst.assigned_anchor_id = ModelUtils.as_string(data.get("assigned_anchor_id"))
 	inst.value = ModelUtils.as_int(data.get("value"))
-	inst.recorded_damage = ModelUtils.as_int(data.get("recorded_damage"))
+	# Pre-revamp saves have no true_value; leave it at 0 so assessed value falls back to the stored
+	# instance value. When true_value is present it is clamped to the template range below.
+	inst.true_value = ModelUtils.as_int(data.get("true_value"), 0)
+	# Clamp out-of-range legacy values to the current template range so a corrupt save (e.g. 500
+	# on a Gold Locket whose range is [100, 240]) cannot permanently break the value display.
+	# Guarded so repository bootstrapping does not recurse; only clamp when the key is actually
+	# present, otherwise a missing true_value would be raised to the template minimum.
+	if inst.true_value > 0 and DataRepository.is_singleton_loaded():
+		var template: ScrapObjectTemplate = DataRepository.singleton().get_template(
+			inst.template_id
+		)
+		if template != null and template.base_value_range.y > template.base_value_range.x:
+			inst.true_value = clampi(
+				inst.true_value, int(template.base_value_range.x), int(template.base_value_range.y)
+			)
 	inst.removed_decals = ModelUtils.as_string_array(data.get("removed_decals"))
 	if data.get("spawned_decals") is Array:
 		for raw_decal in data["spawned_decals"]:
 			if raw_decal is Dictionary:
 				inst.spawned_decals.append(raw_decal.duplicate())
+	inst.allowed_conditions = ModelUtils.as_string_array(data.get("allowed_conditions"))
 	inst.is_joined = ModelUtils.as_bool(data.get("is_joined"))
+	inst.is_quest_item = ModelUtils.as_bool(data.get("is_quest_item"))
 	var raw_mask: Variant = data.get("dirt_mask", "")
 	if raw_mask is String and not (raw_mask as String).is_empty():
 		inst.dirt_mask = Marshalls.base64_to_raw(raw_mask)
+	if data.get("overlay_keep") is Dictionary:
+		inst.overlay_keep = (data["overlay_keep"] as Dictionary).duplicate()
 	return inst
 
 
@@ -69,11 +99,14 @@ func to_dictionary() -> Dictionary:
 		"storage_cost": storage_cost,
 		"assigned_anchor_id": assigned_anchor_id,
 		"value": value,
-		"recorded_damage": recorded_damage,
+		"true_value": true_value,
 		"removed_decals": removed_decals.duplicate(),
 		"spawned_decals": spawned_decals.duplicate(true),
+		"allowed_conditions": allowed_conditions.duplicate(),
 		"is_joined": is_joined,
+		"is_quest_item": is_quest_item,
 		"dirt_mask": Marshalls.raw_to_base64(dirt_mask) if not dirt_mask.is_empty() else "",
+		"overlay_keep": overlay_keep.duplicate(),
 	}
 
 
@@ -112,8 +145,4 @@ func validate(
 		result.add_field_error(file_path, uid, "storage_cost", "storage_cost must be at least 1")
 	if value < 0:
 		result.add_field_error(file_path, uid, "value", "value must be non-negative")
-	if recorded_damage < 0:
-		result.add_field_error(
-			file_path, uid, "recorded_damage", "recorded_damage must be non-negative"
-		)
 	return result

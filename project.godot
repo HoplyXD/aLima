@@ -40,12 +40,19 @@ PauseMenu="*res://scenes/ui/pause_menu.tscn"
 LocalAI="*res://scripts/economy/local_ai.gd"
 SpaceManager="*res://scripts/core/space_manager.gd"
 AylaService="*res://scripts/delivery/ayla_service.gd"
+DispositionRouter="*res://scripts/economy/disposition_router.gd"
+EveningService="*res://scripts/economy/evening_service.gd"
+TutorialService="*res://scripts/tutorial/tutorial_service.gd"
+QuestService="*res://scripts/core/quest_service.gd"
+Day1Service="*res://scripts/tutorial/day1_service.gd"
+ServerLauncher="*res://scripts/core/server_launcher.gd"
 
 [display]
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
+window/stretch/mode="canvas_items"
 
 [filesystem]
 

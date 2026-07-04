@@ -34,6 +34,18 @@ func _ready() -> void:
 func begin_session() -> void:
 	if DayClock.running:
 		return
+	# Day 0 (TUT): a freshly created save runs the clockless tutorial instead of
+	# the day loop. The clock never starts (running stays false) and a tutorial
+	# pause is held as belt-and-braces, so no tick/close/loop logic can fire.
+	# Yuyu hands over the starter tools mid-tutorial, so the starting kit is NOT
+	# granted here; graduation (complete_tutorial) grants it with the Day 1 reset.
+	if TutorialService.is_tutorial_active():
+		DayClock.reset()
+		DayClock.loop_index = GameState.loop_index
+		DayClock.request_pause(DayClock.PAUSE_TUTORIAL)
+		FragmentService.sync_repo_from_persistent()
+		TutorialService.begin_or_resume()
+		return
 	DayClock.reset()
 	DayClock.loop_index = GameState.loop_index
 	DayClock.running = true
@@ -48,6 +60,8 @@ func begin_session() -> void:
 	var saved_hour: int = GameState.save_state.loop.current_hour
 	if saved_hour >= DayClock.DAY_START_HOUR and saved_hour < DayClock.DAY_END_HOUR:
 		DayClock.set_hour(saved_hour)
+	# Resume the exact minute within the hour so reloading restores the saved moment.
+	DayClock.set_minute(GameState.save_state.loop.current_minute)
 
 
 # --- DayClock -> EventBus / GameState bridge ---------------------------------
@@ -56,6 +70,7 @@ func begin_session() -> void:
 func _on_hour_changed(day: int, hour: int) -> void:
 	GameState.save_state.loop.current_day = day
 	GameState.save_state.loop.current_hour = hour
+	GameState.save_state.loop.current_minute = 0  # a fresh hour starts at minute 0
 	EventBus.hour_changed.emit(day, hour)
 
 
@@ -79,10 +94,52 @@ func _on_day_closed(day: int) -> void:
 	# reset can never run twice. _resetting additionally guards re-entrancy.
 	if _resetting or not DayClock.is_closed():
 		return
+	# The mandatory evening runs before day advancement (EVE-R1, §4-N). In interactive
+	# mode the evening takes over and advances on commit (EveningService.commit_plan ->
+	# advance_day_or_reset); in non-interactive mode (headless/tests) it returns false
+	# and advancement proceeds inline exactly as before.
+	if EveningService.handle_day_close(day):
+		return
+	advance_day_or_reset(day)
+
+
+## Advances to the next day, or performs the Day 5 loop reset. Called inline at the
+## close in non-interactive mode, and by EveningService.commit_plan() once the player
+## has committed the evening plan (EVE-R5).
+func advance_day_or_reset(day: int) -> void:
+	if _resetting:
+		return
 	if day < DayClock.TOTAL_DAYS:
 		DayClock.start_day(day + 1)
 	else:
 		_perform_loop_reset()
+
+
+## Graduates the Day 0 tutorial (played through or skipped) onto Day 1 of the
+## same first loop (TUT). Mirrors the Day 5 reset transaction — clear loop
+## state, grant the kit, plan placements, save atomically, announce loop_reset —
+## but WITHOUT incrementing the loop index: a fresh save is already loop 1, and
+## the tutorial happened inside it. The caller then reloads the shop
+## (SpaceManager.go_to_shop) so begin_session() starts the Day 1 clock normally.
+func complete_tutorial() -> void:
+	if GameState.save_state.persistent.tutorial_completed:
+		return
+	GameState.save_state.persistent.tutorial_completed = true
+	GameState.save_state.persistent.tutorial_step = ""
+	if DayClock.has_pause_owner(DayClock.PAUSE_TUTORIAL):
+		DayClock.release_pause(DayClock.PAUSE_TUTORIAL)
+	GameState.reset_loop_state()
+	_grant_starting_kit()
+	_plan_carrier_placements()
+	DayClock.reset()
+	DayClock.loop_index = GameState.loop_index
+	var save_result := SaveService.save_game()
+	if not save_result.ok:
+		push_error(
+			"LoopController: tutorial graduation save failed: %s" % save_result.get("error", "")
+		)
+	EventBus.loop_reset.emit(GameState.loop_index)
+	TutorialService.notify_completed()
 
 
 ## Day 5 reset, in a fixed, idempotent order (SAVE-R1..R6, CLAUDE.md §4-A/B):
@@ -141,6 +198,13 @@ func _grant_starting_kit() -> void:
 		# and can be dragged onto the bench. Idempotent within a loop.
 		if not _owns_tool_instance(tool_id):
 			tools.grant_tool(tool_id)
+	# Debug-only quality-of-life tools are granted automatically in debug/editor builds
+	# and never leak into release saves.
+	if OS.is_debug_build():
+		var debug_clean_all := "debug_clean_all"
+		var debug_tool := repo.get_tool(debug_clean_all)
+		if debug_tool != null and not _owns_tool_instance(debug_clean_all):
+			tools.grant_tool(debug_clean_all)
 
 
 ## True if a durability-tracked instance of the tool already exists this loop.

@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://5k8rxv610vhy"]
+
+[ext_resource type="PackedScene" uid="uid://c8g1y868fsx8g" path="res://assets/3d Assets/Scrapyard/scrapyard.glb" id="1_map"]
+
+[node name="ScrapyardMap" unique_id=1595046604 instance=ExtResource("1_map")]
+
+[node name="ScrapHeap_B" parent="." index="42" unique_id=1483360851]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.444028, 0, 12.981697)
+
+[node name="Heap_G" parent="." index="48" unique_id=1232025101]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1074238, 0, -4.0900054)
+
+[node name="Crate_005" parent="." index="59" unique_id=1356653143]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.9463477)
+
+[node name="Crate_006" parent="." index="60" unique_id=953010171]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.9463477)
+
+[node name="Crate_007" parent="." index="61" unique_id=159780124]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.9463477)
+
+[node name="Crate_008" parent="." index="62" unique_id=892492667]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.9463477)
+
+[node name="Crate_009" parent="." index="63" unique_id=1257677153]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.9463477)
+
+[node name="Drum_002" parent="." index="66" unique_id=1837348725]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.2422523)
+
+[node name="Drum_003" parent="." index="67" unique_id=864470330]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7662745, 0, 2.1280212)
+
+[node name="Tarp_Pile_A" parent="." index="73" unique_id=1864557316]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.8130674)
+
+[node name="Tarp_F" parent="." index="78" unique_id=747646801]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.013527, 0, 2.154273)
+
+[node name="Drums_C" parent="." index="82" unique_id=1493192244]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.83393764, 0, -3.286902)

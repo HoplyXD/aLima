@@ -136,6 +136,19 @@
     },
     {
       "record_type": "tool",
+      "id": "debug_clean_all",
+      "display_name": "DEBUG: Clean All",
+      "enables": ["debug_clean_all"],
+      "quality": 1,
+      "cost": 0,
+      "is_legacy": false,
+      "durability": 0,
+      "buyable": false,
+      "debug_only": true,
+      "ship_hours": 0
+    },
+    {
+      "record_type": "tool",
       "id": "archival_tape",
       "display_name": "Archival Tape",
       "enables": ["photo_join"],

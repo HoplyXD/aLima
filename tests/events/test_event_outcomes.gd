@@ -34,10 +34,16 @@ func test_rush_delivery_generates_larger_batch() -> void:
 
 
 func test_mystery_box_adds_extra_instance() -> void:
+	const ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 	EventDirector.force_event("mystery_box")
 	var extras := EventDirector.get_injected_delivery_extras(1)
 	assert_eq(extras.size(), 1)
-	assert_eq(extras[0].template_id, "rusted_tin")
+	# The authored box template (rusted_tin) has no artifact scene, so it's swapped for a real,
+	# folder-scened artifact — events must never inject a placeholder.
+	assert_true(
+		ArtifactScenes.has_scene(extras[0].template_id),
+		"mystery box injects a real (scened) artifact, got %s" % extras[0].template_id
+	)
 	assert_eq(extras[0].contents, ModelEnums.OpenResult.TEMPORAL_ECHO)
 
 

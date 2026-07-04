@@ -53,10 +53,58 @@ func test_v1_migration_injects_run_seed_and_loop_index() -> void:
 	assert_true(
 		load_result.ok, "v1 save should migrate and load: %s" % load_result.get("error", "")
 	)
-	assert_eq(load_result.schema_version, 2, "Load reports the current schema")
-	assert_eq(GameState.save_state.schema_version, 2)
+	assert_eq(load_result.schema_version, 3, "Load reports the current schema")
+	assert_eq(GameState.save_state.schema_version, 3)
 	assert_eq(GameState.save_state.run_seed, 0, "v1 migration injects run_seed=0")
 	assert_eq(GameState.save_state.loop_index, 0, "v1 migration injects loop_index=0")
+	assert_true(
+		GameState.save_state.persistent.tutorial_completed,
+		"Chained v1 migration also marks the tutorial completed"
+	)
+
+
+func test_v2_migration_marks_tutorial_completed() -> void:
+	# Pre-v3 saves predate Day 0 and must never enter the tutorial.
+	var v2 := {
+		"schema_version": 2,
+		"player_id": "veteran",
+		"run_seed": 7,
+		"loop_index": 2,
+		"persistent": {"techniques_learned": ["pendant_cleaning"]},
+		"loop": {"money": 40},
+	}
+	_write_save(v2)
+	var load_result := SaveService.load_game()
+	assert_true(
+		load_result.ok, "v2 save should migrate and load: %s" % load_result.get("error", "")
+	)
+	assert_eq(GameState.save_state.schema_version, 3)
+	assert_true(GameState.save_state.persistent.tutorial_completed)
+	assert_eq(GameState.save_state.persistent.tutorial_step, "")
+	assert_eq(GameState.save_state.persistent.player_name, "")
+	assert_eq(
+		GameState.save_state.persistent.techniques_learned[0],
+		"pendant_cleaning",
+		"Migration preserves existing persistent knowledge"
+	)
+
+
+func test_tutorial_fields_round_trip() -> void:
+	GameState.save_state.persistent.player_name = "Maverick"
+	GameState.save_state.persistent.tutorial_completed = false
+	GameState.save_state.persistent.tutorial_step = "restore_artifact"
+	var save_result := SaveService.save_game()
+	assert_true(save_result.ok, "Save should succeed: %s" % save_result.get("error", ""))
+
+	GameState.initialize("other-player")
+	var load_result := SaveService.load_game()
+	assert_true(load_result.ok, "Load should succeed: %s" % load_result.get("error", ""))
+	assert_eq(GameState.save_state.persistent.player_name, "Maverick")
+	assert_false(
+		GameState.save_state.persistent.tutorial_completed,
+		"A fresh (non-migrated) save keeps tutorial_completed false until Day 0 ends"
+	)
+	assert_eq(GameState.save_state.persistent.tutorial_step, "restore_artifact")
 
 
 func test_flashlight_on_round_trips_through_save() -> void:
@@ -258,6 +306,7 @@ func test_slot_summary_reads_metadata_without_full_load() -> void:
 
 	var summary := SaveService.slot_summary(0)
 	assert_eq(summary.get("run_seed"), 4242)
+	assert_eq(summary.get("player_name"), "", "Summary exposes player_name (empty when unset)")
 	assert_eq(summary.get("loop_index"), 1)
 	assert_eq(summary.get("current_day"), 3)
 	assert_eq(summary.get("current_hour"), 14)

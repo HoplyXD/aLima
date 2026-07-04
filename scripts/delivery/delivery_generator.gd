@@ -8,9 +8,10 @@ class_name DeliveryGenerator
 
 const DELIVERY_STREAM := "delivery_generator"
 const UID_PREFIX := "obj_"
-## DEBUG: guarantee this template in every day-1 delivery while iterating on the condition overlays.
-## Set to "" to disable. Replaces the first delivered slot, so batch size + uids stay unchanged.
-const DEBUG_FIRST_GOLD := "bronze_pendant"
+## Only templates with a real authored artifact scene (a model in scenes/restoration/artifacts/)
+## may spawn in random deliveries — no placeholder shapes. The registry is the source of truth.
+const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const _ArtifactCatalog := preload("res://scripts/restoration/artifact_catalog.gd")
 
 var _repo: DataRepository
 var _game_state: GameState
@@ -42,6 +43,7 @@ func generate_day_delivery(
 	var templates_by_rarity := _group_templates_by_rarity()
 	var total_weight := _total_rarity_weight(cfg, templates_by_rarity)
 
+	var allowed_conditions := _tutorial_allowed_conditions()
 	for i in batch_size:
 		if total_weight <= 0.0:
 			break
@@ -49,26 +51,13 @@ func generate_day_delivery(
 		if template == null:
 			break
 		var inst := _create_instance(template, day)
+		inst.allowed_conditions = allowed_conditions.duplicate()
 		_assign_random_conditions(inst, rng)
+		_apply_initial_value(inst, template, rng)
 		while used_uids.has(inst.uid):
 			inst.uid = _make_uid(day)
 		used_uids[inst.uid] = true
 		instances.append(inst)
-
-	# DEBUG: force a Gold artifact into the first slot of day-1 deliveries (see DEBUG_FIRST_GOLD).
-	# Replaces rather than appends so batch size, uids, and determinism are unaffected.
-	if (
-		not DEBUG_FIRST_GOLD.is_empty()
-		and _game_state.debug_first_gold
-		and day == 1
-		and not instances.is_empty()
-	):
-		var gold_template := _repo.get_template(DEBUG_FIRST_GOLD)
-		if gold_template != null and instances[0].template_id != DEBUG_FIRST_GOLD:
-			var replacement := _create_instance(gold_template, day)
-			_assign_random_conditions(replacement, rng)
-			replacement.uid = instances[0].uid
-			instances[0] = replacement
 
 	_inject_carriers(instances, day, used_uids)
 
@@ -88,12 +77,35 @@ func generate_day_delivery(
 
 func _group_templates_by_rarity() -> Dictionary:
 	var groups := {}
+	# Make sure scene-only artifacts are synthesized + registered before we snapshot the template keys.
+	_ArtifactCatalog.ensure_ready()
+	var required_conditions := _tutorial_allowed_conditions()
 	for id in _repo.scrap_object_templates.keys():
 		var template: ScrapObjectTemplate = _repo.scrap_object_templates[id]
 		if not template.deliverable:
 			# Quest/given items (e.g. Auntie's photos) never enter the random pool.
 			continue
-		var rarity_name := ModelEnums.rarity_name(template.base_rarity)
+		if not _ArtifactScenes.has_scene(id):
+			# Only artifacts with a real authored model spawn — never placeholder shapes.
+			continue
+		if _ArtifactCatalog.is_quest_item(id):
+			# Quest-bound artifacts are handed out for their NPC step, never randomly delivered.
+			continue
+		if _effective_rarity(template) == ModelEnums.Rarity.WHITE and _needs_rust_tarnish(template):
+			# Common artifacts that need the rust/tarnish path (Wire Brush / tin_pry) are
+			# banned from the random pool: the player has no rust tool early, so the piece
+			# could never be "ready for the bench" (nor sellable while dirty). This rule
+			# covers any future rust/tarnish common artifact automatically.
+			continue
+		# Day 0 (TUT): the taught piece must actually CARRY every whitelisted
+		# condition in its authored scene, otherwise the whitelist would render it
+		# spotless at the bench and the cleaning lesson could never complete.
+		if (
+			not required_conditions.is_empty()
+			and not _scene_has_conditions(id, required_conditions)
+		):
+			continue
+		var rarity_name := ModelEnums.rarity_name(_effective_rarity(template))
 		if not groups.has(rarity_name):
 			groups[rarity_name] = []
 		groups[rarity_name].append(template)
@@ -125,6 +137,44 @@ func _pick_template(
 	return null
 
 
+## Rolls the instance's pristine true value within the template range, then sets its current
+## value from the live condition coverage (a freshly-delivered, dirty piece spawns below true).
+func _apply_initial_value(
+	inst: ObjectInstance, template: ScrapObjectTemplate, rng: RandomNumberGenerator
+) -> void:
+	var value_range := _effective_value_range(template)
+	inst.true_value = ValueModel.roll_true_value_range(value_range.x, value_range.y, rng)
+	inst.value = ValueModel.current_value(inst, template, _repo)
+
+
+## The artifact's rarity: the scene-config override (ArtifactCatalog) when set, else the data template.
+func _effective_rarity(template: ScrapObjectTemplate) -> int:
+	var override := _ArtifactCatalog.rarity_override(template.id)
+	return override if override >= 0 else template.base_rarity
+
+
+## Tools / minigames that clean rust and tarnish. An artifact whose cleaning path uses
+## any of these is a "rust/tarnish" piece — kept out of the common delivery pool above.
+const RUST_TARNISH_TOOLS := ["rust_brush"]
+const RUST_TARNISH_MINIGAMES := ["tin_pry"]
+
+
+func _needs_rust_tarnish(template: ScrapObjectTemplate) -> bool:
+	return (
+		template.required_clean_tool in RUST_TARNISH_TOOLS
+		or template.clean_minigame in RUST_TARNISH_MINIGAMES
+	)
+
+
+## The artifact's pristine value range: the scene-config override when set (non-zero), else the
+## data template's base_value_range.
+func _effective_value_range(template: ScrapObjectTemplate) -> Vector2i:
+	var override := _ArtifactCatalog.value_range_override(template.id)
+	if override.x > 0 or override.y > 0:
+		return override
+	return Vector2i(int(template.base_value_range.x), int(template.base_value_range.y))
+
+
 func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance:
 	var inst := ObjectInstance.new()
 	inst.template_id = template.id
@@ -137,6 +187,7 @@ func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance
 	inst.authenticity = ModelEnums.Verdict.UNKNOWN
 	inst.is_counterfeit_truth = false
 	inst.storage_cost = template.storage_cost
+	inst.is_quest_item = template.is_quest_item
 	inst.value = int(template.base_value_range.x)
 	inst.assigned_anchor_id = _fallback_anchor(template)
 	return inst
@@ -148,6 +199,15 @@ func _create_instance(template: ScrapObjectTemplate, day: int) -> ObjectInstance
 ## via the delivery RNG. Phase 18: active events may append extra conditions.
 func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator) -> void:
 	var catalog := _repo.get_surface_conditions_sorted()
+	# Instance-level condition filter (Day 0 grime+dust, quest constraints): only
+	# the allowed condition types may spawn on this piece (TUT).
+	if not inst.allowed_conditions.is_empty():
+		var filtered: Array = []
+		for raw in catalog:
+			var candidate: SurfaceCondition = raw
+			if inst.allowed_conditions.has(candidate.id):
+				filtered.append(candidate)
+		catalog = filtered
 	if catalog.is_empty():
 		return
 	var count := mini(rng.randi_range(2, 4), catalog.size())
@@ -171,6 +231,37 @@ func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator)
 	if EventDirector != null:
 		decals.append_array(EventDirector.get_extra_conditions_for_delivery())
 	inst.spawned_decals = decals
+
+
+## The Day 0 condition whitelist from the tutorial config, or [] in normal play.
+func _tutorial_allowed_conditions() -> Array[String]:
+	if TutorialService.is_tutorial_active():
+		return ModelUtils.as_string_array(TutorialService.get_config().get("allowed_conditions"))
+	return [] as Array[String]
+
+
+## True when the artifact's authored scene carries EVERY condition id in `required`.
+## Scene slugs may be display-name based (e.g. "grime"); normalize them to journal
+## condition ids before comparing.
+func _scene_has_conditions(template_id: String, required: Array[String]) -> bool:
+	var present := {}
+	for raw_type in _ArtifactCatalog.condition_types_for(template_id):
+		present[_normalize_condition_id(raw_type)] = true
+	for condition_id in required:
+		if not present.has(condition_id):
+			return false
+	return true
+
+
+## Resolves a raw scene slug ("grime", "Water Stain") to its journal condition id.
+func _normalize_condition_id(raw_type: String) -> String:
+	var slug := raw_type.to_lower().replace(" ", "_").replace("-", "_")
+	for raw in _repo.get_surface_conditions_sorted():
+		var condition: SurfaceCondition = raw
+		var display_slug := condition.display_name.to_lower().replace(" ", "_").replace("-", "_")
+		if slug == condition.id or slug == display_slug:
+			return condition.id
+	return slug
 
 
 func _make_uid(day: int) -> String:
@@ -257,6 +348,7 @@ func _inject_carriers(instances: Array[ObjectInstance], day: int, used_uids: Dic
 		inst.contents = ModelEnums.OpenResult.FRAGMENT
 		inst.assigned_anchor_id = container_id
 		_assign_random_conditions(inst, cond_rng)
+		_apply_initial_value(inst, template, cond_rng)
 		plan["carrier_instance_id"] = inst.uid
 		while used_uids.has(inst.uid):
 			inst.uid = _make_uid(day)

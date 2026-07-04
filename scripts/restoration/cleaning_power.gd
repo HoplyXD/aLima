@@ -10,11 +10,29 @@ class_name CleaningPower
 
 const DEFAULT_POWER: int = 60
 
+## Max cleaning power on the 0..255 dirt scale; the debug eraser cleans anything at full power.
+const UNIVERSAL_POWER: int = 255
+
+## A tool whose `enables` lists this interaction is the debug "universal cleaner": it removes
+## ANY surface condition (authored overlay, data decal, or dirt mask) regardless of the
+## condition's required tool. Data-driven so the engine stays artifact-agnostic.
+const DEBUG_ERASE_ENABLE: String = "debug_erase"
+
+
+## True when the tool is the debug universal cleaner (erases any condition).
+static func is_universal_cleaner(repo: DataRepository, tool_id: String) -> bool:
+	if repo == null or tool_id.is_empty():
+		return false
+	var tool := repo.get_tool(tool_id)
+	return tool != null and tool.enables.has(DEBUG_ERASE_ENABLE)
+
 
 ## The power `tool_id` has against `condition_id` (0 = can't clean it).
 static func power(repo: DataRepository, tool_id: String, condition_id: String) -> int:
 	if repo == null or tool_id.is_empty() or condition_id.is_empty():
 		return 0
+	if is_universal_cleaner(repo, tool_id):
+		return UNIVERSAL_POWER  # the debug eraser cleans every condition
 	var tool := repo.get_tool(tool_id)
 	if tool != null and not tool.cleans.is_empty():
 		return maxi(0, int(tool.cleans.get(condition_id, 0)))
@@ -29,6 +47,13 @@ static func power(repo: DataRepository, tool_id: String, condition_id: String) -
 static func conditions_for(repo: DataRepository, tool_id: String) -> Array:
 	var out: Array = []
 	if repo == null:
+		return out
+	# The debug eraser lists EVERY known condition (it cleans them all).
+	if is_universal_cleaner(repo, tool_id):
+		for raw in repo.get_surface_conditions_sorted():
+			var cond := raw as SurfaceCondition
+			if cond != null:
+				out.append(_entry(cond.id, cond, UNIVERSAL_POWER))
 		return out
 	var tool := repo.get_tool(tool_id)
 	if tool != null and not tool.cleans.is_empty():

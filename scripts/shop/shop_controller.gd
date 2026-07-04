@@ -11,6 +11,13 @@ extends Node3D
 const RESTORATION_VIEW_SCENE := preload("res://scenes/restoration/restoration_view.tscn")
 const PHONE_SCENE := preload("res://scenes/ui/phone.tscn")
 const STORAGE_SCREEN_SCENE := preload("res://scenes/ui/storage_screen.tscn")
+const RESTORATION_ARTIFACT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
+const ShopArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
+
+## Day 0 finale reading state (TUT): the player opens Yuyu's journal, reads his
+## last letter, and only then does the blackout into Day 1 fire.
+enum Day0Finale { INACTIVE, VIEWER_OPEN, CASE_SHOWN, LETTER_SHOWN }
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector (e.g. 0.1) to watch the clock move faster while
@@ -48,10 +55,20 @@ var _ayla_source: AylaSource = AylaSource.NONE
 
 ## Alya (the morning-delivery courier) portrait, shown when she knocks.
 const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
+## Yuyu (the uncle), standing in the shop through Day 0 until he vanishes (TUT).
+const YUYU_PORTRAIT := preload("res://assets/Characters/Uncle.png")
 
 @onready var _hud: ShopHud = $HUD
 @onready var _visitor: Sprite3D = $Visitor
 @onready var _visitor2: Sprite3D = $Visitor2  ## Alya (scavenger) waiting at the door.
+## Day 0 placeholder Yuyu sprite (created at runtime while the tutorial runs).
+var _yuyu_sprite: Sprite3D
+## Restored-artifact 3D inspection overlay (created on first card click).
+var _artifact_viewer: ArtifactViewer
+## Day 0 finale reading state + its inner-monologue dialogue (over the book).
+var _day0_finale: Day0Finale = Day0Finale.INACTIVE
+var _finale_dialogue: DialogueBox
+var _finale_cb: Callable = Callable()
 @onready var _triage_screen: TriageController = $TriageScreen
 @onready var _book_viewport: BookViewport = $BookViewport
 @onready var _restoration_view: RestorationView = _create_restoration_view()
@@ -63,6 +80,9 @@ const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
 @onready var _showcase: ShowcaseScreen = _create_showcase()
 ## DEBUG-only slice/placement demo overlay (F9). Excluded from normal progression.
 @onready var _demo_menu: DemoMenu = _create_demo_menu()
+## End-of-day evening summary/upkeep/plan screen (Phase 14, §4-N). Opened at the
+## 20:00 close via EventBus.evening_started; committing it advances the day.
+@onready var _evening_screen: EveningScreen = _create_evening_screen()
 
 # Diegetic 3D shop interactables. Each one fires the same controller handler as
 # its HUD fallback button, so the physical prop and the accessibility button are
@@ -97,6 +117,8 @@ func _ready() -> void:
 	_hud.storage_pressed.connect(_on_storage_pressed)
 	_hud.morning_delivery_pressed.connect(_on_morning_delivery_pressed)
 	_hud.dialogue_finished.connect(_on_dialogue_finished)
+	_hud.unrestored_card_selected.connect(_on_unrestored_card_selected)
+	_hud.restored_card_selected.connect(_on_restored_card_selected)
 
 	_connect_interactables()
 
@@ -121,7 +143,34 @@ func _ready() -> void:
 
 	AylaService.sort_ready.connect(_on_ayla_sort_ready)
 	EventBus.day_changed.connect(_on_day_changed)
+	# The evening runs interactively while the shop is the active scene; leaving the
+	# shop (to the yard/title) drops back to auto-advance so the clock never soft-locks
+	# waiting for an evening screen that isn't on screen.
+	EveningService.interactive = true
+	EventBus.evening_started.connect(_on_evening_started)
+	_evening_screen.closed.connect(_on_evening_closed)
 	_refresh_ayla_knock()
+
+	# Day 0 (TUT): the tutorial glue presents Yuyu's dialogue and hint arrows on
+	# top of the normal shop, and Yuyu himself stands in the room per step data.
+	# Created only while the tutorial is active; outside it the hand-placed node
+	# stays hidden (he vanished with Day 0).
+	if TutorialService.is_tutorial_active():
+		_create_tutorial_glue()
+		_create_yuyu_sprite()
+		# The journal only appears at the Day 0 finale; re-gate it on every step.
+		TutorialService.step_changed.connect(func(_id: String) -> void: _apply_day0_journal_gate())
+		_apply_day0_journal_gate()
+		# Day 0 finale reading: react to the book opening and its page turns.
+		_book_viewport.book_opened.connect(_on_day0_book_opened)
+		_book_viewport.page_changed.connect(_on_day0_page_changed)
+	else:
+		var yuyu_node := get_node_or_null("YuyuNpc") as Sprite3D
+		if yuyu_node != null:
+			yuyu_node.visible = false
+		# Day 1 intro: trigger the scripted blackout sequence when entering the shop.
+		if Day1Service.is_day1_intro_active():
+			_day1_intro_start()
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -140,6 +189,67 @@ func _enter_backdrop_mode() -> void:
 		(menu_cam as Camera3D).make_current()
 
 
+## Starts the Day 1 intro sequence: inner monologue about blacking out, then guides
+## the player to exit the house and meet Alya at the scrapyard gate.
+func _day1_intro_start() -> void:
+	Day1Service.step_changed.connect(_on_day1_step_changed)
+	Day1Service.day1_intro_finished.connect(_on_day1_intro_finished)
+	# If resuming, re-announce the current step; otherwise start at the first step.
+	var step_id := Day1Service.current_step_id()
+	if step_id.is_empty():
+		Day1Service.advance()
+	else:
+		Day1Service.step_changed.emit(step_id)
+
+
+func _on_day1_step_changed(step_id: String) -> void:
+	var step := Day1Service.get_step(step_id)
+	if step.is_empty():
+		return
+	# Present the step's dialogue lines.
+	var dialogue: Array = SaveState._as_array(step.get("dialogue"))
+	if dialogue.size() > 0:
+		_show_dialogue_lines(dialogue)
+	# Update the HUD hint.
+	var hint := ModelUtils.as_dictionary(step.get("hint"))
+	if not hint.is_empty():
+		var speaker := ModelUtils.as_string(hint.get("speaker"))
+		var text := ModelUtils.as_string(hint.get("text"))
+		var anchor := ModelUtils.as_string(hint.get("anchor"))
+		_hud.set_hint(speaker, text, anchor)
+	else:
+		_hud.clear_hint()
+
+
+func _on_day1_intro_finished() -> void:
+	_hud.clear_hint()
+	# Start the normal day clock.
+	DayClock.start_day(1)
+	DayClock.running = true
+
+
+## Shows a sequence of dialogue lines from a step.
+func _show_dialogue_lines(lines: Array) -> void:
+	if lines.is_empty():
+		return
+	var box: DialogueBox = DIALOGUE_BOX_SCENE.instantiate()
+	add_child(box)
+	var formatted_lines: Array = []
+	for line in lines:
+		if line is Dictionary:
+			var speaker := ModelUtils.as_string(line.get("speaker"))
+			var text := ModelUtils.as_string(line.get("text"))
+			if speaker == "inner":
+				# Inner monologue hides the speaker name label.
+				formatted_lines.append({"name": "", "text": text})
+			else:
+				formatted_lines.append({"name": speaker, "text": text})
+		else:
+			formatted_lines.append(str(line))
+	box.start(formatted_lines)
+	box.finished.connect(func() -> void: box.queue_free())
+
+
 func _process(delta: float) -> void:
 	# `running` is the auto-driver gate; tick() itself still no-ops while paused or
 	# closed. Tests set running=false to drive the clock deterministically.
@@ -153,8 +263,14 @@ func _exit_tree() -> void:
 	# shared autoload state when the menu is torn down to enter the game.
 	if backdrop_mode:
 		return
+	# Leaving the shop scene returns the evening to non-interactive auto-advance.
+	EveningService.interactive = false
 	# The clock is intentionally not reset here: the scrapyard keeps the same
 	# running session, and SpaceManager resets it only on return-to-title.
+	# Autosave on the way out so the exact day/hour/minute survives stepping into the
+	# yard or quitting the game (serialize_state snapshots the live clock).
+	if DayClock.running:
+		SaveService.save_game()
 	if _triage_screen != null:
 		_triage_screen.close()
 
@@ -166,17 +282,108 @@ func is_day_running() -> bool:
 
 
 func _refresh_ui() -> void:
-	var unrestored := _count_inventory_by_glow(false)
-	var restored := _count_inventory_by_glow(true)
-	_hud.set_unrestored(unrestored)
-	_hud.set_restored(restored)
+	_hud.set_artifact_cards(
+		_artifact_card_entries(false),
+		_artifact_card_entries(true),
+		SettingsService.previews_enabled(),
+		_attach_card_preview
+	)
 	_hud.set_quest_count(_count_seated_fragments())
 	_update_clock_display()
 
 
+## Card entries ({uid, display_name, color}) for one strip of the top bar.
+func _artifact_card_entries(restored_only: bool) -> Array:
+	var out: Array = []
+	var repo := DataRepository.singleton()
+	for raw in GameState.save_state.loop.inventory:
+		if not (raw is Dictionary):
+			continue
+		var inst := ObjectInstance.from_dictionary(raw)
+		var template := repo.get_template(inst.template_id)
+		if template == null:
+			continue
+		var is_restored := (
+			inst.state == ModelEnums.ObjState.CLEAN or inst.state == ModelEnums.ObjState.OPEN
+		)
+		if is_restored != restored_only:
+			continue
+		out.append(
+			{
+				"uid": inst.uid,
+				"display_name": template.display_name,
+				# Quest items read ORANGE everywhere; ordinary pieces use their rarity.
+				"color": GlowMapper.get_instance_glow_color(
+					template.base_rarity, inst.is_carrier, false, inst.is_quest_item
+				),
+			}
+		)
+	return out
+
+
+func _rarity_color(rarity: int) -> Color:
+	var index := clampi(rarity, 0, ShopHud.RARITY.size() - 1)
+	return Color.from_string(str(ShopHud.RARITY[index]["color"]), Color.WHITE)
+
+
+## Embeds the rotating 3D preview (model + live conditions) into a top-bar card,
+## mirroring the bench's artifact bar presentation.
+func _attach_card_preview(uid: String, card: ArtifactCard) -> void:
+	var service := RestorationService.new()
+	var inst := service.find_instance_by_id(uid)
+	if inst == null:
+		return
+	var template := service.get_repository().get_template(inst.template_id)
+	if template == null:
+		return
+	var scene: PackedScene = ShopArtifactScenes.scene_for(
+		template.id, RESTORATION_ARTIFACT_SCENE
+	)
+	var preview: RestorationObject3D = scene.instantiate()
+	card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
+	service.present_object(preview, inst, template, uid.hash())
+
+
 func _update_clock_display() -> void:
+	# Day 0 (tutorial) is clockless: show the day tag only (TUT).
+	if TutorialService.is_tutorial_active():
+		_hud.set_day_zero()
+		_refresh_yuyu_presence()
+		return
 	_hud.set_day(DayClock.get_day(), DayClock.TOTAL_DAYS)
 	_hud.set_time(DayClock.get_hour(), DayClock.get_minute())
+
+
+## Yuyu stands in the shop on the steps whose data lists him (npcs: ["yuyu"]);
+## he is gone by the finale — the empty shop IS the story beat (TUT).
+func _refresh_yuyu_presence() -> void:
+	if _yuyu_sprite == null:
+		return
+	var step := TutorialService.current_step()
+	_yuyu_sprite.visible = (
+		TutorialService.is_tutorial_active()
+		and ModelUtils.as_string(step.get("space")) == "SHOP"
+		and ModelUtils.as_string_array(step.get("npcs")).has("yuyu")
+	)
+
+
+## Resolves the hand-placed Yuyu node (Shop.tscn/YuyuNpc — move him in the
+## editor); falls back to a runtime duplicate beside the visitor spot when the
+## scene lacks one. Presentation only; step data decides when he is visible.
+func _create_yuyu_sprite() -> void:
+	_yuyu_sprite = get_node_or_null("YuyuNpc") as Sprite3D
+	if _yuyu_sprite != null:
+		_yuyu_sprite.visible = false
+		return
+	if _visitor == null:
+		return
+	_yuyu_sprite = _visitor.duplicate() as Sprite3D
+	_yuyu_sprite.name = "YuyuNpc"
+	_yuyu_sprite.texture = YUYU_PORTRAIT
+	_yuyu_sprite.visible = false
+	add_child(_yuyu_sprite)
+	_yuyu_sprite.transform = _visitor.transform
+	_yuyu_sprite.translate(Vector3(1.4, 0.0, 0.0))
 
 
 # --- HUD intent ---------------------------------------------------------
@@ -203,10 +410,22 @@ func _on_door_pressed() -> void:
 			]
 		_open_dialogue(lines, true)
 		return
+	# Day 0 (TUT): no scheduled route visitors exist yet — the door always steps
+	# out to the yard while the tutorial is running.
+	if TutorialService.is_tutorial_active():
+		SpaceManager.go_to_yard()
+		return
 	# Authored dialogue + portraits live in data/routes/routes.json. The door shows
 	# whichever character RouteService schedules for the current in-game day/hour,
 	# branching their lines on whether the player has met them before.
-	var route := RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
+	# QUEST PRIORITY: If the player has the salakot, Sam appears first.
+	var route: CharacterRoute = null
+	if _has_quest_item_in_inventory("salakot"):
+		var sam_route := DataRepository.singleton().get_route("sam")
+		if sam_route != null and not RouteService.is_visit_consumed("sam", DayClock.get_day()):
+			route = sam_route
+	if route == null:
+		route = RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
 	if route == null:
 		# No visitor waiting: step outside into the walkable scrapyard.
 		SpaceManager.go_to_yard()
@@ -226,9 +445,43 @@ func _on_door_pressed() -> void:
 func _on_workbench_pressed() -> void:
 	_set_interactables_enabled(false)
 	_restoration_view.open()
+	EventBus.restoration_opened.emit(GameState.save_state.loop.restore_target_uid)
+
+
+## Top-bar card click on an UNRESTORED artifact: load exactly that piece onto
+## the bench and open restoration on it.
+func _on_unrestored_card_selected(uid: String) -> void:
+	GameState.save_state.loop.restore_target_uid = uid
+	_on_workbench_pressed()
+
+
+func _has_quest_item_in_inventory(template_id: String) -> bool:
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary and raw.get("template_id") == template_id:
+			return true
+	return false
+
+
+## Top-bar card click on a RESTORED artifact: open the spin/zoom 3D viewer
+## (viewing only — clicking outside the model exits).
+func _on_restored_card_selected(uid: String) -> void:
+	if _artifact_viewer == null:
+		_artifact_viewer = ArtifactViewer.new()
+		add_child(_artifact_viewer)
+		_artifact_viewer.closed.connect(func() -> void: _set_interactables_enabled(true))
+	_set_interactables_enabled(false)
+	_artifact_viewer.open(uid)
 
 
 func _on_journal_pressed() -> void:
+	# Day 0 ending (TUT): touching the journal on the finale step opens Yuyu's book
+	# to be READ — the blackout into Day 1 only fires after his letter.
+	if (
+		TutorialService.is_tutorial_active()
+		and TutorialService.current_step_id() == "journal_finale"
+	):
+		_begin_day0_finale_reading()
+		return
 	# The journal is the book rendered in its own viewport overlay. Opening it covers
 	# the shop; it closes via Esc, the Close button, or clicking off the book.
 	_set_interactables_enabled(false)
@@ -239,6 +492,82 @@ func _on_journal_pressed() -> void:
 func _on_journal_closed() -> void:
 	_set_interactables_enabled(true)
 	_hud.set_journal_open(false)
+	# Closing the journal AFTER reading Yuyu's letter ends Day 0.
+	if _day0_finale == Day0Finale.LETTER_SHOWN:
+		_finish_day0_finale()
+
+
+# --- Day 0 finale reading (TUT) ----------------------------------------------
+
+
+func _begin_day0_finale_reading() -> void:
+	_day0_finale = Day0Finale.VIEWER_OPEN
+	_set_interactables_enabled(false)
+	_book_viewport.open()  # shows the closed cover
+	_hud.set_journal_open(true)
+	_play_inner_monologue(["Tito Yuyu's journal... it wasn't here this morning. Let me open it."])
+
+
+## The book's cover just opened onto the Fragment Case (the "big slot" spread).
+func _on_day0_book_opened() -> void:
+	if _day0_finale == Day0Finale.INACTIVE:
+		return
+	_day0_finale = Day0Finale.CASE_SHOWN
+	_play_inner_monologue(
+		["A case, cut with five empty slots... like something is meant to fit inside each one."]
+	)
+
+
+## Watches the reading progress: page 5 is Yuyu's letter; turning away from it (or
+## closing) once read ends Day 0.
+func _on_day0_page_changed(page_number: int) -> void:
+	if _day0_finale == Day0Finale.INACTIVE:
+		return
+	if page_number == Page.CONDITION_PAGE_NUMBER:
+		_day0_finale = Day0Finale.LETTER_SHOWN
+	elif _day0_finale == Day0Finale.LETTER_SHOWN:
+		_finish_day0_finale()
+
+
+## The player has read Yuyu's letter — the last monologue, then the blackout.
+func _finish_day0_finale() -> void:
+	if _day0_finale == Day0Finale.INACTIVE:
+		return
+	_day0_finale = Day0Finale.INACTIVE
+	_book_viewport.close()
+	_hud.set_journal_open(false)
+	_play_inner_monologue(
+		[
+			"Tito Yuyu is really gone.",
+			"Five fragments. Five people he trusted. I have to find every one.",
+			"I'll bring him back. However many times these days repeat.",
+		],
+		func() -> void: TutorialService.run_finale()
+	)
+
+
+## Plays inner-monologue lines in a DialogueBox layered above the book, then runs
+## `on_finished` (if given). The speaker is the player ({player}).
+func _play_inner_monologue(lines: Array, on_finished: Callable = Callable()) -> void:
+	if _finale_dialogue == null:
+		var layer := CanvasLayer.new()
+		layer.layer = 120  # above the book viewport
+		add_child(layer)
+		_finale_dialogue = DIALOGUE_BOX_SCENE.instantiate()
+		layer.add_child(_finale_dialogue)
+		_finale_dialogue.finished.connect(_on_finale_monologue_finished)
+	var formatted: Array = []
+	for line in lines:
+		formatted.append({"name": "{player}", "text": str(line)})
+	_finale_cb = on_finished
+	_finale_dialogue.start(formatted)
+
+
+func _on_finale_monologue_finished() -> void:
+	var cb := _finale_cb
+	_finale_cb = Callable()
+	if cb.is_valid():
+		cb.call()
 
 
 func _on_phone_pressed() -> void:
@@ -284,6 +613,10 @@ func _open_dialogue(lines: Array, show_visitor: bool) -> void:
 
 func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	_set_interactables_enabled(false)
+	# Pop the loading screen up FIRST and let it paint, so the (one-time) catalog scan + delivery
+	# generation below freezes behind the loading overlay instead of on Alya's face.
+	_triage_screen.begin_loading()
+	await get_tree().process_frame
 	var repo := DataRepository.singleton()
 
 	# Plan carrier placements once per loop if missing.
@@ -299,44 +632,32 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	# Suspicious Antique) before generating the batch so their modifiers and injected
 	# instances are included. Scrap bias is layered on top of the event-adjusted weights
 	# and only touches rarity weights, so event batch-size/storage effects remain intact.
-	EventDirector.roll_morning_event(GameState.save_state.loop.current_day)
+	# Day 0 (TUT) never rolls events: their injected extras bypass the tutorial's
+	# rarity/condition constraints (that's where the odd uncommon artifact came from).
+	var tutorial_active := TutorialService.is_tutorial_active()
+	if not tutorial_active:
+		EventDirector.roll_morning_event(GameState.save_state.loop.current_day)
 	var event_cfg := EventDirector.modify_delivery_config(repo.get_delivery_config())
 	# The daily free drop uses the event-adjusted base config; only scrap-sort
 	# returns get the scrap-bias layer applied.
 	var biased_cfg := event_cfg
 	if not is_free_daily:
 		biased_cfg = AylaService.get_biased_delivery_config(event_cfg)
-	var extras := EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
-	if is_free_daily:
-		extras.append_array(_first_delivery_showcase(GameState.save_state.loop.current_day))
+	# Day 0 (TUT): the taught batch is EXACTLY TWO random common artifacts carrying
+	# both whitelisted conditions. Yuyu tells you to keep one and recycle the other.
+	if tutorial_active:
+		biased_cfg.rarity_weights = {ModelEnums.rarity_name(ModelEnums.Rarity.WHITE): 1.0}
+		biased_cfg.batch_min = 2
+		biased_cfg.batch_max = 2
+	var extras: Array[ObjectInstance] = []
+	if not tutorial_active:
+		extras = EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(
 		GameState.save_state.loop.current_day, biased_cfg, extras
 	)
 	_triage_screen.open(delivery, biased_cfg.storage_cap, is_free_daily)
-
-
-## Guarantees the Oton Death Mask arrives in the very first delivery so the gold
-## surface-clean artifact (authored Tarnish/Dust/Grime conditions) can be exercised
-## end-to-end. Day 1 only; its scene-placed decals drive the cleaning, so no data-driven
-## conditions are assigned (spawned_decals stays empty).
-func _first_delivery_showcase(day: int) -> Array[ObjectInstance]:
-	var out: Array[ObjectInstance] = []
-	if day != 1:
-		return out
-	var template := DataRepository.singleton().get_template("oton_death_mask")
-	if template == null:
-		return out
-	var inst := ObjectInstance.new()
-	inst.template_id = template.id
-	inst.uid = "inst_oton_day1"
-	inst.condition = 0.0
-	inst.state = ModelEnums.ObjState.DIRTY
-	inst.storage_cost = template.storage_cost
-	inst.value = int(template.base_value_range.x)
-	out.append(inst)
-	return out
 
 
 func _on_morning_delivery_pressed() -> void:
@@ -370,6 +691,16 @@ func _refresh_ayla_knock() -> void:
 		_alya_waiting = true
 		_visitor2.texture = ALYA_PORTRAIT
 		_visitor2.visible = true
+		return
+	# Day 0 (TUT): only the taught forage -> hand-off -> sort flow may knock; the
+	# daily free drop starts with the normal days.
+	if TutorialService.is_tutorial_active():
+		return
+	# Day 1 intro: no morning delivery; player finds scrap in the yard instead.
+	if DayClock.get_day() == 1 and not Day1Service.is_day1_intro_active():
+		return
+	# Day 1 intro active: no daily delivery either; scrap-sort only.
+	if Day1Service.is_day1_intro_active():
 		return
 	if GameState.save_state.loop.last_delivery_day != GameState.save_state.loop.current_day:
 		_ayla_source = AylaSource.DAILY
@@ -424,6 +755,45 @@ func _create_demo_menu() -> DemoMenu:
 	return menu
 
 
+func _create_evening_screen() -> EveningScreen:
+	var screen := EveningScreen.new()
+	add_child(screen)
+	return screen
+
+
+func _create_tutorial_glue() -> TutorialGlue:
+	var glue := TutorialGlue.new()
+	glue.setup(
+		"SHOP",
+		{
+			"door": _door_interactable,
+			"workbench": _workbench_interactable,
+			"journal": _journal_interactable,
+			"phone": _phone_interactable,
+			"storage": _delivery_interactable,
+		}
+	)
+	add_child(glue)
+	return glue
+
+
+# --- Evening (Phase 14, §4-N) -------------------------------------------------
+
+
+## Opens the evening screen when the day closes (EVE-R1). Committing it advances the
+## day through EveningService -> LoopController.
+func _on_evening_started(day: int) -> void:
+	_hud.set_actions_visible(false)
+	_set_interactables_enabled(false)
+	_evening_screen.open(day)
+
+
+func _on_evening_closed() -> void:
+	_hud.set_actions_visible(true)
+	_set_interactables_enabled(true)
+	_refresh_ui()
+
+
 # --- Diegetic interactables ---------------------------------------------------
 
 
@@ -462,6 +832,19 @@ func _set_interactables_enabled(value: bool) -> void:
 		entry.set_enabled(value)
 	if not value:
 		_hud.set_prompt("")
+	else:
+		_apply_day0_journal_gate()
+
+
+## Day 0 (TUT): the journal only exists at the END of Day 0 — it appears on the
+## table once Yuyu has gone. Keep the journal prop hidden/off until the finale
+## step, so it can't be opened during the earlier lessons.
+func _apply_day0_journal_gate() -> void:
+	if not TutorialService.is_tutorial_active():
+		return
+	var at_finale := TutorialService.current_step_id() == "journal_finale"
+	_journal_interactable.set_enabled(at_finale)
+	_journal_interactable.visible = at_finale
 
 
 func _count_inventory_by_glow(restored_only: bool) -> Dictionary:
@@ -524,6 +907,10 @@ func _on_dialogue_finished() -> void:
 	# After a route's door conversation, open its scripted showcase if a beat is due.
 	if not finished_route_id.is_empty():
 		_maybe_open_showcase(finished_route_id)
+	# Sam quest: after talking to Sam with the salakot, unlock archeologist house
+	if finished_route_id == "sam":
+		QuestService.unlock_location("archeologist_house")
+		SpaceManager.go_to_archeologist_house()
 
 
 ## Opens the route's scripted showcase when a beat is authored and ready for the

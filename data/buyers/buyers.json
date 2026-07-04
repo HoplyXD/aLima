@@ -7,8 +7,14 @@
       "display_name": "Esperanza Vega",
       "occupation": "Heirloom Collector",
       "motive": "Completes a private collection of fine heirlooms.",
-      "budget_range": [120, 900],
-      "preferred_categories": ["jewelry", "ceramic"],
+      "budget_range": [
+        120,
+        900
+      ],
+      "preferred_categories": [
+        "jewelry",
+        "ceramic"
+      ],
       "negotiation_style": "appraising",
       "route_id": "",
       "fallback_response_set": "collector_lines",
@@ -21,13 +27,33 @@
       "daily_allowance": 120,
       "ignores_banter": true,
       "lines": {
-        "open": ["A fine piece. I could give you ₱{offer} for it.", "Provenance matters to me. ₱{offer}, to start."],
-        "counter": ["Hm. I can come up to ₱{offer}.", "For the right piece, ₱{offer}."],
-        "accept": ["Sold. It will be well cared for.", "A pleasure doing business."],
-        "walk": ["Then we have no deal. Good day.", "Too rich for me. I'll pass."],
-        "banter_warm": ["Ah, provenance — now you have my attention.", "A piece with a story is worth more."],
-        "banter_cool": ["Flattery won't change an appraisal.", "I value the object, not the patter."]
-      }
+        "open": [
+          "A fine piece. I could give you ₱{offer} for it.",
+          "Provenance matters to me. ₱{offer}, to start."
+        ],
+        "counter": [
+          "Hm. I can come up to ₱{offer}.",
+          "For the right piece, ₱{offer}."
+        ],
+        "accept": [
+          "Sold. It will be well cared for.",
+          "A pleasure doing business."
+        ],
+        "walk": [
+          "Then we have no deal. Good day.",
+          "Too rich for me. I'll pass."
+        ],
+        "banter_warm": [
+          "Ah, provenance — now you have my attention.",
+          "A piece with a story is worth more."
+        ],
+        "banter_cool": [
+          "Flattery won't change an appraisal.",
+          "I value the object, not the patter."
+        ]
+      },
+      "min_condition": 100,
+      "requires_scan": true
     },
     {
       "record_type": "buyer_persona",
@@ -35,8 +61,14 @@
       "display_name": "Boy Santos",
       "occupation": "Reseller",
       "motive": "Flips junk for a quick margin.",
-      "budget_range": [40, 360],
-      "preferred_categories": ["metal", "ceramic"],
+      "budget_range": [
+        40,
+        360
+      ],
+      "preferred_categories": [
+        "metal",
+        "ceramic"
+      ],
       "negotiation_style": "aggressive",
       "route_id": "",
       "fallback_response_set": "reseller_lines",
@@ -48,13 +80,32 @@
       "starting_cash": 360,
       "daily_allowance": 70,
       "lines": {
-        "open": ["I'll take it off your hands for ₱{offer}, final-ish.", "Eh, ₱{offer}. It's basically scrap."],
-        "counter": ["Fine, fine — ₱{offer}, and that's me being generous.", "₱{offer}. Don't push it."],
-        "accept": ["Deal. Pleasure squeezing you.", "Sold. I'll double it by Friday."],
-        "walk": ["Nah, keep it then.", "You're dreaming. I'm out."],
-        "banter_warm": ["Heh, you drive a hard bargain.", "Alright, you've got some hustle."],
-        "banter_cool": ["Save the sales pitch.", "History? I sell to tourists, pal."]
-      }
+        "open": [
+          "I'll take it off your hands for ₱{offer}, final-ish.",
+          "Eh, ₱{offer}. It's basically scrap."
+        ],
+        "counter": [
+          "Fine, fine — ₱{offer}, and that's me being generous.",
+          "₱{offer}. Don't push it."
+        ],
+        "accept": [
+          "Deal. Pleasure squeezing you.",
+          "Sold. I'll double it by Friday."
+        ],
+        "walk": [
+          "Nah, keep it then.",
+          "You're dreaming. I'm out."
+        ],
+        "banter_warm": [
+          "Heh, you drive a hard bargain.",
+          "Alright, you've got some hustle."
+        ],
+        "banter_cool": [
+          "Save the sales pitch.",
+          "History? I sell to tourists, pal."
+        ]
+      },
+      "requires_scan": true
     },
     {
       "record_type": "buyer_persona",
@@ -62,8 +113,14 @@
       "display_name": "Maya Reyes",
       "occupation": "Student",
       "motive": "Hunts cheap decor for a tiny apartment.",
-      "budget_range": [20, 160],
-      "preferred_categories": ["paper", "photo"],
+      "budget_range": [
+        20,
+        160
+      ],
+      "preferred_categories": [
+        "paper",
+        "photo"
+      ],
       "negotiation_style": "earnest",
       "route_id": "",
       "fallback_response_set": "student_lines",
@@ -75,13 +132,33 @@
       "starting_cash": 160,
       "daily_allowance": 50,
       "lines": {
-        "open": ["This is so cute! Could you do ₱{offer}?", "I'm on a budget... ₱{offer}?"],
-        "counter": ["Okay, I can stretch to ₱{offer}.", "Maybe ₱{offer}? That's most of my allowance."],
-        "accept": ["Yay! Thank you so much!", "Deal! It'll look perfect on my shelf."],
-        "walk": ["Aw, that's too much for me. Sorry!", "I can't afford that. Maybe next time."],
-        "banter_warm": ["Aw, that's actually really sweet!", "Okay okay, you're convincing me!"],
-        "banter_cool": ["Um, that's a lot of pressure...", "I— I don't know about that."]
-      }
+        "open": [
+          "This is so cute! Could you do ₱{offer}?",
+          "I'm on a budget... ₱{offer}?"
+        ],
+        "counter": [
+          "Okay, I can stretch to ₱{offer}.",
+          "Maybe ₱{offer}? That's most of my allowance."
+        ],
+        "accept": [
+          "Yay! Thank you so much!",
+          "Deal! It'll look perfect on my shelf."
+        ],
+        "walk": [
+          "Aw, that's too much for me. Sorry!",
+          "I can't afford that. Maybe next time."
+        ],
+        "banter_warm": [
+          "Aw, that's actually really sweet!",
+          "Okay okay, you're convincing me!"
+        ],
+        "banter_cool": [
+          "Um, that's a lot of pressure...",
+          "I— I don't know about that."
+        ]
+      },
+      "min_condition": 100,
+      "requires_scan": true
     },
     {
       "record_type": "buyer_persona",
@@ -89,8 +166,14 @@
       "display_name": "Ramon Aquino",
       "occupation": "Gift Shopper",
       "motive": "Wants a sentimental, beautifully restored gift.",
-      "budget_range": [80, 520],
-      "preferred_categories": ["photo", "jewelry"],
+      "budget_range": [
+        80,
+        520
+      ],
+      "preferred_categories": [
+        "photo",
+        "jewelry"
+      ],
       "negotiation_style": "sentimental",
       "route_id": "",
       "fallback_response_set": "gift_lines",
@@ -102,13 +185,32 @@
       "starting_cash": 520,
       "daily_allowance": 90,
       "lines": {
-        "open": ["It's for my wife's birthday. ₱{offer}?", "If it's truly restored well — ₱{offer}."],
-        "counter": ["For her, I can manage ₱{offer}.", "₱{offer}, if you promise it's spotless."],
-        "accept": ["She'll love it. Thank you.", "Sold — wrap it gently, please."],
-        "walk": ["I'll find something else for her, sorry.", "That's beyond the occasion. No thank you."],
-        "banter_warm": ["Oh, she would adore that story.", "You understand — it has to be special."],
-        "banter_cool": ["Please don't push, this is personal.", "That's not how I want to choose a gift."]
-      }
+        "open": [
+          "It's for my wife's birthday. ₱{offer}?",
+          "If it's truly restored well — ₱{offer}."
+        ],
+        "counter": [
+          "For her, I can manage ₱{offer}.",
+          "₱{offer}, if you promise it's spotless."
+        ],
+        "accept": [
+          "She'll love it. Thank you.",
+          "Sold — wrap it gently, please."
+        ],
+        "walk": [
+          "I'll find something else for her, sorry.",
+          "That's beyond the occasion. No thank you."
+        ],
+        "banter_warm": [
+          "Oh, she would adore that story.",
+          "You understand — it has to be special."
+        ],
+        "banter_cool": [
+          "Please don't push, this is personal.",
+          "That's not how I want to choose a gift."
+        ]
+      },
+      "requires_scan": true
     },
     {
       "record_type": "buyer_persona",
@@ -116,8 +218,14 @@
       "display_name": "Lito Fernandez",
       "occupation": "Engineer",
       "motive": "Collects only pristine, well-conserved pieces.",
-      "budget_range": [60, 600],
-      "preferred_categories": ["metal", "ceramic"],
+      "budget_range": [
+        60,
+        600
+      ],
+      "preferred_categories": [
+        "metal",
+        "ceramic"
+      ],
       "negotiation_style": "exacting",
       "route_id": "",
       "fallback_response_set": "hobbyist_lines",
@@ -129,13 +237,32 @@
       "starting_cash": 600,
       "daily_allowance": 100,
       "lines": {
-        "open": ["Condition is everything. ₱{offer} as it stands.", "I inspected it closely — ₱{offer}."],
-        "counter": ["The work is decent. ₱{offer}.", "I'll allow ₱{offer} for that finish."],
-        "accept": ["Acceptable. A clean piece. Done.", "Sold — proper conservation pays."],
-        "walk": ["The flaws aren't worth that. No.", "I only pay for quality. Pass."],
-        "banter_warm": ["Honesty about flaws — I respect that.", "Good. A careful seller, then."],
-        "banter_cool": ["Charm doesn't improve the finish.", "Spare me; I judge by the piece."]
-      }
+        "open": [
+          "Condition is everything. ₱{offer} as it stands.",
+          "I inspected it closely — ₱{offer}."
+        ],
+        "counter": [
+          "The work is decent. ₱{offer}.",
+          "I'll allow ₱{offer} for that finish."
+        ],
+        "accept": [
+          "Acceptable. A clean piece. Done.",
+          "Sold — proper conservation pays."
+        ],
+        "walk": [
+          "The flaws aren't worth that. No.",
+          "I only pay for quality. Pass."
+        ],
+        "banter_warm": [
+          "Honesty about flaws — I respect that.",
+          "Good. A careful seller, then."
+        ],
+        "banter_cool": [
+          "Charm doesn't improve the finish.",
+          "Spare me; I judge by the piece."
+        ]
+      },
+      "requires_scan": true
     },
     {
       "record_type": "buyer_persona",
@@ -143,8 +270,14 @@
       "display_name": "Marco Villar",
       "occupation": "Appraiser",
       "motive": "Buys purely on condition and craftsmanship — sentiment means nothing.",
-      "budget_range": [80, 700],
-      "preferred_categories": ["metal", "ceramic"],
+      "budget_range": [
+        80,
+        700
+      ],
+      "preferred_categories": [
+        "metal",
+        "ceramic"
+      ],
       "negotiation_style": "exacting",
       "route_id": "",
       "fallback_response_set": "appraiser_lines",
@@ -157,13 +290,32 @@
       "daily_allowance": 100,
       "ignores_banter": true,
       "lines": {
-        "open": ["I have examined it. ₱{offer}, on its merits.", "Condition dictates value. ₱{offer}."],
-        "counter": ["The grading supports ₱{offer}. No more.", "₱{offer}. The figures are the figures."],
-        "accept": ["Accepted. A fair grade.", "Done. The numbers agree."],
-        "walk": ["The condition does not justify it. No.", "I deal in facts, not hopes. Pass."],
-        "banter_warm": ["Stories do not alter a grade.", "Noted. The price stands on condition alone."],
-        "banter_cool": ["Irrelevant. I value the object.", "Spare me the patter; I read the piece, not you."]
-      }
+        "open": [
+          "I have examined it. ₱{offer}, on its merits.",
+          "Condition dictates value. ₱{offer}."
+        ],
+        "counter": [
+          "The grading supports ₱{offer}. No more.",
+          "₱{offer}. The figures are the figures."
+        ],
+        "accept": [
+          "Accepted. A fair grade.",
+          "Done. The numbers agree."
+        ],
+        "walk": [
+          "The condition does not justify it. No.",
+          "I deal in facts, not hopes. Pass."
+        ],
+        "banter_warm": [
+          "Stories do not alter a grade.",
+          "Noted. The price stands on condition alone."
+        ],
+        "banter_cool": [
+          "Irrelevant. I value the object.",
+          "Spare me the patter; I read the piece, not you."
+        ]
+      },
+      "requires_scan": true
     },
     {
       "record_type": "buyer_persona",
@@ -171,8 +323,15 @@
       "display_name": "Hannah Cole",
       "occupation": "Tourist",
       "motive": "Pays generously for pieces with a story to take back home.",
-      "budget_range": [100, 550],
-      "preferred_categories": ["photo", "paper", "ceramic"],
+      "budget_range": [
+        100,
+        550
+      ],
+      "preferred_categories": [
+        "photo",
+        "paper",
+        "ceramic"
+      ],
       "negotiation_style": "earnest",
       "route_id": "",
       "fallback_response_set": "tourist_lines",
@@ -184,13 +343,32 @@
       "starting_cash": 500,
       "daily_allowance": 90,
       "lines": {
-        "open": ["Oh, this is wonderful! Would ₱{offer} be alright?", "What a find — ₱{offer}?"],
-        "counter": ["I really want it... ₱{offer}?", "For something this special, ₱{offer}."],
-        "accept": ["Marvelous! It's coming home with me.", "Wonderful — I'll treasure it."],
-        "walk": ["Oh... that's a bit much for my trip, sorry.", "Maybe I'll think on it. Thank you!"],
-        "banter_warm": ["Oh I love the history of it!", "You've quite sold me on its charm."],
-        "banter_cool": ["Hmm, that gives me pause.", "I'm not so sure now."]
-      }
+        "open": [
+          "Oh, this is wonderful! Would ₱{offer} be alright?",
+          "What a find — ₱{offer}?"
+        ],
+        "counter": [
+          "I really want it... ₱{offer}?",
+          "For something this special, ₱{offer}."
+        ],
+        "accept": [
+          "Marvelous! It's coming home with me.",
+          "Wonderful — I'll treasure it."
+        ],
+        "walk": [
+          "Oh... that's a bit much for my trip, sorry.",
+          "Maybe I'll think on it. Thank you!"
+        ],
+        "banter_warm": [
+          "Oh I love the history of it!",
+          "You've quite sold me on its charm."
+        ],
+        "banter_cool": [
+          "Hmm, that gives me pause.",
+          "I'm not so sure now."
+        ]
+      },
+      "requires_scan": true
     },
     {
       "record_type": "buyer_persona",
@@ -198,8 +376,14 @@
       "display_name": "Pacita Salazar",
       "occupation": "Retiree",
       "motive": "Looks for keepsakes that remind her of the old days.",
-      "budget_range": [20, 180],
-      "preferred_categories": ["photo", "jewelry"],
+      "budget_range": [
+        20,
+        180
+      ],
+      "preferred_categories": [
+        "photo",
+        "jewelry"
+      ],
       "negotiation_style": "sentimental",
       "route_id": "",
       "fallback_response_set": "lola_lines",
@@ -211,13 +395,32 @@
       "starting_cash": 150,
       "daily_allowance": 40,
       "lines": {
-        "open": ["It reminds me of home, anak. ₱{offer}?", "Ay, lovely. Could you do ₱{offer}?"],
-        "counter": ["My pension only stretches to ₱{offer}.", "₱{offer}, if you'll be kind to an old woman."],
-        "accept": ["Salamat, anak. You're a good child.", "It will sit on my altar. Thank you."],
-        "walk": ["Too dear for me, anak. Next time.", "Ay, I cannot. Bless you anyway."],
-        "banter_warm": ["Ay, that takes me back...", "You remind me of my own grandchild."],
-        "banter_cool": ["No need to push an old woman.", "Please, anak, be gentle."]
-      }
+        "open": [
+          "It reminds me of home, anak. ₱{offer}?",
+          "Ay, lovely. Could you do ₱{offer}?"
+        ],
+        "counter": [
+          "My pension only stretches to ₱{offer}.",
+          "₱{offer}, if you'll be kind to an old woman."
+        ],
+        "accept": [
+          "Salamat, anak. You're a good child.",
+          "It will sit on my altar. Thank you."
+        ],
+        "walk": [
+          "Too dear for me, anak. Next time.",
+          "Ay, I cannot. Bless you anyway."
+        ],
+        "banter_warm": [
+          "Ay, that takes me back...",
+          "You remind me of my own grandchild."
+        ],
+        "banter_cool": [
+          "No need to push an old woman.",
+          "Please, anak, be gentle."
+        ]
+      },
+      "requires_scan": true
     },
     {
       "record_type": "buyer_persona",
@@ -225,8 +428,14 @@
       "display_name": "Mr. Maverick",
       "occupation": "Mystery Buyer",
       "motive": "Always lurking the market — and he'll always lowball you.",
-      "budget_range": [10, 2000],
-      "preferred_categories": ["jewelry", "metal"],
+      "budget_range": [
+        10,
+        2000
+      ],
+      "preferred_categories": [
+        "jewelry",
+        "metal"
+      ],
       "negotiation_style": "aggressive",
       "route_id": "buyer",
       "fallback_response_set": "suspicious_lines",
@@ -239,12 +448,76 @@
       "unlimited_cash": true,
       "ignores_banter": true,
       "lines": {
-        "open": ["Junk like this? ₱{offer}, and I'm being kind.", "Eh. ₱{offer}, take it or leave it, kid."],
-        "counter": ["Fine, fine — ₱{offer}. That's me being generous.", "Ugh. ₱{offer}. Don't push your luck."],
-        "accept": ["Pleasure robbing — er, doing business with you.", "Sold! You drive a soft bargain."],
-        "walk": ["Suit yourself. I'm always around anyway.", "Your loss. I'll be here tomorrow, kid."],
-        "banter_warm": ["Heh, charming. Still ₱{offer} though.", "Nice story. Barely moves my price."],
-        "banter_cool": ["Save the speech. ₱{offer}.", "Heard it all before. ₱{offer}, kid."]
+        "open": [
+          "Junk like this? ₱{offer}, and I'm being kind.",
+          "Eh. ₱{offer}, take it or leave it, kid."
+        ],
+        "counter": [
+          "Fine, fine — ₱{offer}. That's me being generous.",
+          "Ugh. ₱{offer}. Don't push your luck."
+        ],
+        "accept": [
+          "Pleasure robbing — er, doing business with you.",
+          "Sold! You drive a soft bargain."
+        ],
+        "walk": [
+          "Suit yourself. I'm always around anyway.",
+          "Your loss. I'll be here tomorrow, kid."
+        ],
+        "banter_warm": [
+          "Heh, charming. Still ₱{offer} though.",
+          "Nice story. Barely moves my price."
+        ],
+        "banter_cool": [
+          "Save the speech. ₱{offer}.",
+          "Heard it all before. ₱{offer}, kid."
+        ]
+      },
+      "ignores_state_gates": true
+    },
+    {
+      "record_type": "buyer_persona",
+      "id": "museum",
+      "display_name": "Iloilo Museum",
+      "occupation": "Acquisitions",
+      "motive": "Preserve confirmed local history for the public collection.",
+      "budget_range": [
+        300,
+        2500
+      ],
+      "preferred_categories": [
+        "historical"
+      ],
+      "negotiation_style": "institutional",
+      "route_id": "",
+      "fallback_response_set": "",
+      "open_factor": 0.75,
+      "concession_rate": 0.3,
+      "patience": 4,
+      "category_bonus": 0.2,
+      "condition_weight": 0.1,
+      "ceiling_cap_factor": 0,
+      "starting_cash": 0,
+      "daily_allowance": 0,
+      "unlimited_cash": true,
+      "ignores_banter": true,
+      "min_condition": 0,
+      "requires_scan": true,
+      "requires_historical": true,
+      "ignores_state_gates": false,
+      "lines": {
+        "open": [
+          "The museum would be honoured to acquire this confirmed piece for the public collection."
+        ],
+        "counter": [
+          "Our acquisition budget is fixed, but provenance like this justifies it."
+        ],
+        "accept": [
+          "Wonderful. It will be preserved and credited properly. Thank you."
+        ],
+        "walk": [
+          "Beyond our means for now — but please return if you reconsider."
+        ]
       }
     }
   ]

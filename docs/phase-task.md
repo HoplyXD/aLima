@@ -249,6 +249,81 @@ gdlint scripts scenes dialogue tests
 & $godot --headless --path . --export-release "Web" "build/web/aLima.html"
 ```
 
+## Phase RV3 - Day 0 Tutorial, Travel System, and UI Revamp (2026-07-02)
+
+**Goal:** a one-time, clockless guided Day 0 on every newly created save — Yuyu (the uncle,
+canonically the Phase 19 finale character) teaches forage → hand-off → triage → restore → scan →
+sell, then sends the player on a solo tricycle delivery to the Mall; the shop is empty on return
+and touching the journal blacks out into Day 1 of the same first loop. Includes the travel
+system groundwork for the meet-to-sell backlog item and the shop/scrapyard UI revamps.
+
+**Requirements:** TUT (new), §4-A/§4-J/§4-R compliance
+**Dependencies:** RV2-A..D
+**Subsystems:** save schema v3, TutorialService/TutorialGlue, travel, mall, HUD revamps
+
+### Tasks (all implemented this pass; runtime acceptance still needs an on-screen playthrough)
+
+- `[-]` **RV3.1 Save schema v3 + name entry.** `persistent.player_name`, `tutorial_completed`,
+  `tutorial_step`; v2→v3 migration marks existing saves completed; New Game flow is
+  slot → name → seed; `{player}` token substitution via `DialogueVars`.
+- `[-]` **RV3.2 Day 0 gating + skip.** `TutorialService` autoload (data-driven step machine from
+  `data/tutorial/day0_script.json`, resume-on-reload); `LoopController.begin_session()` tutorial
+  branch (clock never starts, `PAUSE_TUTORIAL` held); `complete_tutorial()` graduates onto Day 1
+  of the SAME loop; pause-menu Skip Tutorial with confirm grants the same end state.
+- `[-]` **RV3.3 Presentation.** `TutorialGlue` per-scene overlay (auto-plays step dialogue once,
+  keeps the `TutorialHintBox` quest panel — text + circular face + bobbing arrow — top-right);
+  Yuyu placeholder sprite (assets/Characters/Uncle.png) in shop and yard per step data; yard
+  scatters common-only scrap during Day 0 with the arrow tracking the nearest piece.
+- `[-]` **RV3.4 Constrained lesson piece.** `ObjectInstance.allowed_conditions` whitelist
+  (delivery conditions, authored decals, and overlays outside the list render clean — type filter
+  only, dev-placed decals untouched per §4-R); the Day 0 batch is EXACTLY ONE common artifact
+  whose scene carries both grime and dust (ArtifactCatalog now records per-scene condition types).
+- `[-]` **RV3.5 Meet-to-collect sales + travel.** `meet_required` sales defer payment into
+  `loop.pending_meets` (paid by `complete_meet_handoff`, emits `meet_scheduled` /
+  `meet_handoff_completed`); `SpaceManager.go_to()` + `Space.MALL`; data-driven
+  `data/travel/destinations.json`; tricycle interactable + "Where to go?" panel with (!)
+  recommendation marks; Mall blockout scene with buyer NPCs per pending meet.
+- `[-]` **RV3.6 Finale.** Journal interact on the finale step → `BlackoutOverlay` → graduation at
+  full darkness → normal Day 1 session.
+- `[-]` **RV3.7 UI revamps.** Shop top bar shows unrestored/restored artifact CARD strips
+  (click unrestored → bench on that piece; click restored → spin/zoom `ArtifactViewer`, click
+  outside exits); quest count moved top-right; scrapyard/mall HUD gains top-left Phone/Journal
+  quick actions, top-right quest count, a 5-slot carry inventory (unsorted scrap bundles into one
+  slot; restored artifacts listed), and an outdoor storage crate opening the Storage screen.
+- `[x]` **RV3.8 Fixes found in playtest.** Scanner Close button was dead (the full-rect content
+  VBox was declared after the Buttons row inside the MarginContainer and swallowed its clicks —
+  reordered); the Day 0 whitelist could wipe every condition off an artifact whose scene had no
+  grime/dust (loads at "100% but Dirty", uncompletable) — the tutorial pool now requires both.
+
+### Acceptance (runtime — perform on screen before flipping to [x])
+
+- `[ ]` New save (name entry) plays Day 0 end-to-end: forage → Ayla → triage → clean the single
+  grime+dust artifact → scan → list/sell → tricycle → mall handoff (paid at handoff) → return →
+  empty shop → journal blackout → Day 1 07:00, Loop unchanged, starting kit granted.
+- `[ ]` Skip Tutorial from the pause menu lands in the identical Day 1 state.
+- `[ ]` Quit/reload mid-Day-0 resumes at the persisted step; a pre-existing save loads straight
+  into normal play (migration marks it tutorial-completed).
+- `[ ]` Day 5 close still loops to Day 1; Day 0 never reappears on any later loop.
+
+### Backlog — story canon locked with the team (2026-07-02, implement in Phases 15/17)
+
+- **Sam is female, an archeologist, and never visits the shop.** Her place is a separate location
+  unlocked after Alya's route ending; on Day 5 of that route the player sells her the salakot at
+  her place and receives a **dirty fragment** that must be cleaned before seating (§4-D spirit).
+  Next loop, the Dump Site and Sam's place stay unlocked (persistent leads). If asked about the
+  fragment afterwards, Sam has no memory of it (it sits outside time in the journal).
+- **Alya quest 1:** Alya mentions finding Yuyu's glasses somewhere in the scrapyard — and that she
+  saw him meeting a woman before he vanished; the player finds the glasses in the yard and cleans
+  them (the `allowed_conditions` instance filter from RV3.4 serves this).
+- **Alya quest 2:** unlocks a new **Dump Site** map (one `data/travel/destinations.json` entry +
+  a scene, per RV3.5); the player finds a clue about Yuyu there. The quest artifact is a
+  **salakot hat**: clean it, sell it, and Sam ALWAYS appears as the buyer asking to meet at her
+  place (the `meet_required`/persona-forced buyer seam from RV3.5 serves this).
+- **Deferred from the RV3 UI pass:** the drag-based "choose what to carry" storage flow (5-slot
+  hard carry limit enforced across triage/restoration/marketplace). The 5-slot inventory HUD and
+  the outdoor storage crate are in; enforcing the carry limit game-wide changes triage/selling
+  rules and needs a team design call first.
+
 ## Status Markers
 
 - `[x]` verified complete under Godot 4.7, or verified by the applicable non-runtime command for documentation/repository-only work
@@ -287,6 +362,12 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[-]` Route progress is tracked in `RouteService` over PersistentState (so it survives the loop reset): a **met** flag (`dialogue_flags`) drives the dialogue branch, and **completion** (`route_completion`) drives mutual-exclusion visit gating — the artisan (prereq: auntie) displaces the scavenger in their shared afternoon slot only once the auntie route completes, and yields to her until then. Completion is wired to `EventBus.fragment_seated` (seating a route's fragment completes it, grants its rewards, and emits `EventBus.route_completed`). Still missing: the archeologist-lead extra-window shift, the scripted multi-day restoration beats themselves, and route expiry on an unanswered visit.
 - `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, atomic seating, buyer-persona marketplace economy (buy/sell/haggle/banter with 3-tier banter: on-device → backend `/api/negotiate` → offline fallback), settings/pause menu, and Windows/Web export presets are implemented and covered by GUT/backend tests or verified CLI export under Godot 4.7 / Node. The full disposition router (return/preserve/journal), evening system, video evidence, final submission package, and live-provider manual gate are not implemented.
 - `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. Cleaning tools are **visible, selectable 3D props on the bench** (`RestorationToolTray`, REST-R9 / task P4.8); the HUD tool buttons are a labelled accessibility/fallback. Author-placed condition decals (`ArtifactConditionDecal`) and per-instance random surface conditions are now supported. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate.
+- `[x]` **REST-FIX-001 (2026-07-01):** scanner threshold now evaluates effective clean percent (`condition / clean_completion_threshold * 100`) so the Gold Locket (`dusty_locket`) and other non-decal openables are not spuriously blocked; live market value for non-decal pieces now rises from the dirty floor toward `true_value` via `ValueModel`; middle-mouse pan is gated to zoom stage 2 and resets when leaving stage 2. Regression tests added to `tests/scanner/test_scanner_service.gd`, `tests/restoration/test_value_model.gd`, and `tests/restoration/test_restoration_view.gd`. Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 106/106 passed; focused scanner suite 33/33 passed; full GUT suite 645/645 passed (2103 asserts); `gdformat --check` and `gdlint` clean on changed files; `git diff --check` clean.
+- `[x]` **REST-FIX-002 (2026-07-01):** Gold Locket (`dusty_locket`) scanner rejection fixed; the blocked message is the exact vague text with no numeric threshold. Scanner response snapshots derive price range and condition notes from the live instance/template. Stored `true_value` is clamped to the template range on load (guarded in `ObjectInstance.from_dictionary()` plus a post-load repository sanitize step) and `RestorationView` prices condition-threshold pieces off the instance condition so the value readout rises after each compatible stroke, even when the scene adds visual overlays. Pre-existing `gdlint` line-length and `load-constant-name` issues in `scripts/restoration/restoration_service.gd` were fixed. Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 109/109 passed; focused scanner suite 36/36 passed; full GUT suite 651/651 passed (2131 asserts); `gdformat --check` and `gdlint` clean on changed files; `git diff --check` clean.
+- `[x]` **REST-FIX-003 (2026-07-01):** Wood Pipe condition overlay now respects its own UV mode when another overlay shares the same mesh: `ArtifactOverlay._load_geometry()` keys the geometry cache by `mesh_rid:uv_mode` so overlays with different UV mappings (`use_own_uvs`, triplanar, auto_unwrap) no longer collide. Zoom stage 2 middle-mouse pan clamp reduced from 1.6 to 0.6 and now scales dynamically with zoom factor (`0.2 + 0.4 * zoom_t`) so the pan limit tightens as the lens zooms in. Regression tests added to `tests/restoration/test_artifact_overlay.gd` (`test_two_overlays_same_mesh_keep_distinct_uv_mode`, `test_use_own_uvs_preserves_mesh_uvs`) and `tests/restoration/test_restoration_view.gd` (`test_pan_clamps_to_new_limit`). Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 112/112 passed; full GUT suite 654/654 passed (2139 asserts); `gdformat --check` and `gdlint` clean on changed files; `git diff --check` clean.
+- `[x]` **REST-FIX-004 (2026-07-01):** Restoration-view middle-mouse pan is now clamped to a consistent screen-relative region (`CAMERA_PAN_SCREEN_FRAC = 0.25`), with the world-unit limit derived from current FOV and camera-to-object distance. When the lens zooms out within stage 2, the stored pan is scaled down toward zero so the artifact recentres instead of staying corner-pinned. `_set_fov()` re-clamps pan on every FOV change, and `zoom_by()` reclamps after the zoom settles. Regression tests added to `tests/restoration/test_restoration_view.gd` (`test_pan_clamps_to_screen_fraction_at_full_zoom`, `test_pan_recentres_on_zoom_out`, `test_pan_limit_at_rest_zoom_is_tight`). Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 114/114 passed; full GUT suite 660/660 passed (2163 asserts); `gdformat --check` and `gdlint` clean on changed files; `git diff --check` clean.
+- `[x]` **REST-FIX-005 (2026-07-01):** Restoration-view middle-mouse pan is now enabled at every zoom level with a single, fixed world-unit limit (`CAMERA_PAN_MAX = 1.6`). The stage-2 gating and screen-relative clamp (`CAMERA_PAN_SCREEN_FRAC`) were removed; `_clamp_pan()` now enforces a symmetric radial+axis bound that does not vary with zoom or FOV. Pan survives across zoom stage transitions (entering/leaving stage 2 no longer resets it). `zoom_by()` and `_reset_zoom()` re-clamp after every zoom change. Regression tests added (`test_pan_enabled_at_all_zoom_levels`, `test_pan_limit_is_fixed_across_zoom`, `test_pan_does_not_shrink_when_zooming_out`). Verified by code review; `gdformat`/`gdlint`/GUT not runnable in this environment (Godot executable and Python/gdtoolkit unavailable).
+- `[x]` **REST-DEBUG-001 (2026-07-01):** New debug-build-only "DEBUG: Clean All" equippable tool (`debug_clean_all`) instantly cleans every condition on the active artifact in one click. Added to `data/objects/tools.json` with `debug_only: true`; granted automatically in debug/editor builds via `LoopController._grant_starting_kit()`; hidden from ownership/storage/workbench in release builds through `ToolService`/`RestorationService` filters. `RestorationService.debug_clean_all()` writes the instance to `CLEAN`, max value, and removes all data-driven decals; `RestorationObject3D.debug_clean_all_visuals()` clears overlays, dust shell, authored decals, and blemishes. Wired through `RestorationView` left-click and controller clean action. Regression tests added to `tests/restoration/test_restoration_service.gd`, `tests/economy/test_tool_loadout.gd`, and `tests/restoration/test_restoration_view.gd`. Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 118/118 passed; full GUT suite 661/661 passed (2165 asserts); `gdformat --check` and `gdlint` not runnable (Python/gdtoolkit not installed in this environment); `git diff --check` clean.
 - `[x]` Phase RV2-B Scrap Foraging & Ayla Delivery is implemented, with the daily free Morning Delivery restored: the scrapyard scatters 2-3 `ScrapItem` pickups per day (persisted via `LoopState.yard_scrap_remaining`), while Ayla still brings one free daily batch to the door. Collected scrap can be handed to Ayla for a separate scrap-biased batch after ~1 hour; talking to her while a sort is pending plays an authored `yard_sorting` dialogue. Loop-scoped `scrap_pool`/`pending_sort`/`yard_scrap_remaining` state, `AylaService` sort timer + scrap-biased delivery, `AylaHandoffScreen`, and the ShopController door path for both daily and scrap-sort triage are in place. Verified by `tests/delivery/test_ayla_service.gd` (12 tests), `tests/scrapyard/*`, and the full GUT suite. The on-screen daily drop + forage → hand-off → sort → knock → triage flow is a pending manual gate.
 - `[-]` The major shop actions (door, workbench, journal, phone) are **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
 
@@ -1515,38 +1596,47 @@ Manual: complete every restoration interaction with correct and wrong tools, the
 - `[-]` **P14.1 Build listing and negotiation state.**
   - **Buy side:** `MarketplaceService` (autoload) lists `buyable` tools, spends `loop.money`, and schedules shipments that arrive after `ship_hours` of in-game time (delivered on the hour tick into `loop.owned_tools`). The shop **Phone interactable** opens an authored phone scene (`scenes/ui/phone.tscn`, `Phone`, `DayClock.PAUSE_PHONE`) with a Marketplace app. Covered by `tests/economy/test_marketplace.gd`, `test_phone.gd`, shop smoke `test_phone_opens_without_pausing`, and `tests/restoration/test_bench_overlays.gd`.
   - **Sell/haggle side:** `MarketplaceService.get_sellable()` lists restored+judged inventory instances. `interested_buyers()` and `arrived_buyers()` produce a time-phased buyer set: Mr. Maverick is always instantly available; other buyers arrive 1-20 in-game minutes apart (seeded per item+loop). Per-loop buyer wallets seed from persona `starting_cash`/`daily_allowance` (Maverick is unlimited). `haggle_for()` returns a persistent same-day `Negotiation` session so the player can shop buyers and return. `complete_sale()` credits money, removes the instance, records `persistent.best_sale`, and emits `EventBus.sale_completed`. Covered by `tests/economy/test_marketplace.gd`, `test_phone.gd`, and `test_storage_screen.gd`.
-  - **Missing:** a formal listing object, the full four-way disposition router, and evening reconciliation. Selling currently happens directly from the Storage/Phone sell flow.
+  - **Implemented (2026-06-29, verification pending):** the formal `MarketplaceListing` model (`scripts/models/marketplace_listing.gd`, loop-scoped `LoopState.listings`) makes listings first-class loop state; `MarketplaceService.list_for_sale()/get_listing()/get_active_listings()/resolve_listing()` manage them, the phone's `open_buyers()` lists the item before haggling, and a completed sale resolves the listing to SOLD. Buyer arrival/wallet behaviour is unchanged.
 - `[x]` **P14.2 Implement buyer personas and fallback sets.**
   - `data/buyers/buyers.json` now contains **nine** authored buyer personas (collector, reseller, student, gift, hobbyist, appraiser, tourist, lola, suspicious/Mr. Maverick), each with budget, preferred categories, negotiation style, per-loop wallet tuning, and fallback line sets. The `BuyerPersona` model loads and validates them.
   - The deterministic offline haggle engine (`Negotiation`) uses persona tuning (`open_factor`, `concession_rate`, `patience`, `condition_weight`, `category_bonus`, `ignores_banter`) and fallback lines.
   - Backend persona prompts/guardrails are server-side in `server/src/services/negotiate_service.js`.
   - The Godot client now calls the backend `/api/negotiate` proxy as tier 2 of a 3-tier banter stack: on-device `LocalAI` (NobodyWho GGUF) → backend `NegotiationClient` → offline `BanterBot`. The LLM supplies only the spoken line + offended flag; all prices remain deterministic in the `Negotiation` engine.
   - Evidence (2026-06-22): `tests/economy/test_buyer_personas.gd` 3/3 passed; full economy suite 61/61 passed. Backend tier wiring and deterministic-price tests added 2026-06-24 (counts to be recorded below).
-- `[-]` **P14.3 Implement the disposition router.**
-  - `SELL` is reachable from the Storage/Phone sell flow and completes via `MarketplaceService.complete_sale()` (idempotent; cannot sell the same instance twice).
-  - `RETURN`, `PRESERVE`, and `JOURNAL` dispositions are not yet offered as explicit player choices. Journal routing already happens automatically for Purple-and-below on restoration/scan (Phase 9); museum routing happens on fragment seating (Phase 8).
-- `[ ]` **P14.4 Implement return-to-owner outcomes.** Resolve owner/route rewards and story flags without directly granting fragments.
-- `[ ]` **P14.5 Build the evening state.** Summarize outcomes, repair/replace tools, resolve storage, prepare requests/equipment, review journal changes, and commit the next-day plan.
+- `[-]` **P14.3 Implement the disposition router.** *(Implemented 2026-06-29; automated verification pending — see note below.)*
+  - `DispositionRouter` autoload (`scripts/economy/disposition_router.gd`) is the single typed entry point. `eligible_dispositions(uid)` / `can_dispose(uid, d)` validate eligibility (restored + judged + non-carrier; rarity/owner gates per disposition) and reject invalid dispositions with a player-facing reason (DISP-R1). `dispose(uid, d, params)` routes to `SELL`/`RETURN`/`PRESERVE`/`JOURNAL`, emits `EventBus.disposition_completed(instance_id, disposition, outcome_id)`, logs to `loop.disposition_log`, and is idempotent (the routed instance is removed, so it cannot be disposed twice — DISP-R5).
+  - Rarity routing reuses Phase 8/9 (§4-F): `PRESERVE` is offered only for Gold/historical and creates a persistent `MuseumEntry`; `JOURNAL` is offered only for Purple-and-below and reuses `JournalService.record_restoration()`.
+  - The existing Storage/Phone sell path was migrated **into** the router: the phone's `_settle()` and Storage's `sell_artifact()` now call `DispositionRouter.complete_sell()` (which delegates the money/removal transaction to `MarketplaceService.complete_sale()` and resolves the listing).
+- `[-]` **P14.4 Implement return-to-owner outcomes.** *(Implemented 2026-06-29; verification pending.)* `RETURN` is offered only when `data/marketplace/returns.json` identifies an owner for the template. `ReturnService` (`scripts/economy/return_service.gd`) resolves the authored non-fragment reward + story flag through `RouteService.grant_reward_ids()/set_dialogue_flag()`, records a persistent `persistent.returns` entry (DISP-R6), removes the instance, and emits `EventBus.object_returned(...)`. Carriers are refused and the reward is non-fragment by contract, so a return provably cannot grant a fragment (§4-B/C).
+- `[-]` **P14.5 Build the evening state.** *(Implemented 2026-06-29; verification pending.)* `EveningService` autoload (`scripts/economy/evening_service.gd`) runs at the 20:00 close: `LoopController._on_day_closed()` defers to `EveningService.handle_day_close()` in interactive mode (the live Shop) so the day does not advance until the player commits, and falls back to inline auto-advance in headless/test mode. It builds the day summary (EVE-R2), exposes tool repair/replace upkeep and storage-overage resolution (EVE-R3), and `commit_plan()` saves atomically then advances the day or performs the Day 5 reset (EVE-R5). `EveningScreen` (`scripts/ui/evening_screen.gd`, code-built like `ShowcaseScreen`, owns `DayClock.PAUSE_EVENING`) is opened by the Shop on `EventBus.evening_started`.
 - `[-]` **P14.6 Extend save and event contracts.**
-  - `EventBus.sale_completed(instance_id, buyer_id, price)` exists and is emitted by `MarketplaceService.complete_sale()`.
-  - `persistent.best_sale` records the highest sale price, template, buyer, condition, and day.
-  - Buyer ghosts, wallets, schedules, and haggle sessions are loop-scoped and cleared on `loop_reset`.
-  - Full disposition/evening event partition is pending P14.3-P14.5.
+  - `EventBus` now carries `disposition_completed`, `object_returned`, `evening_started`, and `evening_plan_committed` (ARCH-R6, matching the Stable Interfaces contract). `sale_completed` is still emitted by `MarketplaceService.complete_sale()`.
+  - Loop-scoped, cleared on `loop_reset`: `loop.disposition_log`, `loop.listings`, `loop.evening_plan`, `loop.upkeep_actions` (plus the existing buyer ghosts/wallets/schedules/haggle sessions).
+  - Persistent, survives the reset: `persistent.returns`, `persistent.upkeep_learned`, `persistent.best_sale`, and route rewards.
 - `[-]` **P14.7 Test economy and transaction safety.**
-  - Covered: duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, banter mood effects, and the 3-tier banter fallback (backend reply use, offline fallback, offended propagation, deterministic pricing).
-  - Evidence (2026-06-24): `tests/economy/` 92/92 passed (test_buyer_personas 3, test_marketplace 13, test_marketplace_banter 11, test_negotiation 21, test_phone 19, test_storage_screen 11, test_tool_durability 4, test_tool_loadout 10); full GUT suite 512/512 passed (1645 asserts); server `npm test` 24/24 passed.
-  - Pending: live-provider manual gate (Gemini/Ollama configured in `server/.env`), invalid disposition rejection, return/preserve/journal flow tests, and Day 5 evening advancement.
+  - Covered before (still present): duplicate sale prevention, insufficient funds, non-buyable rejection, shipment arrival, wallet caps, Maverick ghosting rules, buyer arrival timing, free-text moderation, negotiation accept/counter/walk, banter mood effects, and the 3-tier banter fallback.
+  - **Added 2026-06-29 (verification pending):** `tests/economy/test_disposition_router.gd` (eligibility, invalid-disposition rejection, journal/preserve/sell routing, idempotency, listing resolution), `tests/economy/test_return_to_owner.gd` (owner-gated eligibility, reward/flag/persistent return, **no fragment state change on return**, idempotency), and `tests/economy/test_evening_state.gd` (day-close handoff, commit advancement, Day 5 reset partition, repair/replace upkeep).
+  - **Verification status:** this machine (user `chuchuu`) has no Godot 4.7 executable, so GUT / `gdformat --check` / `gdlint` were **not run here**. The team/CI must run the commands below and record real results before any `[x]`.
 ### Acceptance
 
-- `[-]` Sell flow completes via Storage/Phone Marketplace; return, preserve, and journal flows are not yet explicit player choices.
+- `[-]` Sell flow completes through the `DispositionRouter`, and `RETURN`/`PRESERVE`/`JOURNAL` are now explicit player choices with rarity/owner routing and idempotent outcomes (implemented 2026-06-29; automated/manual verification pending — no Godot on this machine).
 - `[x]` Multiple personas produce distinct, constrained negotiations and prices respond to condition, category, honesty, and banter (automated tests verify this).
-- `[ ]` Every day ends through a useful evening screen and Day 5 preserves only the documented state.
+- `[-]` Every day ends through the evening screen and Day 5 preserves only the documented persistent state through the loop reset (implemented; on-screen + GUT verification pending).
 
 ### Verification
 
 ```powershell
-& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/economy
-# Result (2026-06-24): 92/92 passed.
+$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
+# Run on a machine with Godot 4.7 (CI / the dev box). These were NOT run for the
+# 2026-06-29 Phase 14 disposition/return/evening work — implemented on a machine
+# without a Godot binary; record real results here before marking any task [x].
+& $godot --headless --editor --path . --quit                                    # import check, expect exit 0
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/economy -gexit
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+gdformat --check scripts scenes dialogue tests
+gdlint scripts scenes dialogue tests
+
+# Result (2026-06-24, pre-Phase-14-disposition): tests/economy 92/92 passed.
 
 Push-Location server
 npm test
@@ -1952,6 +2042,30 @@ Captured design intents that are **not** part of any numbered phase above yet. P
 phase (with a requirement ID + acceptance) before implementing; until then they are direction,
 not committed scope.
 
+- [ ] **Scan gating by cleanliness.** The Scan action is ALWAYS available, but reports "Too dirty to
+  be scanned" until the piece is cleaned enough: **≥50% condition** for ordinary artifacts, **≥25%**
+  for historical ones (tag `historical` / gold rarity). Only at/above the threshold does it return the
+  identification/value evidence. Raised by the team 2026-06-29. *(Implemented this pass.)*
+
+- [ ] **Marketplace: list everything; value hidden until scanned.** Every owned artifact appears in
+  the sell list (not just scanned+judged ones), but an UNSCANNED piece shows its value as **"???"** —
+  scanning is the *proof of origin/value*. Buyers price off the scan: an unscanned, dirty piece is hard
+  to sell (few or no buyers message you; any that do flag it as dirty and lowball), while a scanned
+  piece draws buyers FASTER, scaled by how clean it is and how high its value. Raised 2026-06-29.
+
+- [ ] **Buyer personas / NPC personalities.** Each buyer has arrival rules tied to artifact state:
+  e.g. **Maya** and **the Collector** only appear once the piece is **100% cleaned**; a new **Museum**
+  buyer **always** appears for a CONFIRMED historical artifact even while it's dirty (and pays for
+  provenance). Generalise into per-persona gates (min condition, requires-scan, requires-historical,
+  value floor) on top of the existing wallet/ghost system. Raised 2026-06-29.
+
+- [ ] **Meet-to-sell handoff (out-of-shop sale).** FUTURE. After a sale is agreed, some buyers want to
+  **meet in person at a place** to pay — the player travels out to that location to collect the money —
+  while others **pay online and have it shipped** (money on delivery). UI shows "Meet me at (Place)"
+  after purchase; meeting them releases the payment. Per-persona `payment_mode` (online | meet) + a
+  meeting location/flow + a travel space. **For now every buyer accepts online money** (no meeting).
+  Raised by the team 2026-06-29.
+
 - [ ] **Trash-Goblin-style click-drag surface cleaning.** Replace/augment the current
   stroke-commit cleaning with a continuous *click-and-drag scrub*: the player holds the
   (cursor-following) tool down and drags it across the grime, which wears away progressively
@@ -1961,3 +2075,57 @@ not committed scope.
   change. Open questions to resolve when scheduling: per-frame vs. accumulated wear, how it
   reads on touch/controller, and how it composes with the per-condition decal cleaning. Raised
   by the team 2026-06-25.
+
+- [ ] **Artifact price revamp (coverage-based value reduction).** Each artifact template has a
+  `[min, max]` base value; on spawn an instance rolls a single *true value* uniformly in that
+  range (e.g. `[100, 200]` → 155) and stores it. Each surface condition gains a new
+  `value_reduction` config: the percentage it cuts from the true value at 100% coverage. The
+  reduction SCALES with the condition's current coverage on the instance, so a 20% condition that
+  generated at only 50% coverage starts at −10%, and as the player cleans it the coverage (and
+  the penalty) falls toward 0. Final value = `true_value − Σ(condition.value_reduction ×
+  condition.coverage)`, summed across active conditions and floored at `min`. The player can scan
+  and sell a partially-cleaned piece — it just sells for less. Pairs with "condition starts at 0":
+  the as-generated pattern reads 0% cleaned, and cleaning raises condition while lowering coverage.
+  Raised by the team 2026-06-28.
+
+- [ ] **Condition starts at 0% (as-generated pattern = fully dirty).** Opening an artifact at the
+  bench currently shows a non-zero condition (e.g. 38%) because the cleanliness reading is taken
+  against a fully-bare surface, but the as-generated dirty pattern only covers part of it. The
+  spawned pattern must read **0% condition**, with cleaning raising it to 100% when the pattern is
+  fully removed — i.e. normalise progress over the *generated* dirt, not the whole surface
+  (`progress = (current_clean - initial_clean) / (1 - initial_clean)`), so a freshly-delivered piece
+  always starts at 0%. Pairs with the price revamp (coverage = remaining generated dirt). Raised by
+  the team 2026-06-28.
+
+- [ ] **Auto-complete timing (soften the snap-to-100%).** Currently the surface snaps to 100% once
+  overlay coverage hits ~98%. Replace with: (a) if condition is **≥95% AND ≥30 s** have elapsed in
+  the current restoration session (both true), the **next** successful clean stroke sets it to
+  100%; (b) if condition reaches **≥98%** at any point it snaps to 100% immediately. The 30 s timer
+  starts when the piece first crosses 95% in the session. Keeps the player from chasing the last
+  specks without making completion instant. Raised by the team 2026-06-28.
+
+- [ ] **Artifact configs (folder-driven randomizer + rarity + quest assignment).** The delivery
+  randomizer must AUTO-FOLLOW `scenes/restoration/artifacts/**` — dropping a new artifact scene in
+  the folder adds it to the spawn pool with no code/registry edit (replace the hand-maintained
+  `ArtifactScenes` map with a folder scan / generated manifest). Add two per-artifact configs the
+  designer sets in the inspector: (1) **rarity** — freely settable per artifact (white/green/blue/
+  purple/gold). (2) **Quest assignment** — an `is_quest_item` checkbox that, when checked, reveals
+  an **NPC** selector (the 5 main NPCs) and a **quest item number**, so an artifact can be bound to
+  e.g. "Alya, quest 2". Two artifacts sharing the same NPC + quest number are pooled and one is
+  randomly given for that quest step. Quest-bound artifacts are excluded from the ordinary random
+  delivery pool. Raised by the team 2026-06-28.
+
+- [ ] **BUG: artifact cleaning resets on a scrapyard round-trip.** Cleaning progress persists across
+  shop ↔ restoration view and shop-only re-entries, but is LOST after stepping out to the scrapyard
+  and back. Repro: clean an artifact 10% → 20%, close restoration → shop (still 20%), go to the
+  scrapyard scene, return to the shop, reopen restoration → it shows 10% again (an earlier value),
+  not 20%. Indicates the latest cleaned state isn't the source of truth across a full two-scene
+  unload/reload (stale save reload or in-view-only cleaned state for authored-overlay artifacts).
+  Raised by the team 2026-06-28.
+
+- [ ] **PERF: artifact load lag spike (GPU MultiMesh).** Rendering artifacts (body + condition
+  overlays) in the Storage screen, the restoration view top bar, and the 3D keep/recycle triage
+  view causes a noticeable lag spike on load. Move those non-interactive artifact renders to GPU
+  `MultiMesh` so body and overlays upload/draw cheaply. Only the single center artifact in the
+  restoration view stays CPU-side, since its overlays are mutated every clean stroke. Raised by the
+  team 2026-06-28.

@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/Characters/Uncle.png" id="1_uncle"]
+
+[node name="YuyuNpc" type="Sprite3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+pixel_size = 0.00055
+billboard = 2
+alpha_cut = 1
+texture = ExtResource("1_uncle")

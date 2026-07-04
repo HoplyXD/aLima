@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://r2437s1g705o"]
+
+[ext_resource type="PackedScene" uid="uid://n17lqckcieei" path="res://scenes/locations/dump_site_forbidden/forbidden_zone_map.tscn" id="1_map"]
+[ext_resource type="PackedScene" uid="uid://cjm8k2o6gqmv1" path="res://scenes/ui/scrapyard_hud.tscn" id="2_hud"]
+[ext_resource type="Script" uid="uid://cmnncy5e8fmri" path="res://scripts/shop/interactable_3d.gd" id="3_interactable"]
+[ext_resource type="Script" uid="uid://drhq2coumljtu" path="res://scripts/locations/forbidden_zone_controller.gd" id="4_controller"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_return"]
+size = Vector3(4, 4, 2)
+
+[node name="ForbiddenZone" type="Node3D" unique_id=521521150]
+script = ExtResource("4_controller")
+
+[node name="MapRoot" type="Node3D" parent="." unique_id=2094666342]
+
+[node name="ForbiddenZoneMap" parent="MapRoot" unique_id=258802970 instance=ExtResource("1_map")]
+
+[node name="PlayerSpawn" type="Node3D" parent="." unique_id=1682299748]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 15)
+
+[node name="HUD" parent="." unique_id=1266949273 instance=ExtResource("2_hud")]
+
+[node name="ReturnInteractable" type="Area3D" parent="." unique_id=1642419817]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 17)
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("3_interactable")
+prompt_text = "Return to Dump Site"
+proximity_prompt_text = "Press E to return"
+use_proximity = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ReturnInteractable" unique_id=439264729]
+shape = SubResource("BoxShape3D_return")

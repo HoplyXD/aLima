@@ -77,17 +77,19 @@ func test_unavailable_required_tool_excludes_candidate() -> void:
 	assert_true(found_unavailable, "rusted_tin should be rejected due to missing rust_brush")
 
 
-func test_granting_tool_makes_candidate_eligible() -> void:
+func test_granting_tool_clears_the_tool_gate() -> void:
+	# Granting the required tool must lift the tool-gate (§4-H). rusted_tin has no artifact scene, so
+	# it stays filtered for "missing_scene" — but it must NO LONGER be rejected for the missing tool.
 	GameState.save_state.loop.tool_items.append("rust_brush")
 	var director := _make_director()
-	var plan := director.plan_fragment_placement("fragment_01")
+	director.plan_fragment_placement("fragment_01")
 	var audit: Dictionary = director.get_last_audit_log()
-	var eligible_templates := []
-	for c in _eligible_candidates(director):
-		eligible_templates.append(c.template_id)
-	assert_true(
-		eligible_templates.has("rusted_tin"), "Granting rust_brush should make rusted_tin eligible"
-	)
+	var tool_gated := false
+	for r in audit["rejected_candidates"]:
+		if r["template_id"] == "rusted_tin" and r["reason"] == "required_tool_unavailable":
+			tool_gated = true
+			break
+	assert_false(tool_gated, "Granting rust_brush must clear rusted_tin's required-tool rejection")
 
 
 func test_incompatible_containers_are_rejected() -> void:

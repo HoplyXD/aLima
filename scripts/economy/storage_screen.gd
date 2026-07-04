@@ -112,8 +112,9 @@ func request_restore(uid: String) -> void:
 	restore_requested.emit(uid)
 
 
-## Quick-sells a restored artifact at its assessed value. A placeholder for the
-## Phase-14 buyer negotiation: it simply credits money and removes the instance.
+## Quick-sells a restored artifact at its assessed value through the DispositionRouter
+## (SELL disposition), so the storage sell path is recorded consistently with the
+## phone marketplace and the four-way disposition router (P14.3).
 func sell_artifact(uid: String) -> void:
 	var found := _find_inventory(uid)
 	if found.is_empty():
@@ -123,11 +124,12 @@ func sell_artifact(uid: String) -> void:
 	if not _is_restored(inst):
 		return
 	var price := _sale_price(inst, template)
-	GameState.save_state.loop.money += price
-	_remove_inventory(uid)
+	var result := DispositionRouter.complete_sell(uid, price, "")
+	if not result.ok:
+		_status_label.text = result.error
+		return
 	if _selected_artifact_uid == uid:
 		_selected_artifact_uid = ""
-	SaveService.save_game()
 	_status_label.text = "Sold %s for %s." % [template.display_name, _peso(price)]
 	refresh()
 
@@ -257,6 +259,42 @@ func _render_artifact_detail(host: VBoxContainer, uid: String) -> void:
 		action.text = "Restoring…" if is_target else "Restore"
 		action.pressed.connect(func() -> void: request_restore(uid))
 	host.add_child(action)
+
+	# Once restored + judged, the other dispositions become explicit player choices
+	# routed through the DispositionRouter (DISP-R1, §4-F/N). SELL is the button above.
+	if _is_restored(inst):
+		for disposition in DispositionRouter.eligible_dispositions(uid):
+			if disposition == DispositionRouter.Disposition.SELL:
+				continue
+			host.add_child(_make_disposition_button(uid, disposition))
+
+
+func _make_disposition_button(uid: String, disposition: int) -> Button:
+	var button := Button.new()
+	button.focus_mode = Control.FOCUS_ALL
+	match disposition:
+		DispositionRouter.Disposition.RETURN:
+			button.text = "Return to owner"
+		DispositionRouter.Disposition.PRESERVE:
+			button.text = "Preserve in museum"
+		DispositionRouter.Disposition.JOURNAL:
+			button.text = "Archive in journal"
+		_:
+			button.text = "Dispose"
+	button.pressed.connect(func() -> void: dispose_artifact(uid, disposition))
+	return button
+
+
+## Routes an artifact to a non-sell disposition through the DispositionRouter.
+func dispose_artifact(uid: String, disposition: int) -> void:
+	var result := DispositionRouter.dispose(uid, disposition)
+	if not result.ok:
+		_status_label.text = ModelUtils.as_string(result.get("error"))
+		return
+	if _selected_artifact_uid == uid:
+		_selected_artifact_uid = ""
+	_status_label.text = "Done: %s." % ModelUtils.as_string(result.get("disposition"))
+	refresh()
 
 
 # --- Tools tab ---------------------------------------------------------------

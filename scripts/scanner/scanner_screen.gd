@@ -20,7 +20,7 @@ const VERDICT_BUTTONS: Dictionary = {
 const STATUS_TEXT: Dictionary = {
 	ScannerResult.Status.SUCCESS: "Analysis complete.",
 	ScannerResult.Status.FALLBACK: "Analysis complete (cached fallback).",
-	ScannerResult.Status.NOT_CLEAN: "This object must be cleaned before scanning.",
+	ScannerResult.Status.NOT_CLEAN: "Too dirty to be scanned — clean it more first.",
 	ScannerResult.Status.MISSING_CACHE: "No scanner data is available for this object offline.",
 	ScannerResult.Status.MALFORMED_RESPONSE: "Scanner data is corrupted. Try again later.",
 	ScannerResult.Status.TRANSPORT_ERROR:

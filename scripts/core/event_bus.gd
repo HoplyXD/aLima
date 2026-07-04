@@ -22,6 +22,13 @@ signal fragment_released(fragment_id: String)
 ## answering the door (the visit is consumed). owner is the route id.
 signal visit_missed(route_id: String, day: int)
 
+# --- Quest events ---
+signal quest_started(quest_id: String, display_name: String)
+signal quest_advanced(quest_id: String, progress: String)
+signal quest_completed(quest_id: String, display_name: String)
+signal quest_failed(quest_id: String)
+signal location_unlocked(location_id: String)
+
 # --- Delivery and triage events ---
 signal delivery_generated(day: int, instance_ids: Array[String])
 signal triage_completed(kept_ids: Array[String], recycled_ids: Array[String])
@@ -37,6 +44,21 @@ signal tool_arrived(tool_id: String, uid: String)
 
 # --- Marketplace / disposition events ---
 signal sale_completed(instance_id: String, buyer_id: String, price: int)
+## Emitted by the DispositionRouter when an eligible restored+judged instance is
+## routed to a final disposition (SELL/RETURN/PRESERVE/JOURNAL). outcome_id is the
+## disposition-specific result reference (buyer_id, reward_id, museum_entry_id, or
+## journal template id). Idempotent: a given instance disposes at most once.
+signal disposition_completed(instance_id: String, disposition: String, outcome_id: String)
+## Emitted when an object is returned to its identified owner/route. Never grants a
+## fragment (CLAUDE.md §4-B/C); reward_id is the authored non-fragment reward.
+signal object_returned(instance_id: String, owner_route_id: String, reward_id: String)
+
+# --- Evening events (Phase 14) ---
+## Emitted when the day-close boundary opens the explicit evening state (EVE-R1).
+signal evening_started(day: int)
+## Emitted when the player commits the evening plan; the day then advances or the
+## Day 5 loop reset runs (EVE-R5).
+signal evening_plan_committed(day: int, plan_id: String)
 
 # --- Scanner events ---
 signal scanner_response_received(instance_id: String, status: String)
@@ -58,6 +80,21 @@ signal event_expired(event_id: String, display_name: String)
 ## suspicious antique judged, tool broke). Persisted to LoopState for the evening
 ## summary; the evening summary UI itself is a future Phase 14 dependency.
 signal event_outcome_resolved(event_id: String, outcome_type: String, outcome_data: Dictionary)
+
+# --- Tutorial / travel events (TUT) ---
+## Emitted when the player hands a scrap selection to Ayla (drives the Day 0
+## forage step and any future scrap-flow listeners).
+signal scrap_submitted(selection: Dictionary)
+## Emitted when the restoration bench opens (Day 0 workbench step).
+signal restoration_opened(instance_id: String)
+## Emitted when a sale is accepted with a meet-in-person payment: the item is
+## handed to the player to deliver; money arrives at the handoff.
+signal meet_scheduled(instance_id: String, buyer_id: String, destination_id: String)
+## Emitted when the player hands the item to the buyer at the meet location and
+## the deferred payment is credited.
+signal meet_handoff_completed(
+	instance_id: String, buyer_id: String, price: int, destination_id: String
+)
 
 # --- Discovery events ---
 signal carrier_activated(instance_id: String, fragment_id: String)

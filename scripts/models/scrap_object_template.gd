@@ -29,6 +29,7 @@ var counterfeit_profile: String = ""  ## Optional ref; empty if none.
 var historical_fact_ref: String = ""  ## Optional ref; empty if none.
 var can_hold_temporal_echo: bool = false
 var deliverable: bool = true  ## False => quest/given item; excluded from the delivery pool.
+var is_quest_item: bool = false  ## True => orange quest marker in UI, unsellable to normal buyers.
 var decals: Array[SurfaceDecal] = []
 ## Authored grime/damage; empty => condition-based cleaning.
 var requires_join: bool = false
@@ -67,6 +68,7 @@ static func from_dictionary(data: Dictionary) -> ScrapObjectTemplate:
 	t.historical_fact_ref = ModelUtils.as_string(data.get("historical_fact_ref"))
 	t.can_hold_temporal_echo = ModelUtils.as_bool(data.get("can_hold_temporal_echo"))
 	t.deliverable = ModelUtils.as_bool(data.get("deliverable"), true)
+	t.is_quest_item = ModelUtils.as_bool(data.get("is_quest_item"))
 	var raw_decals: Variant = data.get("decals", [])
 	if raw_decals is Array:
 		for raw_decal in raw_decals:

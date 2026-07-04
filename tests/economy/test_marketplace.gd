@@ -101,12 +101,18 @@ func _add_item(uid: String, state: int, value: int = 0, condition: float = 80.0)
 	GameState.save_state.loop.inventory.append(inst.to_dictionary())
 
 
-func test_get_sellable_only_returns_restored_items() -> void:
+func test_get_sellable_lists_every_owned_artifact() -> void:
+	# Every real artifact is listed now (dirty/unscanned included); the value shows as ??? and few
+	# buyers come, but it's in the list.
 	_add_item("d1", ModelEnums.ObjState.DIRTY)
 	_add_item("c1", ModelEnums.ObjState.CLEAN)
 	var sellable := MarketplaceService.get_sellable()
-	assert_eq(sellable.size(), 1)
-	assert_eq(sellable[0].uid, "c1")
+	assert_eq(sellable.size(), 2, "both the dirty and clean artifacts are sellable-listed")
+	var uids: Array = []
+	for inst in sellable:
+		uids.append(inst.uid)
+	assert_has(uids, "d1")
+	assert_has(uids, "c1")
 
 
 func test_assessed_value_uses_the_instance_value() -> void:
@@ -114,18 +120,37 @@ func test_assessed_value_uses_the_instance_value() -> void:
 	assert_eq(MarketplaceService.assessed_value("c1"), 275)
 
 
-func test_interested_buyers_excludes_those_who_cannot_afford() -> void:
-	_add_item("c1", ModelEnums.ObjState.CLEAN, 1000)
+func test_interested_buyers_gate_on_budget_and_condition() -> void:
+	# A spotless (100%), scanned ₱1000 piece: the collector wants it (rich + only buys spotless), but
+	# the low-budget student is priced out even though she'd take a clean piece.
+	_add_item("c1", ModelEnums.ObjState.CLEAN, 1000, 100.0)
 	var ids: Array = []
 	for raw in MarketplaceService.interested_buyers("c1"):
 		ids.append((raw as BuyerPersona).id)
 	assert_does_not_have(ids, "student", "the low-budget student can't afford a ₱1000 piece")
-	assert_has(ids, "collector")
+	assert_has(ids, "collector", "the collector wants the spotless, scanned piece")
 
 
-func test_start_negotiation_is_null_for_an_unrestored_item() -> void:
-	_add_item("d1", ModelEnums.ObjState.DIRTY, 200)
-	assert_null(MarketplaceService.start_negotiation("d1", "collector"))
+func test_dirty_unscanned_item_only_draws_the_lowballer() -> void:
+	# An unscanned, dirty piece: only Mr. Maverick (who ignores all gates and lowballs) shows up.
+	var inst := ObjectInstance.new()
+	inst.template_id = "tarnished_pendant"
+	inst.uid = "dirty1"
+	inst.condition = 10.0
+	inst.state = ModelEnums.ObjState.DIRTY
+	inst.authenticity = ModelEnums.Verdict.UNKNOWN  # never scanned
+	GameState.save_state.loop.inventory.append(inst.to_dictionary())
+	var ids: Array = []
+	for raw in MarketplaceService.interested_buyers("dirty1"):
+		ids.append((raw as BuyerPersona).id)
+	assert_has(ids, MarketplaceService.MAVERICK_ID, "the lowballer takes anything")
+	assert_does_not_have(ids, "collector", "scan-gated buyers stay away from an unscanned piece")
+
+
+func test_start_negotiation_works_for_a_dirty_item() -> void:
+	# You CAN sell a dirty piece now (to the lowballer) — it just sells for little.
+	_add_item("d1", ModelEnums.ObjState.DIRTY, 200, 10.0)
+	assert_not_null(MarketplaceService.start_negotiation("d1", MarketplaceService.MAVERICK_ID))
 
 
 func test_complete_sale_credits_removes_and_records_best() -> void:

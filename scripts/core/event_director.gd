@@ -20,6 +20,9 @@ const EVENT_STREAM := "event_director"
 const MAX_EVENTS_PER_LOOP: int = 5
 const MAX_DISRUPTIVE_PER_LOOP: int = 2
 const MIN_SECONDS_PER_HOUR: float = 30.0
+## Event-injected items must be REAL artifacts (a folder scene) — never scene-less placeholders.
+const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const _ArtifactCatalog := preload("res://scripts/restoration/artifact_catalog.gd")
 
 ## Debug-only backdoor for deterministic QA. Never enabled in production.
 var _debug_force_enabled: bool = false
@@ -733,7 +736,32 @@ func _make_suspicious_antique_instance(day: int) -> ObjectInstance:
 	return inst
 
 
+## Resolves an authored event template id to a REAL (folder-scened) artifact. If the requested
+## template has no scene (e.g. small_santo / rusted_tin), it swaps to a deterministic scened,
+## deliverable template — preferring the same rarity — so an event never injects a placeholder.
+func _resolve_scened_template(template_id: String) -> String:
+	if _ArtifactScenes.has_scene(template_id):
+		return template_id
+	var wanted := _repo.get_template(template_id)
+	var wanted_rarity := wanted.base_rarity if wanted != null else -1
+	var same: Array[String] = []
+	var any: Array[String] = []
+	for tid in _ArtifactCatalog.spawnable_template_ids():
+		var t := _repo.get_template(tid)
+		if t == null or not t.deliverable:
+			continue
+		any.append(tid)
+		if wanted_rarity >= 0 and t.base_rarity == wanted_rarity:
+			same.append(tid)
+	var pool := same if not same.is_empty() else any
+	if pool.is_empty():
+		return template_id  # nothing scened available; leave it (no worse than before)
+	pool.sort()
+	return pool[0]
+
+
 func _make_instance_from_template(template_id: String, day: int) -> ObjectInstance:
+	template_id = _resolve_scened_template(template_id)
 	var template := _repo.get_template(template_id)
 	if template == null:
 		return null

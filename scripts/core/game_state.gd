@@ -10,9 +10,6 @@ var player_id: String = "local-player"
 var loop_index: int = 0
 var run_seed: int = 0
 var debug_seed_override: int = -1  ## -1 means use a generated seed.
-## DEBUG: guarantee a Gold artifact in day-1 deliveries (so the dust overlay contrasts with the
-## silver artifacts) — see DeliveryGenerator.DEBUG_FIRST_GOLD. Set false for unbiased deliveries.
-var debug_first_gold: bool = true
 
 var save_state: SaveState = SaveState.new()
 var run_context: RunContext = RunContext.new()
@@ -32,6 +29,10 @@ func initialize(new_player_id: String = "local-player") -> void:
 	debug_seed_override = -1
 	save_state = SaveState.new()
 	save_state.player_id = player_id
+	# Sessions and tests default to normal play; ONLY the title screen's New Game
+	# flow arms the Day 0 tutorial (TUT) by flipping this back to false. Loading a
+	# save replaces save_state wholesale, so a mid-tutorial save still resumes Day 0.
+	save_state.persistent.tutorial_completed = true
 	_load_fragment_definitions()
 	_update_run_context()
 	# A fresh session is a fresh loop: clear loop-scoped state in every subscriber

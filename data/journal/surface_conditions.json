@@ -8,7 +8,8 @@
       "category": "surface_soil",
       "color": "#C9C2B0",
       "cleaning_tool": "soft_brush",
-      "description": "Loose surface dust. A soft brush lifts it without scratching."
+      "description": "Loose surface dust. A soft brush lifts it without scratching.",
+      "value_reduction": 5
     },
     {
       "record_type": "surface_condition",
@@ -17,7 +18,8 @@
       "category": "surface_soil",
       "color": "#6B4A2B",
       "cleaning_tool": "damp_cloth",
-      "description": "Ingrained dirt and greasy residue. Wipe it away with a damp cloth."
+      "description": "Ingrained dirt and greasy residue. Wipe it away with a damp cloth.",
+      "value_reduction": 10
     },
     {
       "record_type": "surface_condition",
@@ -26,7 +28,8 @@
       "category": "accretion",
       "color": "#D9C27A",
       "cleaning_tool": "solvent",
-      "description": "A foreign accretion: sticky adhesive left by old tape. Dissolve it gently with solvent."
+      "description": "A foreign accretion: sticky adhesive left by old tape. Dissolve it gently with solvent.",
+      "value_reduction": 8
     },
     {
       "record_type": "surface_condition",
@@ -35,7 +38,8 @@
       "category": "corrosion",
       "color": "#B5511E",
       "cleaning_tool": "rust_brush",
-      "description": "Iron corrosion. Work it off and stabilise the metal with the wire brush."
+      "description": "Iron corrosion. Work it off and stabilise the metal with the wire brush.",
+      "value_reduction": 20
     },
     {
       "record_type": "surface_condition",
@@ -44,7 +48,8 @@
       "category": "corrosion",
       "color": "#4A5240",
       "cleaning_tool": "polishing_cloth",
-      "description": "Dull oxidation on silver or brass. Buff it back with a polishing cloth."
+      "description": "Dull oxidation on silver or brass. Buff it back with a polishing cloth.",
+      "value_reduction": 12
     },
     {
       "record_type": "surface_condition",
@@ -53,7 +58,8 @@
       "category": "staining",
       "color": "#C8A24B",
       "cleaning_tool": "stain_lifter",
-      "description": "Yellow-brown blotches soaked into paper or photos. Draw them out with the stain lifter."
+      "description": "Yellow-brown blotches soaked into paper or photos. Draw them out with the stain lifter.",
+      "value_reduction": 15
     },
     {
       "record_type": "surface_condition",
@@ -62,7 +68,8 @@
       "category": "structural_damage",
       "color": "#D8CFC0",
       "cleaning_tool": "photo_kit",
-      "description": "Media loss: a washed-out, discoloured image. Restore it with the photo restoration kit."
+      "description": "Media loss: a washed-out, discoloured image. Restore it with the photo restoration kit.",
+      "value_reduction": 18
     },
     {
       "record_type": "surface_condition",
@@ -71,7 +78,8 @@
       "category": "structural_damage",
       "color": "#3A3A3A",
       "cleaning_tool": "consolidant",
-      "description": "Structural cracks in a frame, glaze, or paint. Stabilise them with consolidant."
+      "description": "Structural cracks in a frame, glaze, or paint. Stabilise them with consolidant.",
+      "value_reduction": 25
     }
   ]
 }

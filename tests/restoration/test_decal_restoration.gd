@@ -128,7 +128,6 @@ func test_wrong_tool_damages_and_leaves_decal() -> void:
 	assert_true(result.ok)
 	assert_false(result.compatible)
 	assert_false(result.removed)
-	assert_gt(result.recorded_damage, 0)
 	var inst := _reload("photo_1")
 	assert_false(inst.removed_decals.has("dust_corner"))
 

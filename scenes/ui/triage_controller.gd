@@ -18,6 +18,7 @@ signal closed  ## Emitted after triage is confirmed and applied.
 const ARTIFACT_OBJECT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
 const ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
+const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
 
 const KEEP_ZONE_NAME := "KeepZone"
 const RECYCLE_ZONE_NAME := "RecycleZone"
@@ -63,6 +64,13 @@ var _bodies: Dictionary = {}  ## uid -> RigidBody3D.
 var _pending_release: bool = false
 var _props: Array[RigidBody3D] = []
 
+## Pile items are built a few per frame behind a loading overlay so the (now much smaller) build cost
+## never freezes the frame. The generation guards against a close()/reopen() landing mid-build.
+const SPAWN_BATCH: int = 2
+var _build_generation: int = 0
+var _loading_layer: CanvasLayer = null
+var _loading_label: Label = null
+
 var _keep_zone_pos: Vector3 = Vector3.ZERO
 var _recycle_zone_pos: Vector3 = Vector3.ZERO
 var _keep_ring: MeshInstance3D = null
@@ -92,6 +100,10 @@ var _recycle_ring: MeshInstance3D = null
 @onready var _fallback_confirm_button: Button = (
 	$HudLayer/FallbackPanel/Panel/Margin/VBox/ConfirmButton as Button
 )
+
+
+## Day 0 nudge shown with the shared NPC dialogue box (Tito Yuyu speaking).
+var _tutorial_dialogue: DialogueBox
 
 
 func _ready() -> void:
@@ -210,6 +222,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			_show_validation("Decide every item (keep or recycle) before leaving.")
 
 
+## Shows the full-screen loading overlay immediately. Call this BEFORE generating the delivery so the
+## one-time catalog scan + generation freeze happens behind the loading screen, not on Alya's face.
+func begin_loading() -> void:
+	visible = true
+	_show_loading(true)
+
+
 ## Opens the triage interface for the given delivery. Requests clock pause.
 ## `is_free_daily` marks the daily Morning Delivery so it consumes the daily drop
 ## when confirmed; scrap-sort triages do not.
@@ -225,7 +244,15 @@ func open(delivery: Array[ObjectInstance], storage_cap: int, is_free_daily: bool
 	_clear_rows()
 	_update_input_mode_from_settings()
 	_build_rows()
-	_spawn_items()
+	# Build the 3D pile incrementally behind a loading overlay (paint it once before the heavy work).
+	_build_generation += 1
+	var gen := _build_generation
+	_show_loading(true)
+	await get_tree().process_frame
+	await _spawn_items_async(gen)
+	if _build_generation != gen:
+		return  # a close()/reopen() superseded this build
+	_show_loading(false)
 	_update_ui()
 	if _input_mode == InputMode.MODE_LIST and _rows.size() > 0:
 		var first_row: Control = _rows.values()[0]
@@ -236,6 +263,9 @@ func open(delivery: Array[ObjectInstance], storage_cap: int, is_free_daily: bool
 
 ## Closes the interface and releases pause ownership.
 func close() -> void:
+	_build_generation += 1  # abort any in-flight incremental pile build
+	if _loading_layer != null:
+		_loading_layer.visible = false
 	if visible:
 		visible = false
 		_hud_layer.visible = false
@@ -293,7 +323,9 @@ func _clear_world() -> void:
 	_returning_body = null
 
 
-func _spawn_items() -> void:
+## Builds the pile a few items per frame (SPAWN_BATCH), awaiting a frame between batches so the
+## loading overlay stays responsive and no single frame stalls. Aborts if the build is superseded.
+func _spawn_items_async(gen: int) -> void:
 	if _viewport == null or _pile_spawn == null:
 		return
 	_spawn_props()
@@ -301,10 +333,35 @@ func _spawn_items() -> void:
 	rng.seed = _delivery_seed()
 	var index := 0
 	for inst in _state.instances:
+		if _build_generation != gen or not is_instance_valid(_viewport):
+			return
 		var body := _create_item_body(inst, rng, index)
 		_viewport.add_child(body)
 		_bodies[inst.uid] = body
 		index += 1
+		if index % SPAWN_BATCH == 0:
+			await get_tree().process_frame
+
+
+## Full-screen loading overlay shown while the pile builds. Created lazily; no .tscn edit needed.
+func _show_loading(on: bool) -> void:
+	if _loading_layer == null:
+		_loading_layer = CanvasLayer.new()
+		_loading_layer.layer = 100  # above the HUD
+		add_child(_loading_layer)
+		var rect := ColorRect.new()
+		rect.color = Color(0.05, 0.045, 0.06, 1.0)
+		rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		rect.mouse_filter = Control.MOUSE_FILTER_STOP  # swallow clicks while building
+		_loading_layer.add_child(rect)
+		_loading_label = Label.new()
+		_loading_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_loading_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_loading_label.add_theme_font_size_override("font_size", 36)
+		_loading_label.text = "Sorting today's haul…"
+		_loading_layer.add_child(_loading_label)
+	_loading_layer.visible = on
 
 
 func _delivery_seed() -> int:
@@ -347,6 +404,10 @@ func _create_item_body(inst: ObjectInstance, rng: RandomNumberGenerator, index: 
 
 	if template != null:
 		_restoration.present_object(obj, inst, template, inst.uid.hash())
+		# Show the condition overlays here too, so the player can judge how dirty/hard-to-clean an
+		# artifact is while deciding Keep vs Recycle. Same seed as the bench so triage == what you clean.
+		if obj.has_overlays():
+			obj.build_overlays(inst.uid.hash() ^ (GameState.loop_index * 104729))
 		var color := GlowMapper.get_instance_glow_color(
 			template.base_rarity, inst.is_carrier, false
 		)
@@ -657,11 +718,40 @@ func _on_confirm() -> void:
 		elif not _state.within_capacity():
 			_show_validation("Over capacity. Recycle more items.")
 		return
+	# Day 0 (TUT): the lesson IS the trade-off — exactly one kept, one recycled.
+	# Keeping both or recycling both pops a nudge instead of committing.
+	if TutorialService.is_tutorial_active():
+		var kept := _tutorial_kept_count()
+		if kept == 2:
+			_show_tutorial_notice("Storage is tight — keep only ONE. Send the other to Recycle.")
+			return
+		if kept == 0 and _state.instances.size() == 2:
+			_show_tutorial_notice("Don't recycle both! Keep ONE artifact to restore.")
+			return
 	if _service.apply_triage(_state):
 		if _is_free_daily:
 			GameState.save_state.loop.last_delivery_day = GameState.save_state.loop.current_day
 			SaveService.save_game()
 		close()
+
+
+## Shows the Day 0 keep-one nudge through the same DialogueBox every NPC uses
+## (created lazily under the triage HUD layer so it renders on top).
+func _show_tutorial_notice(message: String) -> void:
+	if _tutorial_dialogue == null:
+		_tutorial_dialogue = DIALOGUE_BOX_SCENE.instantiate()
+		_tutorial_dialogue.process_mode = Node.PROCESS_MODE_ALWAYS
+		_hud_layer.add_child(_tutorial_dialogue)
+	_tutorial_dialogue.start([{"name": "Tito Yuyu", "text": message}])
+
+
+## Number of kept items in the taught two-piece batch (0..2).
+func _tutorial_kept_count() -> int:
+	var kept := 0
+	for inst in _state.instances:
+		if _state.decisions.get(inst.uid, TriageState.Decision.UNDECIDED) == TriageState.Decision.KEEP:
+			kept += 1
+	return kept
 
 
 # --- List-view fallback (keyboard/controller/touch parity) -------------------
@@ -671,6 +761,7 @@ func _build_rows() -> void:
 	for child in _fallback_items_container.get_children():
 		child.queue_free()
 	_rows.clear()
+	_fallback_items_container.add_theme_constant_override("separation", 14)
 
 	for inst in _state.instances:
 		var row := _make_row(inst)
@@ -705,52 +796,133 @@ func _make_row(inst: ObjectInstance) -> Control:
 		)
 	)
 
-	var row := HBoxContainer.new()
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var heading_font: Font = load("res://assets/fonts/RomanAntique.ttf")
 
+	# Card shell: a framed panel with a rarity-coloured left edge.
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _make_card_style(glow_color))
+
+	var pad := MarginContainer.new()
+	pad.add_theme_constant_override("margin_left", 20)
+	pad.add_theme_constant_override("margin_right", 20)
+	pad.add_theme_constant_override("margin_top", 14)
+	pad.add_theme_constant_override("margin_bottom", 14)
+	card.add_child(pad)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 20)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pad.add_child(row)
+
+	# Artifact preview (or a rarity swatch when 3D previews are disabled).
 	if SettingsService.previews_enabled():
-		var card: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
-		card.custom_minimum_size = Vector2(96, 108)
-		card.tooltip_text = glow_name
-		row.add_child(card)
-		row.set_meta("preview_card", card)
+		var preview: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
+		preview.custom_minimum_size = Vector2(150, 165)
+		preview.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		preview.tooltip_text = glow_name
+		row.add_child(preview)
+		card.set_meta("preview_card", preview)
 	else:
 		var icon := ColorRect.new()
-		icon.custom_minimum_size = Vector2(40, 40)
+		icon.custom_minimum_size = Vector2(72, 72)
 		icon.color = glow_color
 		icon.tooltip_text = glow_name
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(icon)
 
+	# Name + rarity + storage details.
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info.add_theme_constant_override("separation", 6)
+	row.add_child(info)
 
 	var name_label := Label.new()
 	name_label.text = display_name
-	name_label.add_theme_font_size_override("font_size", 18)
+	if heading_font != null:
+		name_label.add_theme_font_override("font", heading_font)
+	name_label.add_theme_font_size_override("font_size", 34)
+	name_label.add_theme_color_override("font_color", Color(0.96, 0.92, 0.82))
 	info.add_child(name_label)
 
+	var rarity_chip := Label.new()
+	rarity_chip.text = glow_name.to_upper()
+	rarity_chip.add_theme_font_size_override("font_size", 18)
+	rarity_chip.add_theme_color_override("font_color", glow_color.lightened(0.25))
+	info.add_child(rarity_chip)
+
 	var detail := Label.new()
-	detail.text = "%s | %s | cost %d" % [glow_name, container_name, inst.storage_cost]
-	detail.add_theme_font_size_override("font_size", 14)
+	detail.text = "%s   •   cost %d" % [container_name, inst.storage_cost]
+	detail.add_theme_font_size_override("font_size", 22)
+	detail.add_theme_color_override("font_color", Color(0.78, 0.74, 0.66))
 	info.add_child(detail)
 
-	row.add_child(info)
+	# Keep / Recycle decision buttons.
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 12)
+	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(actions)
 
 	var keep := Button.new()
 	keep.text = "Keep"
 	keep.toggle_mode = true
+	keep.custom_minimum_size = Vector2(150, 64)
+	_style_decision_button(keep, Color(0.16, 0.5, 0.24), Color(0.2, 0.78, 0.34))
 	keep.pressed.connect(func() -> void: _set_decision(inst.uid, TriageState.Decision.KEEP))
-	row.add_child(keep)
+	actions.add_child(keep)
 
 	var recycle := Button.new()
 	recycle.text = "Recycle"
 	recycle.toggle_mode = true
+	recycle.custom_minimum_size = Vector2(150, 64)
+	_style_decision_button(recycle, Color(0.55, 0.2, 0.16), Color(0.86, 0.28, 0.18))
 	recycle.pressed.connect(func() -> void: _set_decision(inst.uid, TriageState.Decision.RECYCLE))
-	row.add_child(recycle)
+	actions.add_child(recycle)
 
-	row.set_meta("keep_button", keep)
-	row.set_meta("recycle_button", recycle)
-	return row
+	card.set_meta("keep_button", keep)
+	card.set_meta("recycle_button", recycle)
+	return card
+
+
+## Builds the framed card background, tinted by the item's rarity glow colour.
+func _make_card_style(accent: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.14, 0.11, 0.09, 0.92)
+	sb.set_corner_radius_all(12)
+	sb.set_border_width_all(2)
+	sb.border_color = Color(accent.r, accent.g, accent.b, 0.55)
+	sb.border_width_left = 6  # Rarity accent stripe down the left edge.
+	return sb
+
+
+## Applies a green (keep) / red (recycle) toggle style. The toggled-on state
+## reuses the solid "pressed" box so the chosen decision reads at a glance.
+func _style_decision_button(button: Button, base: Color, accent: Color) -> void:
+	button.focus_mode = Control.FOCUS_ALL
+	button.add_theme_font_size_override("font_size", 24)
+	button.add_theme_color_override("font_color", Color(0.96, 0.95, 0.9))
+	button.add_theme_color_override("font_hover_color", Color(1, 1, 1))
+	button.add_theme_color_override("font_pressed_color", Color(1, 1, 1))
+
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(base.r, base.g, base.b, 0.35)
+	normal.set_corner_radius_all(10)
+	normal.set_border_width_all(2)
+	normal.border_color = Color(accent.r, accent.g, accent.b, 0.7)
+	normal.set_content_margin_all(8)
+
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(base.r, base.g, base.b, 0.55)
+
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = accent
+	pressed.border_color = Color(1, 1, 1, 0.85)
+
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", hover)
 
 
 func _fill_row_preview(row: Control, inst: ObjectInstance) -> void:

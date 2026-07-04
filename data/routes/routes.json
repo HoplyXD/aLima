@@ -278,6 +278,92 @@
             "name": "Ayla",
             "text": "Oo. Balik ka na sa shop, makita mo na dira. Indi na ko magdugang until ma-kuha mo ina. [i]She turns back to her own pile.[/i] Sige, lakatan ko pa ni."
           }
+        ],
+        "q1_start": [
+          {
+            "name": "Ayla",
+            "text": "Oy, hulat anay. [i]She tugs at the hem of her shirt, not quite looking at you.[/i] May gusto ko i-share sa imo parte sa akon Tatay... kag kay Yuyu."
+          },
+          {
+            "name": "Ayla",
+            "text": "Sang una, si Yuyu kag akon Tatay close gid. Parang mag-utod. Kon may makita si Yuyu nga vintage nga butang, ginahatud niya kay Tatay. Siling ni Tatay, 'Si Yuyu lang ang tawo nga indi mag-haggle — bayad siya sang amo sang gusto mo.'"
+          },
+          {
+            "name": "Ayla",
+            "text": "Kon indi na si Tatay, si Yuyu ang nag-atipan sa amon. Ginbulig niya sa akon Nanay. Gani, ginahatag niya ang iya old glasses sa akon — sabi niya, 'Daw indi na ko makakita sang maayo, Ayla. Pero ikaw, you see things I don't.'"
+          },
+          {
+            "name": "Ayla",
+            "text": "[i]Her voice cracks slightly.[/i] Pero sang nag-disappear si Yuyu... nawala man ang iya glasses. Ginhalungkat ko ang tibuok scrapyard, pero wala ko makita. Siguro, nabilin diri sa basurahan. [i]She looks up at you.[/i] Kon makakita ka... ginahatag ko ang akon kabuhi para mabalik lang sa iya."
+          }
+        ],
+        "q1_glasses_found": [
+          {
+            "name": "Ayla",
+            "text": "[i]She takes the glasses with both hands, turning them over.[/i] ...Amo gid ini. [i]Her thumb traces the worn frame.[/i] Tito's glasses. Ginahatag niya ini sa akon sang bata pa ko. Sabi niya, 'Wear these when you read, Ayla. Make your eyes strong.'"
+          },
+          {
+            "name": "Ayla",
+            "text": "Thank you. [i]She wipes her eyes quickly.[/i] Thank you gid. Indi ko ma-explain kon ano ang ini para sa akon."
+          },
+          {
+            "name": "Ayla",
+            "text": "Oy, abi mo, may lugar pa ko nga gusto ko ipakita sa imo. Ang Dump Site — didto kami nag-estar sang una pa, before everything. [i]She looks toward the distant heaps.[/i] Pwede ka na magbisita didto. May mga butang pa nga nagahulat."
+          }
+        ],
+        "q2_start": [
+          {
+            "name": "Ayla",
+            "text": "[i]She stands at the entrance, looking smaller than usual.[/i] Didto ko nagdako. [i]She gestures at the crumbling structures beyond the fence.[/i] Amo didto ang balay namon sang una. Kag didto... didto ko nawala ang bag nga ginhatag ni Tatay sa akon."
+          },
+          {
+            "name": "Ayla",
+            "text": "Small lang siya, hand-sewn, may floral pattern. [i]She smiles sadly.[/i] Sabi ni Tatay, 'Dala-a ini, Ayla. Para kon malipay ka, may ma-dala ka nga ginhawa niya.'"
+          },
+          {
+            "name": "Ayla",
+            "text": "Pero sang nag-guba ang tanan... nawala ko siya. Siguro nabilin pa didto. [i]She looks at you.[/i] Kon makakita ka... please, balik mo sa akon. Gusto ko makita liwat ang sulod."
+          }
+        ],
+        "q2_bag_found": [
+          {
+            "name": "Ayla",
+            "text": "[i]She holds the bag to her chest, pressing it gently.[/i] ...Amo gid ini. Akon cute bag. [i]She looks up at you with wide eyes.[/i] Pero indi ko mabuklat ang zipper — rusted na. Kag may something sa sulod, I know it. I can feel it."
+          },
+          {
+            "name": "Ayla",
+            "text": "Please... [i]She presses the bag into your hands.[/i] Please clean it for me. I want to see what's inside. Gusto ko makabasa sang note ni Papa. Please."
+          }
+        ],
+        "q2_bag_opened": [
+          {
+            "name": "Ayla",
+            "text": "[i]She opens the bag slowly, unfolding the note with trembling fingers.[/i] ...'Para sa akon pinalangga nga Ayla...' [i]Tears stream down her face.[/i] It's a note from Papa. Kag ini... [i]She pulls out a small, wrapped artifact.[/i] Ini ang ginhimo niya para sa akon."
+          },
+          {
+            "name": "Ayla",
+            "text": "Thank you. [i]She wipes her face, then reaches into her pocket.[/i] Wala ko sang dako, pero... please, take this. 1000 pesos. Para sa imo time, sa imo effort. Salamat gid."
+          }
+        ],
+        "q3_start": [
+          {
+            "name": "Ayla",
+            "text": "[i]She stands at the entrance, frowning at the broken fence.[/i] The fence wasn't broken yesterday... Something's wrong."
+          },
+          {
+            "name": "Ayla",
+            "text": "[i]She looks at you with worry in her eyes.[/i] Please be careful in there. Kon makakita ka sang bisan ano nga strange... balik ka lang."
+          }
+        ],
+        "q3_salakot_found": [
+          {
+            "name": "Ayla",
+            "text": "[i]Her eyes widen as she sees the salakot.[/i] ...Amo gid na. Yuyu's salakot. Ginahatag niya ini sa akon sang bata pa ko, pero ginbalik ko sa iya sang last time."
+          },
+          {
+            "name": "Ayla",
+            "text": "Take it back to the shop, [i]she whispers.[/i] Someone important will come looking for it. I can feel it."
+          }
         ]
       }
     },
@@ -459,6 +545,58 @@
           {
             "name": "Yuyu",
             "text": "Alima. Passing something forward, hand to hand, until it's too heavy for one person to carry alone. I think I finally understand why your Lola said it like that."
+          }
+        ]
+      }
+    },
+    {
+      "record_type": "route",
+      "id": "sam",
+      "display_name": "Sam",
+      "portrait": "res://assets/Characters/Archeologist.png",
+      "schedule": [
+        {
+          "days": [1, 2, 3, 4, 5],
+          "start_hour": 0,
+          "end_hour": 23
+        }
+      ],
+      "prerequisites": [],
+      "mutual_exclusions": [],
+      "holds_fragment_id": "",
+      "rewards": ["archeologist_house_access"],
+      "has_ending": true,
+      "dialogue": {
+        "intro": [
+          {
+            "name": "Sam",
+            "text": "[i]He stops at the door, eyes fixed on the salakot on your table.[/i] ...That hat. I know that hat."
+          },
+          {
+            "name": "You",
+            "text": "It was Yuyu's. Found it in the Dump Site."
+          },
+          {
+            "name": "Sam",
+            "text": "[i]He steps inside, gently lifting the salakot.[/i] The last time I saw this... Yuyu was wearing it. We were mapping the old ruins together."
+          },
+          {
+            "name": "Sam",
+            "text": "He was obsessed with the master artifact — said it was the key to everything. But someone else wanted it too."
+          },
+          {
+            "name": "Sam",
+            "text": "Come to my house. I have something to show you. Something Yuyu left behind."
+          }
+        ],
+        "return": [
+          {
+            "name": "Sam",
+            "text": "You brought the salakot. Good. It means you're serious about finding the truth."
+          },
+          {
+            "name": "Sam",
+            "text": "Come to my house. I have something to show you."
           }
         ]
       }

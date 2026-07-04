@@ -188,26 +188,114 @@ func get_pending_shipments() -> Array:
 	return GameState.save_state.loop.tool_shipments.duplicate()
 
 
+# --- Formal listings (P14.1, MKT-R1) -----------------------------------------
+
+
+## Lists a restored item for buyers as first-class loop state. Reuses an existing
+## active listing for the same instance (listing is idempotent). asking_price < 0
+## defaults to the assessed value; honest reflects an accurate description (DISP-R2).
+## Returns the listing, or null when the instance can't be found.
+func list_for_sale(uid: String, asking_price: int = -1, honest: bool = true) -> MarketplaceListing:
+	var found := _find_instance(uid)
+	if found.is_empty():
+		return null
+	var existing := get_listing(uid)
+	if existing != null and existing.is_active():
+		return existing
+	var inst: ObjectInstance = found["inst"]
+	var listing := MarketplaceListing.new()
+	listing.instance_uid = uid
+	listing.template_id = inst.template_id
+	listing.asking_price = asking_price if asking_price >= 0 else assessed_value(uid)
+	listing.listed_day = GameState.save_state.loop.current_day
+	listing.condition_at_listing = int(round(inst.condition))
+	listing.honest_description = honest
+	listing.status = MarketplaceListing.Status.LISTED
+	_upsert_listing(listing)
+	return listing
+
+
+## The listing for an instance, or null if none exists.
+func get_listing(uid: String) -> MarketplaceListing:
+	for raw in GameState.save_state.loop.listings:
+		if raw is Dictionary and raw.get("instance_uid") == uid:
+			return MarketplaceListing.from_dictionary(raw)
+	return null
+
+
+## All currently active (LISTED) listings.
+func get_active_listings() -> Array[MarketplaceListing]:
+	var out: Array[MarketplaceListing] = []
+	for raw in GameState.save_state.loop.listings:
+		if raw is Dictionary:
+			var listing := MarketplaceListing.from_dictionary(raw)
+			if listing.is_active():
+				out.append(listing)
+	return out
+
+
+## Resolves a listing to SOLD or WITHDRAWN. No-op when there is no listing. Does not
+## save (the caller owns persistence); idempotent.
+func resolve_listing(
+	uid: String, status: int, price: int = 0, buyer_id: String = ""
+) -> void:
+	var listing := get_listing(uid)
+	if listing == null:
+		return
+	listing.status = status
+	if status == MarketplaceListing.Status.SOLD:
+		listing.sold_price = price
+		listing.sold_buyer_id = buyer_id
+	_upsert_listing(listing)
+
+
+func _upsert_listing(listing: MarketplaceListing) -> void:
+	var listings: Array = GameState.save_state.loop.listings
+	for i in listings.size():
+		if listings[i] is Dictionary and listings[i].get("instance_uid") == listing.instance_uid:
+			listings[i] = listing.to_dictionary()
+			return
+	listings.append(listing.to_dictionary())
+
+
 # --- Selling (deterministic haggle) ------------------------------------------
 
 
 ## Inventory instances ready to sell: restored (CLEAN or OPEN) AND scanned & judged. The
 ## player must Scan & Judge a piece (commit a verdict) before it can be listed — that's
 ## why an item only appears in the Marketplace after scanning.
+## EVERY real artifact you own is listed (dirty or clean, scanned or not). An unscanned piece sells
+## for an unknown price (its value shows as "???" in the phone) and draws few or no buyers; scanning is
+## the proof of value that brings buyers out.
 func get_sellable() -> Array[ObjectInstance]:
 	var out: Array[ObjectInstance] = []
+	var repo := DataRepository.singleton()
 	for raw in GameState.save_state.loop.inventory:
 		if not (raw is Dictionary):
 			continue
 		var inst := ObjectInstance.from_dictionary(raw)
-		if _is_restored(inst) and _is_judged(inst):
+		if repo.get_template(inst.template_id) != null:
 			out.append(inst)
 	return out
 
 
-## True once the player has committed a scan verdict on the instance.
+## True once the player has committed a scan verdict on the instance (proof of identity/value).
 func _is_judged(inst: ObjectInstance) -> bool:
 	return inst.authenticity != ModelEnums.Verdict.UNKNOWN
+
+
+## True when the player has scanned + judged this item (so its price is known to buyers).
+func is_scanned(uid: String) -> bool:
+	var found := _find_instance(uid)
+	return not found.is_empty() and _is_judged(found["inst"])
+
+
+## True for historical artifacts (gold rarity / `historical` tag) — what the museum buys.
+func _is_historical(template: ScrapObjectTemplate) -> bool:
+	return (
+		template != null
+		and (template.tags.has("historical") or template.base_rarity == ModelEnums.Rarity.GOLD)
+	)
 
 
 ## The assessed value of an instance: its recorded value if set, else the template's
@@ -218,6 +306,10 @@ func assessed_value(uid: String) -> int:
 		return 0
 	var inst: ObjectInstance = found["inst"]
 	var template: ScrapObjectTemplate = found["template"]
+	# Revamped pieces (a rolled true value) price off live condition coverage, so a
+	# partially-cleaned artifact sells for less. Pre-revamp/test instances keep the old path.
+	if inst.true_value > 0:
+		return ValueModel.current_value(inst, template, DataRepository.singleton())
 	if inst.value > 0:
 		return inst.value
 	if template == null:
@@ -228,24 +320,47 @@ func assessed_value(uid: String) -> int:
 ## Buyers worth pitching this item to: those whose budget can make a meaningful offer.
 ## Falls back to every persona so the player can always try to sell something.
 func interested_buyers(uid: String) -> Array[BuyerPersona]:
+	# A missing/hypothetical item has no state, so only the always-on lowballer (Maverick) qualifies.
+	var found := _find_instance(uid)
+	var inst: ObjectInstance = found.get("inst")
+	var template: ScrapObjectTemplate = found.get("template")
 	var value := assessed_value(uid)
+	var condition := inst.condition if inst != null else 0.0
+	var scanned := inst != null and _is_judged(inst)
+	var historical := _is_historical(template)
 	var out: Array[BuyerPersona] = []
-	# Mr. Maverick shows up first — unless he's artifact-ghosted for THIS item (he never
-	# day/loop ghosts, but a failed banter / offence on a piece does block that piece).
-	var maverick := DataRepository.singleton().get_buyer(MAVERICK_ID)
-	if maverick != null and not is_ghosted(uid, MAVERICK_ID):
-		out.append(maverick)
 	for raw in DataRepository.singleton().get_buyers_sorted():
 		var persona := raw as BuyerPersona
-		if persona == null or persona.id == MAVERICK_ID:
+		if persona == null or is_ghosted(uid, persona.id):
 			continue
-		if is_ghosted(uid, persona.id):
-			continue  # a buyer you failed/ghosted won't return for this item
-		if persona.budget_range.y >= int(round(value * 0.35)):
+		if _buyer_interested(persona, condition, value, scanned, historical):
 			out.append(persona)
-	if out.is_empty() and maverick != null and not is_ghosted(uid, MAVERICK_ID):
-		out.append(maverick)
+	# Quest items: normal buyers refuse them; only state-gate-ignoring buyers (Maverick) show up.
+	if inst != null and inst.is_quest_item:
+		var quest_only: Array[BuyerPersona] = []
+		for persona in out:
+			if persona.ignores_state_gates:
+				quest_only.append(persona)
+		return quest_only
 	return out
+
+
+## Whether a persona will message the player about an item in this state. Mr. Maverick (and any buyer
+## with ignores_state_gates) always shows and lowballs anything; everyone else needs the piece scanned
+## (proof of value), and personas may require a minimum cleanliness, a historical piece, and the budget
+## to make a meaningful offer. This is what makes a dirty/unscanned artifact hard to sell.
+func _buyer_interested(
+	persona: BuyerPersona, condition: float, value: int, scanned: bool, historical: bool
+) -> bool:
+	if persona.ignores_state_gates:
+		return true
+	if persona.requires_scan and not scanned:
+		return false
+	if persona.requires_historical and not historical:
+		return false
+	if condition < persona.min_condition:
+		return false
+	return persona.budget_range.y >= int(round(value * 0.35))
 
 
 ## Buyers who have ACTUALLY shown up for `uid` so far. Mr. Maverick is here at once;
@@ -333,8 +448,6 @@ func start_negotiation(uid: String, persona_id: String) -> Negotiation:
 		return null
 	var inst: ObjectInstance = found["inst"]
 	var template: ScrapObjectTemplate = found["template"]
-	if not _is_restored(inst):
-		return null
 	var persona := DataRepository.singleton().get_buyer(persona_id)
 	if persona == null:
 		return null
@@ -379,10 +492,37 @@ func complete_sale(uid: String, price: int, buyer_id: String) -> Dictionary:
 		return {"ok": false, "error": "That item is no longer available.", "price": 0}
 	var inst: ObjectInstance = found["inst"]
 	var template: ScrapObjectTemplate = found["template"]
-	if not _is_restored(inst):
-		return {"ok": false, "error": "Only restored pieces can be sold.", "price": 0}
 
 	var loop := GameState.save_state.loop
+
+	# Meet-in-person sale (TUT / meet-to-sell groundwork): the deal is agreed but
+	# the buyer pays at the meeting place. The item leaves inventory (the player
+	# carries it out for delivery); money and best-sale land in
+	# complete_meet_handoff(). An undelivered meet dies with the loop (§4-A).
+	var destination_id := _meet_destination_for(buyer_id)
+	if not destination_id.is_empty():
+		_clear_negotiations_for(uid)
+		_remove_instance(uid)
+		loop.pending_meets.append(
+			{
+				"uid": uid,
+				"template_id": inst.template_id,
+				"buyer_id": buyer_id,
+				"price": price,
+				"destination_id": destination_id,
+				"condition": inst.condition,
+			}
+		)
+		SaveService.save_game()
+		EventBus.meet_scheduled.emit(uid, buyer_id, destination_id)
+		return {
+			"ok": true,
+			"error": "",
+			"price": price,
+			"meet_required": true,
+			"destination_id": destination_id,
+		}
+
 	loop.money += price
 	_deduct_cash(buyer_id, price)  # the buyer spends from their wallet
 	_clear_negotiations_for(uid)  # the item is gone; drop its cached haggles
@@ -391,6 +531,56 @@ func complete_sale(uid: String, price: int, buyer_id: String) -> Dictionary:
 	SaveService.save_game()
 	EventBus.sale_completed.emit(uid, buyer_id, price)
 	return {"ok": true, "error": "", "price": price}
+
+
+## The meet destination for this buyer, or "" for a normal online payment. Day 0
+## forces the tutorial buyer's meet at the authored destination; buyer-persona
+## payment modes plug in here later (docs/phase-task.md meet-to-sell backlog).
+func _meet_destination_for(_buyer_id: String) -> String:
+	if TutorialService.is_tutorial_active():
+		return ModelUtils.as_string(
+			TutorialService.get_config().get("buyer_destination_id"), "mall"
+		)
+	return ""
+
+
+## Pending meet-in-person sales waiting at `destination_id` (tricycle
+## recommendation marks and the buyer spawner read this).
+func pending_meets_for(destination_id: String) -> Array:
+	var out: Array = []
+	for raw in GameState.save_state.loop.pending_meets:
+		if raw is Dictionary and str(raw.get("destination_id")) == destination_id:
+			out.append(raw)
+	return out
+
+
+## Hands the item to the buyer at the meeting place: credits the deferred price,
+## records the best sale, and emits sale_completed + meet_handoff_completed.
+## Idempotent — an unknown/already-completed uid fails without side effects.
+func complete_meet_handoff(uid: String) -> Dictionary:
+	var loop := GameState.save_state.loop
+	for i in loop.pending_meets.size():
+		var raw: Variant = loop.pending_meets[i]
+		if not (raw is Dictionary) or str(raw.get("uid")) != uid:
+			continue
+		var meet: Dictionary = raw
+		var price := ModelUtils.as_int(meet.get("price"))
+		var buyer_id := ModelUtils.as_string(meet.get("buyer_id"))
+		var destination_id := ModelUtils.as_string(meet.get("destination_id"))
+		var template: ScrapObjectTemplate = DataRepository.singleton().get_template(
+			ModelUtils.as_string(meet.get("template_id"))
+		)
+		loop.pending_meets.remove_at(i)
+		loop.money += price
+		_deduct_cash(buyer_id, price)
+		_record_best_sale(
+			price, template, buyer_id, ModelUtils.as_float(meet.get("condition")), loop.current_day
+		)
+		SaveService.save_game()
+		EventBus.sale_completed.emit(uid, buyer_id, price)
+		EventBus.meet_handoff_completed.emit(uid, buyer_id, price, destination_id)
+		return {"ok": true, "error": "", "price": price}
+	return {"ok": false, "error": "No meet is pending for that item.", "price": 0}
 
 
 func _is_restored(inst: ObjectInstance) -> bool:

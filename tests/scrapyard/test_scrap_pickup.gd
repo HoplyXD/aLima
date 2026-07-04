@@ -2,7 +2,7 @@ extends GutTest
 
 ## Headless tests for the unified proximity-E scrap pickup.
 
-const SCRAP_ITEM_SCENE := preload("res://scenes/scrapyard/scrap_item.tscn")
+const SCRAP_ITEM_SCENE := preload("res://scenes/locations/scrapyard/scrap_item.tscn")
 
 
 func before_each() -> void:

@@ -2,10 +2,9 @@
 
 [ext_resource type="Script" uid="uid://crxpsad5lskcv" path="res://scenes/ui/echo_hud.gd" id="1_8g3wj"]
 [ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_i0krg"]
-[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/Pause_menu.tres" id="3_gqxa3"]
-[ext_resource type="FontFile" uid="uid://d0g0hfveuuypx" path="res://assets/fonts/startedbyamouse.ttf" id="4_y4nwu"]
-[ext_resource type="FontFile" uid="uid://7gx30v1rvopa" path="res://assets/fonts/The Antique.otf" id="5_y4nwu"]
-[ext_resource type="FontFile" uid="uid://c6rub4sia07fh" path="res://assets/fonts/The Antique.ttf" id="6_vvsy4"]
+[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="3_gqxa3"]
+[ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="4_gqxa3"]
+[ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="5_gqxa3"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vvsy4"]
 texture = ExtResource("2_i0krg")
@@ -46,7 +45,7 @@ theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=2011515508]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("4_y4nwu")
+theme_override_fonts/font = ExtResource("4_gqxa3")
 theme_override_font_sizes/font_size = 52
 text = "Cultural Echo"
 
@@ -57,7 +56,7 @@ text = "Resonance"
 
 [node name="Meter" type="ProgressBar" parent="Panel/Margin/VBox" unique_id=95443088]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("5_y4nwu")
+theme_override_fonts/font = ExtResource("5_gqxa3")
 max_value = 1.0
 
 [node name="Bands" type="Label" parent="Panel/Margin/VBox" unique_id=939662733]
@@ -76,7 +75,7 @@ autowrap_mode = 3
 [node name="Pulse" type="ProgressBar" parent="Panel/Margin/VBox" unique_id=488791473]
 visible = false
 layout_mode = 2
-theme_override_fonts/font = ExtResource("6_vvsy4")
+theme_override_fonts/font = ExtResource("5_gqxa3")
 max_value = 1.0
 
 [node name="Loss" type="Label" parent="Panel/Margin/VBox" unique_id=93741197]

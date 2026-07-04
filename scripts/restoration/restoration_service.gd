@@ -16,7 +16,6 @@ class ToolResult:
 	var condition_after: float = 0.0
 	var value_before: int = 0
 	var value_after: int = 0
-	var recorded_damage: int = 0
 	var reached_clean: bool = false
 	var state_changed: bool = false
 
@@ -39,7 +38,6 @@ class DecalResult:
 	var reached_clean: bool = false  ## True when this action cleared the last decal.
 	var condition_after: float = 0.0
 	var value_after: int = 0
-	var recorded_damage: int = 0
 	var remaining_decals: int = 0
 
 
@@ -61,7 +59,7 @@ class AuthoredResult:
 ## Per-template authored scenes. A non-openable artifact whose scene carries hand-placed
 ## condition decals (e.g. the Oton mask) has nothing in its DATA decals, so we consult this
 ## to keep it a bench object — otherwise it would show in storage but not on the bench.
-const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const ARTIFACT_SCENES := preload("res://scripts/restoration/artifact_scenes.gd")
 
 var _game_state: GameState
 var _repo: DataRepository
@@ -101,13 +99,23 @@ func get_restorable_instances() -> Array[ObjectInstance]:
 
 ## Returns all owned tools with their definitions. Includes the id-set ownership
 ## (starting kit / legacy rewards) and any usable durability-tracked instances.
+## Debug-only tools are hidden in release builds.
 func get_available_tools() -> Array[ToolDefinition]:
 	var owned_ids: Array[String] = []
-	owned_ids.append_array(_game_state.save_state.loop.tool_items)
-	owned_ids.append_array(_game_state.save_state.persistent.legacy_items)
+	for tool_id in _game_state.save_state.loop.tool_items:
+		if not _debug_tools_allowed() and _is_debug_only(tool_id):
+			continue
+		owned_ids.append(tool_id)
+	for tool_id in _game_state.save_state.persistent.legacy_items:
+		if not _debug_tools_allowed() and _is_debug_only(tool_id):
+			continue
+		owned_ids.append(tool_id)
 	for raw in _game_state.save_state.loop.owned_tools:
 		if raw is Dictionary and _instance_usable(raw):
-			owned_ids.append(ModelUtils.as_string(raw.get("tool_id")))
+			var tool_id := ModelUtils.as_string(raw.get("tool_id"))
+			if not _debug_tools_allowed() and _is_debug_only(tool_id):
+				continue
+			owned_ids.append(tool_id)
 
 	var seen := {}
 	var out: Array[ToolDefinition] = []
@@ -127,6 +135,7 @@ func get_available_tools() -> Array[ToolDefinition]:
 ## to "all available" is the id-set-only path (no durability instances at all),
 ## which is the legacy/seed case used in tests.
 ## Phase 18: tools blocked by an active event (e.g. Sudden Brownout) are hidden.
+## Debug-only tools are hidden in release builds.
 func get_workbench_tools() -> Array[ToolDefinition]:
 	var loadout: Array = _game_state.save_state.loop.workbench_tools
 	if loadout.is_empty():
@@ -142,6 +151,8 @@ func get_workbench_tools() -> Array[ToolDefinition]:
 		if not loadout.has(uid) or not _instance_usable(raw):
 			continue
 		var tool_id := ModelUtils.as_string(raw.get("tool_id"))
+		if not _debug_tools_allowed() and _is_debug_only(tool_id):
+			continue
 		if seen.has(tool_id):
 			continue
 		seen[tool_id] = true
@@ -156,19 +167,28 @@ func get_workbench_tools() -> Array[ToolDefinition]:
 ## id-set case (no durability instances).
 func get_workbench_durability() -> Dictionary:
 	var out := {}
-	var loadout: Array = _game_state.save_state.loop.workbench_tools
+	# Live remaining uses per tool_id from durability-tracked owned instances (the lowest
+	# copy is the one that will wear next). Infinite (max_durability <= 0) tools are skipped.
+	var remaining := {}
 	for raw in _game_state.save_state.loop.owned_tools:
-		if not (raw is Dictionary):
+		if not (raw is Dictionary) or ModelUtils.as_int(raw.get("max_durability")) <= 0:
 			continue
-		var uid := ModelUtils.as_string(raw.get("uid"))
-		if not loadout.has(uid):
+		var owned_id := ModelUtils.as_string(raw.get("tool_id"))
+		var left := ModelUtils.as_int(raw.get("durability"))
+		if not remaining.has(owned_id) or left < int(remaining[owned_id]):
+			remaining[owned_id] = left
+	# The bar's MAX always comes from the live tool config (tools.json), so editing a tool's
+	# `durability` there changes its progress bar immediately. CURRENT is the live remaining
+	# uses when the tool wears, otherwise full (config durability <= 0 means infinite).
+	for slot in get_workbench_slots():
+		var tool_id := ModelUtils.as_string(slot)
+		if tool_id.is_empty() or out.has(tool_id):
 			continue
-		var tool_id := ModelUtils.as_string(raw.get("tool_id"))
-		if out.has(tool_id):
-			continue
+		var def := _repo.get_tool(tool_id)
+		var max_uses := def.durability if def != null else 0
 		out[tool_id] = {
-			"current": ModelUtils.as_int(raw.get("durability")),
-			"max": ModelUtils.as_int(raw.get("max_durability")),
+			"current": int(remaining.get(tool_id, max_uses)),
+			"max": max_uses,
 		}
 	return out
 
@@ -204,13 +224,19 @@ func _usable_tool_id_for_uid(uid: String) -> String:
 			continue
 		if not _instance_usable(raw):
 			return ""
-		return ModelUtils.as_string(raw.get("tool_id"))
+		var tool_id := ModelUtils.as_string(raw.get("tool_id"))
+		if not _debug_tools_allowed() and _is_debug_only(tool_id):
+			return ""
+		return tool_id
 	return ""
 
 
 ## True if the player currently owns the named tool (id-set ownership or a usable
-## durability-tracked instance).
+## durability-tracked instance). Debug-only tools are treated as unowned in release
+## builds even if a save contains them.
 func is_tool_owned(tool_id: String) -> bool:
+	if not _debug_tools_allowed() and _is_debug_only(tool_id):
+		return false
 	if (
 		_game_state.save_state.loop.tool_items.has(tool_id)
 		or _game_state.save_state.persistent.legacy_items.has(tool_id)
@@ -225,6 +251,17 @@ func is_tool_owned(tool_id: String) -> bool:
 func _instance_usable(raw: Dictionary) -> bool:
 	var max_d := ModelUtils.as_int(raw.get("max_durability"))
 	return max_d <= 0 or ModelUtils.as_int(raw.get("durability")) > 0
+
+
+## True when debug-only tools should be visible/usable (editor and debug exports).
+func _debug_tools_allowed() -> bool:
+	return OS.is_debug_build()
+
+
+## True when the authored tool definition is flagged debug-only.
+func _is_debug_only(tool_id: String) -> bool:
+	var tool := _repo.get_tool(tool_id)
+	return tool != null and tool.debug_only
 
 
 ## Wears down one durability-tracked instance of the given tool after a use. The
@@ -318,7 +355,6 @@ func apply_tool(uid: String, tool_id: String) -> ToolResult:
 		var value_damage := template.wrong_tool_value_damage
 		inst.condition = maxf(inst.condition - condition_damage, 0.0)
 		inst.value = maxi(inst.value - value_damage, int(template.base_value_range.x))
-		inst.recorded_damage += int(condition_damage) + value_damage
 		result.feedback = (
 			template.wrong_tool_feedback
 			if not template.wrong_tool_feedback.is_empty()
@@ -327,11 +363,58 @@ func apply_tool(uid: String, tool_id: String) -> ToolResult:
 
 	result.condition_after = inst.condition
 	result.value_after = inst.value
-	result.recorded_damage = inst.recorded_damage
 	# Only an effective (correct-tool) stroke wears the tool. Scrubbing with the wrong tool
 	# still damages the artifact, but must not silently burn through — and delete — the tool.
 	if compatible:
 		_consume_tool_durability(tool_id)
+	# In-memory only — the bench writes to disk on switch/close (no per-stroke save lag).
+	_write_instance_back(inst)
+	result.ok = true
+	return result
+
+
+## Debug-only: instantly cleans every condition on the instance and flips it to CLEAN.
+## Removes all data-driven decals, sets condition/value to the completed state, and saves.
+## The view is responsible for wiping the visible overlays/dust/authored decals.
+func debug_clean_all(uid: String) -> ToolResult:
+	var result := ToolResult.new()
+	if not _debug_tools_allowed():
+		result.feedback = "Debug tools are not available in release builds."
+		return result
+	var inst := find_instance_by_id(uid)
+	if inst == null:
+		result.feedback = "Item not found."
+		return result
+	var template := _repo.get_template(inst.template_id)
+	if template == null:
+		result.feedback = "Unknown object template."
+		return result
+	if inst.state == ModelEnums.ObjState.OPEN:
+		result.feedback = "Already opened."
+		return result
+
+	result.condition_before = inst.condition
+	result.value_before = inst.value
+	result.compatible = true
+
+	var threshold := template.clean_completion_threshold
+	inst.condition = float(threshold)
+	inst.value = int(template.base_value_range.y)
+
+	# Remove every data-driven decal so decal-based objects are fully clean.
+	for decal in effective_decals(inst, template):
+		if not inst.removed_decals.has(decal.id):
+			inst.removed_decals.append(decal.id)
+
+	if inst.state == ModelEnums.ObjState.DIRTY:
+		inst.state = ModelEnums.ObjState.CLEAN
+		result.reached_clean = true
+		result.state_changed = true
+		EventBus.restoration_completed.emit(inst.uid, inst.condition, "debug_clean_all")
+
+	result.condition_after = inst.condition
+	result.value_after = inst.value
+	result.feedback = "DEBUG: every condition is wiped clean."
 	_write_instance_back(inst)
 	SaveService.save_game()
 	result.ok = true
@@ -381,7 +464,7 @@ func _can_restore_instance(inst: ObjectInstance) -> bool:
 	if (
 		not template.is_openable
 		and effective_decals(inst, template).is_empty()
-		and not _ArtifactScenes.has_scene(template.id)
+		and not ARTIFACT_SCENES.has_scene(template.id)
 	):
 		return false
 	if inst.state == ModelEnums.ObjState.OPEN:
@@ -394,6 +477,8 @@ func _can_restore_instance(inst: ObjectInstance) -> bool:
 
 
 func _is_compatible_tool(template: ScrapObjectTemplate, tool: ToolDefinition) -> bool:
+	if CleaningPower.is_universal_cleaner(_repo, tool.id):
+		return true  # the debug eraser cleans any surface
 	return tool.enables.has(template.clean_minigame) or tool.id == template.required_clean_tool
 
 
@@ -438,8 +523,33 @@ func persist_dirt_mask(uid: String, png_bytes: PackedByteArray) -> void:
 	if inst == null:
 		return
 	inst.dirt_mask = png_bytes
-	_write_instance_back(inst)
-	SaveService.save_game()
+	_write_instance_back(inst)  # in-memory; the view's _cache_current_dirt does the single disk save
+
+
+## Persists authored-overlay cleaning progress onto the instance so it survives a full scene
+## reload (e.g. stepping out to the scrapyard and back), not just an in-session artifact switch.
+## `raw_state` is {overlay_name: PackedFloat32Array keep} from
+## RestorationObject3D.capture_overlay_keep().
+func persist_overlay_keep(uid: String, raw_state: Dictionary) -> void:
+	var inst := find_instance_by_id(uid)
+	if inst == null:
+		return
+	var encoded := {}
+	for key in raw_state.keys():
+		var arr: PackedFloat32Array = raw_state[key]
+		encoded[str(key)] = Marshalls.raw_to_base64(arr.to_byte_array())
+	inst.overlay_keep = encoded
+	_write_instance_back(inst)  # in-memory; the view's _cache_current_dirt does the single disk save
+
+
+## Decodes a persisted overlay_keep dict back to {overlay_name: PackedFloat32Array} for
+## RestorationObject3D.apply_overlay_keep().
+func decode_overlay_keep(encoded: Dictionary) -> Dictionary:
+	var out := {}
+	for key in encoded.keys():
+		var bytes := Marshalls.base64_to_raw(str(encoded[key]))
+		out[str(key)] = bytes.to_float32_array()
+	return out
 
 
 func _write_instance_back(inst: ObjectInstance) -> void:
@@ -484,7 +594,9 @@ func present_object(
 	obj: RestorationObject3D, inst: ObjectInstance, template: ScrapObjectTemplate, seed_value: int
 ) -> bool:
 	obj.configure(template, inst)
-	obj.register_authored_conditions(_repo, seed_value)
+	obj.register_authored_conditions(
+		_repo, seed_value, inst.allowed_conditions if inst != null else []
+	)
 	# Author-placed decals and data-driven decals are mutually exclusive: when a scene
 	# carries hand-placed conditions, THEY are the conditions — the medallion reads clean
 	# and the data-driven decals are skipped, so a stray placed decal can never linger
@@ -574,7 +686,9 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 		result.remaining_decals = _remaining_decals(template, inst)
 		return result
 
-	result.compatible = decal.required_tool == tool_id
+	result.compatible = (
+		decal.required_tool == tool_id or CleaningPower.is_universal_cleaner(_repo, tool_id)
+	)
 	var tool := _repo.get_tool(tool_id)
 	var tool_name := tool.display_name if tool != null else tool_id
 	if EventDirector != null and EventDirector.is_tool_blocked(tool_id):
@@ -609,7 +723,6 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 		var value_damage := template.wrong_tool_value_damage
 		inst.condition = maxf(inst.condition - float(condition_damage), 0.0)
 		inst.value = maxi(inst.value - value_damage, int(template.base_value_range.x))
-		inst.recorded_damage += condition_damage + value_damage
 		result.feedback = (
 			template.wrong_tool_feedback
 			if not template.wrong_tool_feedback.is_empty()
@@ -618,13 +731,12 @@ func clean_decal(uid: String, decal_id: String, tool_id: String) -> DecalResult:
 
 	result.condition_after = inst.condition
 	result.value_after = inst.value
-	result.recorded_damage = inst.recorded_damage
 	result.remaining_decals = _remaining_decals(template, inst)
 	# Wrong-tool strokes punish the artifact but do not wear (and delete) the tool.
 	if result.compatible:
 		_consume_tool_durability(tool_id)
+	# In-memory only — the bench writes to disk on switch/close (no per-stroke save lag).
 	_write_instance_back(inst)
-	SaveService.save_game()
 	result.ok = true
 	return result
 
@@ -647,7 +759,12 @@ func _remaining_decals(template: ScrapObjectTemplate, inst: ObjectInstance) -> i
 ## `cleaned_active` is how many are now removed; `finished_one` is true on the stroke that
 ## just removed a condition (so the value bonus is awarded once per condition).
 func register_authored_clean(
-	uid: String, tool_id: String, total_active: int, cleaned_active: int, finished_one: bool
+	uid: String,
+	tool_id: String,
+	total_active: int,
+	cleaned_active: int,
+	finished_one: bool,
+	market_value: int = -1
 ) -> AuthoredResult:
 	var result := AuthoredResult.new()
 	var inst := find_instance_by_id(uid)
@@ -665,7 +782,11 @@ func register_authored_clean(
 		inst.condition = clampf(
 			fraction * float(threshold) * _event_condition_multiplier(), 0.0, float(threshold)
 		)
-	if finished_one and template != null:
+	# Value: revamp pieces price off live coverage (passed in by the view, saved in THIS write so
+	# cleaning never triggers an extra disk save). Legacy pieces keep the per-condition clean bonus.
+	if market_value >= 0:
+		inst.value = market_value
+	elif finished_one and template != null:
 		inst.value = clampi(
 			inst.value + template.clean_value_bonus,
 			int(template.base_value_range.x),
@@ -681,8 +802,8 @@ func register_authored_clean(
 		EventBus.restoration_completed.emit(inst.uid, inst.condition, tool_id)
 	result.condition_after = inst.condition
 	result.value_after = inst.value
+	# In-memory only — the bench writes to disk on switch/close (no per-stroke save lag).
 	_write_instance_back(inst)
-	SaveService.save_game()
 	result.ok = true
 	return result
 

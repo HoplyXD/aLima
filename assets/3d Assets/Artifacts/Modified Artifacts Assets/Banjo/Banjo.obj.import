@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://c3glrawcwjhu2"
+path="res://.godot/imported/Banjo.obj-a92b153d3c08a7b514e06de7be11c7aa.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Banjo.obj-a92b153d3c08a7b514e06de7be11c7aa.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Modified Artifacts Assets/Banjo/Banjo.obj"
+dest_files=["res://.godot/imported/Banjo.obj-a92b153d3c08a7b514e06de7be11c7aa.mesh", "res://.godot/imported/Banjo.obj-a92b153d3c08a7b514e06de7be11c7aa.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

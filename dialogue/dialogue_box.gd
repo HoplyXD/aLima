@@ -82,6 +82,9 @@ func _show_line() -> void:
 		body = str(line.get("text", ""))
 	else:
 		body = str(line)
+	# Data-driven token substitution ({player}, ...) for authored lines.
+	speaker = DialogueVars.format(speaker)
+	body = DialogueVars.format(body)
 
 	_name_label.text = speaker
 	_name_label.visible = speaker != ""

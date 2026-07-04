@@ -41,10 +41,12 @@ const PAUSE_PHONE: String = "phone"
 const PAUSE_STORAGE: String = "storage"
 const PAUSE_SHOWCASE: String = "showcase"
 const PAUSE_DEMO: String = "demo"
+const PAUSE_EVENING: String = "evening"
+const PAUSE_TUTORIAL: String = "tutorial"  ## Day 0 runs clockless (TUT).
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this (e.g. 0.1) to watch/verify the clock move faster (debug speed).
-var seconds_per_hour: float = 60.0
+var seconds_per_hour: float = 300.0
 
 ## Whether the auto-driver (the active scene's _process) should advance the clock
 ## via tick(). Tests leave this false and drive tick() directly so the simulation
@@ -97,6 +99,13 @@ func set_hour(hour: int) -> void:
 	if new_hour != _hour:
 		_hour = new_hour
 		hour_changed.emit(_day, _hour)
+
+
+## Sets the minute within the current hour (for resuming a saved game) by seeding the
+## elapsed-seconds accumulator. Clamped to 0..59; needs seconds_per_hour set first.
+func set_minute(minute: int) -> void:
+	var m := clampi(minute, 0, MINUTES_PER_HOUR - 1)
+	_hour_elapsed = (float(m) / float(MINUTES_PER_HOUR)) * seconds_per_hour
 
 
 ## Advances the simulation by `delta` real seconds. No-op while paused or closed.

@@ -25,6 +25,8 @@ var scanner_cache_entries: Dictionary = {}  ## id -> ScannerCacheEntry
 var surface_conditions: Dictionary = {}  ## id -> SurfaceCondition
 var buyer_personas: Dictionary = {}  ## id -> BuyerPersona
 var event_definitions: Dictionary = {}  ## id -> EventDefinition
+var return_owners: Dictionary = {}  ## id -> return_owner record dict (Phase 14 returns).
+var evening_config: Dictionary = {}  ## Evening upkeep/plan tuning (Phase 14).
 var delivery_config: DeliveryConfig = DeliveryConfig.new()
 var spawn_config: SpawnConfig = SpawnConfig.new()
 var scrap_config: ScrapConfig = ScrapConfig.new()
@@ -64,6 +66,8 @@ func load_from_filesystem() -> ValidationResult:
 	_load_directory("buyers", _parse_buyer_file)
 	_load_directory("events", _parse_event_file)
 	_load_directory("scrap", _parse_scrap_file)
+	_load_directory("marketplace", _parse_marketplace_file)
+	_load_directory("evening", _parse_evening_file)
 
 	if not _validation.is_valid():
 		_clear_state()
@@ -73,6 +77,7 @@ func load_from_filesystem() -> ValidationResult:
 	_validate_container_compatibility()
 
 	if _validation.is_valid():
+		_sanitize_loaded_fixtures()
 		_loaded = true
 	else:
 		_clear_state()
@@ -81,6 +86,12 @@ func load_from_filesystem() -> ValidationResult:
 
 func is_loaded() -> bool:
 	return _loaded
+
+
+## True only when the shared singleton has been created AND finished loading.
+## Safe to call from ObjectInstance.from_dictionary() without triggering re-load.
+static func is_singleton_loaded() -> bool:
+	return _singleton != null and _singleton.is_loaded()
 
 
 func get_validation_result() -> ValidationResult:
@@ -135,6 +146,24 @@ func get_event(id: String) -> EventDefinition:
 	return event_definitions.get(id) as EventDefinition
 
 
+## The return-owner record for a template, or {} when the template has no identified
+## owner (RETURN is then not an eligible disposition for it; DISP-R1/DISP-R3).
+func get_return_for_template(template_id: String) -> Dictionary:
+	for id in return_owners.keys():
+		var record: Dictionary = return_owners[id]
+		if ModelUtils.as_string(record.get("template_id")) == template_id:
+			return record
+	return {}
+
+
+func get_return_owner(id: String) -> Dictionary:
+	return ModelUtils.as_dictionary(return_owners.get(id))
+
+
+func get_evening_config() -> Dictionary:
+	return evening_config
+
+
 ## Buyer personas sorted by id for a stable marketplace order.
 func get_buyers_sorted() -> Array:
 	var ids := buyer_personas.keys()
@@ -183,6 +212,8 @@ func _clear_state() -> void:
 	surface_conditions.clear()
 	buyer_personas.clear()
 	event_definitions.clear()
+	return_owners.clear()
+	evening_config = {}
 	delivery_config = DeliveryConfig.new()
 	spawn_config = SpawnConfig.new()
 	scrap_config = ScrapConfig.new()
@@ -426,6 +457,43 @@ func _parse_scrap_file(file_path: String) -> void:
 	scrap_config = scrap_cfg
 
 
+func _parse_marketplace_file(file_path: String) -> void:
+	var doc: Variant = _read_json_file(file_path)
+	if doc == null:
+		return
+	var items := _get_items(doc, file_path)
+	for item in items:
+		if not item is Dictionary:
+			continue
+		var record_type := ModelUtils.as_string(item.get("record_type"))
+		match record_type:
+			"return_owner":
+				var id := ModelUtils.as_string(item.get("id"))
+				_add_record(
+					return_owners,
+					id,
+					(item as Dictionary).duplicate(true),
+					file_path,
+					"return_owner"
+				)
+			"marketplace_listing":
+				# Authored listing fixtures are validated as models but not persisted here;
+				# runtime listings live in LoopState. Reserved for future tuning content.
+				MarketplaceListing.from_dictionary(item).validate(_validation, file_path)
+			_:
+				_validation.add_field_error(
+					file_path, "", "record_type", "unknown record_type '%s'" % record_type
+				)
+
+
+func _parse_evening_file(file_path: String) -> void:
+	var doc: Variant = _read_json_file(file_path)
+	if doc == null:
+		return
+	# The evening config is a single document (no items array); the latest file wins.
+	evening_config = (doc as Dictionary).duplicate(true)
+
+
 func _get_items(doc: Dictionary, file_path: String) -> Array:
 	if not doc.has("items"):
 		return [doc]
@@ -598,6 +666,29 @@ func _validate_cross_references() -> void:
 				"unknown route reference '%s'" % persona.route_id
 			)
 
+	for return_id in return_owners.keys():
+		var record: Dictionary = return_owners[return_id]
+		var template_ref := ModelUtils.as_string(record.get("template_id"))
+		if template_ref.is_empty() or not scrap_object_templates.has(template_ref):
+			_validation.add_field_error(
+				"data/marketplace",
+				return_id,
+				"template_id",
+				"unknown or missing template reference '%s'" % template_ref
+			)
+		var owner_ref := ModelUtils.as_string(record.get("owner_route_id"))
+		if owner_ref.is_empty() or not character_routes.has(owner_ref):
+			_validation.add_field_error(
+				"data/marketplace",
+				return_id,
+				"owner_route_id",
+				"unknown or missing route reference '%s'" % owner_ref
+			)
+		if ModelUtils.as_string(record.get("reward_id")).is_empty():
+			_validation.add_field_error(
+				"data/marketplace", return_id, "reward_id", "return reward_id is required"
+			)
+
 	const REQUIRED_EVENT_IDS: Array[String] = [
 		"rush_delivery",
 		"sudden_brownout",
@@ -677,6 +768,11 @@ func _validate_container_compatibility() -> void:
 		return
 	for template_id in scrap_object_templates.keys():
 		var template: ScrapObjectTemplate = scrap_object_templates[template_id]
+		# Non-deliverable items (quest/given items like the salakot) are placed by
+		# bespoke code, never by the spawn director into a delivery container, so they
+		# do not require a compatible container.
+		if not template.deliverable:
+			continue
 		var candidate_tags := template.tags.duplicate()
 		candidate_tags.append(template.category)
 		if not template.openable_type.is_empty():
@@ -697,3 +793,17 @@ func _validate_container_compatibility() -> void:
 				"tags",
 				"no compatible placement container found for tags %s" % str(candidate_tags)
 			)
+
+
+## Clamps fixture true_value entries to their template range. This runs after the repository is
+## fully loaded so it cannot recurse into ObjectInstance.from_dictionary() during parse.
+func _sanitize_loaded_fixtures() -> void:
+	for uid in object_instance_fixtures.keys():
+		var fixture: ObjectInstance = object_instance_fixtures[uid]
+		var template: ScrapObjectTemplate = scrap_object_templates.get(fixture.template_id)
+		if template == null:
+			continue
+		var lo := int(template.base_value_range.x)
+		var hi := int(template.base_value_range.y)
+		if hi > lo:
+			fixture.true_value = clampi(fixture.true_value, lo, hi)

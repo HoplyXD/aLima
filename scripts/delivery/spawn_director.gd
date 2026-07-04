@@ -15,6 +15,8 @@ class_name SpawnDirector
 
 const PLACEMENT_STREAM := "spawn_director"
 const DAY_SELECTION_STREAM := "spawn_director_day"
+## Carriers must be real artifacts with an authored folder scene (no scene-less placeholders).
+const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 
 var _repo: DataRepository
 var _game_state: GameState
@@ -155,6 +157,12 @@ func _apply_hard_filters(
 
 	if not _tool_is_obtainable(template.required_clean_tool):
 		candidate.rejection_reason = "required_tool_unavailable"
+		return
+
+	# A carrier must be a REAL artifact the player can see and clean — never a scene-less placeholder
+	# (e.g. small_santo). Checked last so tool-gating still records its own reason for the audit.
+	if not _ArtifactScenes.has_scene(candidate.template_id):
+		candidate.rejection_reason = "missing_scene"
 		return
 
 

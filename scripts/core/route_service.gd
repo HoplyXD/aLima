@@ -77,6 +77,22 @@ func has_lead(lead_id: String) -> bool:
 	return GameState.save_state.persistent.leads.has(lead_id)
 
 
+## Public seam for granting authored reward ids outside route completion (used by
+## return-to-owner, P14.4). Applies the same conventions as completion rewards
+## (leads, legacy items, safe code, else story clue). Never grants a fragment.
+func grant_reward_ids(rewards: Array) -> void:
+	_grant_rewards(rewards)
+
+
+## Records a persistent dialogue/story flag (e.g. a return marker). Idempotent.
+func set_dialogue_flag(flag: String) -> void:
+	if flag.is_empty():
+		return
+	var flags: Array[String] = GameState.save_state.persistent.dialogue_flags
+	if not flags.has(flag):
+		flags.append(flag)
+
+
 # --- Authored route beats -----------------------------------------------------
 
 

@@ -17,6 +17,10 @@ const COLOR_BLUE := Color("#4c8cff")
 const COLOR_PURPLE := Color("#b066ff")
 const COLOR_GOLD := Color("#e6b422")
 const COLOR_FLICKERING := Color("#ff6a3d")
+## Quest items render orange. This is a UI marker for is_quest_item, NOT a glow-legend
+## state (the fixed legend stays at six per CLAUDE.md §4-E); returned directly by
+## get_instance_glow_color, so it is intentionally absent from GLOW_COLORS.
+const COLOR_ORANGE := Color("#ff7f00")
 
 const GLOW_COLORS: Array[Color] = [
 	COLOR_WHITE,
@@ -80,6 +84,8 @@ static func get_display_name(state: int) -> String:
 ## Convenience: returns the glow color for an instance without exposing flicker
 ## before authorization.
 static func get_instance_glow_color(
-	base_rarity: int, is_carrier: bool, flicker_authorized: bool
+	base_rarity: int, is_carrier: bool, flicker_authorized: bool, is_quest_item: bool = false
 ) -> Color:
+	if is_quest_item:
+		return COLOR_ORANGE
 	return get_color(resolve_glow_state(base_rarity, is_carrier, flicker_authorized))

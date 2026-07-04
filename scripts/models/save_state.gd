@@ -4,7 +4,7 @@ class_name SaveState
 ## The save is split into persistent (Chronos-bound) and loop-scoped sections.
 ## See docs/phase-task.md "Save Contract" and PRD §5.
 
-const CURRENT_SCHEMA_VERSION: int = 2
+const CURRENT_SCHEMA_VERSION: int = 3
 
 var schema_version: int = CURRENT_SCHEMA_VERSION
 var player_id: String = "local-player"
@@ -75,6 +75,13 @@ func reset_loop_state() -> void:
 ## PersistentState
 ## ---------------------------------------------------------------------------
 class PersistentState:
+	## Player-chosen display name, typed at save creation. Used for {player}
+	## dialogue substitution. Persistent: identity survives every loop reset.
+	var player_name: String = ""
+	## Day 0 tutorial state (TUT). Persistent per §4-A: a save that finished (or
+	## skipped) the tutorial never re-enters Day 0, on any later loop.
+	var tutorial_completed: bool = false
+	var tutorial_step: String = ""
 	var journal_entries: Dictionary = {}  ## template_id -> JournalEntry.
 	var techniques_learned: Array[String] = []
 	var scanned_records: Dictionary = {}  ## template_id -> ScannedRecord.
@@ -91,9 +98,26 @@ class PersistentState:
 	var safe_code_known: bool = false
 	var drawer_unlocked: bool = false
 	var best_sale: Dictionary = {}  ## Best sale ever: {price, template_id, buyer_id, condition, day}.
+	## Completed return-to-owner outcomes (DISP-R3/DISP-R6, persistent story state).
+	## Each entry: {template_id, owner_route_id, reward_id, day}.
+	var returns: Array = []
+	## Upkeep knowledge the player has learned (e.g. a repair technique unlocked in the
+	## evening). Persistent so it survives the loop reset (P14.6).
+	var upkeep_learned: Array[String] = []
+	## Locations unlocked across loops (e.g. "dump_site", "archeologist_house").
+	var unlocked_locations: Array[String] = []
+	## Quest IDs that have been completed (persist across loops).
+	var completed_quests: Array[String] = []
+	## Quest progress: quest_id -> progress string (e.g. "started", "found_item", "completed").
+	var quest_progress: Dictionary = {}
+	var day1_intro_completed: bool = false
+	var day1_step: String = ""
 
 	static func from_dictionary(data: Dictionary) -> PersistentState:
 		var p := PersistentState.new()
+		p.player_name = ModelUtils.as_string(data.get("player_name"), "")
+		p.tutorial_completed = ModelUtils.as_bool(data.get("tutorial_completed"))
+		p.tutorial_step = ModelUtils.as_string(data.get("tutorial_step"), "")
 		p.journal_entries = SaveState._entry_dict(data.get("journal_entries", {}), JournalEntry)
 		p.techniques_learned = ModelUtils.as_string_array(data.get("techniques_learned"))
 		p.scanned_records = SaveState._entry_dict(data.get("scanned_records", {}), ScannedRecord)
@@ -110,10 +134,20 @@ class PersistentState:
 		p.safe_code_known = ModelUtils.as_bool(data.get("safe_code_known"))
 		p.drawer_unlocked = ModelUtils.as_bool(data.get("drawer_unlocked"))
 		p.best_sale = ModelUtils.as_dictionary(data.get("best_sale"))
+		p.returns = SaveState._as_array(data.get("returns", []))
+		p.upkeep_learned = ModelUtils.as_string_array(data.get("upkeep_learned"))
+		p.unlocked_locations = ModelUtils.as_string_array(data.get("unlocked_locations"))
+		p.completed_quests = ModelUtils.as_string_array(data.get("completed_quests"))
+		p.quest_progress = data.get("quest_progress", {}) as Dictionary
+		p.day1_intro_completed = ModelUtils.as_bool(data.get("day1_intro_completed"))
+		p.day1_step = ModelUtils.as_string(data.get("day1_step"), "")
 		return p
 
 	func to_dictionary() -> Dictionary:
 		return {
+			"player_name": player_name,
+			"tutorial_completed": tutorial_completed,
+			"tutorial_step": tutorial_step,
 			"journal_entries": SaveState._dict_to_raw(journal_entries),
 			"techniques_learned": techniques_learned.duplicate(),
 			"scanned_records": SaveState._dict_to_raw(scanned_records),
@@ -130,6 +164,13 @@ class PersistentState:
 			"safe_code_known": safe_code_known,
 			"drawer_unlocked": drawer_unlocked,
 			"best_sale": best_sale.duplicate(true),
+			"returns": returns.duplicate(true),
+			"upkeep_learned": upkeep_learned.duplicate(),
+			"unlocked_locations": unlocked_locations.duplicate(),
+			"completed_quests": completed_quests.duplicate(),
+			"quest_progress": quest_progress.duplicate(),
+			"day1_intro_completed": day1_intro_completed,
+			"day1_step": day1_step,
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:
@@ -153,6 +194,7 @@ class PersistentState:
 class LoopState:
 	var current_day: int = 1
 	var current_hour: int = 7
+	var current_minute: int = 0  ## Minute within the hour (0..59); resumes the saved moment.
 	var money: int = 0
 	var inventory: Array = []  ## ObjectInstance dictionaries.
 	var tool_items: Array[String] = []  ## Owned non-legacy tool ids.
@@ -174,17 +216,36 @@ class LoopState:
 	var pending_sort: Dictionary = {}
 	## Pieces of scrap still scattered in the yard today. -1 means "not spawned yet".
 	var yard_scrap_remaining: int = -1
+	## Pieces of scrap still scattered in the dump site today. -1 means "not spawned yet".
+	var dump_site_scrap_remaining: int = -1
 	## Phase 18 mini-event state. All reset on loop_reset; persistent knowledge untouched.
 	var event_active: Array = []  ## Active event states: {event_id, day, hour,
 	## expires_hour, resolved}.
 	var event_history: Array[String] = []  ## Event ids triggered this loop.
 	var event_caps: Dictionary = {}  ## category -> count this loop.
 	var event_outcomes: Array = []  ## Resolved outcomes for the future evening summary.
+	## Phase 14 disposition + evening state. All loop-scoped: cleared on loop_reset.
+	## Dispositions routed this loop (SELL/RETURN/PRESERVE/JOURNAL), for the evening
+	## summary. Each entry: {uid, template_id, disposition, outcome_id, price, day}.
+	var disposition_log: Array = []
+	## Formal marketplace listings for restored items (P14.1). MarketplaceListing dicts.
+	## (marketplace_listings above is the legacy field; listings is the typed model store.)
+	var listings: Array = []
+	## The committed next-day plan (P14.5 / EVE-R4): {plan_id, day, notes, prep}.
+	var evening_plan: Dictionary = {}
+	## Tool repair/replace upkeep performed this loop, for the summary. Each entry:
+	## {action, tool_id, uid, cost, day}.
+	var upkeep_actions: Array = []
+	## Accepted meet-in-person sales awaiting handoff (TUT / meet-to-sell). Each
+	## entry: {uid, template_id, buyer_id, price, destination_id, condition}.
+	## Loop-scoped: an undelivered meet dies with the loop (§4-A).
+	var pending_meets: Array = []
 
 	static func from_dictionary(data: Dictionary) -> LoopState:
 		var l := LoopState.new()
 		l.current_day = ModelUtils.as_int(data.get("current_day"), 1)
 		l.current_hour = ModelUtils.as_int(data.get("current_hour"), 7)
+		l.current_minute = ModelUtils.as_int(data.get("current_minute"), 0)
 		l.money = ModelUtils.as_int(data.get("money"))
 		l.inventory = SaveState._as_array(data.get("inventory", []))
 		l.tool_items = ModelUtils.as_string_array(data.get("tool_items"))
@@ -203,16 +264,23 @@ class LoopState:
 		l.scrap_pool = ModelUtils.as_dictionary(data.get("scrap_pool"))
 		l.pending_sort = ModelUtils.as_dictionary(data.get("pending_sort"))
 		l.yard_scrap_remaining = ModelUtils.as_int(data.get("yard_scrap_remaining"), -1)
+		l.dump_site_scrap_remaining = ModelUtils.as_int(data.get("dump_site_scrap_remaining"), -1)
 		l.event_active = SaveState._as_array(data.get("event_active", []))
 		l.event_history = ModelUtils.as_string_array(data.get("event_history"))
 		l.event_caps = data.get("event_caps", {}) as Dictionary
 		l.event_outcomes = SaveState._as_array(data.get("event_outcomes", []))
+		l.disposition_log = SaveState._as_array(data.get("disposition_log", []))
+		l.listings = SaveState._as_array(data.get("listings", []))
+		l.evening_plan = ModelUtils.as_dictionary(data.get("evening_plan"))
+		l.upkeep_actions = SaveState._as_array(data.get("upkeep_actions", []))
+		l.pending_meets = SaveState._as_array(data.get("pending_meets", []))
 		return l
 
 	func to_dictionary() -> Dictionary:
 		return {
 			"current_day": current_day,
 			"current_hour": current_hour,
+			"current_minute": current_minute,
 			"money": money,
 			"inventory": inventory.duplicate(),
 			"tool_items": tool_items.duplicate(),
@@ -231,10 +299,16 @@ class LoopState:
 			"scrap_pool": scrap_pool.duplicate(),
 			"pending_sort": pending_sort.duplicate(true),
 			"yard_scrap_remaining": yard_scrap_remaining,
+			"dump_site_scrap_remaining": dump_site_scrap_remaining,
 			"event_active": event_active.duplicate(),
 			"event_history": event_history.duplicate(),
 			"event_caps": event_caps.duplicate(),
 			"event_outcomes": event_outcomes.duplicate(),
+			"disposition_log": disposition_log.duplicate(true),
+			"listings": listings.duplicate(true),
+			"evening_plan": evening_plan.duplicate(true),
+			"upkeep_actions": upkeep_actions.duplicate(true),
+			"pending_meets": pending_meets.duplicate(true),
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:
@@ -242,6 +316,10 @@ class LoopState:
 			result.add_field_error(file_path, "", "loop.current_day", "current_day must be 1..5")
 		if current_hour < 0 or current_hour > 23:
 			result.add_field_error(file_path, "", "loop.current_hour", "current_hour must be 0..23")
+		if current_minute < 0 or current_minute > 59:
+			result.add_field_error(
+				file_path, "", "loop.current_minute", "current_minute must be 0..59"
+			)
 		if money < 0:
 			result.add_field_error(file_path, "", "loop.money", "money must be non-negative")
 

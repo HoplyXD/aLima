@@ -55,8 +55,33 @@ func _exit_tree() -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
+## Free the mouse while the game is paused (so the pause menu is clickable) and recapture it on
+## resume — the scrapyard otherwise keeps the cursor captured for mouse-look, hiding it during pause.
+func _notification(what: int) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	if what == NOTIFICATION_PAUSED:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	elif what == NOTIFICATION_UNPAUSED:
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+
 func set_input_enabled(enabled: bool) -> void:
 	_input_enabled = enabled
+
+
+## Faces the player along a world-space yaw (radians), e.g. from a spawn marker.
+## Sets BOTH the body rotation and the mouse-look target, otherwise
+## _physics_process would immediately snap the body back to _target_yaw.
+func set_look_yaw(yaw: float) -> void:
+	_target_yaw = yaw
+	rotation.y = yaw
+
+
+## Convenience: face the player the same way a Marker3D/Node3D is oriented.
+func face_like(node: Node3D) -> void:
+	if node != null:
+		set_look_yaw(node.global_rotation.y)
 
 
 func _input(event: InputEvent) -> void:

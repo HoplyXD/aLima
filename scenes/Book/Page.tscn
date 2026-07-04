@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dyspm3hy6o2oi"]
 
 [ext_resource type="Script" uid="uid://der3o7nd5xlge" path="res://scenes/Book/Page.gd" id="2"]
-[ext_resource type="FontFile" uid="uid://cgejurd6j5r2j" path="res://assets/fonts/Sniglet-Regular.ttf" id="2_hfk0q"]
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="2_hfk0q"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_64fw0"]
 bg_color = Color(0.6, 0.6, 0.6, 0)

@@ -96,9 +96,12 @@ func test_different_seeds_produce_different_deliveries() -> void:
 
 
 func test_weight_distribution_respects_rarity_weights() -> void:
-	# With real weights, white (40) should outnumber blue (18) over many runs.
-	# This measures the UNBIASED weighted distribution, so disable the day-1 Gold debug override.
-	GameState.debug_first_gold = false
+	# white (40) should clearly outnumber blue (18) over many runs. We count by EFFECTIVE
+	# rarity rather than one hardcoded template id (the Brass Hand Bell that used to be the
+	# white sample is now banned as a rust/tarnish common). refresh() re-registers the
+	# scene-only common artifacts (Cup/Plate/wood_pipe) so the common tier is populated even
+	# after this suite's repo reloads.
+	preload("res://scripts/restoration/artifact_catalog.gd").refresh()
 	var white_count := 0
 	var blue_count := 0
 	for seed in range(50):
@@ -107,13 +110,16 @@ func test_weight_distribution_respects_rarity_weights() -> void:
 		GameState.new_run()
 		var delivery := _make_generator().generate_day_delivery(1)
 		for inst in delivery:
-			if inst.template_id == "rusted_tin":
+			var tmpl := _repo.get_template(inst.template_id)
+			if tmpl == null:
+				continue
+			if tmpl.base_rarity == ModelEnums.Rarity.WHITE:
 				white_count += 1
-			elif inst.template_id == "tarnished_pendant":
+			elif tmpl.base_rarity == ModelEnums.Rarity.BLUE:
 				blue_count += 1
 	assert_gt(white_count, 0)
 	assert_gt(blue_count, 0)
-	assert_gt(white_count, blue_count, "White-weighted templates should appear more often")
+	assert_gt(white_count, blue_count, "Higher-weighted rarities should appear more often")
 
 
 func test_unique_instance_ids_across_batches() -> void:
@@ -262,3 +268,26 @@ func _uids_of(instances: Array[ObjectInstance]) -> Array[String]:
 	for inst in instances:
 		out.append(inst.uid)
 	return out
+
+
+func test_common_rust_tarnish_artifacts_excluded_from_pool() -> void:
+	# The Brass Hand Bell / Rusted Tin are white but need the rust path (Wire Brush /
+	# tin_pry); with only the early tools they could never reach the bench, so they must
+	# never enter the random delivery pool. This also covers future rust/tarnish commons.
+	GameState.save_state.persistent.tutorial_completed = true  # disable the Day 0 whitelist
+	var generator := _make_generator()
+	# The helper flags the rust/tarnish path (Wire Brush / tin_pry).
+	assert_true(generator._needs_rust_tarnish(_repo.get_template("brass_hand_bell")))
+	assert_true(generator._needs_rust_tarnish(_repo.get_template("rusted_tin")))
+	# Neither reported common ever appears in any rarity bucket of the delivery pool, and
+	# no white template that needs the rust path survives the filter.
+	var groups := generator._group_templates_by_rarity()
+	for rarity in groups.keys():
+		for template in groups[rarity]:
+			assert_ne(str(template.id), "brass_hand_bell", "bell is banned from the pool")
+			assert_ne(str(template.id), "rusted_tin", "rusted tin is banned from the pool")
+			var is_white := generator._effective_rarity(template) == ModelEnums.Rarity.WHITE
+			assert_false(
+				is_white and generator._needs_rust_tarnish(template),
+				"%s (white rust/tarnish) must be excluded" % template.id
+			)
