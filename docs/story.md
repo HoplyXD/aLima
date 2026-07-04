@@ -977,3 +977,90 @@ gate; she becomes the daily scrap-sorting partner and the emotional heart of the
 
 **N6 — Maverick day-5 buy-in vs §8 spiral-mark flow.** The ₱50k last-offer canon (14.4)
 replaces §8's trust-gift beat; the build still runs §8. Reconcile before Phase 15 dialogue lock.
+
+---
+
+## 15. Canon updates — Sam gating, fragment source, historical artifacts & echoes (2026-07-04)
+
+> **Status: CANON (owner decision, Jorge). Partly implemented.** Records new design intent from
+> the 2026-07-04 pass. Where this **revises a CLAUDE.md §4 invariant**, it is flagged below with
+> an `[INV]` tag and MUST be reconciled into `CLAUDE.md` §4 + `docs/PRD.md` + the phase tracker,
+> with team sign-off, before it is treated as shipped law. Recorded here so nothing is lost.
+
+### 15.1 Sam is a two-step unlock (meet-then-visit)
+
+Sam (the woman archeologist) does **not** simply appear at the shop when the player holds the
+salakot. The full gate is:
+
+1. Complete **Alya's route ending** (the salakot → Sam beat) → this **unlocks Sam's house**
+   as a travel destination.
+2. The player must **travel to Sam's house and meet her there first.**
+3. **Only after that first in-person meeting** does Sam begin **visiting the shop** on her own.
+
+*Delta vs current build:* the shipped flow has Sam appear at the shop door directly once the
+salakot is in inventory, then travel to her house. Reorder to meet-first when the Sam storyline
+is expanded (this was the deferred Sam work — see [[storyline-revamp-v2-canon]] N5).
+
+### 15.2 Fragments come from the NPC keepers
+
+Each of the five **Master Artifact fragments is given to the player by its NPC keeper** as the
+payoff of that keeper's route (auntie, artisan, scavenger/Ayla→archeologist/Sam, buyer/Maverick).
+The fragment is the **route reward**, not something hunted in the yard.
+
+**[INV] Revises §4-B / §4-C / §4-I.** The current invariants say no character hands a fragment
+directly — a route *releases* it into a promoted ordinary **carrier** that the player then finds
+(via Echoes), cleans, and opens. The owner's new model has the NPC hand the fragment as the route
+reward. Two compliant ways to honor both, to decide at reconciliation:
+  * **(A) keep the clean→open gate:** the NPC hands a *dirty carrier object* (e.g. Sam's sewn bag,
+    already implemented for `fragment_04`); the player still cleans + opens it to seat the
+    fragment. Satisfies §4-D and reads as "the NPC gave me the fragment."
+  * **(B) direct seat:** the NPC hands the seated fragment outright. Simpler, but drops §4-B/§4-D
+    — needs an explicit invariant change + jam-eligibility check.
+Recommendation: **(A)** — it keeps the restoration gate that defines the game and needs no
+invariant rewrite.
+
+### 15.3 Historical artifacts are the Echo sources, unlocked by fragments
+
+Seating/unlocking a fragment **unlocks a Historical Artifact** (gold-tier, `tags:["historical"]`,
+e.g. the Oton Death Mask) into the **world spawn pool** — it then has a **chance to appear while
+foraging**, and **those historical artifacts are what emit the Cultural Echoes** (the hum → melody
+→ voice → heartbeat proximity hunt). Finding one routes it to the **online museum** (§4-F), not the
+journal.
+
+**[INV] Revises §4-E / §4-I / §12 (Spawn Director / Echoes).** Today Echoes are bound to a
+RELEASED fragment **carrier**; the owner's model binds them to **historical artifacts** gated by
+fragment progress, decoupling the echo hunt from the fragment-carrier. Reconcile the Spawn
+Director + EchoController target (carrier → historical-artifact instance) and the
+`is_carrier`/heartbeat gate (§4-I) into this model before implementing. The five authored
+`echo_set` records already exist and can be re-pointed from fragments to historical artifacts.
+
+### 15.4 Historical artifact content pipeline (what to model)
+
+Only **one historical artifact exists today: the Oton Death Mask.** The unlock-per-fragment model
+needs **at least five** (one per fragment tier) plus the §4-M minimum of 5 additional Gold
+discoveries. Research-backed shortlist (all verified National Cultural Treasures / documented
+finds — no Code of Kalantiaw or unsourced folklore, per §4-L). Record each chosen piece's source
+in `docs/sources/` before its scanner facts ship.
+
+| Priority | Artifact | Why it fits | Model notes |
+|---|---|---|---|
+| **1 (next)** | **Lingling-o** (nephrite jade ear pendant) | National Cultural Treasure; Early Metal Age (~500–200 BCE); the *personal ornament* → strongest Echo/memory resonance; iconic omega silhouette, unlike the mask | Small, single hero shape; jade-green translucent material |
+| 2 | **Trade ceramic — celadon / blue-and-white dish or tradeware jar** | Excavated at the **Oton / Katagman (Iloilo)** burial sites *with* the mask — perfect Panay regional fit and "trade-hub" lore; reads as junk-shop treasure | Bowl/jar of revolution; celadon glaze; crackle + chip conditions |
+| 3 | **Manunggul Jar** (secondary burial jar, boat-of-the-dead lid) | THE iconic Philippine artifact (ex-₱1000 bill); the soul-journey lid is ideal Echo material | Larger, sculpted twin figures on the lid — the showpiece, more modelling effort |
+| 4 | **Gold nose disc / eye-cover ornaments** | Same Oton burial assemblage as the mask — instant thematic pairing, tiny to model | Thin hammered-gold discs; repoussé dots |
+| 5 | **Boat-shaped coffin fitting / gold sash ornament** | Rounds out the Visayan gold-burial set | — |
+
+Region priority: pieces actually excavated on **Panay/Iloilo** (Oton mask, its gold ornaments,
+Katagman trade ceramics) sit closest to the game's setting; the lingling-o and Manunggul jar are
+nationally iconic and broaden the museum. **Owner pick pending — recommendation is the Lingling-o.**
+
+### 15.5 New open flags (append to §12)
+
+**N7 — Fragment handoff mechanic (15.2 [INV]):** choose (A) dirty-carrier gate or (B) direct
+seat; if (B), amend §4-B/§4-D.
+
+**N8 — Echoes bound to historical artifacts (15.3 [INV]):** re-target Spawn Director + Echo hunt
+from fragment carriers to fragment-unlocked historical artifacts; reconcile §4-E/§4-I/§12.
+
+**N9 — Historical artifact roster (15.4):** confirm the 5+ pieces to model and log each in
+`docs/sources/`.
