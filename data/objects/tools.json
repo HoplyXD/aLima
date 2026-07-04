@@ -43,6 +43,7 @@
       "id": "damp_cloth",
       "display_name": "Damp Cloth",
       "enables": ["decal_clean"],
+      "cleans": { "dirt": 40, "dust": 30 },
       "quality": 1,
       "cost": 0,
       "is_legacy": true,

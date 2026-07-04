@@ -11,6 +11,14 @@
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_dcdtr"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_lo217"]
 [ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Verdigris.png" id="ovl_tex_verdigris"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
 
 [sub_resource type="StandardMaterial3D" id="pendant_gold"]
 albedo_color = Color(0.82, 0.67, 0.29, 1)
@@ -125,3 +133,38 @@ cultural_relevance = "A personal pendant in a style common to heirloom jewelry i
 price_min = 120
 price_max = 280
 uncertainty_notes = "Exact maker and original owner are unknown."
+
+[node name="OverlayGrease" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_grease")
+layer_order = 24
+
+[node name="OverlayMold" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_mold")
+layer_order = 23
+
+[node name="OverlayMud" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_mud")
+layer_order = 28
+
+[node name="OverlaySaltCrust" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_salt_crust")
+layer_order = 26
+
+[node name="OverlaySoot" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_soot")
+layer_order = 27
+
+[node name="OverlayVerdigris" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_verdigris")
+layer_order = 18
+
+[node name="OverlayWax" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_wax")
+layer_order = 25

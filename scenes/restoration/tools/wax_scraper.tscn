@@ -1,0 +1,41 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" uid="uid://d80c57n5yr6v" path="res://scripts/restoration/tool_config.gd" id="2_config"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_blade"]
+albedo_color = Color(0.78, 0.8, 0.84, 1)
+metallic = 0.7
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_handle"]
+albedo_color = Color(0.45, 0.3, 0.18, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="Mesh_blade"]
+size = Vector3(0.12, 0.01, 0.08)
+
+[sub_resource type="CylinderMesh" id="Mesh_handle"]
+top_radius = 0.018
+bottom_radius = 0.018
+height = 0.14
+
+[node name="wax_scraper" type="Node3D"]
+script = ExtResource("2_config")
+max_durability = 200
+clean_radius = 0.1
+cleans = {
+"wax": 60
+}
+
+[node name="CleanPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1)
+
+[node name="Blade" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.06)
+mesh = SubResource("Mesh_blade")
+surface_material_override/0 = SubResource("Mat_blade")
+
+[node name="Handle" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.06)
+mesh = SubResource("Mesh_handle")
+surface_material_override/0 = SubResource("Mat_handle")

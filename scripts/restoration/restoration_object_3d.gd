@@ -1146,7 +1146,11 @@ func _spawn_decals(
 		var removed: bool = removed_ids.has(decal.id)
 		node.visible = not removed and not HIDE_DECALS
 		_blemishes[decal.id] = {
-			"node": node, "center": center, "removed": removed, "required_tool": decal.required_tool
+			"node": node,
+			"center": center,
+			"removed": removed,
+			"required_tool": decal.required_tool,
+			"type_id": decal.type,  # condition id, for power-based tool highlighting
 		}
 		index += 1
 
@@ -1479,6 +1483,9 @@ func apply_authored_clean(condition_id: String, power: int) -> bool:
 ## Optional learning cue: throbs the conditions (authored OR data-driven) that `tool_id`
 ## can clean, at the given pulse `intensity` (0..1); every other condition goes quiet. Pass
 ## tool_id "" or intensity 0 to clear. Presentation only — never moves the dev-placed decals.
+## Matching is POWER-based (CleaningPower), so a multi-condition tool (e.g. the damp
+## cloth cleaning grime AND dust, or soap's mud/soot/grease) highlights every condition
+## it can treat — not just the one whose catalog `cleaning_tool` names it.
 func highlight_for_tool(tool_id: String, intensity: float) -> void:
 	if _authored.is_empty() and _blemishes.is_empty():
 		return
@@ -1486,14 +1493,25 @@ func highlight_for_tool(tool_id: String, intensity: float) -> void:
 		var entry: Dictionary = _authored[condition_id]
 		var decal: Variant = entry["node"]
 		if decal != null and decal.has_method("set_highlight"):
-			var matched := tool_id != "" and str(entry.get("required_tool", "")) == tool_id
+			var matched := _tool_treats(tool_id, str(entry.get("type_id", "")))
 			decal.set_highlight(intensity if matched else 0.0)
 	for blemish_id in _blemishes.keys():
 		var b: Dictionary = _blemishes[blemish_id]
 		var node: Variant = b["node"]
 		if node != null and node.has_method("set_highlight"):
-			var hit := tool_id != "" and str(b.get("required_tool", "")) == tool_id
+			var hit := _tool_treats(tool_id, str(b.get("type_id", "")))
 			node.set_highlight(intensity if hit else 0.0)
+
+
+## True when `tool_id` has any cleaning power against `condition_id`: first from the
+## tool SCENE config (the live source for bench cleaning), else the data catalog.
+func _tool_treats(tool_id: String, condition_id: String) -> bool:
+	if tool_id.is_empty() or condition_id.is_empty():
+		return false
+	var scene_cleans: Dictionary = ToolConfig.for_tool(tool_id).get("cleans", {})
+	if not scene_cleans.is_empty():
+		return int(scene_cleans.get(condition_id, 0)) > 0
+	return CleaningPower.power(DataRepository.singleton(), tool_id, condition_id) > 0
 
 
 func has_authored_conditions() -> bool:

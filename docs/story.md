@@ -906,3 +906,74 @@ decal sets, tools, and `deliverable: false` where appropriate (following the Aun
 
 *This document is the narrative source of record from its approval onward. Implementation follows
 it; where implementation must deviate, update this file in the same change.*
+
+---
+
+## 14. Implemented Story Canon — 2026-07 build updates
+
+> **Status: IN THE BUILD.** Everything below is wired and playable now (Kimi + Claude story
+> revamp waves, 2026-07-02 → 2026-07-04). Dialogue remains working-draft quality and falls under
+> the same §13 review gates. Where this section contradicts §4–§8, THIS is what currently ships;
+> reconcile at the team read-through.
+
+### 14.1 Day 0 — the day Yuyu vanishes (tutorial)
+
+The player (named at save creation, never modelled or gendered) is on vacation at their
+grand-uncle **Tito Yuyu's** junk shop. Yuyu teaches the whole trade in one clockless day:
+forage → triage → restore → scan → sell → a solo tricycle delivery to the **Mall**. The sun is
+scripted, not clocked: **sunrise** through the cleaning lesson, **noon** across the sale and the
+mall trip, **sunset** when the player rides home. They return to an **empty shop** — no Yuyu, no
+Alya — and only now does **the journal appear on the table**. Reading Yuyu's last letter blacks
+the world out into Day 1, Loop 1. Day 0 never recurs (persistent flag).
+
+### 14.2 Day 1 — waking into the loop
+
+The player wakes on the shop floor ("Did I… black out?"). Yuyu's glasses are on the counter, his
+jacket on the hook. Stepping outside, **Alya** — Yuyu's goddaughter, the scavenger — is at the
+gate; she becomes the daily scrap-sorting partner and the emotional heart of the first loop.
+
+### 14.3 Alya's questline (implemented end-to-end)
+
+* **Q1 — Yuyu's Glasses (yard, any day):** Alya mentions Yuyu lost his glasses — a gift from her
+  late father. Find them in the scrapyard, return them → she opens up → **unlocks the Dump Site**
+  ("It's where I used to live with my parents.").
+* **Q2 — The Cute Bag (Dump Site):** the Dump Site is Alya's childhood home — including her
+  family's **typhoon-broken house**, abandoned after the storms. Find the bag her father gave
+  her, **clean it, open it** → a note from Papa + a small artifact → **₱1000** and the bag
+  becomes a permanent legacy item.
+* **Q3 — The Salakot (Day 5):** the forbidden-zone fence is suddenly broken. Inside lies the
+  **salakot Yuyu wore when he disappeared**. Bring it back: **Sam** — a woman archeologist who
+  never normally visits — appears at the door first, recognises it, and asks to meet at her
+  house.
+* **At Sam's house:** Sam and Yuyu investigated the Master Artifact together and were ambushed
+  in the Dump Site. Sam **buys the salakot back (₱3000)**. Alya realises the bag's lining holds
+  something heavy — Sam has the player take the **dirty bag home, clean it, and open it**: the
+  archeologist fragment (`fragment_04`), released as a carrier per §4-B/§4-D (never handed over
+  seated). **Selling the salakot to any other buyer fails the quest** for the loop.
+* Next loop, the Dump Site and Sam's house stay unlocked (persistent leads).
+
+### 14.4 Fragment sourcing canon (team decision, partially implemented)
+
+| Fragment | Keeper | How it's earned |
+|---|---|---|
+| `fragment_01` | Nang Shine (auntie) | found **inside the shop safe** once the safe code is learned |
+| `fragment_02` | Nong Lave (artisan) | given after completing his **final cleaning quest** |
+| `fragment_03` | Ayla (scavenger) | open — resolve with the Sam expansion (see N5) |
+| `fragment_04` | Sam (archeologist) | the salakot → bag carrier flow above (**implemented**) |
+| `fragment_05` | Mr. Maverick (buyer) | his **end-of-Day-5 "last offer"**: ~**₱50,000** — brutal, demands mastery of haggling + clean restorations (mechanics pending; the shipped build still uses §8's spiral-mark trust flow) |
+
+### 14.5 Schedules & spaces (implemented)
+
+* **Auntie** visits days **1 / 3 / 5**; **Artisan** days **2 / 4 / 5**, only after Auntie's
+  first quest; **Alya's** questline runs as yard/dump-site interactions on **2 / 4 / 5** and
+  never competes for the shop door.
+* New walkable spaces: **Dump Site** (2× yard, Alya's ruined house, forbidden zone), **Sam's
+  archeologist house**, and the **Mall** (meet-to-sell handoffs + the physical tool shop).
+
+### 14.6 New open flags (append to §12)
+
+**N5 — Scavenger vs archeologist fragment split.** Q3 delivers `fragment_04` via Sam; Ayla's own
+`fragment_03` release path is unwritten. Decide when the Sam storyline expands.
+
+**N6 — Maverick day-5 buy-in vs §8 spiral-mark flow.** The ₱50k last-offer canon (14.4)
+replaces §8's trust-gift beat; the build still runs §8. Reconcile before Phase 15 dialogue lock.

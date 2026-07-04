@@ -3170,7 +3170,7 @@ shadow_mesh = SubResource("ArrayMesh_iueci")
 [node name="DumpSiteMap" type="Node3D" unique_id=1546268323]
 
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=1289461609]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.11783409, -0.09999976, 0.033460617)
 mesh = SubResource("Mesh_ground")
 surface_material_override/0 = SubResource("Mat_ground")
 
@@ -3253,7 +3253,7 @@ mesh = SubResource("Mesh_house_wall_broken")
 surface_material_override/0 = SubResource("Mat_wood_old")
 
 [node name="RoofCavedIn" type="MeshInstance3D" parent="AlyaOldHouse" unique_id=661846534]
-transform = Transform3D(0.996, 0.087, 0, -0.05, 0.573, 0.818, 0.071, -0.815, 0.575, 0, 1.55, 0.2)
+transform = Transform3D(-0.08294453, -0.19848952, -0.97647923, 0.024238199, -0.9801375, 0.19700174, -0.9960372, -0.0074596256, 0.08618512, 3.6684518, 0.20360541, 2.4305477)
 mesh = SubResource("Mesh_house_roof_broken")
 surface_material_override/0 = SubResource("Mat_roof_broken")
 
@@ -3516,7 +3516,7 @@ transform = Transform3D(-0.9424364, 0, -0.49857652, 0, 1.0661918, 0, 0.49857652,
 mesh = SubResource("ArrayMesh_5tq6r")
 
 [node name="Heap_E_5" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1162607209]
-transform = Transform3D(-0.859469, 0, 0.20044255, 0, 0.8825328, 0, -0.20044255, 0, -0.859469, -29.154413, 0, 22.516087)
+transform = Transform3D(-0.859469, 0, 0.20044255, 0, 0.8825328, 0, -0.20044255, 0, -0.859469, -17.362667, 0, 4.5563583)
 mesh = SubResource("ArrayMesh_dfw5j")
 
 [node name="ScrapHeap_B_6" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=659814100]
@@ -3552,7 +3552,7 @@ transform = Transform3D(-0.9645149, 0, 0.38793713, 0, 1.0396078, 0, -0.38793713,
 mesh = SubResource("ArrayMesh_btbcr")
 
 [node name="Heap_H_14" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=952660216]
-transform = Transform3D(-0.3246449, 0, 1.0292208, 0, 1.0792079, 0, -1.0292208, 0, -0.3246449, -15.969282, 0, 23.626072)
+transform = Transform3D(-0.3246449, 0, 1.0292208, 0, 1.0792079, 0, -1.0292208, 0, -0.3246449, -12.642663, -0.057819366, 19.879576)
 mesh = SubResource("ArrayMesh_0vjr6")
 
 [node name="Tarp_Pile_B_15" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=588877606]
@@ -3576,7 +3576,7 @@ transform = Transform3D(0.67372906, 0, -0.78007585, 0, 1.030742, 0, 0.78007585, 
 mesh = SubResource("ArrayMesh_piywr")
 
 [node name="Heap_E_20" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=161406916]
-transform = Transform3D(0.87528116, 0, 0.46118477, 0, 0.9893475, 0, -0.46118477, 0, 0.87528116, 25.219067, 0, -9.909084)
+transform = Transform3D(0.87528116, 0, 0.46118477, 0, 0.9893475, 0, -0.46118477, 0, 0.87528116, 25.219067, 0, -5.0084343)
 mesh = SubResource("ArrayMesh_dfw5j")
 
 [node name="Ayla_Table_21" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1510259137]
@@ -3588,7 +3588,7 @@ transform = Transform3D(0.79517025, 0, -0.23491842, 0, 0.82914555, 0, 0.23491842
 mesh = SubResource("ArrayMesh_t8ytl")
 
 [node name="Heap_G_23" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1844971060]
-transform = Transform3D(0.12823054, 0, 1.1820767, 0, 1.1890116, 0, -1.1820767, 0, 0.12823054, -36.408585, 0, -20.649782)
+transform = Transform3D(0.12823054, 0, 1.1820767, 0, 1.1890116, 0, -1.1820767, 0, 0.12823054, 26.68058, 0, -7.600378)
 mesh = SubResource("ArrayMesh_piywr")
 
 [node name="ScrapHeap_C_24" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=162962002]
@@ -3612,11 +3612,11 @@ transform = Transform3D(1.0083417, 0, -0.25708047, 0, 1.0405976, 0, 0.25708047, 
 mesh = SubResource("ArrayMesh_fa2a2")
 
 [node name="ScrapHeap_A_29" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=780937982]
-transform = Transform3D(-0.32431847, 0, -0.91782314, 0, 0.97343814, 0, 0.91782314, 0, -0.32431847, 28.102089, 0, -28.296139)
+transform = Transform3D(-0.32431847, 0, -0.91782314, 0, 0.97343814, 0, 0.91782314, 0, -0.32431847, 28.102089, 0, -25.254633)
 mesh = SubResource("ArrayMesh_fa2a2")
 
 [node name="Heap_D_30" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=188766614]
-transform = Transform3D(-0.44921753, 0, -0.82010263, 0, 0.9350747, 0, 0.82010263, 0, -0.44921753, -14.782114, 0, 19.12291)
+transform = Transform3D(-0.44921753, 0, -0.82010263, 0, 0.9350747, 0, 0.82010263, 0, -0.44921753, -13.913419, 0, 19.12291)
 mesh = SubResource("ArrayMesh_si1la")
 
 [node name="ScrapHeap_C_31" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1383774270]
@@ -3640,11 +3640,11 @@ transform = Transform3D(-1.1724414, 0, -0.19128957, 0, 1.1879438, 0, 0.19128957,
 mesh = SubResource("ArrayMesh_dfw5j")
 
 [node name="Heap_D_36" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1791871119]
-transform = Transform3D(-0.8614221, 0, 0.6709209, 0, 1.0918713, 0, -0.6709209, 0, -0.8614221, 36.502, 0, -1.2286205)
+transform = Transform3D(-0.8614221, 0, 0.6709209, 0, 1.0918713, 0, -0.6709209, 0, -0.8614221, 33.547466, 0, -0.4686947)
 mesh = SubResource("ArrayMesh_si1la")
 
 [node name="Heap_F_37" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1430305353]
-transform = Transform3D(-0.49299955, 0, -1.1457418, 0, 1.2473062, 0, 1.1457418, 0, -0.49299955, -0.46910477, 0, -24.80459)
+transform = Transform3D(-0.49299955, 0, -1.1457418, 0, 1.2473062, 0, 1.1457418, 0, -0.49299955, -3.2290382, 0, -4.042612)
 mesh = SubResource("ArrayMesh_btbcr")
 
 [node name="Crate_001_38" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1699403858]
@@ -3664,7 +3664,7 @@ transform = Transform3D(-0.84553325, 0, 0.09252854, 0, 0.850581, 0, -0.09252854,
 mesh = SubResource("ArrayMesh_btbcr")
 
 [node name="Heap_I_42" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=713591693]
-transform = Transform3D(0.35566857, 0, 1.2371558, 0, 1.2872663, 0, -1.2371558, 0, 0.35566857, -31.39163, 0, 11.520866)
+transform = Transform3D(0.35566857, 0, 1.2371558, 0, 1.2872663, 0, -1.2371558, 0, 0.35566857, 3.2258244, 0, -1.8974285)
 mesh = SubResource("ArrayMesh_t8ytl")
 
 [node name="Win_MullV_43" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=2004455598]
@@ -3676,7 +3676,7 @@ transform = Transform3D(-0.4620327, 0, 0.8803463, 0, 0.99422526, 0, -0.8803463, 
 mesh = SubResource("ArrayMesh_b5p1t")
 
 [node name="Heap_D_45" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=299219031]
-transform = Transform3D(0.049872145, 0, -0.89483094, 0, 0.8962196, 0, 0.89483094, 0, 0.049872145, -8.608341, 0, -17.162655)
+transform = Transform3D(0.049872145, 0, -0.89483094, 0, 0.8962196, 0, 0.89483094, 0, 0.049872145, -3.4808273, 0, -15.653874)
 mesh = SubResource("ArrayMesh_si1la")
 
 [node name="Heap_E_46" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1041666952]
@@ -3712,7 +3712,7 @@ transform = Transform3D(0.15110816, 0, -1.188776, 0, 1.1983414, 0, 1.188776, 0, 
 mesh = SubResource("ArrayMesh_a3wq7")
 
 [node name="Heap_D_54" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=840727293]
-transform = Transform3D(0.960228, 0, -0.77995884, 0, 1.2370827, 0, 0.77995884, 0, 0.960228, 3.7512589, 0, -14.046013)
+transform = Transform3D(0.960228, 0, -0.77995884, 0, 1.2370827, 0, 0.77995884, 0, 0.960228, -24.976748, 0, 0.99918365)
 mesh = SubResource("ArrayMesh_si1la")
 
 [node name="Heap_E_55" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1841805858]
@@ -3728,7 +3728,7 @@ transform = Transform3D(0.6392518, 0, -0.635095, 0, 0.9011041, 0, 0.635095, 0, 0
 mesh = SubResource("ArrayMesh_5tq6r")
 
 [node name="Heap_D_58" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=2146394896]
-transform = Transform3D(-0.2876261, 0, 0.9197318, 0, 0.96365726, 0, -0.9197318, 0, -0.2876261, -36.60766, 0, 11.6072235)
+transform = Transform3D(-0.2876261, 0, 0.9197318, 0, 0.96365726, 0, -0.9197318, 0, -0.2876261, -18.013508, 0, 10.232609)
 mesh = SubResource("ArrayMesh_si1la")
 
 [node name="Tarp_Pile_B_59" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1579676920]
@@ -3756,7 +3756,7 @@ transform = Transform3D(0.80798143, 0, 0.6790846, 0, 1.0554572, 0, -0.6790846, 0
 mesh = SubResource("ArrayMesh_si1la")
 
 [node name="Heap_F_65" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=303269374]
-transform = Transform3D(-1.2713279, 0, 0.08689348, 0, 1.2742939, 0, -0.08689348, 0, -1.2713279, 29.124306, 0, 18.129593)
+transform = Transform3D(-1.2713279, 0, 0.08689348, 0, 1.2742939, 0, -0.08689348, 0, -1.2713279, -13.222343, 0, 15.138439)
 mesh = SubResource("ArrayMesh_btbcr")
 
 [node name="Drum_002_66" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=107533941]
@@ -3768,7 +3768,7 @@ transform = Transform3D(0.98447496, 0, 0.06289268, 0, 0.98648185, 0, -0.06289268
 mesh = SubResource("ArrayMesh_si1la")
 
 [node name="Heap_F_68" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1512428008]
-transform = Transform3D(0.9016716, 0, 0.86966664, 0, 1.2527297, 0, -0.86966664, 0, 0.9016716, -27.582253, 0, 25.326904)
+transform = Transform3D(0.9016716, 0, 0.86966664, 0, 1.2527297, 0, -0.86966664, 0, 0.9016716, -11.961558, 0, -28.726044)
 mesh = SubResource("ArrayMesh_btbcr")
 
 [node name="ScrapHeap_B_69" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1524219661]
@@ -3776,7 +3776,7 @@ transform = Transform3D(0.8304208, 0, 0.7301071, 0, 1.1057373, 0, -0.7301071, 0,
 mesh = SubResource("ArrayMesh_rkghg")
 
 [node name="Heap_H_70" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=2108963271]
-transform = Transform3D(0.9174223, 0, 0.49301153, 0, 1.0415008, 0, -0.49301153, 0, 0.9174223, -35.634483, 0, -4.3560333)
+transform = Transform3D(0.9174223, 0, 0.49301153, 0, 1.0415008, 0, -0.49301153, 0, 0.9174223, -7.343504, 0, -4.3560333)
 mesh = SubResource("ArrayMesh_0vjr6")
 
 [node name="Crate_007_71" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=46034199]
@@ -3792,7 +3792,7 @@ transform = Transform3D(-0.71166706, 0, -0.7278058, 0, 1.017925, 0, 0.7278058, 0
 mesh = SubResource("ArrayMesh_nxij0")
 
 [node name="Heap_E_74" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=415326807]
-transform = Transform3D(1.0553893, 0, -0.0928836, 0, 1.0594686, 0, 0.0928836, 0, 1.0553893, 19.78009, 0, -26.79552)
+transform = Transform3D(1.0553893, 0, -0.0928836, 0, 1.0594686, 0, 0.0928836, 0, 1.0553893, 11.131685, 0, 10.288441)
 mesh = SubResource("ArrayMesh_dfw5j")
 
 [node name="Drums_D_75" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1795592420]
@@ -3808,7 +3808,7 @@ transform = Transform3D(-0.79532075, 0, -0.5054365, 0, 0.9423381, 0, 0.5054365, 
 mesh = SubResource("ArrayMesh_fa2a2")
 
 [node name="Heap_I_78" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1195668855]
-transform = Transform3D(-0.9726147, 0, -0.80680555, 0, 1.2636908, 0, 0.80680555, 0, -0.9726147, -25.952995, 0, 15.38559)
+transform = Transform3D(-0.9726147, 0, -0.80680555, 0, 1.2636908, 0, 0.80680555, 0, -0.9726147, -9.095146, 0, 11.607212)
 mesh = SubResource("ArrayMesh_t8ytl")
 
 [node name="ScrapHeap_A_79" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1350957645]
@@ -3848,7 +3848,7 @@ transform = Transform3D(0.5885676, 0, -1.0121679, 0, 1.1708527, 0, 1.0121679, 0,
 mesh = SubResource("ArrayMesh_7p1w2")
 
 [node name="Heap_E_88" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1009281628]
-transform = Transform3D(0.7582156, 0, 0.6175826, 0, 0.9779055, 0, -0.6175826, 0, 0.7582156, -27.311892, 0, -13.648857)
+transform = Transform3D(0.7582156, 0, 0.6175826, 0, 0.9779055, 0, -0.6175826, 0, 0.7582156, -36.027336, 0, -2.8104935)
 mesh = SubResource("ArrayMesh_dfw5j")
 
 [node name="ScrapHeap_A_89" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1172655309]
@@ -3884,7 +3884,7 @@ transform = Transform3D(-0.3121169, 0, 1.25524, 0, 1.2934622, 0, -1.25524, 0, -0
 mesh = SubResource("ArrayMesh_sda0h")
 
 [node name="Win_FrameR_97" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=751122573]
-transform = Transform3D(-1.1884898, 0, -0.1442687, 0, 1.1972141, 0, 0.1442687, 0, -1.1884898, 9.6957245, 0, 26.641235)
+transform = Transform3D(-1.1884898, 0, -0.1442687, 0, 1.1972141, 0, 0.1442687, 0, -1.1884898, 0.9364147, -1.5499423, 26.641235)
 mesh = SubResource("ArrayMesh_nxij0")
 
 [node name="Tarp_E_98" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=313933538]
@@ -3936,7 +3936,7 @@ transform = Transform3D(0.18620867, 0, -0.98194593, 0, 0.99944556, 0, 0.98194593
 mesh = SubResource("ArrayMesh_t8ytl")
 
 [node name="Heap_F_110" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1278923676]
-transform = Transform3D(1.1188713, 0, 0.24685013, 0, 1.1457784, 0, -0.24685013, 0, 1.1188713, -22.556126, 0, 10.813259)
+transform = Transform3D(1.1188713, 0, 0.24685013, 0, 1.1457784, 0, -0.24685013, 0, 1.1188713, 1.2380104, 0, 27.150795)
 mesh = SubResource("ArrayMesh_btbcr")
 
 [node name="Heap_G_111" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1561359228]
@@ -3960,7 +3960,7 @@ transform = Transform3D(-0.9296138, 0, -0.0013285757, 0, 0.9296148, 0, 0.0013285
 mesh = SubResource("ArrayMesh_t8ytl")
 
 [node name="Heap_H_116" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=1096506525]
-transform = Transform3D(-0.9107307, 0, 0.921371, 0, 1.2955134, 0, -0.921371, 0, -0.9107307, -19.201946, 0, -17.674091)
+transform = Transform3D(-0.9107307, 0, 0.921371, 0, 1.2955134, 0, -0.921371, 0, -0.9107307, -12.699036, 0, -17.674091)
 mesh = SubResource("ArrayMesh_0vjr6")
 
 [node name="Tarp_G_117" type="MeshInstance3D" parent="ScrapyardAssets" unique_id=816430811]

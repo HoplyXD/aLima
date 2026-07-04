@@ -14,6 +14,14 @@
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_segii"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_0cvim"]
 [ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Verdigris.png" id="ovl_tex_verdigris"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
 
 [node name="Lamp" type="Node3D" unique_id=456840677]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, -0.11943139, 0)
@@ -123,3 +131,38 @@ cultural_relevance = "A household oil lamp of a type used before rural electrifi
 price_min = 70
 price_max = 220
 uncertainty_notes = "No maker's mark; date estimated from construction and wear."
+
+[node name="OverlayGrease" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_grease")
+layer_order = 24
+
+[node name="OverlayMold" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_mold")
+layer_order = 23
+
+[node name="OverlayMud" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_mud")
+layer_order = 28
+
+[node name="OverlaySaltCrust" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_salt_crust")
+layer_order = 26
+
+[node name="OverlaySoot" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_soot")
+layer_order = 27
+
+[node name="OverlayVerdigris" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_verdigris")
+layer_order = 18
+
+[node name="OverlayWax" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_wax")
+layer_order = 25

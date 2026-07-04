@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" uid="uid://d80c57n5yr6v" path="res://scripts/restoration/tool_config.gd" id="2_config"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_tin"]
+albedo_color = Color(0.35, 0.38, 0.42, 1)
+metallic = 0.6
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_label"]
+albedo_color = Color(0.3, 0.62, 0.5, 1)
+roughness = 0.6
+
+[sub_resource type="CylinderMesh" id="Mesh_tin"]
+top_radius = 0.07
+bottom_radius = 0.07
+height = 0.04
+
+[sub_resource type="CylinderMesh" id="Mesh_label"]
+top_radius = 0.071
+bottom_radius = 0.071
+height = 0.015
+
+[node name="metal_polish" type="Node3D"]
+script = ExtResource("2_config")
+max_durability = 150
+clean_radius = 0.11
+cleans = {
+"verdigris": 45
+}
+
+[node name="CleanPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+
+[node name="Tin" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_tin")
+surface_material_override/0 = SubResource("Mat_tin")
+
+[node name="Label" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("Mesh_label")
+surface_material_override/0 = SubResource("Mat_label")
