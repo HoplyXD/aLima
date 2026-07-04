@@ -63,5 +63,8 @@ func test_slot_click_reports_inspection_data() -> void:
 func test_quest_and_quick_buttons_exist() -> void:
 	var hud := _make_hud()
 	hud.set_quest_count(2)
-	assert_eq((hud.get_node("QuestLabel") as Label).text, "Quest: 2")
+	# The top-right counter now tracks seated fragments; active quests moved to the
+	# node-based QuestTracker (see tests/ui/test_quest_tracker.gd).
+	assert_eq((hud.get_node("QuestLabel") as Label).text, "Fragments: 2")
 	assert_not_null(hud.get_node("QuickActions"))
+	assert_not_null(hud.get_node("QuestTracker"))

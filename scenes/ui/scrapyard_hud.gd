@@ -28,6 +28,7 @@ const SLOT_EMPTY_COLOR := Color(0.12, 0.12, 0.12, 0.75)
 const SLOT_SCRAP_COLOR := Color(0.45, 0.4, 0.32)
 
 const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
+const QUEST_TRACKER_SCENE := preload("res://scenes/ui/quest_tracker.tscn")
 
 @onready var _day_label: Label = $DayLabel
 @onready var _clock_label: Label = $ClockLabel
@@ -47,6 +48,7 @@ func _ready() -> void:
 	set_prompt("")
 	_build_top_left_buttons()
 	_build_quest_label()
+	_build_quest_tracker()
 	_build_hotbar()
 	set_inventory(0, [])
 
@@ -93,7 +95,15 @@ func _build_quest_label() -> void:
 
 func set_quest_count(amount: int) -> void:
 	if _quest_label != null:
-		_quest_label.text = "Quest: %d" % amount
+		_quest_label.text = "Fragments: %d" % amount
+
+
+## Node-based active-quest tracker (top-right). Lists active quests as QuestEntry
+## nodes; hides itself when there are none, so it never clutters the tutorial.
+func _build_quest_tracker() -> void:
+	var tracker: QuestTracker = QUEST_TRACKER_SCENE.instantiate()
+	tracker.name = "QuestTracker"
+	add_child(tracker)
 
 
 ## Shows a prompt at the bottom-center of the screen. Pass an empty string to hide.
@@ -239,7 +249,9 @@ func _build_hotbar() -> void:
 		_cards.append(card)
 		_slot_data.append({})
 		var slot_index := i
-		card.clicked.connect(func() -> void: item_inspected.emit(slot_index, _slot_data[slot_index]))
+		card.clicked.connect(
+			func() -> void: item_inspected.emit(slot_index, _slot_data[slot_index])
+		)
 
 
 func _format_time(hour: int, minute: int = 0) -> String:

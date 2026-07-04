@@ -15,6 +15,9 @@ func before_each() -> void:
 	GameState.initialize("tutorial-artifact-test")
 	DayClock.reset()
 	TutorialService.load_script_file()
+	# A prior suite may have reloaded the repo (dropping scene-only synthesized commons);
+	# re-register them so the tutorial can still find a restorable common to inject.
+	preload("res://scripts/restoration/artifact_catalog.gd").refresh()
 
 
 func after_each() -> void:

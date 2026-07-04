@@ -91,10 +91,19 @@ func _group_templates_by_rarity() -> Dictionary:
 		if _ArtifactCatalog.is_quest_item(id):
 			# Quest-bound artifacts are handed out for their NPC step, never randomly delivered.
 			continue
+		if _effective_rarity(template) == ModelEnums.Rarity.WHITE and _needs_rust_tarnish(template):
+			# Common artifacts that need the rust/tarnish path (Wire Brush / tin_pry) are
+			# banned from the random pool: the player has no rust tool early, so the piece
+			# could never be "ready for the bench" (nor sellable while dirty). This rule
+			# covers any future rust/tarnish common artifact automatically.
+			continue
 		# Day 0 (TUT): the taught piece must actually CARRY every whitelisted
 		# condition in its authored scene, otherwise the whitelist would render it
 		# spotless at the bench and the cleaning lesson could never complete.
-		if not required_conditions.is_empty() and not _scene_has_conditions(id, required_conditions):
+		if (
+			not required_conditions.is_empty()
+			and not _scene_has_conditions(id, required_conditions)
+		):
 			continue
 		var rarity_name := ModelEnums.rarity_name(_effective_rarity(template))
 		if not groups.has(rarity_name):
@@ -142,6 +151,19 @@ func _apply_initial_value(
 func _effective_rarity(template: ScrapObjectTemplate) -> int:
 	var override := _ArtifactCatalog.rarity_override(template.id)
 	return override if override >= 0 else template.base_rarity
+
+
+## Tools / minigames that clean rust and tarnish. An artifact whose cleaning path uses
+## any of these is a "rust/tarnish" piece — kept out of the common delivery pool above.
+const RUST_TARNISH_TOOLS := ["rust_brush"]
+const RUST_TARNISH_MINIGAMES := ["tin_pry"]
+
+
+func _needs_rust_tarnish(template: ScrapObjectTemplate) -> bool:
+	return (
+		template.required_clean_tool in RUST_TARNISH_TOOLS
+		or template.clean_minigame in RUST_TARNISH_MINIGAMES
+	)
 
 
 ## The artifact's pristine value range: the scene-config override when set (non-zero), else the

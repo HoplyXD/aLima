@@ -63,6 +63,7 @@ func _ready() -> void:
 	_morning_button.pressed.connect(func() -> void: morning_delivery_pressed.emit())
 	_dialogue.finished.connect(func() -> void: dialogue_finished.emit())
 	_build_storage_button()
+	_build_quest_tracker()
 
 
 ## The Storage button is created in code (the rest of the HUD is authored in
@@ -86,6 +87,17 @@ func _build_storage_button() -> void:
 	_storage_button.pressed.connect(func() -> void: storage_pressed.emit())
 	_storage_button.visible = FALLBACK_BUTTONS_VISIBLE
 	add_child(_storage_button)
+
+
+const QUEST_TRACKER_SCENE := preload("res://scenes/ui/quest_tracker.tscn")
+
+
+## Node-based active-quest tracker (top-right). Lists active quests as QuestEntry
+## nodes; hides itself when there are none.
+func _build_quest_tracker() -> void:
+	var tracker: QuestTracker = QUEST_TRACKER_SCENE.instantiate()
+	tracker.name = "QuestTracker"
+	add_child(tracker)
 
 
 const ARTIFACT_CARD_SCENE := preload("res://scenes/restoration/artifact_card.tscn")
@@ -119,10 +131,7 @@ func _fill_card_strip(
 		var card: ArtifactCard = ARTIFACT_CARD_SCENE.instantiate()
 		strip.add_child(card)
 		card.configure(
-			uid,
-			str(entry.get("display_name", uid)),
-			entry.get("color", Color.WHITE),
-			previews_on
+			uid, str(entry.get("display_name", uid)), entry.get("color", Color.WHITE), previews_on
 		)
 		if is_unrestored:
 			card.selected.connect(func(id: String) -> void: unrestored_card_selected.emit(id))

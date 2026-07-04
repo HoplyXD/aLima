@@ -170,6 +170,20 @@ func get_quest_definition(quest_id: String) -> QuestDefinition:
 	return _quests.get(quest_id) as QuestDefinition
 
 
+## Human-readable current objective for a quest, for the QuestTracker UI. Prefers the
+## beat whose id matches the current progress; otherwise falls back to the quest
+## description. Data-driven — no per-quest UI code.
+func current_objective(quest_id: String) -> String:
+	var def := get_quest_definition(quest_id)
+	if def == null:
+		return ""
+	var progress := get_progress(quest_id)
+	for beat in def.beats:
+		if beat is Dictionary and str((beat as Dictionary).get("id", "")) == progress:
+			return str((beat as Dictionary).get("summary", ""))
+	return def.description
+
+
 # --- Internal -------------------------------------------------------------------
 
 
