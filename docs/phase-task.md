@@ -1710,6 +1710,7 @@ Manual: run the deterministic event showcase, then play three unforced loops and
 **Goal:** deliver all authored outcomes and the complete Master Artifact restoration ending.
 
 **Requirements:** END-R1..R5, ROUTE-R5, CONTENT-R7, CONTENT-R9
+**Narrative source:** `docs/story.md` — the finalized story bible (routes, beats, dialogue, endings, item web), authored ahead of implementation.
 **Dependencies:** Phases 15, 16, and 17
 **Subsystems:** ending state, character resolutions, Neutral continuation, final restoration, credits transition
 
