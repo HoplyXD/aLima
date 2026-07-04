@@ -21,6 +21,10 @@ var debug_only: bool = false
 ## tool's power is derived from the journal catalog (the condition whose
 ## cleaning_tool is this tool) at a default strength — see CleaningPower.
 var cleans: Dictionary = {}
+## Which storefront sells this tool when `buyable`: "online" (the phone marketplace,
+## ships in ship_hours) or "mall" (the mall's physical tool shop — buy it in person,
+## carry it home instantly). The two shops carry DIFFERENT sets by design.
+var shop: String = "online"
 
 
 func _init() -> void:
@@ -40,6 +44,7 @@ static func from_dictionary(data: Dictionary) -> ToolDefinition:
 	t.ship_hours = ModelUtils.as_int(data.get("ship_hours"), 2)
 	t.debug_only = ModelUtils.as_bool(data.get("debug_only"))
 	t.cleans = ModelUtils.as_dictionary(data.get("cleans"))
+	t.shop = ModelUtils.as_string(data.get("shop"), "online")
 	return t
 
 
@@ -56,6 +61,7 @@ func to_dictionary() -> Dictionary:
 		"ship_hours": ship_hours,
 		"debug_only": debug_only,
 		"cleans": cleans.duplicate(),
+		"shop": shop,
 	}
 
 
@@ -74,4 +80,6 @@ func validate(
 		result.add_field_error(file_path, id, "quality", "quality must be non-negative")
 	if cost < 0:
 		result.add_field_error(file_path, id, "cost", "cost must be non-negative")
+	if shop != "online" and shop != "mall":
+		result.add_field_error(file_path, id, "shop", "shop must be 'online' or 'mall'")
 	return result

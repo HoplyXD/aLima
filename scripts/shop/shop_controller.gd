@@ -143,6 +143,8 @@ func _ready() -> void:
 
 	AylaService.sort_ready.connect(_on_ayla_sort_ready)
 	EventBus.day_changed.connect(_on_day_changed)
+	# The window light tracks the clock (and Day 0's scripted sunrise/noon/sunset).
+	SunController.attach(self, get_node_or_null("DirectionalLight3D") as DirectionalLight3D)
 	# The evening runs interactively while the shop is the active scene; leaving the
 	# shop (to the yard/title) drops back to auto-advance so the clock never soft-locks
 	# waiting for an evening screen that isn't on screen.
@@ -308,15 +310,19 @@ func _artifact_card_entries(restored_only: bool) -> Array:
 		)
 		if is_restored != restored_only:
 			continue
-		out.append(
-			{
-				"uid": inst.uid,
-				"display_name": template.display_name,
-				# Quest items read ORANGE everywhere; ordinary pieces use their rarity.
-				"color": GlowMapper.get_instance_glow_color(
-					template.base_rarity, inst.is_carrier, false, inst.is_quest_item
-				),
-			}
+		(
+			out
+			. append(
+				{
+					"uid": inst.uid,
+					"display_name": template.display_name,
+					# Quest items read ORANGE everywhere; ordinary pieces use their rarity.
+					"color":
+					GlowMapper.get_instance_glow_color(
+						template.base_rarity, inst.is_carrier, false, inst.is_quest_item
+					),
+				}
+			)
 		)
 	return out
 
@@ -336,9 +342,7 @@ func _attach_card_preview(uid: String, card: ArtifactCard) -> void:
 	var template := service.get_repository().get_template(inst.template_id)
 	if template == null:
 		return
-	var scene: PackedScene = ShopArtifactScenes.scene_for(
-		template.id, RESTORATION_ARTIFACT_SCENE
-	)
+	var scene: PackedScene = ShopArtifactScenes.scene_for(template.id, RESTORATION_ARTIFACT_SCENE)
 	var preview: RestorationObject3D = scene.instantiate()
 	card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
 	service.present_object(preview, inst, template, uid.hash())
@@ -763,15 +767,18 @@ func _create_evening_screen() -> EveningScreen:
 
 func _create_tutorial_glue() -> TutorialGlue:
 	var glue := TutorialGlue.new()
-	glue.setup(
-		"SHOP",
-		{
-			"door": _door_interactable,
-			"workbench": _workbench_interactable,
-			"journal": _journal_interactable,
-			"phone": _phone_interactable,
-			"storage": _delivery_interactable,
-		}
+	(
+		glue
+		. setup(
+			"SHOP",
+			{
+				"door": _door_interactable,
+				"workbench": _workbench_interactable,
+				"journal": _journal_interactable,
+				"phone": _phone_interactable,
+				"storage": _delivery_interactable,
+			}
+		)
 	)
 	add_child(glue)
 	return glue

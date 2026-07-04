@@ -240,6 +240,11 @@ var _verts: PackedVector3Array = PackedVector3Array()
 var _tris: PackedInt32Array = PackedInt32Array()
 var _extent: float = 1.0  ## Overlay size, so clean_radius is mesh-scale independent.
 var _initial_keep: float = 0.0  ## Total keep at spawn, so cleaned_fraction is progress-relative.
+## Two-stage reveal state: when set, this overlay now REPRESENTS the revealed condition
+## (get_condition_id returns it), and _spawn_keep holds the spawn pattern so the revealed
+## layer re-dirties exactly where the outer one sat.
+var _condition_override: String = ""
+var _spawn_keep: PackedFloat32Array = PackedFloat32Array()
 
 
 func _ready() -> void:
@@ -320,6 +325,19 @@ func _apply_pattern(seed: int) -> void:
 	_arrays[Mesh.ARRAY_COLOR] = colors
 	_runtime_mesh.clear_surfaces()
 	_runtime_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _arrays)
+	_spawn_keep = get_keep()  # remembered so a two-stage reveal can re-dirty this pattern
+	_condition_override = ""  # a rebuild returns the overlay to its authored condition
+
+
+## Two-stage conditions: morphs this overlay into the REVEALED condition. Swaps the
+## condition id + texture and restores the SPAWN keep pattern, so the revealed layer
+## sits exactly where the outer one was and must be cleaned again with its own tool.
+func transform_to_condition(new_condition_id: String, new_texture: Texture2D) -> void:
+	_condition_override = new_condition_id
+	if new_texture != null:
+		condition_texture = new_texture  # setter re-applies the shader texture
+	if not _spawn_keep.is_empty():
+		set_keep(_spawn_keep)
 
 
 ## The current per-vertex keep (opacity) values, for caching the cleaning progress across a switch.
@@ -477,6 +495,8 @@ func is_spawnable() -> bool:
 ## (data/journal/surface_conditions.json):
 ## "Grime.png" -> "dirt" (the catalog stores Grime under id "dirt", cleaned by damp_cloth).
 func get_condition_id() -> String:
+	if not _condition_override.is_empty():
+		return _condition_override  # two-stage reveal swapped this overlay's condition
 	if not condition_id.is_empty():
 		return condition_id
 	if condition_texture == null:

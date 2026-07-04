@@ -180,14 +180,17 @@ func _spawn_player() -> void:
 
 func _create_tutorial_glue() -> TutorialGlue:
 	var glue := TutorialGlue.new()
-	glue.setup(
-		"YARD",
-		{
-			"ayla": _ayla_anchor,
-			"door": _door_return,
-			"scrap": _ayla_anchor,  # re-targeted per frame to the nearest scrap
-			"tricycle": get_node_or_null("Anchors/Tricycle"),
-		}
+	(
+		glue
+		. setup(
+			"YARD",
+			{
+				"ayla": _ayla_anchor,
+				"door": _door_return,
+				"scrap": _ayla_anchor,  # re-targeted per frame to the nearest scrap
+				"tricycle": get_node_or_null("Anchors/Tricycle"),
+			}
+		)
 	)
 	add_child(glue)
 	_tutorial_glue = glue
@@ -313,7 +316,12 @@ func _open_handoff() -> void:
 
 	# Next-loop welcome: Alya greets returning players who completed the quest line
 	if QuestService.is_completed("alya_quest_line"):
-		_dialogue_box.start(_ayla_lines("yard_welcome_back", "Ayla: Welcome back! The Dump Site is open if you want to visit."))
+		_dialogue_box.start(
+			_ayla_lines(
+				"yard_welcome_back",
+				"Ayla: Welcome back! The Dump Site is open if you want to visit."
+			)
+		)
 		_pending_dialogue_action = "yard_welcome_back"
 		_enter_overlay()
 		return
@@ -321,14 +329,18 @@ func _open_handoff() -> void:
 	# Quest 1: Start dialogue when Day 1 intro is complete
 	if quest_progress.is_empty() and GameState.save_state.persistent.day1_intro_completed:
 		if not QuestService.is_completed("alya_quest_line"):
-			_dialogue_box.start(_ayla_lines("q1_start", "Ayla: Hey, can I tell you something about Yuyu?"))
+			_dialogue_box.start(
+				_ayla_lines("q1_start", "Ayla: Hey, can I tell you something about Yuyu?")
+			)
 			_pending_dialogue_action = "q1_start"
 			_enter_overlay()
 			return
 
 	# Quest 1: Player found Yuyu's glasses
 	if quest_progress == "q1_glasses" and _has_quest_item_in_inventory("yuyu_glasses"):
-		_dialogue_box.start(_ayla_lines("q1_glasses_found", "Ayla: These are Tito's glasses! Thank you so much!"))
+		_dialogue_box.start(
+			_ayla_lines("q1_glasses_found", "Ayla: These are Tito's glasses! Thank you so much!")
+		)
 		_pending_dialogue_action = "q1_glasses_found"
 		_enter_overlay()
 		return
@@ -500,8 +512,14 @@ func _update_hud() -> void:
 func _update_sun() -> void:
 	if _sun == null:
 		return
-	var hour := DayClock.get_fractional_hour()
-	var progress := clampf((hour - SUNRISE_HOUR) / (SUNSET_HOUR - SUNRISE_HOUR), 0.0, 1.0)
+	var progress: float
+	if TutorialService.is_tutorial_active():
+		# Day 0 is clockless: the sun is scripted by tutorial step instead — sunrise
+		# through the cleaning lesson, noon for the sell/mall trip, sunset heading home.
+		progress = float(SunController.DAY0_PHASES.get(TutorialService.current_step_id(), 0.06))
+	else:
+		var hour := DayClock.get_fractional_hour()
+		progress = clampf((hour - SUNRISE_HOUR) / (SUNSET_HOUR - SUNRISE_HOUR), 0.0, 1.0)
 
 	# Elevation: low at horizon at sunrise/sunset, high at noon.
 	var elevation := deg_to_rad(90.0 * sin(progress * PI) - 10.0)
@@ -634,21 +652,30 @@ func _restored_inventory_entries() -> Array[Dictionary]:
 			continue
 		var inst := ObjectInstance.from_dictionary(raw)
 		# Include quest items regardless of restoration state
-		if not inst.is_quest_item and inst.state != ModelEnums.ObjState.CLEAN and inst.state != ModelEnums.ObjState.OPEN:
+		if (
+			not inst.is_quest_item
+			and inst.state != ModelEnums.ObjState.CLEAN
+			and inst.state != ModelEnums.ObjState.OPEN
+		):
 			continue
 		var template := repo.get_template(inst.template_id)
 		var rarity: int = template.base_rarity if template != null else 0
-		var color := GlowMapper.get_instance_glow_color(rarity, inst.is_carrier, false, inst.is_quest_item)
+		var color := GlowMapper.get_instance_glow_color(
+			rarity, inst.is_carrier, false, inst.is_quest_item
+		)
 		var preview := _create_preview_for_instance(inst)
-		out.append(
-			{
-				"preview": preview,
-				"display_name": template.display_name if template != null else inst.template_id,
-				"color": color,
-				"description": template.description if template != null else "",
-				"is_scrap": false,
-				"is_quest": inst.is_quest_item,
-			}
+		(
+			out
+			. append(
+				{
+					"preview": preview,
+					"display_name": template.display_name if template != null else inst.template_id,
+					"color": color,
+					"description": template.description if template != null else "",
+					"is_scrap": false,
+					"is_quest": inst.is_quest_item,
+				}
+			)
 		)
 	return out
 

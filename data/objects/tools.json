@@ -158,6 +158,62 @@
       "durability": 12,
       "buyable": true,
       "ship_hours": 3
+    },
+    {
+      "record_type": "tool",
+      "id": "soap_bar",
+      "display_name": "Bar of Soap",
+      "enables": ["decal_clean"],
+      "cleans": { "mud": 55, "soot": 50, "grease": 45 },
+      "quality": 1,
+      "cost": 30,
+      "is_legacy": false,
+      "durability": 30,
+      "buyable": true,
+      "shop": "mall",
+      "ship_hours": 0
+    },
+    {
+      "record_type": "tool",
+      "id": "mold_remover",
+      "display_name": "Mold Remover",
+      "enables": ["decal_clean"],
+      "cleans": { "mold": 50 },
+      "quality": 1,
+      "cost": 85,
+      "is_legacy": false,
+      "durability": 20,
+      "buyable": true,
+      "shop": "online",
+      "ship_hours": 3
+    },
+    {
+      "record_type": "tool",
+      "id": "wax_scraper",
+      "display_name": "Wax Scraper",
+      "enables": ["decal_clean"],
+      "cleans": { "wax": 60 },
+      "quality": 1,
+      "cost": 50,
+      "is_legacy": false,
+      "durability": 26,
+      "buyable": true,
+      "shop": "mall",
+      "ship_hours": 0
+    },
+    {
+      "record_type": "tool",
+      "id": "metal_polish",
+      "display_name": "Metal Polish Paste",
+      "enables": ["decal_clean"],
+      "cleans": { "verdigris": 45 },
+      "quality": 2,
+      "cost": 95,
+      "is_legacy": false,
+      "durability": 18,
+      "buyable": true,
+      "shop": "mall",
+      "ship_hours": 0
     }
   ]
 }

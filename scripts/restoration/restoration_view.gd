@@ -916,6 +916,10 @@ func clean_authored_condition(condition_id: String) -> bool:
 		_caption_label.text = "Wrong tool — the %s needs %s." % [label, needs]
 		return false
 	var cleaned := _object.apply_authored_clean(condition_id, strength)
+	# Two-stage conditions: the outer layer coming away MORPHS the mark into a new
+	# condition (its own tool). The type id changing mid-stroke is that reveal.
+	var label_after := _object.authored_type_id(condition_id).replace("_", " ")
+	var revealed := not cleaned and label_after != label
 	# Record the gameplay effect (wear the tool, raise condition/value, reach CLEAN) — this
 	# is what makes the author-placed decals real conditions, not just a visual.
 	var total := _object.authored_active_count()
@@ -930,6 +934,10 @@ func clean_authored_condition(condition_id: String) -> bool:
 			if res.reached_clean
 			else "Cleaned the %s." % label
 		)
+	elif revealed:
+		var needs := _tool_display_name(_object.authored_required_tool(condition_id))
+		_feedback_label.text = "The %s comes away — there's %s underneath!" % [label, label_after]
+		_caption_label.text = "%s revealed. It needs %s." % [label_after.capitalize(), needs]
 	else:
 		_feedback_label.text = "Working off the %s..." % label
 		_caption_label.text = "Keep scrubbing the %s." % label
@@ -1848,9 +1856,21 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 				bool(result.get("fully_cleaned", false)),
 				_overlay_market_value(inst)
 			)
-			_feedback_label.text = (
-				"Working off the %s..." % String(result.get("condition_id", "")).replace("_", " ")
-			)
+			if result.has("revealed"):
+				# Two-stage condition: the outer layer came away and exposed a new one.
+				var outer := String(result.get("condition_id", "")).replace("_", " ")
+				var revealed := String(result.get("revealed", "")).replace("_", " ")
+				_feedback_label.text = (
+					"The %s comes away — there's %s underneath!" % [outer, revealed]
+				)
+				_caption_label.text = (
+					"%s revealed. It needs a different tool." % revealed.capitalize()
+				)
+			else:
+				_feedback_label.text = (
+					"Working off the %s..."
+					% String(result.get("condition_id", "")).replace("_", " ")
+				)
 		var inst2 := _service.find_instance_by_id(_selected_uid)
 		if inst2 != null:
 			_refresh(inst2, _service.get_repository().get_template(inst2.template_id))

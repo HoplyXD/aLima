@@ -34,6 +34,10 @@ var description: String = ""  ## Short guide blurb.
 ## live penalty scales with the condition's current coverage on the instance, so cleaning it off
 ## restores value. See the Artifact price revamp (docs/phase-task.md backlog).
 var value_reduction: float = 0.0
+## Two-stage chain: when this condition is fully cleaned it TRANSFORMS into this other
+## condition id instead of disappearing (e.g. soaping dried mud off reveals the grime
+## underneath, which then needs the damp cloth). Empty = single-stage.
+var reveals_condition: String = ""
 
 
 func _init() -> void:
@@ -49,6 +53,7 @@ static func from_dictionary(data: Dictionary) -> SurfaceCondition:
 	c.cleaning_tool = ModelUtils.as_string(data.get("cleaning_tool"))
 	c.description = ModelUtils.as_string(data.get("description"))
 	c.value_reduction = ModelUtils.as_float(data.get("value_reduction"))
+	c.reveals_condition = ModelUtils.as_string(data.get("reveals_condition"))
 	return c
 
 
@@ -61,6 +66,7 @@ func to_dictionary() -> Dictionary:
 		"cleaning_tool": cleaning_tool,
 		"description": description,
 		"value_reduction": value_reduction,
+		"reveals_condition": reveals_condition,
 	}
 
 
@@ -98,5 +104,9 @@ func validate(
 	if value_reduction < 0.0 or value_reduction > 100.0:
 		result.add_field_error(
 			file_path, id, "value_reduction", "value_reduction must be a percent in 0..100"
+		)
+	if not reveals_condition.is_empty() and reveals_condition == id:
+		result.add_field_error(
+			file_path, id, "reveals_condition", "a condition cannot reveal itself"
 		)
 	return result

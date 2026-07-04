@@ -794,13 +794,31 @@ func clean_overlays_with_tool(
 		if power > 0:
 			# Only counts as a clean (puff + wear) if dirt actually came off here — scrubbing an
 			# already-clean spot does nothing.
-			var changed: bool = overlay.clean_ray(origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac)
-			return {
+			var changed: bool = overlay.clean_ray(
+				origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac
+			)
+			var fully: bool = overlay.cleaned_fraction() >= 0.999
+			var out := {
 				"cleaned": changed,
 				"condition_id": cond,
-				"fully_cleaned": overlay.cleaned_fraction() >= 0.999,
+				"fully_cleaned": fully,
 				"point": overlay.ray_hit_point(origin, direction),
 			}
+			# Two-stage chain (data-driven): fully cleaning a chained condition MORPHS the
+			# overlay into the revealed one (its own texture + tool) instead of finishing.
+			if fully and overlay.has_method("transform_to_condition"):
+				var condition := _match_condition(DataRepository.singleton(), cond)
+				if condition != null and not condition.reveals_condition.is_empty():
+					var revealed: SurfaceCondition = (
+						DataRepository
+						. singleton()
+						. get_surface_condition(condition.reveals_condition)
+					)
+					if revealed != null:
+						overlay.transform_to_condition(revealed.id, _condition_texture(revealed))
+						out["fully_cleaned"] = false
+						out["revealed"] = revealed.id
+			return out
 	return {"cleaned": false, "wrong_tool": any_hit}
 
 
@@ -921,7 +939,11 @@ func _find_overlays(root: Node) -> Array:
 	# Duck-typed (build_with_fallback + clean_ray) so this @tool script needs no ArtifactOverlay ref.
 	var out: Array = []
 	for child in root.get_children():
-		if child is Node3D and child.has_method("build_with_fallback") and child.has_method("clean_ray"):
+		if (
+			child is Node3D
+			and child.has_method("build_with_fallback")
+			and child.has_method("clean_ray")
+		):
 			out.append(child)
 		out.append_array(_find_overlays(child))
 	return out
@@ -1005,9 +1027,7 @@ func is_clasp_interactive() -> bool:
 func ray_test_surface(origin: Vector3, direction: Vector3) -> Dictionary:
 	if not _built or _medallion == null:
 		return {"hit": false}
-	var hit := _ray_sphere(
-		origin, direction, _medallion.global_position, _radius * _authored_scale
-	)
+	var hit := _ray_sphere(origin, direction, _medallion.global_position, _radius * _authored_scale)
 	if not hit.get("hit", false):
 		return {"hit": false}
 	var local: Vector3 = _medallion.to_local(hit["point"])
@@ -1344,7 +1364,49 @@ func register_authored_conditions(
 			"required_tool": required_tool,
 			"type_id": type_id,
 			"removed": decal.is_cleaned(),
+			# Two-stage chain (data-driven): fully cleaning this condition morphs the decal
+			# into the revealed one (its own tool/tint/texture) instead of removing it.
+			"reveals": _resolve_reveals(repo, condition),
 		}
+
+
+## Builds the reveal payload for a condition's `reveals_condition` chain link, or {}.
+## Resolved at registration (repo in hand) so cleaning needs no data lookups. Each link
+## carries the NEXT link too, so chains of 2+ stages work; a visited set breaks cycles.
+func _resolve_reveals(
+	repo: DataRepository, condition: SurfaceCondition, visited: Array = []
+) -> Dictionary:
+	if repo == null or condition == null or condition.reveals_condition.is_empty():
+		return {}
+	if visited.has(condition.id):
+		return {}  # cycle guard — malformed data must never hang cleaning
+	visited.append(condition.id)
+	var revealed := repo.get_surface_condition(condition.reveals_condition)
+	if revealed == null:
+		return {}
+	return {
+		"type_id": revealed.id,
+		"required_tool": revealed.cleaning_tool,
+		"color": revealed.to_color(),
+		"texture": _condition_texture(revealed),
+		"reveals": _resolve_reveals(repo, revealed, visited),
+	}
+
+
+## The condition art for a journal condition: the PNG in assets/artifact_conditions/
+## whose file name slugs to the condition's id or display name (Mud.png -> mud). Null
+## when no art exists yet — the decal then keeps its current texture, tint changes only.
+static func _condition_texture(condition: SurfaceCondition) -> Texture2D:
+	var dir := DirAccess.open("res://assets/artifact_conditions")
+	if dir == null:
+		return null
+	for file in dir.get_files():
+		if not file.to_lower().ends_with(".png"):
+			continue
+		var slug := _slug(file.get_basename())
+		if slug == condition.id or slug == _slug(condition.display_name):
+			return load("res://assets/artifact_conditions/" + file) as Texture2D
+	return null
 
 
 ## Ray-tests the uncleaned authored decals. Returns {hit, condition_id}.
@@ -1389,6 +1451,9 @@ func authored_working_burst(condition_id: String) -> void:
 
 ## Applies one correct-tool stroke of `power` to an authored condition: fades it a
 ## step and, once fully cleaned, plays the success sparkle. Returns true when cleaned.
+## Two-stage conditions never return true on their outer layer: scrubbing the mud off
+## MORPHS the decal into the revealed condition (new tool, tint, texture) and cleaning
+## continues — only clearing the FINAL link in the chain counts as cleaned.
 func apply_authored_clean(condition_id: String, power: int) -> bool:
 	if not _authored.has(condition_id):
 		return false
@@ -1397,8 +1462,17 @@ func apply_authored_clean(condition_id: String, power: int) -> bool:
 	if decal == null or not decal.has_method("apply_clean"):
 		return false
 	var cleaned: bool = decal.apply_clean(power)
-	if cleaned:
-		entry["removed"] = true
+	if not cleaned:
+		return false
+	var reveals: Dictionary = entry.get("reveals", {})
+	if not reveals.is_empty() and decal.has_method("transform_to"):
+		# Outer layer off — swap the decal to the revealed condition and keep going.
+		decal.transform_to(reveals.get("texture"), reveals.get("color", Color.WHITE))
+		entry["type_id"] = str(reveals.get("type_id", entry["type_id"]))
+		entry["required_tool"] = str(reveals.get("required_tool", ""))
+		entry["reveals"] = reveals.get("reveals", {})
+		return false
+	entry["removed"] = true
 	return cleaned
 
 
@@ -1481,8 +1555,8 @@ func _find_authored_decals(root: Node) -> Array:
 			child is Node3D
 			and child.has_method("condition_slug")
 			and not child.has_meta("data_blemish")  # runtime data-driven blemish, not authored
-			and not child.is_queued_for_deletion()  # a blemish being cleared this frame
-		):
+			and not child.is_queued_for_deletion()
+		):  # a blemish being cleared this frame
 			found.append(child)
 		found.append_array(_find_authored_decals(child))
 	return found
@@ -1681,10 +1755,13 @@ func view_bounding_radius() -> float:
 func _aabb_corner_radius(ab: AABB) -> float:
 	var m := 0.0
 	for i in 8:
-		var c := ab.position + Vector3(
-			ab.size.x if (i & 1) != 0 else 0.0,
-			ab.size.y if (i & 2) != 0 else 0.0,
-			ab.size.z if (i & 4) != 0 else 0.0
+		var c := (
+			ab.position
+			+ Vector3(
+				ab.size.x if (i & 1) != 0 else 0.0,
+				ab.size.y if (i & 2) != 0 else 0.0,
+				ab.size.z if (i & 4) != 0 else 0.0
+			)
 		)
 		m = maxf(m, c.length())
 	return m

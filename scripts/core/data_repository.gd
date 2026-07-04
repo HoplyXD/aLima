@@ -655,6 +655,16 @@ func _validate_cross_references() -> void:
 				"cleaning_tool",
 				"unknown tool reference '%s'" % condition.cleaning_tool
 			)
+		if (
+			not condition.reveals_condition.is_empty()
+			and not surface_conditions.has(condition.reveals_condition)
+		):
+			_validation.add_field_error(
+				"data/journal",
+				condition_id,
+				"reveals_condition",
+				"unknown condition reference '%s'" % condition.reveals_condition
+			)
 
 	for buyer_id in buyer_personas.keys():
 		var persona: BuyerPersona = buyer_personas[buyer_id]

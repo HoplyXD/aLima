@@ -151,13 +151,24 @@ func _add_daily_allowance() -> void:
 		_wallets[persona.id] = buyer_cash(persona.id) + persona.daily_allowance
 
 
-## Tools currently listed for purchase (authored `buyable`).
+## Tools listed in the phone's ONLINE shop (authored `buyable`, shop == "online").
+## The mall's physical tool shop carries a different set — see get_mall_catalog().
 func get_catalog() -> Array[ToolDefinition]:
+	return _catalog_for_shop("online")
+
+
+## Tools sold at the MALL's physical tool shop (authored `buyable`, shop == "mall").
+## Bought in person: no shipment — the tool is carried home and owned immediately.
+func get_mall_catalog() -> Array[ToolDefinition]:
+	return _catalog_for_shop("mall")
+
+
+func _catalog_for_shop(shop: String) -> Array[ToolDefinition]:
 	var out: Array[ToolDefinition] = []
 	var repo := DataRepository.singleton()
 	for tool_id in repo.tool_definitions.keys():
 		var def: ToolDefinition = repo.tool_definitions[tool_id]
-		if def.buyable:
+		if def.buyable and def.shop == shop:
 			out.append(def)
 	out.sort_custom(func(a: ToolDefinition, b: ToolDefinition) -> bool: return a.id < b.id)
 	return out
@@ -170,6 +181,8 @@ func buy(tool_id: String) -> Dictionary:
 	var def := repo.get_tool(tool_id)
 	if def == null or not def.buyable:
 		return {"ok": false, "error": "That tool is not for sale.", "arrival_index": -1}
+	if def.shop == "mall":
+		return {"ok": false, "error": "Only sold in person at the mall.", "arrival_index": -1}
 
 	var loop := GameState.save_state.loop
 	if loop.money < def.cost:
@@ -181,6 +194,26 @@ func buy(tool_id: String) -> Dictionary:
 	SaveService.save_game()
 	EventBus.tool_purchased.emit(tool_id, arrival)
 	return {"ok": true, "error": "", "arrival_index": arrival}
+
+
+## Buys a tool IN PERSON at the mall's tool shop: money out, tool owned immediately
+## (no shipment queue — the player is standing in the store). Returns
+## {ok, error, tool_uid}. Only tools authored with shop == "mall" sell here.
+func buy_in_person(tool_id: String) -> Dictionary:
+	var repo := DataRepository.singleton()
+	var def := repo.get_tool(tool_id)
+	if def == null or not def.buyable or def.shop != "mall":
+		return {"ok": false, "error": "That tool is not sold here.", "tool_uid": ""}
+	var loop := GameState.save_state.loop
+	if loop.money < def.cost:
+		return {"ok": false, "error": "Not enough money.", "tool_uid": ""}
+	loop.money -= def.cost
+	var tools := ToolService.new(GameState, repo)
+	var inst := tools.grant_tool(tool_id)
+	SaveService.save_game()
+	EventBus.tool_purchased.emit(tool_id, _now_index())
+	EventBus.tool_arrived.emit(tool_id, inst.uid)
+	return {"ok": true, "error": "", "tool_uid": inst.uid}
 
 
 ## Pending shipments not yet delivered.
@@ -236,9 +269,7 @@ func get_active_listings() -> Array[MarketplaceListing]:
 
 ## Resolves a listing to SOLD or WITHDRAWN. No-op when there is no listing. Does not
 ## save (the caller owns persistence); idempotent.
-func resolve_listing(
-	uid: String, status: int, price: int = 0, buyer_id: String = ""
-) -> void:
+func resolve_listing(uid: String, status: int, price: int = 0, buyer_id: String = "") -> void:
 	var listing := get_listing(uid)
 	if listing == null:
 		return
@@ -503,15 +534,19 @@ func complete_sale(uid: String, price: int, buyer_id: String) -> Dictionary:
 	if not destination_id.is_empty():
 		_clear_negotiations_for(uid)
 		_remove_instance(uid)
-		loop.pending_meets.append(
-			{
-				"uid": uid,
-				"template_id": inst.template_id,
-				"buyer_id": buyer_id,
-				"price": price,
-				"destination_id": destination_id,
-				"condition": inst.condition,
-			}
+		(
+			loop
+			. pending_meets
+			. append(
+				{
+					"uid": uid,
+					"template_id": inst.template_id,
+					"buyer_id": buyer_id,
+					"price": price,
+					"destination_id": destination_id,
+					"condition": inst.condition,
+				}
+			)
 		)
 		SaveService.save_game()
 		EventBus.meet_scheduled.emit(uid, buyer_id, destination_id)
