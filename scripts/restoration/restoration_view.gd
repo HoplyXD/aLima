@@ -1397,10 +1397,10 @@ func _apply_camera_offset() -> void:
 	var zoom_t := clampf(
 		(_default_fov - _camera.fov) / maxf(0.001, _default_fov - MIN_FOV), 0.0, 1.0
 	)
-	# Manual pan only applies during the stage-2 lens zoom; in stage 1 the camera stays centred.
-	var pan := _camera_pan if _is_zoom_stage_2() else Vector2.ZERO
-	_camera.h_offset = _fov_lean_ndc.x * FOV_LEAN_MAX * zoom_t + pan.x
-	_camera.v_offset = _fov_lean_ndc.y * FOV_LEAN_MAX * zoom_t + pan.y
+	# Manual middle-mouse pan applies at every zoom level (the zoom-to-cursor lean is added on top,
+	# scaled by how far the lens is zoomed).
+	_camera.h_offset = _fov_lean_ndc.x * FOV_LEAN_MAX * zoom_t + _camera_pan.x
+	_camera.v_offset = _fov_lean_ndc.y * FOV_LEAN_MAX * zoom_t + _camera_pan.y
 
 
 ## Clamps the manual pan to a fixed, symmetric world-unit radius around the camera's original centre.
@@ -1417,8 +1417,6 @@ func _clamp_pan() -> void:
 ## Middle-mouse drag: pan the view by moving the camera offset, clamped to a fixed world-unit
 ## limit so the artifact can always be nudged but never pushed entirely off-screen.
 func _pan_camera(relative: Vector2) -> void:
-	if not _is_zoom_stage_2():
-		return  # panning only exists in the stage-2 lens zoom
 	_camera_pan.x -= relative.x * CAMERA_PAN_SPEED
 	_camera_pan.y += relative.y * CAMERA_PAN_SPEED
 	_clamp_pan()
@@ -2149,6 +2147,8 @@ func _bench_object_pick(origin: Vector3, direction: Vector3) -> String:
 	var best_t := INF
 	for entry in candidates:
 		var node: Node3D = entry["node"]
+		if node == null or not node.visible:
+			continue  # a hidden prop (e.g. the journal during the Day 0 tutorial) has no click hitbox
 		var hit := _ray_sphere(origin, direction, node.global_position, float(entry["radius"]))
 		if hit.get("hit", false) and float(hit["t"]) < best_t:
 			best_t = float(hit["t"])

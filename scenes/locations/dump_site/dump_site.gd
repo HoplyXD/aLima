@@ -95,8 +95,15 @@ func _on_fence_activated() -> void:
 func _show_inner_monologue(text: String) -> void:
 	var box: DialogueBox = DIALOGUE_BOX_SCENE.instantiate()
 	add_child(box)
+	# Free the mouse + freeze the player while the monologue is up (like every other yard dialogue),
+	# so the cursor shows during exploration dialogue instead of staying captured for mouse-look.
+	_enter_overlay()
 	box.start([{"name": "inner", "text": text}])
-	box.finished.connect(func() -> void: box.queue_free())
+	box.finished.connect(
+		func() -> void:
+			_exit_overlay()
+			box.queue_free()
+	)
 
 
 func _update_ayla_position() -> void:
@@ -317,9 +324,12 @@ func _generate_heap_collision() -> void:
 		body.collision_mask = 0
 		var shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()
-		box.size = aabb.size * mesh.scale
+		# The box is a CHILD of the mesh, so the mesh's scale (and every parent scale) already applies
+		# via the transform — size/position must be the mesh-LOCAL AABB, not multiplied by mesh.scale
+		# (which double-scaled the box: filling empty space, or missing the heap entirely).
+		box.size = aabb.size
 		shape.shape = box
-		shape.position = aabb.position * mesh.scale + (box.size * 0.5)
+		shape.position = aabb.position + aabb.size * 0.5  # AABB centre, in mesh-local space
 		body.add_child(shape)
 		mesh.add_child(body)
 		body.owner = mesh

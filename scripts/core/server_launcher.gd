@@ -59,9 +59,12 @@ func _launch_server() -> void:
 	if not FileAccess.file_exists(script_path):
 		push_warning("[ServerLauncher] launch script missing: %s" % script_path)
 		return
-	# CreateProcess can't run a .cmd directly, so go through cmd.exe. open_console = true
-	# keeps the server's logs visible (and closeable) like the VS Code terminal did.
-	var pid := OS.create_process("cmd.exe", ["/c", script_path], true)
+	# CreateProcess can't run a .cmd directly, so go through cmd.exe. We launch the server in a
+	# MINIMISED console via `start /min` (window title "aLima Backend") so it stays out of the way but
+	# its logs are still there if you un-minimise it; open_console=false avoids a launcher-window flash.
+	var pid := OS.create_process(
+		"cmd.exe", ["/c", "start", "/min", "aLima Backend", script_path], false
+	)
 	if pid <= 0:
 		push_warning("[ServerLauncher] failed to start the backend (is Node/npm installed?).")
 		return

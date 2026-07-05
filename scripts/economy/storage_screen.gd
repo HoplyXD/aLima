@@ -346,7 +346,7 @@ func _render_artifact_detail(host: VBoxContainer, uid: String) -> void:
 	var action := Button.new()
 	action.focus_mode = Control.FOCUS_ALL
 	if _is_restored(inst):
-		action.text = "Sell for %s" % _peso(_sale_price(inst, template))
+		action.text = "Sell in market"
 		action.pressed.connect(func() -> void: sell_requested.emit(uid))
 	else:
 		var is_target := _tools.get_restore_target() == uid

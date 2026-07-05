@@ -170,12 +170,11 @@ func _spawn_player() -> void:
 	add_child(_player)
 	if _hud != null:
 		_player.scrap_prompt_changed.connect(_hud.set_prompt)
-	# Day 0 (tutorial): always spawn at the gate so the opening shot frames Yuyu.
-	# Otherwise: when arriving from the shop, spawn at the door exit; from anywhere else, use the gate.
+	# Leaving the SHOP always drops the player at the door exit (even during the Day 0 tutorial), so
+	# stepping out is consistent. Any other arrival (from the title / another location) uses the gate.
 	var spawn_point := _player_spawn
-	if not TutorialService.is_tutorial_active():
-		if SpaceManager.previous_space == SpaceManager.Space.SHOP and _player_door_exit != null:
-			spawn_point = _player_door_exit
+	if SpaceManager.previous_space == SpaceManager.Space.SHOP and _player_door_exit != null:
+		spawn_point = _player_door_exit
 	if spawn_point != null:
 		_player.global_position = spawn_point.global_position
 		# The spawn marker's yaw decides where the player faces on arrival, so the

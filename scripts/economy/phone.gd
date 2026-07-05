@@ -499,20 +499,6 @@ func _render_haggle() -> void:
 
 	_app_content.add_child(_make_action("Accept ₱%d" % _negotiation.current_offer, accept_offer))
 
-	# Conversational banter moves (each usable once) — one full-width row each so the
-	# longer labels stay easy to read.
-	var moves := _negotiation.available_moves()
-	if not moves.is_empty():
-		_app_content.add_child(_make_section_label("Quick banter"))
-		var banter_box := VBoxContainer.new()
-		banter_box.add_theme_constant_override("separation", 6)
-		for move_id in moves:
-			var label: String = Negotiation.BANTER_MOVES[move_id]["label"]
-			var b := _make_action(label, func() -> void: haggle_banter(move_id))
-			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			banter_box.add_child(b)
-		_app_content.add_child(banter_box)
-
 	# One free-text box does everything: chat to warm them up, AND make an offer by naming
 	# a price (e.g. "I'll take it for 80 pesos"). The buyer accepts, counters, or walks —
 	# and the current offer updates to match.

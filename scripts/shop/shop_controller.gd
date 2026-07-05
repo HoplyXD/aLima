@@ -576,10 +576,37 @@ func _on_finale_monologue_finished() -> void:
 
 
 func _on_phone_pressed() -> void:
+	# Day 0: Yuyu won't let you sell before you've scanned a piece — the phone stays locked until then.
+	if _needs_scan_first():
+		_show_scan_first_hint()
+		return
 	# The phone opens to its home screen of apps (Marketplace now; selling comes
 	# with the Phase-14 buyer negotiation). It covers the shop and pauses time.
 	_set_interactables_enabled(false)
 	_phone.open()
+
+
+## Day 0 (tutorial) gate: true when Yuyu should stop the player and tell them to scan first. `uid` ""
+## checks whether ANY piece has been scanned (phone gate); a uid checks that specific piece (sell gate).
+func _needs_scan_first(uid: String = "") -> bool:
+	if not TutorialService.is_tutorial_active():
+		return false
+	if not uid.is_empty():
+		return not MarketplaceService.is_scanned(uid)
+	return GameState.save_state.persistent.scanned_records.is_empty()
+
+
+## Yuyu steps in to insist the player scans the artifact before selling it (Day 0 lesson).
+func _show_scan_first_hint() -> void:
+	if _visitor != null:
+		_visitor.texture = YUYU_PORTRAIT
+	_open_dialogue(
+		[
+			"Yuyu: Hold on — scan the piece on the workbench first.",
+			"Prove what it is before you take it to market, ha?",
+		],
+		true
+	)
 
 
 func _on_phone_closed() -> void:
@@ -608,6 +635,10 @@ func _on_storage_restore_requested(_uid: String) -> void:
 ## Storage's Sell button opens the phone/negotiation UI for the chosen artifact
 ## instead of instantly selling it.
 func _on_storage_sell_requested(uid: String) -> void:
+	# Day 0: you can't sell an unscanned piece — Yuyu tells you to scan it first.
+	if _needs_scan_first(uid):
+		_show_scan_first_hint()
+		return
 	# Close storage and open the phone marketplace directly on the buyer picker.
 	_storage_screen.close()
 	_phone.open_buyers(uid)
