@@ -64,30 +64,33 @@ static func _synthesize_template(tid: String, entry: Dictionary) -> ScrapObjectT
 	if vmax <= 0:
 		vmin = 20
 		vmax = 80
-	return ScrapObjectTemplate.from_dictionary(
-		{
-			"id": tid,
-			"display_name": tid.capitalize(),  # "wood_pipe" -> "Wood Pipe"
-			"category": "artifact",
-			"base_rarity": ModelEnums.rarity_name(rarity),
-			"weight_range": [50.0, 250.0],
-			"materials": [],
-			"tags": [],
-			"is_openable": false,
-			"openable_type": "",
-			"required_clean_tool": "",
-			"clean_minigame": "",
-			"clean_completion_threshold": 100,
-			"clean_progress_per_action": 25,
-			"clean_value_bonus": 10,
-			"wrong_tool_condition_damage": 10,
-			"wrong_tool_value_damage": 8,
-			"wrong_tool_feedback": "The wrong tool risks damaging the surface.",
-			"base_value_range": [vmin, maxi(vmin, vmax)],
-			"storage_cost": 1,
-			"can_hold_temporal_echo": false,
-			"deliverable": not bool(entry.get("is_quest", false)),
-		}
+	return (
+		ScrapObjectTemplate
+		. from_dictionary(
+			{
+				"id": tid,
+				"display_name": tid.capitalize(),  # "wood_pipe" -> "Wood Pipe"
+				"category": "artifact",
+				"base_rarity": ModelEnums.rarity_name(rarity),
+				"weight_range": [50.0, 250.0],
+				"materials": [],
+				"tags": [],
+				"is_openable": false,
+				"openable_type": "",
+				"required_clean_tool": "",
+				"clean_minigame": "",
+				"clean_completion_threshold": 100,
+				"clean_progress_per_action": 25,
+				"clean_value_bonus": 10,
+				"wrong_tool_condition_damage": 10,
+				"wrong_tool_value_damage": 8,
+				"wrong_tool_feedback": "The wrong tool risks damaging the surface.",
+				"base_value_range": [vmin, maxi(vmin, vmax)],
+				"storage_cost": 1,
+				"can_hold_temporal_echo": false,
+				"deliverable": not bool(entry.get("is_quest", false)),
+			}
+		)
 	)
 
 
@@ -136,12 +139,17 @@ static func _read_scene(scene_path: String) -> void:
 	if tid.is_empty():
 		tid = _FILENAME_ALIAS.get(stem, stem)
 	var npc_idx := clampi(int(obj.quest_npc), 0, NPC_IDS.size() - 1)
+	# ORANGE_QUEST (5) is the designer's one-click "this is a quest item" rarity choice:
+	# it flags is_quest and inherits the data rarity — never a real 6th tier (§4-E).
+	var raw_rarity := int(obj.artifact_rarity)
+	var is_orange_quest := raw_rarity == RestorationObject3D.ArtifactRarity.ORANGE_QUEST
 	_entries[tid] = {
 		"scene": packed,
-		"rarity": int(obj.artifact_rarity),  # -1 == INHERIT (use the data template's rarity)
+		# -1 == INHERIT (use the data template's rarity)
+		"rarity": -1 if is_orange_quest else raw_rarity,
 		"value_min": obj.base_value_min,
 		"value_max": obj.base_value_max,
-		"is_quest": obj.is_quest_item,
+		"is_quest": obj.is_quest_item or is_orange_quest,
 		"npc": NPC_IDS[npc_idx],
 		"quest_number": obj.quest_number,
 		"scanner": _read_scanner_data(root),
@@ -249,7 +257,11 @@ static func quest_artifacts(npc_id: String, quest_number: int) -> Array[String]:
 	var out: Array[String] = []
 	for tid in _entries.keys():
 		var e: Dictionary = _entries[tid]
-		if e.get("is_quest", false) and e.get("npc", "") == npc_id and int(e.get("quest_number", 0)) == quest_number:
+		if (
+			e.get("is_quest", false)
+			and e.get("npc", "") == npc_id
+			and int(e.get("quest_number", 0)) == quest_number
+		):
 			out.append(tid)
 	out.sort()  # deterministic order before any seeded pick
 	return out
@@ -257,7 +269,9 @@ static func quest_artifacts(npc_id: String, quest_number: int) -> Array[String]:
 
 ## One artifact template id for the (npc_id, quest_number) step, chosen via `rng` when several share
 ## the step. Empty string when none is assigned.
-static func random_quest_artifact(npc_id: String, quest_number: int, rng: RandomNumberGenerator) -> String:
+static func random_quest_artifact(
+	npc_id: String, quest_number: int, rng: RandomNumberGenerator
+) -> String:
 	var pool := quest_artifacts(npc_id, quest_number)
 	if pool.is_empty():
 		return ""

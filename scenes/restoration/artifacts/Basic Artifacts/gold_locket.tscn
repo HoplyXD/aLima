@@ -11,9 +11,10 @@
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_lhc0q"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_7ho7m"]
 [ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Black Tarnish.png" id="ovl_tex_black_tarnish"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
 [ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
@@ -73,7 +74,6 @@ transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("3_dust")
 opacity = 0.5
-use_own_uvs = true
 auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 7.22
@@ -127,20 +127,25 @@ price_min = 500
 price_max = 700
 uncertainty_notes = "Metal composition is inferred from surface color and tarnish, not assay."
 
+[node name="OverlayBlackTarnish" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_black_tarnish")
+layer_order = 17
+
 [node name="OverlayGrease" type="Node3D" parent="."]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_grease")
 layer_order = 24
 
-[node name="OverlayMold" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_mold")
-layer_order = 23
-
 [node name="OverlayMud" type="Node3D" parent="."]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mud")
 layer_order = 28
+
+[node name="OverlayOldPaint" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_old_paint")
+layer_order = 16
 
 [node name="OverlaySaltCrust" type="Node3D" parent="."]
 script = ExtResource("ovl_script")

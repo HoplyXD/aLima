@@ -25,7 +25,8 @@ script = ExtResource("2_config")
 max_durability = 160
 clean_radius = 0.12
 cleans = {
-"mold": 50
+"mold": 50,
+"moss": 45
 }
 
 [node name="CleanPoint" type="Marker3D" parent="."]

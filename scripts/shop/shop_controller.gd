@@ -133,6 +133,7 @@ func _ready() -> void:
 	_phone.closed.connect(_on_phone_closed)
 	_storage_screen.closed.connect(_on_storage_closed)
 	_storage_screen.restore_requested.connect(_on_storage_restore_requested)
+	_storage_screen.sell_requested.connect(_on_storage_sell_requested)
 	_showcase.closed.connect(_on_showcase_closed)
 	_register_demo_menu_action()
 	# The restoration bench opens the same shared journal / marketplace / storage overlays.
@@ -604,6 +605,14 @@ func _on_storage_restore_requested(_uid: String) -> void:
 	_on_workbench_pressed()
 
 
+## Storage's Sell button opens the phone/negotiation UI for the chosen artifact
+## instead of instantly selling it.
+func _on_storage_sell_requested(uid: String) -> void:
+	# Close storage and open the phone marketplace directly on the buyer picker.
+	_storage_screen.close()
+	_phone.open_buyers(uid)
+
+
 ## Opens the dialogue box, optionally showing the visitor sprite, and freezes the
 ## shop (clock + action buttons) until the conversation ends. The clock pause uses
 ## the DayClock pause-ownership API so it composes with other full-screen systems.
@@ -914,10 +923,11 @@ func _on_dialogue_finished() -> void:
 	# After a route's door conversation, open its scripted showcase if a beat is due.
 	if not finished_route_id.is_empty():
 		_maybe_open_showcase(finished_route_id)
-	# Sam quest: after talking to Sam with the salakot, unlock archeologist house
+	# Sam quest: after talking to Sam with the salakot, schedule archeologist house
+	# for the NEXT loop (not immediate) so the player finishes the current loop normally.
 	if finished_route_id == "sam":
-		QuestService.unlock_location("archeologist_house")
-		SpaceManager.go_to_archeologist_house()
+		QuestService.schedule_location_unlock_next_loop("archeologist_house")
+		return
 
 
 ## Opens the route's scripted showcase when a beat is authored and ready for the

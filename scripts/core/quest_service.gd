@@ -128,6 +128,21 @@ func unlock_location(location_id: String) -> void:
 		EventBus.emit_signal("location_unlocked", location_id)
 
 
+## Schedules a location to unlock on the next loop reset instead of immediately.
+func schedule_location_unlock_next_loop(location_id: String) -> void:
+	var p := GameState.save_state.persistent
+	if not p.pending_unlocked_locations.has(location_id):
+		p.pending_unlocked_locations.append(location_id)
+
+
+## Applies any pending location unlocks (called by LoopController on loop reset).
+func apply_pending_location_unlocks() -> void:
+	var p := GameState.save_state.persistent
+	for location_id in p.pending_unlocked_locations:
+		unlock_location(location_id)
+	p.pending_unlocked_locations.clear()
+
+
 ## Checks if a location is unlocked (including the base locations).
 func is_location_unlocked(location_id: String) -> bool:
 	var base_locations := ["shop", "yard", "mall"]  ## Always available.

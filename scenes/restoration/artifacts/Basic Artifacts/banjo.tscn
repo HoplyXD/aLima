@@ -13,14 +13,6 @@
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_gqn1h"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_28pj5"]
 [ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="13_ktqpn"]
-[ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Verdigris.png" id="ovl_tex_verdigris"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
 
 [node name="Banjo" type="Node3D" unique_id=456840677]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, -0.11943139, 0)
@@ -75,7 +67,6 @@ condition_texture = ExtResource("9_dv4y8")
 opacity = 0.5
 coverage_min = 70.0
 coverage_max = 100.0
-use_own_uvs = true
 auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 7.22
@@ -123,47 +114,12 @@ own_uv_aspect = 0.09
 
 [node name="ScannerData" type="Node" parent="." unique_id=1906226984]
 script = ExtResource("13_ktqpn")
-type = "plate"
+type = "stringed instrument"
 period = "early to mid-20th century"
-materials = Array[String](["brass"])
-markings = Array[String](["tarnish", "clapper wear", "cast seam"])
-condition_note = "Cast brass bell with overall tarnish; clapper swings freely and the tone is intact."
-cultural_relevance = "A common hand bell of the sort used in schools, chapels, and homes. The form is ordinary; any value rests on provenance rather than the object."
-price_min = 20
-price_max = 70
-uncertainty_notes = "No foundry mark; date estimated from casting and wear."
-
-[node name="OverlayGrease" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_grease")
-layer_order = 24
-
-[node name="OverlayMold" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_mold")
-layer_order = 23
-
-[node name="OverlayMud" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_mud")
-layer_order = 28
-
-[node name="OverlaySaltCrust" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_salt_crust")
-layer_order = 26
-
-[node name="OverlaySoot" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_soot")
-layer_order = 27
-
-[node name="OverlayVerdigris" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_verdigris")
-layer_order = 18
-
-[node name="OverlayWax" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_wax")
-layer_order = 25
+materials = Array[String](["wood", "metal"])
+markings = Array[String](["fingerboard wear", "resonator patina", "tuning peg oxidation"])
+condition_note = "Wooden rim and neck with metal resonator and strings; fingerboard shows honest wear from decades of picking."
+cultural_relevance = "A Filipino folk banjo of the sort used in rural string bands. The wooden body and metal resonator give it a bright, cutting tone."
+price_min = 80
+price_max = 250
+uncertainty_notes = "No maker's label; date estimated from construction style and wear pattern."

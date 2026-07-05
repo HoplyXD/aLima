@@ -23,6 +23,9 @@ func _ready() -> void:
 	# Let the base scrapyard set up player, HUD, dialogue, etc.
 	super._ready()
 
+	# Add collision to scrap heaps so the player can't walk through them.
+	_generate_heap_collision()
+
 	# Remove journal access — the journal stays in the shop
 	if _hud != null:
 		if _hud.journal_pressed.is_connected(_open_journal_overlay):
@@ -295,3 +298,42 @@ func _get_dump_site_bounds() -> Dictionary:
 		"size_x": 80.0,
 		"size_z": 68.0,
 	}
+
+
+## Adds box collision to every scrap heap mesh under MapRoot so the player can't walk through them.
+## Heaps are MeshInstance3D nodes whose names start with "Heap_" or "ScrapHeap_".
+func _generate_heap_collision() -> void:
+	var map_root := get_node_or_null("MapRoot/DumpSiteMap")
+	if map_root == null:
+		return
+	for child in _find_heap_meshes(map_root):
+		var mesh := child as MeshInstance3D
+		if mesh.mesh == null:
+			continue
+		var aabb := mesh.mesh.get_aabb()
+		var body := StaticBody3D.new()
+		body.name = "%s_Collision" % mesh.name
+		body.collision_layer = 1
+		body.collision_mask = 0
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = aabb.size * mesh.scale
+		shape.shape = box
+		shape.position = aabb.position * mesh.scale + (box.size * 0.5)
+		body.add_child(shape)
+		mesh.add_child(body)
+		body.owner = mesh
+		shape.owner = mesh
+
+
+## Recursively finds all MeshInstance3D nodes whose names start with Heap_ or ScrapHeap_.
+func _find_heap_meshes(root: Node) -> Array[MeshInstance3D]:
+	var result: Array[MeshInstance3D] = []
+	for child in root.get_children():
+		if child is MeshInstance3D:
+			var name := str(child.name)
+			if name.begins_with("Heap_") or name.begins_with("ScrapHeap_"):
+				result.append(child)
+		if child.get_child_count() > 0:
+			result.append_array(_find_heap_meshes(child))
+	return result

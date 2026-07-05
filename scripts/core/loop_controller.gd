@@ -131,6 +131,7 @@ func complete_tutorial() -> void:
 	GameState.reset_loop_state()
 	_grant_starting_kit()
 	_plan_carrier_placements()
+	QuestService.apply_pending_location_unlocks()
 	DayClock.reset()
 	DayClock.loop_index = GameState.loop_index
 	var save_result := SaveService.save_game()
@@ -155,6 +156,7 @@ func _perform_loop_reset() -> void:
 	GameState.new_run()
 	_grant_starting_kit()
 	_plan_carrier_placements()
+	QuestService.apply_pending_location_unlocks()
 	DayClock.loop_index = GameState.loop_index
 	DayClock.start_day(1)
 	var save_result := SaveService.save_game()

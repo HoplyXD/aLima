@@ -13,14 +13,12 @@
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_wneg4"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_eb6n0"]
 [ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
-[ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Verdigris.png" id="ovl_tex_verdigris"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
+[ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
 
 [sub_resource type="StandardMaterial3D" id="mask_gold"]
 albedo_color = Color(0.85, 0.7, 0.3, 1)
@@ -141,11 +139,6 @@ script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_grease")
 layer_order = 24
 
-[node name="OverlayMold" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_mold")
-layer_order = 23
-
 [node name="OverlayMud" type="Node3D" parent="."]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mud")
@@ -160,11 +153,6 @@ layer_order = 26
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_soot")
 layer_order = 27
-
-[node name="OverlayVerdigris" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_verdigris")
-layer_order = 18
 
 [node name="OverlayWax" type="Node3D" parent="."]
 script = ExtResource("ovl_script")

@@ -106,6 +106,7 @@ class PersistentState:
 	var upkeep_learned: Array[String] = []
 	## Locations unlocked across loops (e.g. "dump_site", "archeologist_house").
 	var unlocked_locations: Array[String] = []
+	var pending_unlocked_locations: Array[String] = []
 	## Quest IDs that have been completed (persist across loops).
 	var completed_quests: Array[String] = []
 	## Quest progress: quest_id -> progress string (e.g. "started", "found_item", "completed").
@@ -137,6 +138,7 @@ class PersistentState:
 		p.returns = SaveState._as_array(data.get("returns", []))
 		p.upkeep_learned = ModelUtils.as_string_array(data.get("upkeep_learned"))
 		p.unlocked_locations = ModelUtils.as_string_array(data.get("unlocked_locations"))
+		p.pending_unlocked_locations = ModelUtils.as_string_array(data.get("pending_unlocked_locations"))
 		p.completed_quests = ModelUtils.as_string_array(data.get("completed_quests"))
 		p.quest_progress = data.get("quest_progress", {}) as Dictionary
 		p.day1_intro_completed = ModelUtils.as_bool(data.get("day1_intro_completed"))
@@ -166,6 +168,7 @@ class PersistentState:
 			"best_sale": best_sale.duplicate(true),
 			"returns": returns.duplicate(true),
 			"upkeep_learned": upkeep_learned.duplicate(),
+			"pending_unlocked_locations": pending_unlocked_locations.duplicate(),
 			"unlocked_locations": unlocked_locations.duplicate(),
 			"completed_quests": completed_quests.duplicate(),
 			"quest_progress": quest_progress.duplicate(),

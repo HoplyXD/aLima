@@ -37,6 +37,10 @@ const SPACE_SCENES := {
 ## launcher, so this defaults to SHOP and stays SHOP while on the title.
 var current_space: Space = Space.SHOP
 
+## The space we just came from (set on every go_to transition). Used so scenes
+## can decide which spawn point to use (e.g. shop door vs scrapyard gate).
+var previous_space: Space = Space.SHOP
+
 ## True while the title screen is showing. Reset on the first shop entry.
 var _on_title: bool = true
 
@@ -55,6 +59,7 @@ func go_to(space: Space) -> void:
 		return
 	# Any gameplay space leaves the title (a fresh save can open in the yard).
 	_on_title = false
+	previous_space = current_space
 	current_space = space
 	_load(SPACE_SCENES[space])
 	space_changed.emit(current_space)
@@ -84,6 +89,11 @@ func go_to_dump_site() -> void:
 		return
 	if not QuestService.is_location_unlocked("dump_site"):
 		push_warning("SpaceManager: dump site is not unlocked yet")
+		return
+	# Dump Site is only open on days 3 and 4.
+	var day := DayClock.get_day()
+	if day < 3 or day > 4:
+		push_warning("SpaceManager: dump site is only open on days 3-4 (today is day %d)" % day)
 		return
 	go_to(Space.DUMP_SITE)
 

@@ -13,6 +13,11 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="11_water"]
 [ext_resource type="Texture2D" uid="uid://dfjm4i3j7utu1" path="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/gltf/woodpipe01_castletexture.png" id="12_pipetex"]
 [ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Dark Varnish.png" id="ovl_tex_dark_varnish"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Moss.png" id="ovl_tex_moss"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wood Rot.png" id="ovl_tex_wood_rot"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Woodworm.png" id="ovl_tex_woodworm"]
 [ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
@@ -69,8 +74,7 @@ overlay_mesh = ExtResource("5_b6n8a")
 condition_texture = ExtResource("8_b6n8a")
 opacity = 0.3
 coverage_max = 100.0
-uv2_tiling = 2.0
-own_uv_tiling = 7.22
+auto_unwrap = true
 
 [node name="WaterStainOverlay" parent="." unique_id=1615825983 instance=ExtResource("4_iah84")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
@@ -79,8 +83,8 @@ condition_texture = ExtResource("11_water")
 condition_id = "water_stain"
 layer_order = 15
 coverage_max = 100.0
-use_own_uvs = true
-uv2_tiling = 2.0
+auto_unwrap = true
+uv2_tiling = 0.1
 
 [node name="GrimeOverlay" parent="." unique_id=1669138805 instance=ExtResource("4_iah84")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
@@ -89,7 +93,7 @@ condition_texture = ExtResource("9_grime")
 condition_id = "dirt"
 layer_order = 28
 coverage_max = 100.0
-use_own_uvs = true
+auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 6.41
 
@@ -117,6 +121,11 @@ price_max = 90
 confidence = 2
 uncertainty_notes = "Maker and owner are unknown; dating is from wear and carving style."
 
+[node name="OverlayDarkVarnish" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_dark_varnish")
+layer_order = 15
+
 [node name="OverlayGrease" type="Node3D" parent="."]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_grease")
@@ -127,10 +136,20 @@ script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mold")
 layer_order = 23
 
+[node name="OverlayMoss" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_moss")
+layer_order = 21
+
 [node name="OverlayMud" type="Node3D" parent="."]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mud")
 layer_order = 28
+
+[node name="OverlayOldPaint" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_old_paint")
+layer_order = 16
 
 [node name="OverlaySaltCrust" type="Node3D" parent="."]
 script = ExtResource("ovl_script")
@@ -146,3 +165,13 @@ layer_order = 27
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_wax")
 layer_order = 25
+
+[node name="OverlayWoodRot" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_wood_rot")
+layer_order = 12
+
+[node name="OverlayWoodworm" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_woodworm")
+layer_order = 11

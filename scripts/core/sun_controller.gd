@@ -24,8 +24,8 @@ const DAY0_PHASES := {
 	"ride_to_mall": 0.52,
 	"board_tricycle": 0.52,
 	"deliver_to_buyer": 0.55,
-	"return_to_shop": 0.92,
-	"enter_the_shop": 0.94,
+	"return_to_shop": 0.60,
+	"enter_the_shop": 0.92,
 	"journal_finale": 0.96,
 }
 

@@ -253,6 +253,12 @@ func open() -> void:
 	_update_clock()
 	_populate_instances()
 	_log("open(): %d restorable instance(s): %s" % [_instance_uids.size(), str(_instance_uids)])
+	# Day 0 (tutorial): hide the journal — the player hasn't earned it yet.
+	var tutorial_active := TutorialService.is_tutorial_active()
+	if _journal_button != null:
+		_journal_button.visible = not tutorial_active
+	if _journal_prop != null:
+		_journal_prop.visible = not tutorial_active
 	if _instance_uids.is_empty():
 		_show_empty_state()
 	else:
@@ -1202,7 +1208,7 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	# The scan button is always available; the scan itself reports "too dirty" below the threshold.
 	_scan_button.visible = true
 	if is_clean:
-		_clasp_prompt.text = "Pendant is clean — scan and judge, or click the clasp to open."
+		_clasp_prompt.text = "%s is clean — scan and judge, or click the clasp to open." % template.display_name
 	elif is_open:
 		_clasp_prompt.visible = false
 

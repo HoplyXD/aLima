@@ -49,6 +49,7 @@ const INSPECTION_OVERLAY_SCENE := preload("res://scenes/ui/item_inspection_overl
 @export var merge_map_collision: bool = true
 
 @onready var _player_spawn: Marker3D = $Anchors/PlayerSpawn
+@onready var _player_door_exit: Marker3D = $Anchors/PlayerDoorExit
 @onready var _door_return: Interactable3D = $Anchors/DoorReturn
 @onready var _ayla_anchor: Marker3D = $Anchors/AylaAnchor
 @onready var _ayla_sprite: Sprite3D = $Anchors/AylaAnchor/Ayla
@@ -169,13 +170,19 @@ func _spawn_player() -> void:
 	add_child(_player)
 	if _hud != null:
 		_player.scrap_prompt_changed.connect(_hud.set_prompt)
-	if _player_spawn != null:
-		_player.global_position = _player_spawn.global_position
+	# Day 0 (tutorial): always spawn at the gate so the opening shot frames Yuyu.
+	# Otherwise: when arriving from the shop, spawn at the door exit; from anywhere else, use the gate.
+	var spawn_point := _player_spawn
+	if not TutorialService.is_tutorial_active():
+		if SpaceManager.previous_space == SpaceManager.Space.SHOP and _player_door_exit != null:
+			spawn_point = _player_door_exit
+	if spawn_point != null:
+		_player.global_position = spawn_point.global_position
 		# The spawn marker's yaw decides where the player faces on arrival, so the
 		# designer can aim the Day 0 opening shot at Yuyu/the yard in the editor.
 		# Must go through set_look_yaw so the mouse-look target matches (otherwise
 		# the controller snaps back to facing -Z on the first physics frame).
-		_player.face_like(_player_spawn)
+		_player.face_like(spawn_point)
 
 
 func _create_tutorial_glue() -> TutorialGlue:
@@ -259,7 +266,20 @@ func _nearest_scrap_item() -> Node3D:
 func _connect_return_door() -> void:
 	if _door_return == null:
 		return
-	_door_return.activated.connect(SpaceManager.go_to_shop)
+	_door_return.activated.connect(_on_return_door_activated)
+
+
+func _on_return_door_activated() -> void:
+	# Day 0 tutorial: the door is locked until the player hands scrap to Ayla.
+	# The "intro_greeting" step completes on scrap_submitted; after that, "head_inside"
+	# tells the player to go inside. Until scrap is submitted, the door stays locked.
+	if TutorialService.is_tutorial_active():
+		var step_id := TutorialService.current_step_id()
+		if step_id == "intro_greeting":
+			if _hud != null:
+				_hud.set_prompt("Find scrap and hand it to Ayla first.")
+			return
+	SpaceManager.go_to_shop()
 
 
 func _connect_hud() -> void:
@@ -714,8 +734,14 @@ func _on_ayla_sort_ready_yard(_day: int, _hour: int) -> void:
 
 ## Hides/disables yard Ayla when her sorted batch is ready at the shop door;
 ## she reappears once the player returns to the yard after the sort is consumed.
+## Also hides her during Day 0 sunset (she is not at the gate when the player returns).
 func _refresh_ayla_presence() -> void:
 	var present := not AylaService.is_sort_ready()
+	# Day 0 sunset: Alya is not at the gate when the player returns from the mall.
+	if TutorialService.is_tutorial_active():
+		var step_id := TutorialService.current_step_id()
+		if step_id == "enter_the_shop" or step_id == "journal_finale":
+			present = false
 	if _ayla_sprite != null:
 		_ayla_sprite.visible = present
 	if _ayla_interactable != null:

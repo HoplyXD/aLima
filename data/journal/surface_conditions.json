@@ -153,6 +153,67 @@
       "cleaning_tool": "damp_cloth",
       "description": "A white crust of sea salt. Dissolve it gently with a damp cloth.",
       "value_reduction": 10
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "black_tarnish",
+      "display_name": "Black Tarnish",
+      "category": "corrosion",
+      "color": "#23211E",
+      "cleaning_tool": "polishing_cloth",
+      "description": "Heavy silver sulfide, near-black. Buff through it — ordinary tarnish still waits underneath.",
+      "value_reduction": 16,
+      "reveals_condition": "tarnish"
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "wood_rot",
+      "display_name": "Wood Rot",
+      "category": "structural_damage",
+      "color": "#4A3B28",
+      "cleaning_tool": "consolidant",
+      "description": "Soft, decayed timber. Stabilise the fibres with consolidant before they crumble.",
+      "value_reduction": 25
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "woodworm",
+      "display_name": "Woodworm",
+      "category": "structural_damage",
+      "color": "#6B5B45",
+      "cleaning_tool": "consolidant",
+      "description": "Pinholes and frass from wood-boring beetles. Treat and fill with consolidant.",
+      "value_reduction": 20
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "moss",
+      "display_name": "Moss",
+      "category": "accretion",
+      "color": "#4F7A3C",
+      "cleaning_tool": "mold_remover",
+      "description": "Green growth from years outdoors. Lift it with the mold remover.",
+      "value_reduction": 12
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "old_paint",
+      "display_name": "Old Paint",
+      "category": "accretion",
+      "color": "#8A4A5C",
+      "cleaning_tool": "solvent",
+      "description": "A careless coat of house paint over the original surface. Dissolve it with solvent.",
+      "value_reduction": 10
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "dark_varnish",
+      "display_name": "Dark Varnish",
+      "category": "staining",
+      "color": "#5C4326",
+      "cleaning_tool": "solvent",
+      "description": "Varnish gone almost opaque with age. Thin it back with solvent to find the grain.",
+      "value_reduction": 12
     }
   ]
 }

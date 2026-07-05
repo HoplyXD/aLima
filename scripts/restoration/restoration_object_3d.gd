@@ -7,8 +7,13 @@ extends Node3D
 ## spawns, so dropping a new scene in scenes/restoration/artifacts/ adds it to the game with no code.
 
 ## Rarity tiers, plus INHERIT (= use the matching data template's rarity, so existing artifacts keep
-## their authored rarity until a designer overrides it on the scene).
-enum ArtifactRarity { INHERIT = -1, WHITE = 0, GREEN = 1, BLUE = 2, PURPLE = 3, GOLD = 4 }
+## their authored rarity until a designer overrides it on the scene). ORANGE_QUEST is NOT a real
+## rarity tier (§4-E keeps the five-tier legend): picking it marks the artifact as a QUEST item
+## (orange UI, unsellable to normal buyers, out of the random pool) and inherits the data rarity —
+## a one-click way to flag quest artifacts without touching the checkbox + tier separately.
+enum ArtifactRarity {
+	INHERIT = -1, WHITE = 0, GREEN = 1, BLUE = 2, PURPLE = 3, GOLD = 4, ORANGE_QUEST = 5
+}
 
 ## The five quest-giving NPCs an artifact can be assigned to (ids match data/routes/routes.json).
 enum QuestNpc { AUNTIE, ARTISAN, SCAVENGER, ARCHEOLOGIST, BUYER }
@@ -775,51 +780,71 @@ func clean_overlays_ray(origin: Vector3, direction: Vector3) -> bool:
 	return false
 
 
-## Cleans overlays with a REAL tool: finds the outermost overlay the ray meets whose condition the
-## tool can clean (`cleans`{condition_id: power 0-100}), and fades it by that power at `radius_frac`.
-## Returns {cleaned, condition_id, fully_cleaned} on success, or {cleaned:false, wrong_tool} when the
-## ray meets overlays but the tool can clean none of them.
+## Cleans overlays with a REAL tool. A single wipe treats EVERY overlay the ray meets
+## whose condition the tool can clean (`cleans`{condition_id: power 0-100}), each at its
+## own power — so a multi-condition tool (damp cloth on dust + grime, soap on mud/soot/
+## grease) clears all its matching layers in one stroke instead of one per pass.
+## Returns {cleaned, condition_id, conditions, fully_cleaned, point[, revealed]} when the
+## tool treats anything here, or {cleaned:false, wrong_tool} when the ray meets overlays
+## but the tool can clean none of them.
 func clean_overlays_with_tool(
 	origin: Vector3, direction: Vector3, cleans: Dictionary, radius_frac: float
 ) -> Dictionary:
 	var overlays := _find_overlays(self)
 	overlays.sort_custom(func(a: Node, b: Node) -> bool: return a.layer_order > b.layer_order)
 	var any_hit := false
+	var treated := false
+	var any_changed := false
+	var any_fully := false
+	var conditions: Array[String] = []
+	var first_point: Variant = null
+	var revealed_id := ""
 	for overlay in overlays:
 		if not overlay.is_built() or not overlay.ray_hits(origin, direction):
 			continue
 		any_hit = true
 		var cond := String(overlay.get_condition_id())
 		var power := int(cleans.get(cond, 0))
-		if power > 0:
-			# Only counts as a clean (puff + wear) if dirt actually came off here — scrubbing an
-			# already-clean spot does nothing.
-			var changed: bool = overlay.clean_ray(
-				origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac
-			)
-			var fully: bool = overlay.cleaned_fraction() >= 0.999
-			var out := {
-				"cleaned": changed,
-				"condition_id": cond,
-				"fully_cleaned": fully,
-				"point": overlay.ray_hit_point(origin, direction),
-			}
-			# Two-stage chain (data-driven): fully cleaning a chained condition MORPHS the
-			# overlay into the revealed one (its own texture + tool) instead of finishing.
-			if fully and overlay.has_method("transform_to_condition"):
-				var condition := _match_condition(DataRepository.singleton(), cond)
-				if condition != null and not condition.reveals_condition.is_empty():
-					var revealed: SurfaceCondition = (
-						DataRepository
-						. singleton()
-						. get_surface_condition(condition.reveals_condition)
-					)
-					if revealed != null:
-						overlay.transform_to_condition(revealed.id, _condition_texture(revealed))
-						out["fully_cleaned"] = false
-						out["revealed"] = revealed.id
-			return out
-	return {"cleaned": false, "wrong_tool": any_hit}
+		if power <= 0:
+			continue
+		treated = true
+		if not conditions.has(cond):
+			conditions.append(cond)
+		if first_point == null:
+			first_point = overlay.ray_hit_point(origin, direction)
+		# Only counts as a clean (puff + wear) if dirt actually came off here — scrubbing an
+		# already-clean spot does nothing.
+		var changed: bool = overlay.clean_ray(
+			origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac
+		)
+		any_changed = any_changed or changed
+		var fully: bool = overlay.cleaned_fraction() >= 0.999
+		# Two-stage chain (data-driven): fully cleaning a chained condition MORPHS the
+		# overlay into the revealed one (its own texture + tool) instead of finishing.
+		if fully and overlay.has_method("transform_to_condition"):
+			var condition := _match_condition(DataRepository.singleton(), cond)
+			if condition != null and not condition.reveals_condition.is_empty():
+				var revealed: SurfaceCondition = DataRepository.singleton().get_surface_condition(
+					condition.reveals_condition
+				)
+				if revealed != null:
+					overlay.transform_to_condition(revealed.id, _condition_texture(revealed))
+					fully = false
+					if revealed_id.is_empty():
+						revealed_id = revealed.id
+		any_fully = any_fully or fully
+	if not treated:
+		return {"cleaned": false, "wrong_tool": any_hit}
+	var out := {
+		"cleaned": any_changed,
+		"condition_id": conditions[0] if not conditions.is_empty() else "",
+		"conditions": conditions,
+		"fully_cleaned": any_fully,
+		"point": first_point,
+	}
+	if not revealed_id.is_empty():
+		out["revealed"] = revealed_id
+	return out
 
 
 ## A small dust puff burst at a WORLD point on the artifact (the spot the tool just cleaned).

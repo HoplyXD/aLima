@@ -13,10 +13,10 @@
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_qs3xv"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_awa71"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
 [ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
 [ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
@@ -75,7 +75,6 @@ transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
 overlay_mesh = ExtResource("5_8j547")
 condition_texture = ExtResource("3_dust")
 opacity = 0.5
-use_own_uvs = true
 auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 7.22
@@ -119,7 +118,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=308950381]
 script = ExtResource("scannerdata_node")
 type = "brass hand bell"
 period = "early to mid-20th century"
@@ -129,7 +128,6 @@ condition_note = "Cast brass bell with overall tarnish; clapper swings freely an
 cultural_relevance = "A common hand bell of the sort used in schools, chapels, and homes. The form is ordinary; any value rests on provenance rather than the object."
 price_min = 20
 price_max = 70
-confidence = 1
 uncertainty_notes = "No foundry mark; date estimated from casting and wear."
 
 [node name="OverlayGrease" type="Node3D" parent="."]
@@ -137,15 +135,15 @@ script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_grease")
 layer_order = 24
 
-[node name="OverlayMold" type="Node3D" parent="."]
-script = ExtResource("ovl_script")
-condition_texture = ExtResource("ovl_tex_mold")
-layer_order = 23
-
 [node name="OverlayMud" type="Node3D" parent="."]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mud")
 layer_order = 28
+
+[node name="OverlayOldPaint" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_old_paint")
+layer_order = 16
 
 [node name="OverlaySaltCrust" type="Node3D" parent="."]
 script = ExtResource("ovl_script")

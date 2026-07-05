@@ -22,6 +22,9 @@ signal closed
 ## Emitted when the player presses Restore on an artifact, so the shop can open the
 ## workbench on the chosen target.
 signal restore_requested(uid: String)
+## Emitted when the player presses Sell on a restored artifact, so the shop can
+## open the phone/negotiation UI instead of instantly selling.
+signal sell_requested(uid: String)
 
 const DETAIL_WIDTH: float = 360.0
 const BOX_MIN: Vector2 = Vector2(164, 196)
@@ -344,7 +347,7 @@ func _render_artifact_detail(host: VBoxContainer, uid: String) -> void:
 	action.focus_mode = Control.FOCUS_ALL
 	if _is_restored(inst):
 		action.text = "Sell for %s" % _peso(_sale_price(inst, template))
-		action.pressed.connect(func() -> void: sell_artifact(uid))
+		action.pressed.connect(func() -> void: sell_requested.emit(uid))
 	else:
 		var is_target := _tools.get_restore_target() == uid
 		action.text = "Restoring…" if is_target else "Restore"

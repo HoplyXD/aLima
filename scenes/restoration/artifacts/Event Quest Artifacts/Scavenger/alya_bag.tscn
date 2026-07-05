@@ -70,7 +70,6 @@ condition_texture = ExtResource("9_iy6wf")
 opacity = 0.5
 coverage_min = 70.0
 coverage_max = 100.0
-use_own_uvs = true
 auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 7.22

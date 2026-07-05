@@ -16,6 +16,7 @@ script = ExtResource("1_config")
 max_durability = 200
 clean_radius = 0.13
 cleans = {
+"black_tarnish": 45,
 "tarnish": 60
 }
 

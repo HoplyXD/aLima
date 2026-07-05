@@ -81,6 +81,7 @@ func current_step_index() -> int:
 
 
 func advance() -> void:
+	_ensure_loaded()
 	if not is_day1_intro_active():
 		return
 	var idx := current_step_index()

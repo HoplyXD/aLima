@@ -35,6 +35,8 @@ func open(travel: TravelService = null) -> void:
 	_travel = travel if travel != null else TravelService.new()
 	_rebuild_buttons()
 	visible = true
+	if DisplayServer.get_name() != "headless":
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if _buttons_box.get_child_count() > 0:
 		(_buttons_box.get_child(0) as Button).grab_focus()
 	else:
@@ -45,6 +47,8 @@ func close() -> void:
 	if not visible:
 		return
 	visible = false
+	if DisplayServer.get_name() != "headless":
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	closed.emit()
 
 
