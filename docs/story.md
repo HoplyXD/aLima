@@ -6,19 +6,24 @@
 > this document. Nothing here is shipped until:
 >
 > - [ ] **Team read-through and approval** of the finalized flow (do not self-certify).
-> - [ ] **Native-speaker review** of every Hiligaynon / Kinaray-a line (CLAUDE.md §4-Q, ASSET-R4).
->   All dialect text in this document — carried-over *and* newly drafted — is working-draft quality.
+> - [ ] **Cultural review** (CLAUDE.md §4-Q). All dialogue is authored in **English** by team
+>   decision (2026-07-04 — see §12 C6); the retained cultural terms, honorifics, folklore framing,
+>   and the Kinaray-a **audio** phrases of the Cultural Echo Voice band (unchanged by that
+>   decision) still require native-speaker/cultural review.
 >
 > **Authority order** is unchanged: `CLAUDE.md` §4 invariants → `README.md` GDD → `docs/PRD.md`
 > → `docs/phase-task.md`. This bible sits below the PRD and above the raw data: it is the complete
 > script-level source for narrative, built on the structural decisions of
 > `docs/route-dialogue-compendium.md` (v2). Where existing `data/routes/routes.json` text conflicts
-> with an invariant, the conflict is **flagged in §12**, never silently resolved here or in data.
+> with an invariant or a decision, the conflict is **flagged in §12**, never silently resolved here
+> or in data.
 >
 > **Markup convention.** Dialogue is quoted with the in-game BBCode intact: `[i]…[/i]` is a stage
-> direction, `[b]Note saved:[/b]` / `[b]Lead saved:[/b]` are journal-note system lines. Lines
-> carried over from `data/routes/routes.json` are **verbatim**. Newly authored material is tagged
-> **[NEW]** and is review-pending like everything else.
+> direction, `[b]Note saved:[/b]` / `[b]Lead saved:[/b]` are journal-note system lines. Scenes
+> carried over from `data/routes/routes.json` keep their staging, beats, and meaning line-for-line
+> but are **rendered in English** — the data files still hold the older Hiligaynon/Kinaray-a mix,
+> and the English pass lands on data at implementation (§12 C6). Newly authored material is tagged
+> **[NEW]**.
 
 ---
 
@@ -58,22 +63,34 @@ it, clean it, and understand it with your own hands. (This is invariant §4-B wo
 ### 1.3 Tone & voice
 
 Cozy, golden-hour, unhurried. Grief is present in every route but handled gently — the game's
-emotional register is *pagpadayon*: carrying on, tending, mending. Humor is small and human (Ayla's
-bravado, Maverick's theatre, Yuyu returning mid-sentence). Nothing screams; the loudest thing in
-the game is a heartbeat under a junk pile. Dialogue is short, concrete, and physical — people talk
-while their hands are busy.
+emotional register is carrying on: tending, mending, keeping the shop open. Humor is small and
+human (Ayla's bravado, Maverick's theatre, Yuyu returning mid-sentence). Nothing screams; the
+loudest thing in the game is a heartbeat under a junk pile. Dialogue is short, concrete, and
+physical — people talk while their hands are busy.
 
 ### 1.4 Language & cultural framing
 
-- English UI; **Hiligaynon and Kinaray-a lines are flavor and heart**, always subtitled, always
-  translated in context. Newly drafted lines in this document deliberately keep dialect *lighter*
-  than the carried-over scenes, reusing patterns already present in the authored text, to minimize
-  the native-speaker correction surface. **Every dialect line is review-pending** (§4-Q).
+- **Dialogue policy (team decision, 2026-07-04): all dialogue is written in English**, in a
+  Philippine-English register. The only non-English elements retained are:
+  - **honorifics and kin terms used as names** — *Nang*, *Nong*, *Manong*, *Tatay*, *Lola*,
+    *Tita*, and the family nickname *Yuyu*;
+  - **cultural object nouns** that are also in-game item names — *ampaw*, *santo*, *baul*,
+    *banga*, *bahay-na-bato*;
+  - **two concept words, glossed where they appear** — *alima* (hand / five; the title) and
+    *dulom* (Nong Lave's word for the patina, "the old dark");
+  - **light interjections** natural to Philippine English — "Oy!", "Ay—", "…ha?".
+
+  If the team wants those trimmed as well, it is a find-and-replace-scale edit to this document.
+- **GDD parity note.** The README currently promises "Kinaray-a and Hiligaynon cultural lines,
+  always subtitled." The all-English dialogue decision conflicts with that promise and is flagged,
+  not silently resolved — see **§12 C6**.
+- The **Cultural Echo Voice band** (README §9.9) remains **Kinaray-a audio phrases with captions**
+  — an audio/atmosphere layer, unaffected by the dialogue decision unless the team extends the
+  decision to it.
 - **Folklore is framed as folklore** (§4-L). Family sayings are attributed to the family member,
   not to history. The scanner's "facts" derive from verified records only. The **Code of
   Kalantiaw** is excluded as a source of fact; Maragtas-adjacent material may flavor lore only as
   oral tradition, explicitly framed as such.
-- "Yuyu" is treated as a **family nickname**, not a dialect word.
 - The Master Artifact is **not yet locked** (decision D1). Everywhere this document touches the
   artifact or a fragment, the object is described generically — "a worked piece, smaller than a
   fist, older than it should be" — and marked with *(artifact-agnostic — D1)*.
@@ -200,47 +217,47 @@ N2, §12.)*
 | Beat objects | `auntie_photo_faded`, `auntie_frame_portrait`, `auntie_halfphoto_torn` *(already authored in `data/objects/objects.json`)* |
 
 Her three beats are already authored in `data/routes/routes.json` and are carried over
-**unchanged**:
+**unchanged in structure**:
 
-| Beat | Day | Object | Restoration action | Summary (verbatim from data) |
+| Beat | Day | Object | Restoration action | Summary (from data) |
 |---|---|---|---|---|
 | `auntie_beat_1` | 1 | `auntie_photo_faded` | brushing · paper care · photo restoration | "Auntie brings a faded family photo. Brush off the dust, lift the grime and water stain, and restore the faded image." |
 | `auntie_beat_2` | 3 | `auntie_frame_portrait` | wiping · polishing · frame repair | "She returns with her framed portrait. Clean the glass, polish the tarnished corners, and consolidate the cracked molding." |
 | `auntie_beat_3` | 5 | `auntie_halfphoto_torn` | paper care · tape-residue removal · archival rejoin | "On the final day she shares a photograph torn in two. Clean both halves, remove the old tape, then rejoin them with archival tape to reveal the uncle. Completing it releases her fragment." |
 
-### 4.1 Intro scene (Day 1 window; verbatim)
+### 4.1 Intro scene (Day 1 window; carried over — English rendering)
 
-> **Nang Shine:** [i]A frail knock. She peers over your shoulder at the half-open biscuit tin.[/i] Ay, kamusta na? Nakita mo na ang sulod?
+> **Nang Shine:** [i]A frail knock. She peers over your shoulder at the half-open biscuit tin.[/i] Ay, how have you been? Have you looked at what's inside yet?
 >
 > **You:** I cleaned what I could, Nang Shine — but the water damage... I don't have the right kit yet for paper this fragile. I don't want to ruin it trying.
 >
-> **Nang Shine:** Ah, husto man na. Indi gid kinahanglan dasohon. [i]She tucks the tin back into her basket — habit, not mistrust.[/i] That's the right call, anak.
+> **Nang Shine:** Ah, that's alright. It doesn't need to be rushed. [i]She tucks the tin back into her basket — habit, not mistrust.[/i] That's the right call, child.
 >
-> **Nang Shine:** Kon may husto ka na nga gamit — ihatag ko liwat ina sa imo. May— [i]She hesitates, then waves the thought away with a small laugh.[/i] Wala, lain lang. Old woman things. Same time Wednesday, ha?
+> **Nang Shine:** When you have the proper tools — I'll bring it back to you. There's— [i]She hesitates, then waves the thought away with a small laugh.[/i] It's nothing. Old woman things. Same time Wednesday, ha?
 >
 > [b]Note saved:[/b] Nang Shine's photo — paper too fragile for current tools. Needs the proper kit. She seemed to recognize something in it before I could ask.
 
 *Design note.* Her opening scene seeds two threads at once: the fragile-paper problem that Nong
 Lave's `delicate_tool` later solves in general (§5), and the flicker of recognition that pays off
 in the return scene. The specific Day-1 photo (`auntie_photo_faded`) is restorable with the
-starting kit's paper tools; the *"right kit"* line refers to the worst-damaged pieces later in her
-arc and keeps the tonal bridge to Lave.
+starting kit's paper tools; the *"proper tools"* line refers to the worst-damaged pieces later in
+her arc and keeps the tonal bridge to Lave.
 
-### 4.2 Return scene (after restoring the photo; verbatim)
+### 4.2 Return scene (after restoring the photo; carried over — English rendering)
 
-> **Nang Shine:** [i]She steps in without quite waiting, a paper bag of ampaw peeking from her basket.[/i] Maayong hapon, anak. Ay— [i]her basket lowers as her eyes catch the photograph on the table.[/i]
+> **Nang Shine:** [i]She steps in without quite waiting, a paper bag of ampaw peeking from her basket.[/i] Good afternoon, child. Oh— [i]her basket lowers as her eyes catch the photograph on the table.[/i]
 >
-> **You:** Sulod, Nang Shine. We finished cleaning something — from the tin you dropped off.
+> **You:** Come in, Nang Shine. We finished cleaning something — from the tin you dropped off.
 >
-> **Nang Shine:** [i]She lifts the restored photo with both hands. A young woman laughing; beside her, a young man caught mid-turn, like he'd been looking at her instead of the camera.[/i] Ay sus, gali ti, kami gid ini.
+> **Nang Shine:** [i]She lifts the restored photo with both hands. A young woman laughing; beside her, a young man caught mid-turn, like he'd been looking at her instead of the camera.[/i] Oh, my. So it's true — that really is us.
 >
 > [i]A low hum rises from beneath the floorboards. For one heartbeat the corner is a wide porch, the same two faces, younger — then it folds back. A Temporal Echo.[/i]
 >
-> **Nang Shine:** [i]A hand pressed to her chest, eyes wet.[/i] Diutay lang... pero amo gid na. That was him. That was Yuyu.
+> **Nang Shine:** [i]A hand pressed to her chest, eyes wet.[/i] Only for a moment... but that was it, exactly. That was him. That was Yuyu.
 >
 > **You:** You knew him? Before—
 >
-> **Nang Shine:** Before your Lola, anak. Way, way before. [i]She presses the photo gently back into your hands.[/i] Keep it safe for me, ha? Maybe it wants to stay here, sa imo anay, until I am.
+> **Nang Shine:** Before your Lola, child. Way, way before. [i]She presses the photo gently back into your hands.[/i] Keep it safe for me, ha? Maybe it wants to stay here, with you for now, until I am.
 >
 > [b]Note saved:[/b] Yuyu and Nang Shine — his first love, long before Lola. The bahay-na-bato in the photo still stands here in Iloilo.
 
@@ -252,11 +269,11 @@ stay inside; Cultural Echoes belong to the yard — compendium §1.3).*
 She brings the framed portrait of the same porch, glass fogged, molding cracked. While the player
 works (wiping, polishing, consolidant on the molding):
 
-> **Nang Shine:** Ang balay nga ina — my father's house. Yuyu would stand outside it for one hour before he had the nerve to knock. [i]She laughs, small.[/i] Isa ka oras, anak. Every Wednesday.
+> **Nang Shine:** That house — my father's house. Yuyu would stand outside it for one hour before he had the nerve to knock. [i]She laughs, small.[/i] One full hour, child. Every Wednesday.
 >
 > **You:** What changed?
 >
-> **Nang Shine:** Wala. He never changed. Ako ang nag-untat sa paghulat. [i]She straightens a doily that does not need straightening.[/i] The frame first, ha. One thing at a time.
+> **Nang Shine:** Nothing. He never changed. I was the one who stopped waiting. [i]She straightens a doily that does not need straightening.[/i] The frame first, ha. One thing at a time.
 >
 > [b]Note saved:[/b] The porch house was her father's. Yuyu courted her there — Wednesdays — until she stopped waiting. Something ended it that she isn't saying.
 
@@ -271,25 +288,25 @@ old tape, and rejoining them with archival tape reveals the full image: young Sh
 and between them, on the porch table, **a small worked piece, wrapped half-open in cloth**
 *(artifact-agnostic — D1)*.
 
-> **Nang Shine:** [i]She looks at the mended seam a long time before she looks at the faces.[/i] Ako ang naggisi sina. The night he told me what he was really keeping in that journal of his. I thought — kon indi ko maintindihan, at least mapaslaw ko. [i]A breath.[/i] Foolish old girl.
+> **Nang Shine:** [i]She looks at the mended seam a long time before she looks at the faces.[/i] I was the one who tore it. The night he told me what he was really keeping in that journal of his. I thought — if I couldn't understand the thing, at least I could break something back. [i]A breath.[/i] Foolish old girl.
 >
 > **You:** The thing on the table — in the cloth. What was it?
 >
-> **Nang Shine:** He said, "Shine, this is one of five. Kon may matabo sa akon, keep it. Don't open it. Don't give it away." [i]Her hands fold in her lap.[/i] And I kept it, anak. Sa lata sang biskwit, sa ilalom sang aparador. Forty years.
+> **Nang Shine:** He said, "Shine, this is one of five. If anything happens to me, keep it. Don't open it. Don't give it away." [i]Her hands fold in her lap.[/i] And I kept it, child. In the biscuit tin, at the bottom of the old wardrobe. Forty years.
 >
-> **Nang Shine:** Then the flood year came, and the salvage cart took the whole aparador while I was at my sister's. Ginbaligya, ginbulad, gindala diri — sa inyo nga yarda, siguro, like everything else this town loses. [i]She meets your eyes, and for once doesn't wave the thought away.[/i] I could not look for it. Ikaw — you can. You have his hands.
+> **Nang Shine:** Then the flood year came, and the salvage cart took the whole wardrobe while I was at my sister's. Sold, sorted, carted off — to your yard, most likely, like everything else this town loses. [i]She meets your eyes, and for once doesn't wave the thought away.[/i] I could not go looking for it. You — you can. You have his hands.
 >
 > [b]Note saved:[/b] Shine kept one of five pieces in a biscuit tin, lost to a salvage cart in the flood year. It's somewhere in the stream that feeds our yard. The journal is listening now.
 
 **→ `fragment_01` = RELEASED.** From the next time the player steps into the yard, the Cultural
 Echoes are live for it: Hum → Melody → Voice → Heartbeat, into an ordinary promoted carrier the
 Spawn Director hides anew each loop until found (§2.4). She also gives the **`safe_code`** —
-"Yuyu's birthday, anak; he never could remember mine" — unlocking the shop Safe in a later loop
+"Yuyu's birthday, child; he never could remember mine" — unlocking the shop Safe in a later loop
 (CACHE-R1) and making it an eligible *outer container* for future placements (never a loose
 fragment; §4-H).
 
-**Completing this beat unlocks Nong Lave** — she sends him: *"My apo works with wood the way you
-work with paper. Kilalaha siya."*
+**Completing this beat unlocks Nong Lave** — she sends him: *"My grandson works with wood the way
+you work with paper. You two should know each other."*
 
 ---
 
@@ -300,7 +317,7 @@ work with paper. Kilalaha siya."*
 | Window | 13:00–14:00, Days 2, 4, 5 (inside) |
 | Prerequisites | **Auntie helped** (he is her grandson). No exclusion with Ayla (v2; the old same-slot exclusion is removed) |
 | Holds | `fragment_02` |
-| Rewards | `delicate_tool` — the legacy tool roll; unlocks fragile-object restoration in general (and retroactively answers Shine's "right kit" problem) |
+| Rewards | `delicate_tool` — the legacy tool roll; unlocks fragile-object restoration in general (and retroactively answers Shine's "proper tools" problem) |
 | Beat objects *(proposed template ids — to be authored in data at P15.1)* | `artisan_santo_wood`, `artisan_lola_notes`, `artisan_baul_lid` |
 
 Only his intro/return dialogue exists in data; his three beats are **[NEW]**, authored here:
@@ -311,38 +328,38 @@ Only his intro/return dialogue exists in data; his three beats are **[NEW]**, au
 | `artisan_beat_2` **[NEW]** | 4 | `artisan_lola_notes` — his Lola's annotated photo bundle | paper care · tape-residue removal, using the just-gifted `delicate_tool` | Reveals in writing that Shine's teacher was Yuyu; grants the tool roll |
 | `artisan_beat_3` **[NEW]** | 5 | `artisan_baul_lid` — the carved lid of her baul (chest) | grime/wax lift · **engraving reveal** | The spiral-marked dedication; completing it **releases `fragment_02`** |
 
-### 5.1 Beat 1 — the santo and the dulom (Day 2; intro scene, verbatim)
+### 5.1 Beat 1 — the santo and the dulom (Day 2; intro scene, carried over — English rendering)
 
-> **Nong Lave:** [i]Forearms like rope, hands stained the color of old varnish. He leans into the doorway.[/i] Maayo nga hapon. May tawag ka guwa nga may bag-o — old wood, daw galing pa sa altar. Mind kung tan-awon ko lang?
+> **Nong Lave:** [i]Forearms like rope, hands stained the color of old varnish. He leans into the doorway.[/i] Good afternoon. Word outside is something new came through — old wood, looks like it came off an altar. Mind if I take a look?
 >
 > **You:** Go ahead, Nong Lave. Found it in this morning's delivery — was about to clean it up.
 >
-> **Nong Lave:** [i]He sees the brass polish open in your hand, and his shoulders drop a little.[/i] Ay — hulat anay. That brass polish — indi gid na para sa kahoy. You'll strip the patina — the dulom. That's not dirt, anak. That's eighty years of hands.
+> **Nong Lave:** [i]He sees the brass polish open in your hand, and his shoulders drop a little.[/i] Ah — hold on. That brass polish — that is not for wood. You'll strip the patina — the dulom, the old dark. That's not dirt, child. That's eighty years of hands.
 >
 > **You:** I just wanted it to look good before I—
 >
-> **Nong Lave:** Maayo na siya the way nag-tigulang siya. [i]He sets it down exactly where it was.[/i] Pasensya na ko. Pero kon imo na ginsalakay sang amerilyo — wala ka na sang ma-ibalik.
+> **Nong Lave:** It's good the way it grew old. [i]He sets it down exactly where it was.[/i] Forgive me. But once you've gone at it with polish — there's nothing left to bring back.
 >
-> **Nong Lave:** Ginatudluan ko anay sang akon Lola kon paano makilala ang tinuod nga daan sa ginhimo lang nga daan. Basi makasugod ka diri. [i]He's gone before you can ask which Lola he means.[/i]
+> **Nong Lave:** My Lola taught me, once, how to tell the truly old from the made-to-look-old. Maybe that's where you start. [i]He's gone before you can ask which Lola he means.[/i]
 
 *Playable beat:* the santo is on the bench with mixed blemishes. The **correct** restoration is
 soft-brush and damp-cloth only; using polish/solvent on the wood applies the wrong-tool damage and
 visibly strips the dulom (permanent value loss — the mechanics teaching his lesson). Completing it
 with restraint is the gate for his return.
 
-### 5.2 Beat 2 — the tool roll and his Lola's notes (Day 4; return scene verbatim, then [NEW])
+### 5.2 Beat 2 — the tool roll and his Lola's notes (Day 4; return scene carried over — English rendering, then [NEW])
 
-> **Nong Lave:** [i]The same careful half-entrance. He watches you work — the soft brush, the restraint — and stops.[/i] Gali ti. Sin-o naghambal sa imo parte sa dulom? Indi ina common nga kaalam sa mga bata subong.
+> **Nong Lave:** [i]The same careful half-entrance. He watches you work — the soft brush, the restraint — and stops.[/i] Well, now. Who told you about the dulom? That's not common knowledge among the young these days.
 >
 > **You:** Someone explained it to me once. It stuck.
 >
-> **Nong Lave:** [i]He picks up the santo with the respect of someone handling a relative's hands.[/i] Akon Lola usually ang naga-asoy sini — paano makilala ang daan sa tinuod. She learned it from someone too. Sang una pa.
+> **Nong Lave:** [i]He picks up the santo with the respect of someone handling a relative's hands.[/i] It was my Lola who used to explain it — how to tell the old from the true. She learned it from someone too. Long ago.
 >
 > [i]Light catches the santo's chipped shoulder wrong. For half a breath: a family altar, candlelight, a younger Nang Shine's hands lighting a wick beside this very santo. It folds shut.[/i]
 >
-> **Nong Lave:** [i]He produces a cloth roll of hand-worn tools.[/i] Abyan na ta subong, ha? Diri — para sa mga butang nga maluya gani, indi lang daan. Indi mo na kinahanglan ang polish nga ina.
+> **Nong Lave:** [i]He produces a cloth roll of hand-worn tools.[/i] We're friends now, ha? Here — for the things that are fragile, not just old. You won't be needing that polish anymore.
 >
-> **Nong Lave:** May ginsulat akon Lola sa iya mga daan nga litrato — parte sa isa nga lalaki nga nakatudlo sa iya. Daw kilala ko na siya gamay, through her. Same time Thursday, ha?
+> **Nong Lave:** My Lola wrote things on her old photographs — about a man who taught her. I feel like I know him a little, through her. Same time Thursday, ha?
 
 **→ `delicate_tool` granted** (the tool roll; persists as a legacy item, §4-A). The Temporal Echo
 confirms what the player may already suspect: his Lola is **Nang Shine**.
@@ -350,7 +367,7 @@ confirms what the player may already suspect: his Lola is **Nang Shine**.
 **[NEW]** He leaves the photo bundle she annotated. Restoring it (paper care with the new tools —
 lifting foxing and old tape without erasing her margin notes) reveals her handwriting:
 
-> [i]In the margins, in a young woman's careful hand: "Ang lalaki nga nagtudlo sa akon magtan-aw — indi sa mata, sa kamot." Beside one photograph, a name is inked and crossed out and inked again.[/i]
+> [i]In the margins, in a young woman's careful hand: "The man who taught me to look — not with the eyes, with the hands." Beside one photograph, a name is inked and crossed out and inked again.[/i]
 >
 > [b]Note saved:[/b] Nong Lave's Lola wrote about the man who taught her to see with her hands, not her eyes. The crossed-out name is short. It could be a nickname.
 
@@ -361,20 +378,20 @@ family lot was cleared. Under a century of wax and candle smoke there is carving
 in decades. **Engraving reveal** (gentle solvent, then dry brush) uncovers a dedication line and,
 at its corner, a **small carved spiral** (§3, the spiral mark):
 
-> [i]The carving, letter by letter, out of the wax: "Ang kamot nga nagatudlo, wala nagauyat." — the hand that teaches does not hold on. In the corner, a spiral, pressed deep, sure of itself.[/i]
+> [i]The carving, letter by letter, out of the wax: "The hand that teaches does not hold on." In the corner, a spiral, pressed deep, sure of itself.[/i]
 >
-> **Nong Lave:** [i]He reads it twice. His thumb stops just short of the spiral.[/i] Amo ni siya. The man in her photographs. Ang nagtudlo sa iya — kag sa akon, paagi sa iya. [i]He sets the lid down exactly where it was, the old habit.[/i] Imo Yuyu.
+> **Nong Lave:** [i]He reads it twice. His thumb stops just short of the spiral.[/i] It's him. The man in her photographs. The one who taught her — and me, through her. [i]He sets the lid down exactly where it was, the old habit.[/i] Your Yuyu.
 >
 > **You:** She never told you?
 >
-> **Nong Lave:** Ginhambal niya nga may ginbilin siya nga butang sa iya — gamay, nabalot, "indi pag-ablihi." Kept it inside this baul, sa idalom sang mga habol. [i]A long breath.[/i] When we cleared the lot after she moved to my Tita's — the baul went with the hauling truck. Tanan. I kept only the lid.
+> **Nong Lave:** She told me once that he left something with her — small, wrapped, "never open it." She kept it inside this baul, under the blankets. [i]A long breath.[/i] When we cleared the lot after she moved to my Tita's — the baul went with the hauling truck. All of it. I kept only the lid.
 >
-> **Nong Lave:** I know your yard buys those loads, anak. Somewhere out there is an old man's parcel inside an old woman's chest. [i]He almost smiles.[/i] I won't dig for it. Indi ko ni ihatag sa kamot — kag indi man ako ang dapat maghatag. The yard gave it to her stream to carry. Let it give it to you.
+> **Nong Lave:** I know your yard buys those loads, child. Somewhere out there is an old man's parcel inside an old woman's chest. [i]He almost smiles.[/i] I won't dig for it, and I won't put it into your hand — it was never mine to give. The yard carries what it's given. Let it give it to you.
 >
-> [b]Note saved:[/b] Lave's Lola kept a small wrapped piece — "don't open it" — in her baul. The baul was hauled to the yard when the lot was cleared. Only the lid stayed behind. The journal is listening.
+> [b]Note saved:[/b] Lave's Lola kept a small wrapped piece — "never open it" — in her baul. The baul was hauled to the yard when the lot was cleared. Only the lid stayed behind. The journal is listening.
 
-**→ `fragment_02` = RELEASED.** *(Note the deliberate echo of Yuyu's rule — "indi ko ni ihatag sa
-kamot" — the same refusal Maverick voices in §8. Nobody hands history over.)*
+**→ `fragment_02` = RELEASED.** *(Note the deliberate echo of Yuyu's rule — "I won't put it into
+your hand" — the same refusal Maverick voices in §8. Nobody hands history over.)*
 
 ---
 
@@ -394,26 +411,26 @@ Her story runs in **two registers** (compendium §3) so daily contact never flat
 
 | Beat | When | Object / action | Advances |
 |---|---|---|---|
-| `scavenger_beat_1` | Early, at the yard | The dismissed lunchbox (intro scene, verbatim) | Her hurt is planted; the lunchbox disappears back into the heaps |
+| `scavenger_beat_1` | Early, at the yard | The dismissed lunchbox (intro scene) | Her hurt is planted; the lunchbox disappears back into the heaps |
 | `scavenger_beat_2` **[NEW]** | Any later hand-off (daily contact) | — (dialogue only) | She gives the **`archeologist_lead`** — free, ungated, persists |
-| `scavenger_beat_3` | After Sam's route (`excavation_tools` owned) | **Dig** the lunchbox from its yard spot · rust removal · **engraving reveal** (initials + date) · "Show Ayla the lunchbox" | Vindication scene (return dialogue, verbatim) → **releases `fragment_03`** |
+| `scavenger_beat_3` | After Sam's route (`excavation_tools` owned) | **Dig** the lunchbox from its yard spot · rust removal · **engraving reveal** (initials + date) · "Show Ayla the lunchbox" | Vindication scene (return dialogue) → **releases `fragment_03`** |
 
-### 6.2 Beat 1 — the dismissed lunchbox (intro scene, verbatim)
+### 6.2 Beat 1 — the dismissed lunchbox (intro scene, carried over — English rendering)
 
-> **Ayla:** [i]The door gets a shove, not a knock. She drops a sack with a clatter.[/i] Oy! May tesoro ko diri, ha! Tan-awa ina nga lunchbox sa imo lamesa — ina, may history ina!
+> **Ayla:** [i]The door gets a shove, not a knock. She drops a sack with a clatter.[/i] Oy! I've got treasure here, ha! Look at that lunchbox on your table — that one, that one has history!
 >
 > **You:** That one's just rusted tin, Ayla. It's going in the recycle bin.
 >
-> **Ayla:** [i]Her grin falters for half a second before she covers it, louder.[/i] Indi ka makasiguro sina kon wala ka nag-tan-aw maayo! May sticker pa ina sang daan nga sine — abi mo basura lang, pero—
+> **Ayla:** [i]Her grin falters for half a second before she covers it, louder.[/i] You can't be sure of that if you didn't even look properly! It's still got a sticker from some old movie — you think it's just trash, but—
 >
 > **You:** It's rust and a torn sticker. I've got better things to restore today.
 >
-> **Ayla:** [i]She picks the lunchbox back up herself — quick, like it shouldn't sit where it isn't wanted.[/i] Sige lang. Wala man, basura man gali, ikaw ang nakahibalo. Same time Thursday — pero tama lang, indi ko na pilitan.
+> **Ayla:** [i]She picks the lunchbox back up herself — quick, like it shouldn't sit where it isn't wanted.[/i] Fine. It's nothing — just trash after all, you'd know best. Same time Thursday — but no, it's fine, I won't push it.
 >
 > [b]Note saved:[/b] Ayla brought in a lunchbox, said it had history. Didn't check. She didn't push back twice.
 
 **[NEW — placement note]** After this scene she doesn't bring it again. If asked, she deflects
-("Wala lang. Pamangkot lang."). In truth she tossed it back where she found it — deep under a heap
+("Never mind. Just asking."). In truth she tossed it back where she found it — deep under a heap
 no hand-forage reaches. **Recovering it requires Sam's excavation tools** (ROUTE-R8): the dig spot
 surfaces as a marked/diggable yard interaction once the tools are owned. *(This re-sets the v1
 "she brings it in" framing to the v2 "excavated from the yard" framing — compendium open task,
@@ -422,28 +439,40 @@ resolved here on paper.)*
 ### 6.3 Routine register — daily hand-off banter pool **[NEW]**
 
 Short, rotating, non-blocking lines at the scrap hand-off (a pool the implementation can draw
-from; all review-pending):
+from):
 
-1. "Oy! Dali dali — may tesoro sa sulod sina. Mabatyagan ko gid."
-2. "Bug-at ni? Maayo. Ang bug-at, may sugilanon."
-3. "Kon makakita ka sang nagakislap nga suga sa tinumpok — indi pagbaligya dayon, ha? Tan-awa anay."
-4. "Tatay ko anay naghambal: ang junkyard amo ang pinaka-busy nga museo sa banwa. Saying niya lang ina, ha — pero tuod man."
-5. "Sort ko ni mga isa ka oras. Indi ka magtindog dira nga nagatulok — makahuya."
-6. *(after beat 1, before beat 3)* "Wala ka nakakita sang... wala lang. Pamangkot lang."
+1. "Oy! Hurry it up — there's treasure in that lot. I can feel it."
+2. "Heavy? Good. Heavy things have stories."
+3. "If you spot something glowing strange in the heaps — don't sell it right away, ha? Look at it first."
+4. "My Tatay used to say: the junkyard is the busiest museum in town. Just his saying, ha — but it's true."
+5. "This'll take me about an hour to sort. Don't just stand there watching — it's embarrassing."
+6. *(after beat 1, before beat 3)* "You haven't seen a... never mind. Just asking."
 
 Her existing yard state lines (`yard_empty`, `yard_sorting`, `yard_sort_ready` in routes.json)
-carry over verbatim as the functional layer of this register.
+carry over with the same function, re-rendered in English:
+
+> *(yard_empty)* **Ayla:** [i]She glances at your empty hands, then back at the yard.[/i] You didn't pick up any scrap at all? It's fine — feels like something out there is still waiting. Check the color of the glow if you're not sure.
+> **You:** I haven't found anything worth handing over yet.
+> **Ayla:** No need to rush. But if you come back empty-handed, that's your morning wasted. [i]She jerks a thumb toward the heaps.[/i] Come back when you've got something, ha?
+
+> *(yard_sorting)* **Ayla:** [i]She doesn't look up from the scrap spread across her cloth.[/i] Hup — still busy sorting what you brought. It's not done yet — come back in a while, ha?
+> **You:** How long is it going to take?
+> **Ayla:** About an hour more. I'll be right here if I find anything good. [i]She waves you toward the heaps without lifting her eyes.[/i] Swing by when it's ready.
+
+> *(yard_sort_ready)* **Ayla:** [i]She wipes her hands on her shirt and jerks a thumb toward the shop.[/i] There — done sorting your scrap. I've left the basket at your door.
+> **You:** You left it at the door?
+> **Ayla:** Yep. Head back to the shop, you'll see it. I'm not adding more until you take that one in. [i]She turns back to her own pile.[/i] Right — I've got my own pile to get through.
 
 ### 6.4 Beat 2 — the lead to Sam (daily contact) **[NEW]**
 
 Given freely at a hand-off once the player has been foraging a few days — deliberately **not**
 gated on her own arc (this is what breaks the Ayla↔Sam dependency cycle, ROUTE-R8):
 
-> **Ayla:** [i]She weighs a rusted bracket in one hand, squints at it like a jeweler.[/i] You know who'd buy this kind of ugly? May kilala ko — nagakutkot sang daan nga mga butang, propesyonal pa. Sa guwa sang syudad ang balay niya, pero nagalibot siya diri kon may lote nga ginabaligya.
+> **Ayla:** [i]She weighs a rusted bracket in one hand, squints at it like a jeweler.[/i] You know who'd buy this kind of ugly? I know someone — digs up old things, professionally even. Lives outside the city, but he comes around whenever a lot goes up for sale.
 >
 > **You:** A digger? Like, an archeologist?
 >
-> **Ayla:** Amo na ang tawag nila kon may diploma ka. [i]She scribbles on the back of a receipt with a pencil stub.[/i] Sam. Hambala nga ako ang nagpadala sa imo — kag indi ka magbinuang sa iya, ha, serioso ina nga tawo.
+> **Ayla:** That's what they call it when you've got the diploma. [i]She scribbles on the back of a receipt with a pencil stub.[/i] Sam. Tell him I sent you — and don't clown around with him, ha? That's a serious man.
 >
 > [b]Lead saved:[/b] Sam, the Archeologist — Ayla's contact who digs old things professionally, outside the city.
 
@@ -452,34 +481,34 @@ from Day 1 (ROUTE-R4). *(The two closing "lead" blocks of her authored `return` 
 routes.json bundled this lead into the vindication scene; v2 moves the lead here, earlier. The
 data-side split is flagged in §12.)*
 
-### 6.5 Beat 3 — the dig, the initials, the vindication (return scene, verbatim core)
+### 6.5 Beat 3 — the dig, the initials, the vindication (return scene, carried over — English rendering)
 
 With `excavation_tools` owned: the dig spot in the yard yields `ayla_lunchbox_rusted`. At the
 bench: rust removal, then engraving reveal — scratched initials and a date. Then, at the yard,
 **"Show Ayla the lunchbox"**:
 
-> **Ayla:** [i]The same shove. She stops — the lunchbox is already on the table, half the rust lifted.[/i] Oy! May tesoro ko diri— ...ay, gina-restore mo na siya?
+> **Ayla:** [i]The same shove. She stops — the lunchbox is already on the table, half the rust lifted.[/i] Oy! I've got treasure here— ...oh. You're restoring it?
 >
 > **You:** Figured I should actually look first.
 >
-> **Ayla:** Tuod gid ko, bala? Indi tanan nga daan basura. [i]The last rust comes away, revealing scratched initials and a date. She goes quiet for the first time since walking in.[/i]
+> **Ayla:** Told you, didn't I? Not everything old is trash. [i]The last rust comes away, revealing scratched initials and a date. She goes quiet for the first time since walking in.[/i]
 >
-> **Ayla:** ...That's akon Tatay's initials. He used to sell scrap to a Manong with a notebook — said he always paid fair, never haggled mean, even kon basura gid lang ang dala mo.
+> **Ayla:** ...That's my Tatay's initials. He used to sell scrap to a Manong with a notebook — said he always paid fair, never haggled mean, even when all you had to offer was junk.
 >
 > **You:** The Manong with the notebook — was that—
 >
-> **Ayla:** Imo Yuyu, siguro gid. [i]She taps the lunchbox once, gently.[/i]
+> **Ayla:** Your Yuyu. It must have been. [i]She taps the lunchbox once, gently.[/i]
 
-*(Scene carried over verbatim through the Yuyu line; setting re-homed to the yard/bench per
-compendium §3. The original scene's final lead-giving blocks are superseded by beat 2 — see §12.)*
+*(Scene carried over beat-for-beat; setting re-homed to the yard/bench per compendium §3. The
+original scene's final lead-giving blocks are superseded by beat 2 — see §12.)*
 
 **[NEW — continuation and release:]**
 
-> **Ayla:** [i]She turns the lunchbox over twice, like it might still be a trick.[/i] Tatay kept his best finds for that Manong. May isa — gamay, mabug-at para sa kadakuon niya, nabalot sa trapo. The Manong told him: "Tago-a ini. Kon indi ako magbalik, itago mo gihapon." [i]Her jaw works.[/i] Gintago niya sa toolbox sang kariton niya.
+> **Ayla:** [i]She turns the lunchbox over twice, like it might still be a trick.[/i] Tatay kept his best finds for that Manong. There was one — small, heavy for its size, wrapped in a rag. The Manong told him: "Keep this hidden. If I don't come back, keep it hidden anyway." [i]Her jaw works.[/i] He stashed it in the toolbox of his cart.
 >
 > **You:** Where's the cart now, Ayla?
 >
-> **Ayla:** [i]A short, unfunny laugh.[/i] Ginbaligya ko. Kinahanglan namon ang kwarta sang lubong. Wala ko kahibalo kon ano to nga butang — basura, bulawan, wala ko na gin-tan-aw. [i]She looks out at the heaps, and for once her voice is the size of a normal person's.[/i] Diri lang gid to nagtiner, sa amo man ni nga yarda. Pangitaa, ha? Kay indi ko na makaya nga ako ang mangita.
+> **Ayla:** [i]A short, unfunny laugh.[/i] I sold it. We needed the money for the funeral. I never even knew what the thing was — trash, gold — I couldn't look. [i]She looks out at the heaps, and for once her voice is the size of a normal person's.[/i] It never left. It's been in this same yard the whole time. Find it, ha? Because I can't be the one to go digging for it.
 >
 > [b]Note saved:[/b] Ayla's Tatay hid a small wrapped piece for Yuyu in his cart's toolbox. She sold the cart into this yard after the funeral. The journal is listening.
 
@@ -505,35 +534,35 @@ Only his intro/return dialogue exists in data; his three beats are **[NEW]**, au
 | `archeologist_beat_2` **[NEW]** | 3 | `sam_banga_cracked` — a broken earthen banga | consolidation with the **seam left legible** — no over-polish, no disguise | Passing the test → return scene → **`excavation_tools`** |
 | `archeologist_beat_3` **[NEW]** | 5 | `sam_transit_jammed` — his surveyor's transit, jammed since the last dig | **mechanism inspection** — free the needle without erasing the field scratches | The confession → **releases `fragment_04`** |
 
-### 7.1 Beat 1 — the mended jar (intro scene, verbatim)
+### 7.1 Beat 1 — the mended jar (intro scene, carried over — English rendering)
 
-> **Sam:** [i]He measures the room from across it before approaching.[/i] Maayo nga aga. I was told there might be something worth seeing here. [i]He lifts the mended jar.[/i] ...This was broken.
+> **Sam:** [i]He measures the room from across it before approaching.[/i] Good morning. I was told there might be something worth seeing here. [i]He lifts the mended jar.[/i] ...This was broken.
 >
 > **You:** It was. I fixed it — you can barely tell now.
 >
-> **Sam:** Tuod — you can barely tell. That's the problem. You didn't fix the jar. You erased the part of its history where it broke.
+> **Sam:** True — you can barely tell. That's the problem. You didn't fix the jar. You erased the part of its history where it broke.
 >
 > **You:** Isn't that the point of restoration?
 >
-> **Sam:** Indi gid. A maker built this with two hands. It broke with someone else's. If you hide that, you're just hiding evidence. Real mastery is re-forging it so both hands still show.
+> **Sam:** Not at all. A maker built this with two hands. It broke with someone else's. If you hide that, you're just hiding evidence. Real mastery is re-forging it so both hands still show.
 >
-> **Sam:** Pasensya ko, ah. Pero kon may sunod ka pa nga daan nga butang nga nabuong — don't disguise the break. Show it. Then we'll talk.
+> **Sam:** My apologies, ah. But the next time an old thing comes to you broken — don't disguise the break. Show it. Then we'll talk.
 
-### 7.2 Beat 2 — the honest seam (Day 3) **[NEW scene, then return verbatim]**
+### 7.2 Beat 2 — the honest seam (Day 3) **[NEW scene, then return carried over — English rendering]**
 
 A broken earthen banga comes through the delivery (or he leaves it — implementation's choice).
 The playable test: consolidate the break so the vessel is whole and stable, **leaving the seam
 visible** — the restoration explicitly rewards *not* using the disguising finish. When he returns:
 
-> **Sam:** [i]He holds a folded paper. His eyes go straight to the jar — to the visible seam, not hidden.[/i] Maayo nga hapon. Ayla said you'd want this address. You left the break showing.
+> **Sam:** [i]He holds a folded paper. His eyes go straight to the jar — to the visible seam, not hidden.[/i] Good afternoon. Ayla said you'd want this address. You left the break showing.
 >
 > **You:** Hiding it would just be lying about whose hands touched it.
 >
-> **Sam:** [i]A real smile, the measuring look gone.[/i] Sige — now we can talk properly. Most people want history invisible. You left it where I could see it.
+> **Sam:** [i]A real smile, the measuring look gone.[/i] Alright — now we can talk properly. Most people want history invisible. You left it where I could see it.
 >
-> **Sam:** I knew your Yuyu. Tuod gid — I was the last one who saw him, before— [i]He doesn't finish.[/i] He used to say almost the same thing: indi mo paglimpyohan ang kasaysayan hasta mawala ang ebidensya.
+> **Sam:** I knew your Yuyu. It's true — I was the last one who saw him, before— [i]He doesn't finish.[/i] He used to say almost the same thing: "never scrub history so clean that the evidence disappears."
 >
-> **Sam:** [i]He sets a small, worn case on the table.[/i] A proper excavation kit. There are objects in this city too sturdy for your current methods — I can open that door, kon gusto mo.
+> **Sam:** [i]He sets a small, worn case on the table.[/i] A proper excavation kit. There are objects in this city too sturdy for your current methods — I can open that door, if you want it.
 >
 > [b]Note saved:[/b] Sam was the last person seen with Yuyu before he vanished.
 
@@ -542,9 +571,9 @@ visible** — the restoration explicitly rewards *not* using the disguising fini
 **[NEW — gloss on the folded paper.]** The "address" Ayla said the player would want is not Sam's —
 the player already has that. It is a **lot-transfer record** Sam has carried for years: the paper
 trail of a crate mis-auctioned as scrap after his final dig with Yuyu was shut down. The trail's
-last line is an address the player knows very well. *"Basaha ang katapusan nga linya."* It is the
-player's own yard. Sam has been circling this shop far longer than Ayla's lead has existed — the
-lead just finally gave him a reason to knock.
+last line is an address the player knows very well. *"Read the last line."* It is the player's own
+yard. Sam has been circling this shop far longer than Ayla's lead has existed — the lead just
+finally gave him a reason to knock.
 
 ### 7.3 Beat 3 — the transit and the confession (Day 5) **[NEW]**
 
@@ -559,7 +588,7 @@ needle, clean the pivot — without erasing the field scratches on the casing ("
 >
 > **Sam:** I catalogued it. Crate 11, wrapped, unlabeled, per his instruction. [i]The old anger, dry as dust.[/i] Then the funding fell through, the site was sealed, and the storage lots went to auction while I was filing appeals. Crate 11 sold as scrap weight. Twelve pesos, the record says.
 >
-> **Sam:** I have bought junk lots for nine years trying to follow it. The paper ends at your yard. [i]He closes the transit's case with a click.[/i] I will not dig up another man's ground, and I will not hand you a conclusion — indi ko paglimpyohan ang kasaysayan para sa imo. Find it in context. Show me the break.
+> **Sam:** I have bought junk lots for nine years trying to follow it. The paper ends at your yard. [i]He closes the transit's case with a click.[/i] I will not dig up another man's ground, and I will not hand you a conclusion — I won't clean history up *for* you. Find it in context. Show me the break.
 >
 > [b]Note saved:[/b] Yuyu asked Sam to keep a wrapped piece "in context." It was catalogued as Crate 11, auctioned as scrap, and the paper trail ends at our yard. The journal is listening.
 
@@ -580,23 +609,23 @@ needle, clean the pivot — without erasing the field scratches on the casing ("
 
 | Beat | When | Action | Advances |
 |---|---|---|---|
-| `buyer_beat_1` | Days 1–4 window | Intro scene (verbatim) | The spiral-mark tip; his card |
+| `buyer_beat_1` | Days 1–4 window | Intro scene | The spiral-mark tip; his card |
 | `buyer_beat_2` **[NEW]** | Days 1–4 window | Restore and **sell him a spiral-marked piece** without price-anchoring (marketplace beat) | The qualifying honest deal (D7) |
 | `buyer_beat_3` **[REWRITTEN — release]** | Day 5, other four seated | The ledger scene → **release** | `fragment_05` → guaranteed yard carrier → the final hunt |
 
-### 8.1 Beat 1 — the card and the spiral (intro scene, verbatim)
+### 8.1 Beat 1 — the card and the spiral (intro scene, carried over — English rendering)
 
-> **Mr. Maverick:** [i]Dressed a half-step nicer than the shop deserves. His eyes sweep the shelves once — fast, practiced.[/i] Maayo nga hapon. Thought I'd stop by, see if anything interesting came through.
+> **Mr. Maverick:** [i]Dressed a half-step nicer than the shop deserves. His eyes sweep the shelves once — fast, practiced.[/i] Good afternoon. Thought I'd stop by, see if anything interesting came through.
 >
 > **You:** Nothing special this week, sorry. Mostly sold straight through the regular buyers.
 >
-> **Mr. Maverick:** [i]A small, unreadable smile. He sets a blank business card on the counter without quite handing it over.[/i] Sige lang. Some people take a few weeks before they understand which pieces are worth my prices.
+> **Mr. Maverick:** [i]A small, unreadable smile. He sets a blank business card on the counter without quite handing it over.[/i] No matter. Some people take a few weeks before they understand which pieces are worth my prices.
 >
-> **Mr. Maverick:** Though — between us — there are objects out there with a small mark. A spiral, pressed into the base, easy to miss. Kon you ever see one, I'd pay it more attention than the glow suggests.
+> **Mr. Maverick:** Though — between us — there are objects out there with a small mark. A spiral, pressed into the base, easy to miss. If you ever see one, I'd pay it more attention than the glow suggests.
 >
 > **You:** Why? What does the mark mean?
 >
-> **Mr. Maverick:** Lain-lain ang storya. Maybe another time. [i]He's gone before the bell finishes ringing — just a card with a phone number and nothing else.[/i]
+> **Mr. Maverick:** The story varies with the telling. Maybe another time. [i]He's gone before the bell finishes ringing — just a card with a phone number and nothing else.[/i]
 
 ### 8.2 Beat 2 — the honest trade (Days 1–4) **[NEW]**
 
@@ -609,11 +638,11 @@ cracks by a millimeter:
 >
 > **You:** You said you'd pay it attention. I wanted to see what that looks like.
 >
-> **Mr. Maverick:** [i]He pays over the odds without haggling — the first time the shop has seen him do anything without theatre.[/i] Ti. Most sellers price the glow. You priced the... [i]he taps the spiral once[/i] ...provenance. He would have liked that.
+> **Mr. Maverick:** [i]He pays over the odds without haggling — the first time the shop has seen him do anything without theatre.[/i] Well. Most sellers price the glow. You priced the... [i]he taps the spiral once[/i] ...provenance. He would have liked that.
 >
 > **You:** Who—
 >
-> **Mr. Maverick:** [i]The smile closes like a shutter, but gently.[/i] Sa Biyernes, siguro. Some stories want the week to finish first.
+> **Mr. Maverick:** [i]The smile closes like a shutter, but gently.[/i] Friday, perhaps. Some stories want the week to finish first.
 >
 > [b]Note saved:[/b] Maverick paid over the odds for the spiral-marked piece — no haggling, no theatre. "He would have liked that." Who?
 
@@ -622,28 +651,28 @@ loops is background trade with lighter lines.)*
 
 ### 8.3 Beat 3 — the ledger and the release (Day 5; finale capstone)
 
-**Fires only when the other four fragments are seated** (ROUTE-R5). Opening — verbatim from the
-authored scene:
+**Fires only when the other four fragments are seated** (ROUTE-R5). Opening — carried over from
+the authored scene (English rendering):
 
-> **Mr. Maverick:** [i]No business-card performance this time. He's already inside, gentler than before.[/i] Maayo nga aga. You sold me that spiral-marked piece without asking my price first. Nobody's done that in a long time, lagi.
+> **Mr. Maverick:** [i]No business-card performance this time. He's already inside, gentler than before.[/i] Good morning. You sold me that spiral-marked piece without asking my price first. Nobody's done that in a long time.
 >
 > **You:** You said you'd pay attention to the mark. Trusting you once wouldn't hurt.
 >
 > **Mr. Maverick:** [i]He sets a battered ledger on the counter — pages of handwriting that isn't his.[/i] Your Yuyu kept me on a short list of people he trusted to deal honestly. I've kept that list longer than I should have.
 >
-> **Mr. Maverick:** He asked me to look into something the week before he disappeared. Indi ko gusto i-drop ina nga investigation nga half-done — pero wala ko sang partner. Until now, maybe.
+> **Mr. Maverick:** He asked me to look into something the week before he disappeared. I never wanted to drop that investigation half-done — but I had no partner. Until now, maybe.
 
 **[REWRITTEN from here — the release replaces the hand-over.]** *(The authored continuation has
 him produce the fragment from his coat — that violates §4-B/ROUTE-R5/DISP-R3 and is superseded;
 the original lines are quoted for the record in §12, conflict C1. The corrected scene:)*
 
-> **Mr. Maverick:** The thing he asked me to trace — the fifth of five. Ginlagas ko ini nga piyesa sa tatlo ka syudad kag isa ka bangkarote nga auction house. [i]He opens the ledger to a page of columns and dead ends, and turns it to face you.[/i] Last month the trail ended. A mixed lot nobody could place — tipped into *your* yard with the rest of the week's salvage.
+> **Mr. Maverick:** The thing he asked me to trace — the fifth of five. I chased that piece through three cities and one bankrupt auction house. [i]He opens the ledger to a page of columns and dead ends, and turns it to face you.[/i] Last month the trail ended. A mixed lot nobody could place — tipped into *your* yard with the rest of the week's salvage.
 >
 > **You:** It's been *here*? Then why not just—
 >
 > **Mr. Maverick:** Buy it back? Walk out there and take it? [i]He closes the ledger, and for once the smile reaches his eyes.[/i] The piece I sold you my attention for — the spiral one — it and its sibling have been speaking to each other all week. Listen on your way out. The yard is loud today.
 >
-> **Mr. Maverick:** I'm not the type to hand a man his own history, anak. Go find it — it's out there waiting for you, same as it waited for me.
+> **Mr. Maverick:** I'm not the type to hand a man his own history, kid. Go find it — it's out there waiting for you, same as it waited for me.
 >
 > [i]He leaves the ledger on the counter. Encoded — Yuyu's hand, Yuyu's cipher. On the last written page, a spiral.[/i]
 >
@@ -678,19 +707,19 @@ deferred to the artifact lock (D1); this scene is authored to the five-part stru
 When the last piece joins, the shop's lamplight holds still — the first moment in the whole game
 with **no clock running.**
 
-### 9.2 The return (verbatim)
+### 9.2 The return (carried over — English rendering)
 
 > **Yuyu:** [i]Where there was only lamplight, there is a man — translucent at the edges, already steadying.[/i] —and that's why the Chronos Emulsion shouldn't ever be sealed with— [i]He stops. Looks at you.[/i] ...Ah.
 >
 > **You:** Yuyu—
 >
-> **Yuyu:** Naku... look at you. [i]He reaches out, not quite touching your shoulder, like his hands aren't entirely back yet.[/i] How long was I...?
+> **Yuyu:** Goodness... look at you. [i]He reaches out, not quite touching your shoulder, like his hands aren't entirely back yet.[/i] How long was I...?
 >
 > **You:** Five days. Looped. Over and over, until—
 >
-> **Yuyu:** Until five people I trusted held five pieces, and one stubborn anak went and found every single one of them. [i]He laughs, real this time, a little wet at the edges.[/i]
+> **Yuyu:** Until five people I trusted held five pieces, and one stubborn kid went and found every single one of them. [i]He laughs, real this time, a little wet at the edges.[/i]
 >
-> **Yuyu:** Alima. Passing something forward, hand to hand, until it's too heavy for one person to carry alone. I think I finally understand why your Lola said it like that.
+> **Yuyu:** *Alima.* Passing something forward, hand to hand, until it's too heavy for one person to carry alone. I think I finally understand why your Lola said it like that.
 
 ### 9.3 The morning that finally comes **[NEW]**
 
@@ -705,7 +734,7 @@ complete by the finale's own gate):
   Nobody says anything important. That's the point.
 - **The workshop.** Lave fits the restored baul lid onto a new-made chest — old wood and new,
   both hands showing.
-- **The yard.** Ayla's cart, repainted: **TESORO**. The lunchbox rides on top, not for sale.
+- **The yard.** Ayla's cart, repainted: **TREASURE**. The lunchbox rides on top, not for sale.
 - **The record.** Sam files the final report on Crate 11 — findspot: *a junk shop in Iloilo;
   context: intact.* The player is listed under "recovered by."
 - **The ledger.** Maverick, at the counter one last time, decoding pages with the player — Yuyu's
@@ -731,26 +760,26 @@ requires the other four seated).
 
 The evening after `fragment_01` releases, she is on the shop step at closing, ampaw for two.
 
-> **Nang Shine:** Kon makita mo siya, anak — sa diin man siya karon — hambala: the porch is still wide. [i]She pats the mended photograph in your hands, once, like tucking in a child.[/i] Kag hambala, wala na ako nagahulat. Nagapuyo na ako. There is a difference, ha. It took me forty years.
+> **Nang Shine:** If you ever see him, child — wherever he is now — tell him: the porch is still wide. [i]She pats the mended photograph in your hands, once, like tucking in a child.[/i] And tell him I'm not waiting anymore. I'm living. There is a difference, ha. It took me forty years.
 
 ### 10.2 Nong Lave — *"An Apprentice of Old Hands"* **[NEW]**
 
 He burns a small mark into the empty slot of the tool roll he gave away — the player's initials,
 beside generations of others.
 
-> **Nong Lave:** Ang roll nga ina — indi na akon. Was never mine, gali. It's a hallway. [i]He hangs the santo's cloth on its hook, unhurried.[/i] Kon may bata nga mag-abot sa imo puertahan someday nga may amerilyo sa kamot — you'll know what to do. Hinay-hinay lang, ha?
+> **Nong Lave:** That roll — it isn't mine anymore. Never was, it turns out. It's a hallway. [i]He hangs the santo's cloth on its hook, unhurried.[/i] If some kid turns up at your door someday with polish in their hand — you'll know what to do. Gently does it, ha?
 
 ### 10.3 Ayla — *"Not Everything Old Is Trash"* **[NEW]**
 
 The lunchbox goes on the shop's shelf — polished, priced at nothing, labeled in her handwriting.
 
-> **Ayla:** [i]She sets it dead center where the light hits, adjusts it twice, dares you to object.[/i] Display lang, ha. Indi baligya. Kon may magpamangkot kon pila — hambala, "sold na. Sang una pa." [i]At the door she stops, doesn't turn around.[/i] ...Salamat kay gintan-aw mo gid. Amo lang to ang ginapangayo ko sa tanan.
+> **Ayla:** [i]She sets it dead center where the light hits, adjusts it twice, dares you to object.[/i] Display only, ha. Not for sale. If anyone asks how much — tell them, "Sold. A long time ago." [i]At the door she stops, doesn't turn around.[/i] ...Thanks for actually looking. That's all I ever asked of anybody.
 
 ### 10.4 Sam — *"The Break, Shown"* **[NEW]**
 
 He brings a copy of his amended site report and puts it on the counter like a shared trophy.
 
-> **Sam:** Nine years of appendices, and the honest version is two pages. [i]He taps the seam of the mended banga on your shelf as he leaves.[/i] History held. Both hands showing. Padayon, kaibahan.
+> **Sam:** Nine years of appendices, and the honest version is two pages. [i]He taps the seam of the mended banga on your shelf as he leaves.[/i] History held. Both hands showing. Carry on, colleague.
 
 ### 10.5 Neutral continuation (END-R2) **[NEW]**
 
@@ -758,7 +787,7 @@ Complete no route in a loop — or in any number of loops — and the week simpl
 is lost (the journal keeps everything), and nothing moves. The journal marks it with one recurring
 line of Yuyu's recovered ink, gentle rather than punitive:
 
-> [i]New ink, no hand visible: "Ang semana nagahulat sa imo, indi sa oras." — the week is waiting on you, not on the clock.[/i]
+> [i]New ink, no hand visible: "The week is waiting on you, not on the clock."[/i]
 
 ### 10.6 The Buyer's non-ending
 
@@ -862,7 +891,8 @@ P15.1/P15.2.
 **C3 — Ayla's authored `return` scene bundles the Sam lead with the vindication.** The final two
 blocks of `scavenger.dialogue.return` give the `archeologist_lead` — but v2 (ROUTE-R8) moves the
 lead earlier, to free daily contact (§6.4), which is what breaks the dependency cycle. The
-vindication scene (§6.5) keeps the rest verbatim. **Pending: split the scene in data** at P15.1.
+vindication scene (§6.5) keeps the rest of the scene beat-for-beat. **Pending: split the scene in
+data** at P15.1.
 
 **C4 — The Master Artifact is unlocked (decision D1, PENDING_TEAM_DECISION).** Every scene that
 touches a fragment or the artifact — Shine's wrapped piece (§4.4), the finale assembly and its
@@ -870,10 +900,24 @@ join order (§9.1), Portal fact cards, the ledger's decoded contents (§9.3) —
 artifact-agnostically here and **must stay generic until `data/artifacts/packets/artifact_lock.json`
 resolves**. The lore video and replica also hang on this.
 
-**C5 — Native-speaker review gate (§4-Q / ASSET-R4).** All Hiligaynon/Kinaray-a — the carried-over
-scenes *and* every **[NEW]** line in this document — is working-draft quality, written by
-non-native hands, and must pass a native-speaker pass before recording/shipping. Record the review
-in `docs/reviews/`. Folklore framing (§1.4) is part of the same review.
+**C5 — Cultural review gate (§4-Q / ASSET-R4).** Even with all-English dialogue (C6), cultural
+review is still required for: the retained honorifics and cultural terms (§1.4), the folklore
+framing of family sayings (§4-L), the depiction of the *santo*, *baul*, and *bahay-na-bato*
+material culture, and the **Kinaray-a audio phrases of the Cultural Echo Voice band** (still
+planned per README §9.9, with captions). Record the review in `docs/reviews/`.
+
+**C6 — All-English dialogue decision (team, 2026-07-04) vs. the GDD's language promise.** The
+team directed that all dialogue be written in English for implementability; this document is fully
+converted (English sentences throughout; only the §1.4 retained terms remain). Two consequences to
+resolve, not silently absorb:
+  1. **GDD parity (§4-M).** `README.md` §3 promises "Kinaray-a and Hiligaynon cultural lines,
+     always subtitled," and §10/§12 promise native-speaker-reviewed Kinaray-a lines. The team must
+     either update the GDD/PRD wording to match the English-dialogue decision (e.g., narrowing the
+     promise to the Voice-band audio + retained cultural terms) or plan a dialect re-localization
+     pass later with native speakers. A product promise must not be silently downgraded.
+  2. **Data catch-up.** The authored dialogue in `data/routes/routes.json` still contains the
+     Hiligaynon/Kinaray-a mix. The English renderings in this document are the canonical
+     replacements; apply them to data at P15.1 together with C1–C3.
 
 **N1 — Kinship canonized (new decision, team may revise).** This bible fixes: Yuyu = the player's
 grand-uncle, the elder brother of **Lola** (the player's grandmother, who ran the shop and coined
@@ -900,7 +944,10 @@ decal sets, tools, and `deliverable: false` where appropriate (following the Aun
 ## 13. Review gates
 
 - [ ] Team read-through: flow, beats, endings, item web approved.
-- [ ] Native-speaker review of all Hiligaynon/Kinaray-a lines (record in `docs/reviews/`).
+- [ ] Cultural review of retained terms, folklore framing, material-culture depictions, and the
+      Voice-band Kinaray-a audio phrases (record in `docs/reviews/`).
+- [ ] C6 resolution: update the GDD/PRD language promise (or schedule a dialect re-localization
+      pass), and apply the English dialogue to `data/routes/routes.json` at P15.1.
 - [ ] C1–C3 data updates scheduled into Phase 15 implementation.
 - [ ] D1 artifact lock → revisit §4.4, §9.1, §9.3 for the locked artifact's specifics.
 
