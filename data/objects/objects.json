@@ -895,6 +895,46 @@
 	  "can_hold_temporal_echo": false,
 	  "deliverable": false,
 	  "is_quest_item": true
+	},
+	{
+	  "record_type": "template",
+	  "id": "ayla_lunchbox",
+	  "display_name": "Dented Lunchbox",
+	  "description": "A dented tin lunchbox, rusted shut, the corner of an old movie sticker still clinging on. Scratched initials and a date hide somewhere under the rust.",
+	  "category": "metal",
+	  "base_rarity": "green",
+	  "weight_range": [
+		150.0,
+		300.0
+	  ],
+	  "materials": [
+		"tin"
+	  ],
+	  "tags": [
+		"metal",
+		"small",
+		"quest"
+	  ],
+	  "is_openable": false,
+	  "openable_type": "",
+	  "required_clean_tool": "rust_brush",
+	  "clean_minigame": "tin_pry",
+	  "clean_completion_threshold": 100,
+	  "clean_progress_per_action": 25,
+	  "clean_value_bonus": 10,
+	  "wrong_tool_condition_damage": 15,
+	  "wrong_tool_value_damage": 10,
+	  "wrong_tool_feedback": "The wrong tool grinds at the initials instead of the rust.",
+	  "base_value_range": [
+		0,
+		150
+	  ],
+	  "storage_cost": 2,
+	  "counterfeit_profile": "",
+	  "historical_fact_ref": "",
+	  "can_hold_temporal_echo": true,
+	  "deliverable": false,
+	  "is_quest_item": true
 	}
   ]
 }

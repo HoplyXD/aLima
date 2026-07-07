@@ -18,6 +18,8 @@ extends Node3D
 const PLAYER_SCENE := preload("res://scenes/locations/scrapyard/player.tscn")
 const SCRAP_ITEM_SCENE := preload("res://scenes/locations/scrapyard/scrap_item.tscn")
 const QUEST_ITEM_SCENE := preload("res://scenes/locations/scrapyard/quest_item.tscn")
+const FRAGMENT_FIND_SCENE := preload("res://scenes/locations/scrapyard/fragment_find.tscn")
+const ECHO_HUD_SCENE := preload("res://scenes/ui/echo_hud.tscn")
 const AYLA_HANDOFF_SCENE := preload("res://scenes/locations/scrapyard/ayla_handoff_screen.tscn")
 const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
 const INTERACTABLE_SCRIPT := preload("res://scripts/shop/interactable_3d.gd")
@@ -77,6 +79,10 @@ var _book_viewport: BookViewport
 var _storage_screen: StorageScreen
 var _storage_interactable: Interactable3D
 var _inspection_overlay: ItemInspectionOverlay
+## Hidden-fragment hunt state for this space: the spawned finds, the echo HUD,
+## and which fragment currently drives the EchoController hunt target.
+var _echo_hud: EchoHud
+var _hunt_target_id: String = ""
 
 const YUYU_PORTRAIT := preload("res://assets/Characters/Uncle.png")
 
@@ -115,6 +121,7 @@ func _ready() -> void:
 	_setup_scrap_items_root()
 	_spawn_scrap_items()
 	_spawn_pending_quest_items()
+	_spawn_fragment_finds()
 	_setup_outdoor_storage()
 	if _hud != null:
 		_hud.phone_pressed.connect(_open_phone_overlay)
@@ -153,6 +160,7 @@ func _process(delta: float) -> void:
 	_update_hud()
 	_update_sun()
 	_update_tutorial_targets()
+	_update_hunt_echo()
 
 
 func _maybe_swap_map() -> void:
@@ -333,6 +341,12 @@ func _setup_scrap_items_root() -> void:
 func _open_handoff() -> void:
 	var quest_progress := QuestService.get_progress("alya_quest_line")
 
+	# The Manong's Keeping (fragment_03): Ayla's post-questline lunchbox arc runs
+	# through daily contact. Checked before the welcome-back line so her story
+	# can continue past the first questline.
+	if _handle_lunchbox_dialogue():
+		return
+
 	# Next-loop welcome: Alya greets returning players who completed the quest line
 	if QuestService.is_completed("alya_quest_line"):
 		_dialogue_box.start(
@@ -390,6 +404,51 @@ func _open_handoff() -> void:
 		if _handoff_screen != null:
 			_handoff_screen.open()
 		_enter_overlay()
+
+
+## The Manong's Keeping (fragment_03) dialogue chain, keyed on quest progress.
+## Gated on Alya's questline being done and Sam's excavation tools being owned
+## (the ROUTE-R8 cross-route gate). Returns true when it presented dialogue.
+func _handle_lunchbox_dialogue() -> bool:
+	var progress := QuestService.get_progress("ayla_lunchbox")
+	if progress == "completed" or progress == "failed":
+		return false
+	if progress.is_empty():
+		if not QuestService.is_completed("alya_quest_line"):
+			return false
+		if not GameState.save_state.persistent.legacy_items.has("excavation_tools"):
+			return false
+		if FragmentService.get_state("fragment_03") != ModelEnums.FragmentState.LOCKED:
+			return false
+		_dialogue_box.start(
+			_ayla_lines(
+				"lunchbox_start",
+				"Ayla: My Tatay's lunchbox is still out there. Dig it out for me, ha?"
+			)
+		)
+		_pending_dialogue_action = "lunchbox_start"
+		_enter_overlay()
+		return true
+	# progress == "lb_dig": the arc advances by what the player is carrying.
+	var lunchbox := _find_quest_item_in_inventory("ayla_lunchbox")
+	if lunchbox == null:
+		_dialogue_box.start(
+			_ayla_lines(
+				"lunchbox_remind",
+				"Ayla: The lunchbox is deep in the Dump Site heaps — Days 3 and 4, ha?"
+			)
+		)
+		_pending_dialogue_action = "lunchbox_remind"
+	elif lunchbox.state == ModelEnums.ObjState.DIRTY:
+		_dialogue_box.start(
+			_ayla_lines("lunchbox_dirty", "Ayla: Not like this, ha? Clean it first.")
+		)
+		_pending_dialogue_action = "lunchbox_dirty"
+	else:
+		_dialogue_box.start(_ayla_lines("lunchbox_show", "Ayla: ...That's my Tatay's initials."))
+		_pending_dialogue_action = "lunchbox_show"
+	_enter_overlay()
+	return true
 
 
 ## Loads an authored Ayla dialogue block from the scavenger route, falling back to
@@ -834,6 +893,17 @@ func _on_dialogue_finished() -> void:
 			QuestService.unlock_location("dump_site")
 			_pending_dialogue_action = ""
 			_exit_overlay()
+		"lunchbox_start":
+			QuestService.start_quest("ayla_lunchbox")
+			QuestService.advance_quest("ayla_lunchbox", "lb_dig")
+			# The dig item lives in the Dump Site; if that's this scene, spawn now.
+			_spawn_pending_quest_items()
+			_pending_dialogue_action = ""
+			_exit_overlay()
+		"lunchbox_show":
+			_complete_lunchbox_quest()
+			_pending_dialogue_action = ""
+			_exit_overlay()
 		"yard_welcome_back":
 			_pending_dialogue_action = ""
 			_exit_overlay()
@@ -841,6 +911,20 @@ func _on_dialogue_finished() -> void:
 			_pending_dialogue_action = ""
 			_exit_overlay()
 	_refresh_hud_hotbar()
+
+
+## Showing Ayla the restored lunchbox completes her arc: the lunchbox becomes a
+## permanent keepsake (never sold) and her fragment RELEASES into the hunt.
+func _complete_lunchbox_quest() -> void:
+	_remove_quest_item_from_inventory("ayla_lunchbox")
+	if not GameState.save_state.persistent.legacy_items.has("ayla_lunchbox"):
+		GameState.save_state.persistent.legacy_items.append("ayla_lunchbox")
+	QuestService.ensure_active("ayla_lunchbox")
+	QuestService.complete_quest("ayla_lunchbox")
+	FragmentService.release_fragment("fragment_03", "ayla_lunchbox")
+	var save_result := SaveService.save_game()
+	if not save_result.ok:
+		push_error("Scrapyard: lunchbox save failed: %s" % save_result.get("error", ""))
 
 
 func _enter_overlay() -> void:
@@ -877,6 +961,116 @@ func _set_yard_interactables_enabled(enabled: bool) -> void:
 			var interactable := child as Interactable3D
 			if interactable != null:
 				interactable.set_enabled(enabled)
+
+
+# --- Hidden-fragment hunt ------------------------------------------------------
+#
+# Team decision 2026-07-07: RELEASED fragments hide at Spawn-Director-planned
+# hiding spots in the walkable spaces. The player tracks the spot by Cultural
+# Echoes (EchoController hunt mode + EchoHud); picking the find up fires the
+# existing Found -> Portal -> seat chain directly.
+
+
+## The hiding-spot location key this space serves. DumpSite overrides.
+func _hunt_location_id() -> String:
+	return "yard"
+
+
+func _spawn_fragment_finds() -> void:
+	# Day 0 has no released fragments and no hunt; skip the HUD entirely.
+	if TutorialService.is_tutorial_active():
+		return
+	var hunts := HuntService.spots_for_location(_hunt_location_id())
+	if hunts.is_empty():
+		return
+	var space := get_world_3d().direct_space_state
+	for hunt in hunts:
+		var spot: HidingSpot = hunt["spot"]
+		var find: FragmentFind = FRAGMENT_FIND_SCENE.instantiate()
+		find.set_fragment_id(hunt["fragment_id"])
+		find.position = _ground_snap(spot.x, spot.z, space)
+		find.found.connect(_on_fragment_found)
+		_scrap_items_root.add_child(find)
+	_setup_echo_hud()
+
+
+func _setup_echo_hud() -> void:
+	if _echo_hud != null:
+		return
+	_echo_hud = ECHO_HUD_SCENE.instantiate()
+	add_child(_echo_hud)
+
+
+## Drives the EchoController hunt target: the nearest unfound find in this
+## space. Silence rules stay in the controller; this only feeds positions.
+func _update_hunt_echo() -> void:
+	var nearest := _nearest_fragment_find()
+	if nearest == null:
+		if not _hunt_target_id.is_empty():
+			_hunt_target_id = ""
+			EchoController.clear_hunt_target()
+		return
+	if nearest.fragment_id != _hunt_target_id:
+		_hunt_target_id = nearest.fragment_id
+		EchoController.set_hunt_target(_hunt_target_id)
+	EchoController.set_carrier_position(nearest.global_position)
+	if _player != null:
+		EchoController.set_listener_position(_player.global_position)
+
+
+func _nearest_fragment_find() -> FragmentFind:
+	if _scrap_items_root == null:
+		return null
+	var best: FragmentFind = null
+	var best_distance := INF
+	for child in _scrap_items_root.get_children():
+		var find := child as FragmentFind
+		if find == null or find.is_queued_for_deletion():
+			continue
+		var distance := INF
+		if _player != null:
+			distance = (find.global_position - _player.global_position).length_squared()
+		if distance < best_distance:
+			best_distance = distance
+			best = find
+	return best
+
+
+func _on_fragment_found(fragment_id: String) -> void:
+	# Free the mouse and freeze the player for the Found -> Unlock overlay; the
+	# portal flow signals back when it ends (unlocked or backed out).
+	_enter_overlay()
+	PortalFlowController.flow_finished.connect(_on_portal_flow_finished, CONNECT_ONE_SHOT)
+	if not _hunt_target_id.is_empty():
+		_hunt_target_id = ""
+		EchoController.clear_hunt_target()
+	HuntService.mark_found(fragment_id)
+	EventBus.fragment_discovered.emit(fragment_id, "")
+
+
+func _on_portal_flow_finished(_fragment_id: String) -> void:
+	_exit_overlay()
+	_refresh_hud_hotbar()
+
+
+## Raycasts down to sit the find on the actual ground at the authored x/z.
+func _ground_snap(x: float, z: float, space: PhysicsDirectSpaceState3D) -> Vector3:
+	var query := PhysicsRayQueryParameters3D.new()
+	query.from = Vector3(x, 50.0, z)
+	query.to = Vector3(x, -10.0, z)
+	query.collision_mask = 1
+	var result := space.intersect_ray(query)
+	if result.is_empty():
+		return Vector3(x, 0.3, z)
+	var pos: Vector3 = result.position
+	pos.y += 0.1
+	return pos
+
+
+func _exit_tree() -> void:
+	if not _hunt_target_id.is_empty():
+		_hunt_target_id = ""
+		EchoController.clear_hunt_target()
 
 
 # --- Quest helpers -----------------------------------------------------------
@@ -936,7 +1130,13 @@ func _spawn_quest_item(template_id: String, bounds: Dictionary) -> void:
 	_scrap_items_root.add_child(item)
 
 
-func _on_quest_item_collected(_template_id: String) -> void:
+func _on_quest_item_collected(template_id: String) -> void:
+	# The lunchbox is quest-essential: selling it to anyone fails the quest
+	# (it can only be shown to Ayla, never traded).
+	if template_id == "ayla_lunchbox":
+		var lunchbox := _find_quest_item_in_inventory("ayla_lunchbox")
+		if lunchbox != null:
+			QuestService.track_quest_item(lunchbox.uid, "ayla_lunchbox", "ayla")
 	_refresh_hud_hotbar()
 
 

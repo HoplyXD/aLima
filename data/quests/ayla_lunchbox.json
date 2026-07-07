@@ -1,0 +1,24 @@
+{
+  "id": "ayla_lunchbox",
+  "display_name": "The Manong's Keeping",
+  "description": "Dig Ayla's father's dented lunchbox out of the Dump Site, restore it, and show her what the rust was hiding.",
+  "prerequisite_quests": ["alya_quest_line"],
+  "prerequisite_locations": ["dump_site"],
+  "prerequisite_day": 1,
+  "is_repeatable": false,
+  "beats": [
+    {
+      "id": "lb_dig",
+      "day": 3,
+      "summary": "Dig the dented lunchbox out of the Dump Site heaps with Sam's excavation tools (Days 3-4), then clean it and show Ayla.",
+      "object_template": "ayla_lunchbox"
+    }
+  ],
+  "rewards": [
+    {
+      "type": "fragment",
+      "value": "fragment_03",
+      "id": "lb_reward"
+    }
+  ]
+}

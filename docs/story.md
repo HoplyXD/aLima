@@ -1005,9 +1005,9 @@ gate; she becomes the daily scrap-sorting partner and the emotional heart of the
 |---|---|---|
 | `fragment_01` | Nang Shine (auntie) | found **inside the shop safe** once the safe code is learned |
 | `fragment_02` | Nong Lave (artisan) | given after completing his **final cleaning quest** |
-| `fragment_03` | Ayla (scavenger) | open — resolve with the Sam expansion (see N5) |
+| `fragment_03` | Ayla (scavenger) | the lunchbox quest — dig/clean/show, then the hunt (**implemented 2026-07-07**; see N5) |
 | `fragment_04` | Sam (archeologist) | the salakot → bag carrier flow above (**implemented**) |
-| `fragment_05` | Mr. Maverick (buyer) | his **end-of-Day-5 "last offer"**: ~**₱50,000** — brutal, demands mastery of haggling + clean restorations (mechanics pending; the shipped build still uses §8's spiral-mark trust flow) |
+| `fragment_05` | Mr. Maverick (buyer) | his **end-of-Day-5 "last offer"**: **₱50,000** once the other four are seated → releases into a guaranteed same-day hunt (**implemented 2026-07-07**; see N6) |
 
 ### 14.5 Schedules & spaces (implemented)
 
@@ -1021,9 +1021,17 @@ gate; she becomes the daily scrap-sorting partner and the emotional heart of the
 
 **N5 — Scavenger vs archeologist fragment split.** Q3 delivers `fragment_04` via Sam; Ayla's own
 `fragment_03` release path is unwritten. Decide when the Sam storyline expands.
+**RESOLVED 2026-07-07 (implemented):** Ayla's own arc is the lunchbox quest ("The Manong's
+Keeping", `data/quests/ayla_lunchbox.json`, per §6.5): after her questline and with Sam's
+excavation tools, dig the dented lunchbox from the Dump Site, clean it (initials reveal), and
+show her — completing it releases `fragment_03` into the hunt.
 
 **N6 — Maverick day-5 buy-in vs §8 spiral-mark flow.** The ₱50k last-offer canon (14.4)
 replaces §8's trust-gift beat; the build still runs §8. Reconcile before Phase 15 dialogue lock.
+**RESOLVED 2026-07-07 (implemented):** the ₱50k last offer is in the build — once fragments
+01–04 are seated, Maverick waits at the door all of Day 5; paying ₱50,000 grants the
+`encoded_ledger` and releases `fragment_05` into a guaranteed same-day hunt spot. The §8
+spiral-mark trust beats stay unwired (the spiral survives as lore).
 
 ---
 
@@ -1105,9 +1113,19 @@ nationally iconic and broaden the museum. **Owner pick pending — recommendatio
 
 **N7 — Fragment handoff mechanic (15.2 [INV]):** choose (A) dirty-carrier gate or (B) direct
 seat; if (B), amend §4-B/§4-D.
+**RESOLVED 2026-07-07 (team lead, implemented):** a hybrid. Fragments released by a **story
+completion** hide **bare** at Spawn-Director-planned hiding spots across the maps
+(`data/delivery/hiding_spots.json`) and are hunted by Cultural Echoes — the pickup at the spot IS
+the discovery (Found → Portal → seat; no clean→open on the hunt path). **NPC-scripted grants keep
+option (A)**: Sam's dirty bag (`fragment_04`) still must be cleaned and opened. CLAUDE.md
+§4-B/C/D/E/H/I and PRD §12 amended accordingly.
 
 **N8 — Echoes bound to historical artifacts (15.3 [INV]):** re-target Spawn Director + Echo hunt
 from fragment carriers to fragment-unlocked historical artifacts; reconcile §4-E/§4-I/§12.
+**RESOLVED 2026-07-07 (team lead): rejected.** The echoes stay bound to the hidden **fragments of
+the secret artifact** — after a character's story completes, their fragment spawns hidden in a
+random place across the maps and the four-band hunt leads to it. Historical artifacts (the Oton
+Death Mask and the §15.4 roster) remain ordinary gold museum collectibles with no echo binding.
 
 **N9 — Historical artifact roster (15.4):** confirm the 5+ pieces to model and log each in
-`docs/sources/`.
+`docs/sources/`. *(Still open — museum content only; decoupled from the echo hunt by N8.)*

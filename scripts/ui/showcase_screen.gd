@@ -56,7 +56,12 @@ func open(route: CharacterRoute, beat: Dictionary) -> void:
 	_step = 0
 	_completed = false
 
-	_title_label.text = "%s — A Photograph to Mend" % route.display_name
+	# Beats may author their own showcase title; the photograph line stays the
+	# default for the original Auntie beats.
+	var beat_title := str(beat.get("title", "")).strip_edges()
+	if beat_title.is_empty():
+		beat_title = "A Photograph to Mend"
+	_title_label.text = "%s — %s" % [route.display_name, beat_title]
 	_summary_label.text = str(beat.get("summary"))
 	if not route.portrait.is_empty():
 		var tex: Texture2D = load(route.portrait)

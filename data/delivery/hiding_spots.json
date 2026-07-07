@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "record_type": "hiding_spot",
+      "id": "yard_tarp_north",
+      "location": "yard",
+      "x": -16.0,
+      "z": -20.0,
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "yard_heap_east",
+      "location": "yard",
+      "x": 14.0,
+      "z": -18.0,
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "yard_gate_side",
+      "location": "yard",
+      "x": -6.0,
+      "z": -2.0,
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "yard_fence_east",
+      "location": "yard",
+      "x": 18.0,
+      "z": 4.0,
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "yard_fence_west",
+      "location": "yard",
+      "x": -18.0,
+      "z": 6.0,
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "yard_heap_south",
+      "location": "yard",
+      "x": 4.0,
+      "z": -22.0,
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "yard_bay_center",
+      "location": "yard",
+      "x": 10.0,
+      "z": -6.0,
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "yard_crate_west",
+      "location": "yard",
+      "x": -10.0,
+      "z": -12.0,
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "dump_heap_west",
+      "location": "dump_site",
+      "x": -25.0,
+      "z": -15.0,
+      "requires": ["location_unlocked:dump_site"],
+      "days": [3, 4]
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "dump_heap_east",
+      "location": "dump_site",
+      "x": 20.0,
+      "z": -20.0,
+      "requires": ["location_unlocked:dump_site"],
+      "days": [3, 4]
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "dump_path_center",
+      "location": "dump_site",
+      "x": -10.0,
+      "z": 5.0,
+      "requires": ["location_unlocked:dump_site"],
+      "days": [3, 4]
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "dump_fence_east",
+      "location": "dump_site",
+      "x": 25.0,
+      "z": 8.0,
+      "requires": ["location_unlocked:dump_site"],
+      "days": [3, 4]
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "dump_house_side",
+      "location": "dump_site",
+      "x": -30.0,
+      "z": 10.0,
+      "requires": ["location_unlocked:dump_site"],
+      "days": [3, 4]
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "dump_heap_south",
+      "location": "dump_site",
+      "x": 8.0,
+      "z": -28.0,
+      "requires": ["location_unlocked:dump_site"],
+      "days": [3, 4]
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "forbidden_rubble",
+      "location": "forbidden_zone",
+      "x": 2.0,
+      "z": 3.0,
+      "requires": ["location_unlocked:forbidden_zone"],
+      "days": [3, 4]
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "forbidden_corner",
+      "location": "forbidden_zone",
+      "x": -3.0,
+      "z": -2.0,
+      "requires": ["location_unlocked:forbidden_zone"],
+      "days": [3, 4]
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "shop_pile_left",
+      "location": "shop",
+      "anchor": "pile_left",
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "shop_pile_center",
+      "location": "shop",
+      "anchor": "pile_center",
+      "requires": [],
+      "days": []
+    },
+    {
+      "record_type": "hiding_spot",
+      "id": "shop_shelf_right",
+      "location": "shop",
+      "anchor": "shelf_right",
+      "requires": [],
+      "days": []
+    }
+  ]
+}

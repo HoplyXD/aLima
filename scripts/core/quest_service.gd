@@ -61,6 +61,21 @@ func start_quest(quest_id: String) -> void:
 	EventBus.emit_signal("quest_started", quest_id, def.display_name)
 
 
+## Re-materializes the runtime instance for a quest whose persistent progress
+## says it is underway (e.g. after a save reload, when _active is empty).
+## No-op when already active, completed, failed, or never started. Call before
+## advance_quest/complete_quest in flows that can resume from a loaded save.
+func ensure_active(quest_id: String) -> void:
+	if is_active(quest_id) or is_completed(quest_id) or is_failed(quest_id):
+		return
+	var progress := str(GameState.save_state.persistent.quest_progress.get(quest_id, ""))
+	if progress.is_empty():
+		return
+	var inst := QuestInstance.new(quest_id)
+	inst.progress = progress
+	_active[quest_id] = inst
+
+
 ## Advances a quest to a new progress state. E.g. "found_glasses" for Alya Q1.
 func advance_quest(quest_id: String, progress: String) -> void:
 	if not is_active(quest_id):

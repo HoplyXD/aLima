@@ -139,6 +139,7 @@ func test_every_loop_scoped_field_resets() -> void:
 	loop.day_event_outcomes["event_a"] = "outcome_a"
 	loop.current_delivery_ids.append("delivery_1")
 	loop.current_carrier_placements["fragment_01"] = {"container_id": "pile_left"}
+	loop.fragment_spots["fragment_01"] = {"spot_id": "stale_manual_spot", "location": "yard"}
 
 	_close_current_day()
 
@@ -154,19 +155,24 @@ func test_every_loop_scoped_field_resets() -> void:
 	assert_eq(fresh.pending_requests.size(), 0)
 	assert_eq(fresh.day_event_outcomes.size(), 0)
 	assert_eq(fresh.current_delivery_ids.size(), 0)
-	# current_carrier_placements is loop-scoped and is cleared, then the Spawn
-	# Director re-plans any RELEASED fragments for the new loop. The manually
-	# injected placeholder must be replaced by a real plan (it has no
-	# carrier_template_id), even if the Director happens to pick the same
-	# container again.
-	assert_true(
-		fresh.current_carrier_placements.has("fragment_01"),
-		"Released fragment gets a fresh carrier placement"
+	# The hidden-fragment hunt (team decision 2026-07-07): loop reset clears the
+	# loop-scoped hunt plans, then the Spawn Director re-plans a hunt spot for
+	# every RELEASED fragment. The legacy carrier-in-delivery placement stays off
+	# unless data re-enables it, so current_carrier_placements remains empty.
+	assert_eq(
+		fresh.current_carrier_placements.size(),
+		0,
+		"Legacy carrier placement stays off (spawn_config.legacy_carrier_delivery=false)"
 	)
-	var new_plan: Dictionary = fresh.current_carrier_placements["fragment_01"]
+	assert_true(fresh.fragment_spots.has("fragment_01"), "Released fragment gets a fresh hunt spot")
+	var new_plan: Dictionary = fresh.fragment_spots["fragment_01"]
 	assert_true(
-		new_plan.has("carrier_template_id"),
-		"Old manual placeholder must be replaced by a real SpawnDirector plan"
+		new_plan.has("spot_id") and new_plan["spot_id"] != "stale_manual_spot",
+		"Old manual placeholder must be replaced by a real SpawnDirector hunt plan"
+	)
+	assert_true(
+		DataRepository.singleton().hiding_spots.has(new_plan["spot_id"]),
+		"Planned spot must be an authored hiding spot"
 	)
 	assert_eq(fresh.current_day, 1)
 	assert_eq(fresh.current_hour, 7)

@@ -11,6 +11,10 @@ var day_spread_weight_multiplier: float = 1.0
 var min_candidate_weight: float = 0.0
 var safe_container_id: String = "safe"
 var safe_unlock_flag: String = "safe_code_known"
+## Legacy pre-hunt behavior: plan carrier placements and inject the carrier into
+## the morning delivery. Superseded by the hidden-fragment hunt (team decision
+## 2026-07-07); kept behind this flag for tests and rollback.
+var legacy_carrier_delivery: bool = false
 
 
 func _init() -> void:
@@ -28,6 +32,7 @@ static func from_dictionary(data: Dictionary) -> SpawnConfig:
 	cfg.min_candidate_weight = ModelUtils.as_float(data.get("min_candidate_weight"), 0.0)
 	cfg.safe_container_id = ModelUtils.as_string(data.get("safe_container_id"), "safe")
 	cfg.safe_unlock_flag = ModelUtils.as_string(data.get("safe_unlock_flag"), "safe_code_known")
+	cfg.legacy_carrier_delivery = ModelUtils.as_bool(data.get("legacy_carrier_delivery"))
 	return cfg
 
 
@@ -40,6 +45,7 @@ func to_dictionary() -> Dictionary:
 		"min_candidate_weight": min_candidate_weight,
 		"safe_container_id": safe_container_id,
 		"safe_unlock_flag": safe_unlock_flag,
+		"legacy_carrier_delivery": legacy_carrier_delivery,
 	}
 
 

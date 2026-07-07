@@ -12,6 +12,12 @@ var _forbidden_zone_block: CollisionShape3D
 var _intact_fence: Node3D
 var _broken_fence: Node3D
 
+
+## Hidden-fragment hunt: this space serves the "dump_site" hiding spots.
+func _hunt_location_id() -> String:
+	return "dump_site"
+
+
 func _ready() -> void:
 	# Disable auto-generated map collision — the authored Collision shapes in the
 	# scene are already scaled 2x and cover the ground, walls, house, and
@@ -197,7 +203,9 @@ func _ayla_lines(dialogue_key: String, fallback: String) -> Array:
 func _check_q3_trigger() -> void:
 	var progress := QuestService.get_progress("alya_quest_line")
 	if progress == "q2_completed" and DayClock.get_day() == 5:
-		_dialogue_box.start(_ayla_lines("q3_start", "Ayla: The fence wasn't broken yesterday... Something's wrong."))
+		_dialogue_box.start(
+			_ayla_lines("q3_start", "Ayla: The fence wasn't broken yesterday... Something's wrong.")
+		)
 		_pending_dialogue_action = "q3_start"
 		_enter_overlay()
 
@@ -217,7 +225,15 @@ func _open_handoff() -> void:
 
 	# Quest 3: Player found salakot
 	if quest_progress == "q3_salakot" and _has_quest_item_in_inventory("salakot"):
-		_dialogue_box.start(_ayla_lines("q3_salakot_found", "Ayla: You found it! Take it back to the shop — someone important will come looking for it."))
+		(
+			_dialogue_box
+			. start(
+				_ayla_lines(
+					"q3_salakot_found",
+					"Ayla: You found it! Take it back to the shop — someone important will come looking for it."
+				)
+			)
+		)
 		_pending_dialogue_action = "q3_salakot_found"
 		_enter_overlay()
 		return
@@ -227,12 +243,22 @@ func _open_handoff() -> void:
 		var bag_inst := _find_quest_item_in_inventory("cute_bag")
 		if bag_inst != null:
 			if bag_inst.state == ModelEnums.ObjState.DIRTY:
-				_dialogue_box.start(_ayla_lines("q2_bag_found", "Ayla: You found it! Please clean it for me... I want to see what's inside."))
+				_dialogue_box.start(
+					_ayla_lines(
+						"q2_bag_found",
+						"Ayla: You found it! Please clean it for me... I want to see what's inside."
+					)
+				)
 				_pending_dialogue_action = "q2_bag_found"
 				_enter_overlay()
 				return
-			elif bag_inst.state == ModelEnums.ObjState.OPEN:
-				_dialogue_box.start(_ayla_lines("q2_bag_opened", "Ayla: It's a note from Papa... and this small artifact he left for me."))
+			if bag_inst.state == ModelEnums.ObjState.OPEN:
+				_dialogue_box.start(
+					_ayla_lines(
+						"q2_bag_opened",
+						"Ayla: It's a note from Papa... and this small artifact he left for me."
+					)
+				)
 				_pending_dialogue_action = "q2_bag_opened"
 				_enter_overlay()
 				return
@@ -295,7 +321,12 @@ func _spawn_pending_quest_items() -> void:
 	if progress == "q2_bag" and not _has_quest_item_in_inventory("cute_bag"):
 		_spawn_quest_item("cute_bag", _get_dump_site_bounds())
 	# Salakot is now in the Forbidden Zone (separate location) — don't spawn it here
-
+	# The Manong's Keeping: her father's lunchbox is buried here until dug out.
+	if (
+		QuestService.get_progress("ayla_lunchbox") == "lb_dig"
+		and not _has_quest_item_in_inventory("ayla_lunchbox")
+	):
+		_spawn_quest_item("ayla_lunchbox", _get_dump_site_bounds())
 
 
 func _get_dump_site_bounds() -> Dictionary:
