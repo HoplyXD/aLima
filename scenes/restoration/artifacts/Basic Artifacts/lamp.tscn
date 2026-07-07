@@ -13,12 +13,19 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_jscyi"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_segii"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_0cvim"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
+[ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
 
 [node name="Lamp" type="Node3D" unique_id=456840677]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, -0.11943139, 0)
 script = ExtResource("1_tgpoi")
-artifact_rarity = 0
+artifact_rarity = 1
 base_value_min = 120
 base_value_max = 200
 randomize_conditions_min = 2
@@ -65,7 +72,6 @@ condition_texture = ExtResource("9_e55b0")
 opacity = 0.2
 coverage_min = 50.0
 coverage_max = 100.0
-use_own_uvs = true
 auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 7.22
@@ -112,7 +118,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=1906747825]
 script = ExtResource("scannerdata_node")
 type = "brass oil lamp"
 period = "late 19th to early 20th century"
@@ -122,5 +128,34 @@ condition_note = "Tarnished brass body; burner and wick channel show use. Reserv
 cultural_relevance = "A household oil lamp of a type used before rural electrification across the Philippines. The form is common; significance depends on provenance."
 price_min = 70
 price_max = 220
-confidence = 1
 uncertainty_notes = "No maker's mark; date estimated from construction and wear."
+
+[node name="OverlayGrease" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_grease")
+layer_order = 24
+
+[node name="OverlayMud" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_mud")
+layer_order = 28
+
+[node name="OverlayOldPaint" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_old_paint")
+layer_order = 16
+
+[node name="OverlaySaltCrust" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_salt_crust")
+layer_order = 26
+
+[node name="OverlaySoot" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_soot")
+layer_order = 27
+
+[node name="OverlayWax" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_wax")
+layer_order = 25

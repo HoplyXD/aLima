@@ -7,8 +7,13 @@ extends Node3D
 ## spawns, so dropping a new scene in scenes/restoration/artifacts/ adds it to the game with no code.
 
 ## Rarity tiers, plus INHERIT (= use the matching data template's rarity, so existing artifacts keep
-## their authored rarity until a designer overrides it on the scene).
-enum ArtifactRarity { INHERIT = -1, WHITE = 0, GREEN = 1, BLUE = 2, PURPLE = 3, GOLD = 4 }
+## their authored rarity until a designer overrides it on the scene). ORANGE_QUEST is NOT a real
+## rarity tier (§4-E keeps the five-tier legend): picking it marks the artifact as a QUEST item
+## (orange UI, unsellable to normal buyers, out of the random pool) and inherits the data rarity —
+## a one-click way to flag quest artifacts without touching the checkbox + tier separately.
+enum ArtifactRarity {
+	INHERIT = -1, WHITE = 0, GREEN = 1, BLUE = 2, PURPLE = 3, GOLD = 4, ORANGE_QUEST = 5
+}
 
 ## The five quest-giving NPCs an artifact can be assigned to (ids match data/routes/routes.json).
 enum QuestNpc { AUNTIE, ARTISAN, SCAVENGER, ARCHEOLOGIST, BUYER }
@@ -362,6 +367,26 @@ func set_fully_clean() -> void:
 	_dirt_texture.update(_dirt_image)
 
 
+## Debug-only: wipes every visible condition in one step — dirt mask, paint layer, authored
+## overlays, dust shell, authored decals, and data-driven blemishes. The service owns the
+## matching state write; this is purely presentation.
+func debug_clean_all_visuals() -> void:
+	set_fully_clean()
+	clear_paint()
+	if has_overlays():
+		force_clean_overlays([])
+	if has_dust_overlay():
+		for i in _dust_alive.size():
+			_dust_alive[i] = 0
+		_rebuild_dust_mesh()
+	if has_authored_conditions():
+		for condition_id in uncleaned_authored_ids():
+			apply_authored_clean(condition_id, 99999)
+	if is_decal_mode():
+		for blemish_id in get_visible_blemish_ids():
+			remove_blemish(blemish_id)
+
+
 # --- Runtime paint layer (DrawableTexture2D) ---------------------------------
 # A drawable grime/damage layer the player can draw onto via the dirt shader's paint_layer
 # sampler, at the SAME analytic surface UV ray_test_surface returns — so a drawn stamp lands
@@ -637,7 +662,7 @@ func _clear_dust_overlay() -> void:
 
 ## Builds every authored ArtifactOverlay child from the model mesh, and caches the model's
 ## triangles+UVs for the ray->UV used to erase them. Runtime only.
-func build_overlays(seed_value: int = 0) -> void:
+func build_overlays(seed_value: int = 0, allowed_conditions: Array = []) -> void:
 	if Engine.is_editor_hint():
 		return
 	var mesh := _dust_source_mesh()
@@ -648,19 +673,37 @@ func build_overlays(seed_value: int = 0) -> void:
 		# artifact, while two different instances (different seed_value) differ overall.
 		var s: int = seed_value ^ (int(overlay.layer_order) * 73856093)
 		overlay.build_with_fallback(mesh, scale, s)
-	_apply_condition_randomizer(overlays, seed_value)
+	_apply_condition_randomizer(overlays, seed_value, allowed_conditions)
 
 
 ## Picks WHICH conditions this instance has: rolls a count in [randomize_conditions_min, max], keeps every
 ## guaranteed_spawn overlay, fills the rest at random from the other spawnable overlays, and clears the
 ## ones that didn't make the cut (they render clean). Deterministic per seed. Disabled when max <= 0.
-func _apply_condition_randomizer(overlays: Array, seed_value: int) -> void:
-	if randomize_conditions_max <= 0:
-		return
+func _apply_condition_randomizer(
+	overlays: Array, seed_value: int, allowed_conditions: Array = []
+) -> void:
 	var eligible: Array = []
 	for o in overlays:
-		if o.has_method("is_spawnable") and o.is_spawnable():
-			eligible.append(o)
+		if not (o.has_method("is_spawnable") and o.is_spawnable()):
+			continue
+		# Instance condition whitelist (Day 0 grime+dust, quest constraints): a
+		# disallowed condition type renders clean this run. Type filter only —
+		# never touches the overlay's authored setup (§4-R).
+		if (
+			not allowed_conditions.is_empty()
+			and o.has_method("get_condition_id")
+			and not _condition_id_allowed(str(o.get_condition_id()), allowed_conditions)
+		):
+			if o.has_method("clear_condition"):
+				o.clear_condition()
+			continue
+		eligible.append(o)
+	# A whitelist means "exactly these conditions": every allowed overlay spawns,
+	# so the taught piece reliably shows each condition the lesson covers.
+	if not allowed_conditions.is_empty():
+		return
+	if randomize_conditions_max <= 0:
+		return
 	if eligible.is_empty():
 		return
 	var rng := RandomNumberGenerator.new()
@@ -691,6 +734,15 @@ func _apply_condition_randomizer(overlays: Array, seed_value: int) -> void:
 	for o in eligible:
 		if not active.has(o) and o.has_method("clear_condition"):
 			o.clear_condition()
+
+
+## True when a raw overlay condition slug (e.g. "grime") resolves into the
+## whitelist ("dirt"). Runtime only (the randomizer never runs in the editor).
+func _condition_id_allowed(raw_type: String, allowed: Array) -> bool:
+	if allowed.has(raw_type):
+		return true
+	var condition := _match_condition(DataRepository.singleton(), _slug(raw_type))
+	return condition != null and allowed.has(condition.id)
 
 
 func has_overlays() -> bool:
@@ -728,33 +780,71 @@ func clean_overlays_ray(origin: Vector3, direction: Vector3) -> bool:
 	return false
 
 
-## Cleans overlays with a REAL tool: finds the outermost overlay the ray meets whose condition the
-## tool can clean (`cleans`{condition_id: power 0-100}), and fades it by that power at `radius_frac`.
-## Returns {cleaned, condition_id, fully_cleaned} on success, or {cleaned:false, wrong_tool} when the
-## ray meets overlays but the tool can clean none of them.
+## Cleans overlays with a REAL tool. A single wipe treats EVERY overlay the ray meets
+## whose condition the tool can clean (`cleans`{condition_id: power 0-100}), each at its
+## own power — so a multi-condition tool (damp cloth on dust + grime, soap on mud/soot/
+## grease) clears all its matching layers in one stroke instead of one per pass.
+## Returns {cleaned, condition_id, conditions, fully_cleaned, point[, revealed]} when the
+## tool treats anything here, or {cleaned:false, wrong_tool} when the ray meets overlays
+## but the tool can clean none of them.
 func clean_overlays_with_tool(
 	origin: Vector3, direction: Vector3, cleans: Dictionary, radius_frac: float
 ) -> Dictionary:
 	var overlays := _find_overlays(self)
 	overlays.sort_custom(func(a: Node, b: Node) -> bool: return a.layer_order > b.layer_order)
 	var any_hit := false
+	var treated := false
+	var any_changed := false
+	var any_fully := false
+	var conditions: Array[String] = []
+	var first_point: Variant = null
+	var revealed_id := ""
 	for overlay in overlays:
 		if not overlay.is_built() or not overlay.ray_hits(origin, direction):
 			continue
 		any_hit = true
 		var cond := String(overlay.get_condition_id())
 		var power := int(cleans.get(cond, 0))
-		if power > 0:
-			# Only counts as a clean (puff + wear) if dirt actually came off here — scrubbing an
-			# already-clean spot does nothing.
-			var changed: bool = overlay.clean_ray(origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac)
-			return {
-				"cleaned": changed,
-				"condition_id": cond,
-				"fully_cleaned": overlay.cleaned_fraction() >= 0.999,
-				"point": overlay.ray_hit_point(origin, direction),
-			}
-	return {"cleaned": false, "wrong_tool": any_hit}
+		if power <= 0:
+			continue
+		treated = true
+		if not conditions.has(cond):
+			conditions.append(cond)
+		if first_point == null:
+			first_point = overlay.ray_hit_point(origin, direction)
+		# Only counts as a clean (puff + wear) if dirt actually came off here — scrubbing an
+		# already-clean spot does nothing.
+		var changed: bool = overlay.clean_ray(
+			origin, direction, clampf(power / 100.0, 0.0, 1.0), radius_frac
+		)
+		any_changed = any_changed or changed
+		var fully: bool = overlay.cleaned_fraction() >= 0.999
+		# Two-stage chain (data-driven): fully cleaning a chained condition MORPHS the
+		# overlay into the revealed one (its own texture + tool) instead of finishing.
+		if fully and overlay.has_method("transform_to_condition"):
+			var condition := _match_condition(DataRepository.singleton(), cond)
+			if condition != null and not condition.reveals_condition.is_empty():
+				var revealed: SurfaceCondition = DataRepository.singleton().get_surface_condition(
+					condition.reveals_condition
+				)
+				if revealed != null:
+					overlay.transform_to_condition(revealed.id, _condition_texture(revealed))
+					fully = false
+					if revealed_id.is_empty():
+						revealed_id = revealed.id
+		any_fully = any_fully or fully
+	if not treated:
+		return {"cleaned": false, "wrong_tool": any_hit}
+	var out := {
+		"cleaned": any_changed,
+		"condition_id": conditions[0] if not conditions.is_empty() else "",
+		"conditions": conditions,
+		"fully_cleaned": any_fully,
+		"point": first_point,
+	}
+	if not revealed_id.is_empty():
+		out["revealed"] = revealed_id
+	return out
 
 
 ## A small dust puff burst at a WORLD point on the artifact (the spot the tool just cleaned).
@@ -874,7 +964,11 @@ func _find_overlays(root: Node) -> Array:
 	# Duck-typed (build_with_fallback + clean_ray) so this @tool script needs no ArtifactOverlay ref.
 	var out: Array = []
 	for child in root.get_children():
-		if child is Node3D and child.has_method("build_with_fallback") and child.has_method("clean_ray"):
+		if (
+			child is Node3D
+			and child.has_method("build_with_fallback")
+			and child.has_method("clean_ray")
+		):
 			out.append(child)
 		out.append_array(_find_overlays(child))
 	return out
@@ -958,9 +1052,7 @@ func is_clasp_interactive() -> bool:
 func ray_test_surface(origin: Vector3, direction: Vector3) -> Dictionary:
 	if not _built or _medallion == null:
 		return {"hit": false}
-	var hit := _ray_sphere(
-		origin, direction, _medallion.global_position, _radius * _authored_scale
-	)
+	var hit := _ray_sphere(origin, direction, _medallion.global_position, _radius * _authored_scale)
 	if not hit.get("hit", false):
 		return {"hit": false}
 	var local: Vector3 = _medallion.to_local(hit["point"])
@@ -1079,7 +1171,11 @@ func _spawn_decals(
 		var removed: bool = removed_ids.has(decal.id)
 		node.visible = not removed and not HIDE_DECALS
 		_blemishes[decal.id] = {
-			"node": node, "center": center, "removed": removed, "required_tool": decal.required_tool
+			"node": node,
+			"center": center,
+			"removed": removed,
+			"required_tool": decal.required_tool,
+			"type_id": decal.type,  # condition id, for power-based tool highlighting
 		}
 		index += 1
 
@@ -1236,13 +1332,34 @@ func _clear_blemishes() -> void:
 ## Idempotent: safe to call again on reload (cleaned ones keep their removed flag).
 ## `seed_value` (instance uid + loop) only drives which decals are active this run
 ## (randomize_conditions_max) and resets dirt; it does NOT move the decals.
-func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> void:
+func register_authored_conditions(
+	repo: DataRepository, seed_value: int = 0, allowed_conditions: Array = []
+) -> void:
 	_authored.clear()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var all := _find_authored_decals(self)
+	# Instance condition whitelist (Day 0 grime+dust, quest constraints): decals of a
+	# disallowed TYPE are hidden and unregistered this run, exactly like decals that
+	# lose the randomiser roll. Their authored placement is never touched (§4-R).
+	if not allowed_conditions.is_empty():
+		var permitted: Array = []
+		for raw in all:
+			var candidate: Variant = raw
+			var candidate_condition := _match_condition(repo, candidate.condition_slug())
+			var resolved_id: String = (
+				candidate_condition.id
+				if candidate_condition != null
+				else str(candidate.condition_slug())
+			)
+			if allowed_conditions.has(resolved_id):
+				permitted.append(candidate)
+			else:
+				candidate.visible = false
+		all = permitted
 	# Randomly pick which placed conditions are live this run (seeded per save + loop).
-	var active := _choose_active_decals(all, rng)
+	# A whitelist means "exactly these conditions": every permitted decal is live.
+	var active := all if not allowed_conditions.is_empty() else _choose_active_decals(all, rng)
 	for raw in all:
 		var decal: Variant = raw
 		# Inactive decals (this run rolled fewer than were placed) are hidden and not
@@ -1276,7 +1393,49 @@ func register_authored_conditions(repo: DataRepository, seed_value: int = 0) -> 
 			"required_tool": required_tool,
 			"type_id": type_id,
 			"removed": decal.is_cleaned(),
+			# Two-stage chain (data-driven): fully cleaning this condition morphs the decal
+			# into the revealed one (its own tool/tint/texture) instead of removing it.
+			"reveals": _resolve_reveals(repo, condition),
 		}
+
+
+## Builds the reveal payload for a condition's `reveals_condition` chain link, or {}.
+## Resolved at registration (repo in hand) so cleaning needs no data lookups. Each link
+## carries the NEXT link too, so chains of 2+ stages work; a visited set breaks cycles.
+func _resolve_reveals(
+	repo: DataRepository, condition: SurfaceCondition, visited: Array = []
+) -> Dictionary:
+	if repo == null or condition == null or condition.reveals_condition.is_empty():
+		return {}
+	if visited.has(condition.id):
+		return {}  # cycle guard — malformed data must never hang cleaning
+	visited.append(condition.id)
+	var revealed := repo.get_surface_condition(condition.reveals_condition)
+	if revealed == null:
+		return {}
+	return {
+		"type_id": revealed.id,
+		"required_tool": revealed.cleaning_tool,
+		"color": revealed.to_color(),
+		"texture": _condition_texture(revealed),
+		"reveals": _resolve_reveals(repo, revealed, visited),
+	}
+
+
+## The condition art for a journal condition: the PNG in assets/artifact_conditions/
+## whose file name slugs to the condition's id or display name (Mud.png -> mud). Null
+## when no art exists yet — the decal then keeps its current texture, tint changes only.
+static func _condition_texture(condition: SurfaceCondition) -> Texture2D:
+	var dir := DirAccess.open("res://assets/artifact_conditions")
+	if dir == null:
+		return null
+	for file in dir.get_files():
+		if not file.to_lower().ends_with(".png"):
+			continue
+		var slug := _slug(file.get_basename())
+		if slug == condition.id or slug == _slug(condition.display_name):
+			return load("res://assets/artifact_conditions/" + file) as Texture2D
+	return null
 
 
 ## Ray-tests the uncleaned authored decals. Returns {hit, condition_id}.
@@ -1321,6 +1480,9 @@ func authored_working_burst(condition_id: String) -> void:
 
 ## Applies one correct-tool stroke of `power` to an authored condition: fades it a
 ## step and, once fully cleaned, plays the success sparkle. Returns true when cleaned.
+## Two-stage conditions never return true on their outer layer: scrubbing the mud off
+## MORPHS the decal into the revealed condition (new tool, tint, texture) and cleaning
+## continues — only clearing the FINAL link in the chain counts as cleaned.
 func apply_authored_clean(condition_id: String, power: int) -> bool:
 	if not _authored.has(condition_id):
 		return false
@@ -1329,14 +1491,26 @@ func apply_authored_clean(condition_id: String, power: int) -> bool:
 	if decal == null or not decal.has_method("apply_clean"):
 		return false
 	var cleaned: bool = decal.apply_clean(power)
-	if cleaned:
-		entry["removed"] = true
+	if not cleaned:
+		return false
+	var reveals: Dictionary = entry.get("reveals", {})
+	if not reveals.is_empty() and decal.has_method("transform_to"):
+		# Outer layer off — swap the decal to the revealed condition and keep going.
+		decal.transform_to(reveals.get("texture"), reveals.get("color", Color.WHITE))
+		entry["type_id"] = str(reveals.get("type_id", entry["type_id"]))
+		entry["required_tool"] = str(reveals.get("required_tool", ""))
+		entry["reveals"] = reveals.get("reveals", {})
+		return false
+	entry["removed"] = true
 	return cleaned
 
 
 ## Optional learning cue: throbs the conditions (authored OR data-driven) that `tool_id`
 ## can clean, at the given pulse `intensity` (0..1); every other condition goes quiet. Pass
 ## tool_id "" or intensity 0 to clear. Presentation only — never moves the dev-placed decals.
+## Matching is POWER-based (CleaningPower), so a multi-condition tool (e.g. the damp
+## cloth cleaning grime AND dust, or soap's mud/soot/grease) highlights every condition
+## it can treat — not just the one whose catalog `cleaning_tool` names it.
 func highlight_for_tool(tool_id: String, intensity: float) -> void:
 	if _authored.is_empty() and _blemishes.is_empty():
 		return
@@ -1344,14 +1518,25 @@ func highlight_for_tool(tool_id: String, intensity: float) -> void:
 		var entry: Dictionary = _authored[condition_id]
 		var decal: Variant = entry["node"]
 		if decal != null and decal.has_method("set_highlight"):
-			var matched := tool_id != "" and str(entry.get("required_tool", "")) == tool_id
+			var matched := _tool_treats(tool_id, str(entry.get("type_id", "")))
 			decal.set_highlight(intensity if matched else 0.0)
 	for blemish_id in _blemishes.keys():
 		var b: Dictionary = _blemishes[blemish_id]
 		var node: Variant = b["node"]
 		if node != null and node.has_method("set_highlight"):
-			var hit := tool_id != "" and str(b.get("required_tool", "")) == tool_id
+			var hit := _tool_treats(tool_id, str(b.get("type_id", "")))
 			node.set_highlight(intensity if hit else 0.0)
+
+
+## True when `tool_id` has any cleaning power against `condition_id`: first from the
+## tool SCENE config (the live source for bench cleaning), else the data catalog.
+func _tool_treats(tool_id: String, condition_id: String) -> bool:
+	if tool_id.is_empty() or condition_id.is_empty():
+		return false
+	var scene_cleans: Dictionary = ToolConfig.for_tool(tool_id).get("cleans", {})
+	if not scene_cleans.is_empty():
+		return int(scene_cleans.get(condition_id, 0)) > 0
+	return CleaningPower.power(DataRepository.singleton(), tool_id, condition_id) > 0
 
 
 func has_authored_conditions() -> bool:
@@ -1413,8 +1598,8 @@ func _find_authored_decals(root: Node) -> Array:
 			child is Node3D
 			and child.has_method("condition_slug")
 			and not child.has_meta("data_blemish")  # runtime data-driven blemish, not authored
-			and not child.is_queued_for_deletion()  # a blemish being cleared this frame
-		):
+			and not child.is_queued_for_deletion()
+		):  # a blemish being cleared this frame
 			found.append(child)
 		found.append_array(_find_authored_decals(child))
 	return found
@@ -1613,10 +1798,13 @@ func view_bounding_radius() -> float:
 func _aabb_corner_radius(ab: AABB) -> float:
 	var m := 0.0
 	for i in 8:
-		var c := ab.position + Vector3(
-			ab.size.x if (i & 1) != 0 else 0.0,
-			ab.size.y if (i & 2) != 0 else 0.0,
-			ab.size.z if (i & 4) != 0 else 0.0
+		var c := (
+			ab.position
+			+ Vector3(
+				ab.size.x if (i & 1) != 0 else 0.0,
+				ab.size.y if (i & 2) != 0 else 0.0,
+				ab.size.z if (i & 4) != 0 else 0.0
+			)
 		)
 		m = maxf(m, c.length())
 	return m

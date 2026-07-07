@@ -188,6 +188,21 @@ func reset() -> void:
 	_set_visual_alpha(clampf(_dirt / 255.0, 0.0, 1.0))
 
 
+## Two-stage conditions: morphs this decal into the REVEALED condition (e.g. soaped-off
+## mud exposing the grime underneath). Swaps the texture + journal tint, restores full
+## dirt, and shows the visual again — the authored transform/size is never touched, so
+## the revealed mark sits exactly where the dev placed the original (§4-R safe).
+func transform_to(new_texture: Texture2D, new_tint: Color) -> void:
+	if new_texture != null:
+		texture = new_texture  # setter rebuilds the visual with the new look
+	_removed = false
+	_dirt = START_DIRT
+	if _visual != null and is_instance_valid(_visual):
+		_visual.visible = true
+	tint(new_tint)
+	_play_sparkle()  # the outer layer coming away reads as a small success
+
+
 ## Current dirt level (255 = full, MIN_DIRT = clean threshold). Test/UI seam.
 func dirt() -> float:
 	return _dirt

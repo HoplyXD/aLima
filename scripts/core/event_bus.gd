@@ -22,6 +22,13 @@ signal fragment_released(fragment_id: String)
 ## answering the door (the visit is consumed). owner is the route id.
 signal visit_missed(route_id: String, day: int)
 
+# --- Quest events ---
+signal quest_started(quest_id: String, display_name: String)
+signal quest_advanced(quest_id: String, progress: String)
+signal quest_completed(quest_id: String, display_name: String)
+signal quest_failed(quest_id: String)
+signal location_unlocked(location_id: String)
+
 # --- Delivery and triage events ---
 signal delivery_generated(day: int, instance_ids: Array[String])
 signal triage_completed(kept_ids: Array[String], recycled_ids: Array[String])
@@ -73,6 +80,21 @@ signal event_expired(event_id: String, display_name: String)
 ## suspicious antique judged, tool broke). Persisted to LoopState for the evening
 ## summary; the evening summary UI itself is a future Phase 14 dependency.
 signal event_outcome_resolved(event_id: String, outcome_type: String, outcome_data: Dictionary)
+
+# --- Tutorial / travel events (TUT) ---
+## Emitted when the player hands a scrap selection to Ayla (drives the Day 0
+## forage step and any future scrap-flow listeners).
+signal scrap_submitted(selection: Dictionary)
+## Emitted when the restoration bench opens (Day 0 workbench step).
+signal restoration_opened(instance_id: String)
+## Emitted when a sale is accepted with a meet-in-person payment: the item is
+## handed to the player to deliver; money arrives at the handoff.
+signal meet_scheduled(instance_id: String, buyer_id: String, destination_id: String)
+## Emitted when the player hands the item to the buyer at the meet location and
+## the deferred payment is credited.
+signal meet_handoff_completed(
+	instance_id: String, buyer_id: String, price: int, destination_id: String
+)
 
 # --- Discovery events ---
 signal carrier_activated(instance_id: String, fragment_id: String)

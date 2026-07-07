@@ -66,6 +66,61 @@ func _make_tin(uid: String, contents: int = ModelEnums.OpenResult.EMPTY) -> Obje
 	return inst
 
 
+func _make_locket(uid: String, condition: float, true_value: int) -> ObjectInstance:
+	var inst := ObjectInstance.new()
+	inst.template_id = "dusty_locket"
+	inst.uid = uid
+	inst.condition = condition
+	inst.state = ModelEnums.ObjState.DIRTY
+	inst.value = 100
+	inst.true_value = true_value
+	inst.storage_cost = 1
+	return inst
+
+
+func test_true_value_clamped_to_template_range_on_load() -> void:
+	var inst := _make_locket("locket_bad", 0.0, 500)
+	var reloaded := ObjectInstance.from_dictionary(inst.to_dictionary())
+	var template: ScrapObjectTemplate = _repo.get_template("dusty_locket")
+	assert_eq(
+		reloaded.true_value,
+		int(template.base_value_range.y),
+		"out-of-range true_value is clamped to max"
+	)
+	# Verify the bottom of the range is also respected.
+	inst.true_value = 10
+	reloaded = ObjectInstance.from_dictionary(inst.to_dictionary())
+	assert_eq(
+		reloaded.true_value,
+		int(template.base_value_range.x),
+		"out-of-range true_value is clamped to min"
+	)
+
+
+func test_gold_locket_value_rises_with_condition() -> void:
+	var inst := _make_locket("locket_value", 0.0, 200)
+	_add_instance(inst)
+	var template: ScrapObjectTemplate = _repo.get_template("dusty_locket")
+
+	var v0 := ValueModel.current_value(inst, template, _repo)
+	assert_lte(v0, 50, "filthy piece is floored at 25%% of true value")
+
+	inst.condition = 50.0
+	var v50 := ValueModel.current_value(inst, template, _repo)
+	assert_gt(v50, v0, "value rises as condition improves")
+	assert_lt(v50, inst.true_value, "partially-clean piece is worth less than pristine")
+
+	inst.condition = 100.0
+	var v100 := ValueModel.current_value(inst, template, _repo)
+	assert_eq(v100, inst.true_value, "fully-clean non-decal openable reaches true value")
+
+	# A real tool stroke should also move the displayed value upward.
+	var before := _service.find_instance_by_id("locket_value").value
+	var result := _service.apply_tool("locket_value", "soft_cloth")
+	assert_true(result.ok and result.compatible, "compatible stroke succeeds")
+	assert_gt(result.value_after, before, "one compatible stroke raises the stored value")
+
+
 ## The shared-inventory rule: a non-openable artifact whose conditions are authored in its
 ## scene (no data decals) — like the Oton Death Mask — must still be a bench object, so an
 ## item delivered into storage can actually be restored. Regression for it showing in
@@ -83,7 +138,9 @@ func test_authored_scene_artifact_is_restorable_without_data_decals() -> void:
 	var ids: Array[String] = []
 	for restorable in _service.get_restorable_instances():
 		ids.append(restorable.uid)
-	assert_has(ids, "oton_test", "an authored-scene artifact appears on the bench, not just storage")
+	assert_has(
+		ids, "oton_test", "an authored-scene artifact appears on the bench, not just storage"
+	)
 
 
 func test_instance_with_spawned_conditions_cleans_to_clean() -> void:
@@ -367,6 +424,46 @@ func test_invalid_technique_reference_fails_repository_validation() -> void:
 	repo._validate_cross_references()
 	assert_false(repo.get_validation_result().is_valid())
 	assert_true(_errors_contain(repo.get_validation_result(), "unknown technique"))
+
+
+func test_debug_clean_all_definition_is_debug_only() -> void:
+	var tool := _repo.get_tool("debug_clean_all")
+	assert_not_null(tool)
+	assert_true(tool.debug_only, "the clean-all tool is flagged debug-only")
+	assert_true(tool.enables.has("debug_clean_all"))
+
+
+func test_debug_clean_all_instantly_cleans_openable() -> void:
+	var inst := _make_pendant("debug_pendant")
+	_add_instance(inst)
+	var template: ScrapObjectTemplate = _repo.get_template("tarnished_pendant")
+
+	var result := _service.debug_clean_all("debug_pendant")
+	assert_true(result.ok, "debug clean succeeds in debug builds")
+	assert_true(result.reached_clean)
+
+	var after := _service.find_instance_by_id("debug_pendant")
+	assert_eq(after.state, ModelEnums.ObjState.CLEAN, "state flips to CLEAN")
+	assert_eq(after.condition, float(template.clean_completion_threshold), "condition reaches threshold")
+	assert_eq(after.value, int(template.base_value_range.y), "value reaches max")
+
+
+func test_debug_clean_all_removes_all_spawned_decals() -> void:
+	GameState.save_state.loop.tool_items.append("soft_brush")
+	var inst := _make_pendant("debug_decal")
+	inst.spawned_decals = [
+		{"id": "dust_0", "type": "dust", "color": "#C9C2B0", "required_tool": "soft_brush"},
+		{"id": "rust_1", "type": "rust", "color": "#B5511E", "required_tool": "rust_brush"},
+	]
+	_add_instance(inst)
+
+	var result := _service.debug_clean_all("debug_decal")
+	assert_true(result.ok)
+	var after := _service.find_instance_by_id("debug_decal")
+	assert_eq(after.removed_decals.size(), 2, "both decals are removed")
+	assert_true(after.removed_decals.has("dust_0"))
+	assert_true(after.removed_decals.has("rust_1"))
+	assert_eq(after.state, ModelEnums.ObjState.CLEAN)
 
 
 func _errors_contain(result: ValidationResult, snippet: String) -> bool:

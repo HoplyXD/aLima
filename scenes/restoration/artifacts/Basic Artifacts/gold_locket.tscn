@@ -3,14 +3,23 @@
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
 [ext_resource type="Texture2D" uid="uid://d0hv2ea0goiai" path="res://assets/artifact_conditions/Dust.png" id="3_dust"]
 [ext_resource type="Texture2D" uid="uid://b0wbg2oof1ihe" path="res://assets/artifact_conditions/Tarnish.png" id="4_tarnish"]
-[ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Locket.obj" id="5_locket"]
+[ext_resource type="ArrayMesh" uid="uid://j3s8n3syj0k1" path="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Locket/Locket.obj" id="5_locket"]
 [ext_resource type="PackedScene" uid="uid://b7artovl4lay0" path="res://scenes/restoration/artifact_overlay.tscn" id="6_overlay"]
 [ext_resource type="Texture2D" uid="uid://ce6dtxlv1pqe7" path="res://assets/artifact_conditions/Cracking.png" id="7_cracking"]
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="8_ttqfc"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_lhc0q"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_7ho7m"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Black Tarnish.png" id="ovl_tex_black_tarnish"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
+[ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Verdigris.png" id="ovl_tex_verdigris"]
+[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
 
 [sub_resource type="StandardMaterial3D" id="locket_gold"]
 albedo_color = Color(0.85, 0.7, 0.3, 1)
@@ -21,13 +30,9 @@ roughness = 0.35
 [node name="GoldLocket" type="Node3D" unique_id=1252588796]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-artifact_template_id = null
 artifact_rarity = 3
 base_value_min = 500
 base_value_max = 700
-is_quest_item = null
-quest_npc = null
-quest_number = null
 randomize_conditions_min = 5
 randomize_conditions_max = 5
 model_mesh = ExtResource("5_locket")
@@ -69,7 +74,6 @@ transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 overlay_mesh = ExtResource("5_locket")
 condition_texture = ExtResource("3_dust")
 opacity = 0.5
-use_own_uvs = true
 auto_unwrap = true
 uv2_tiling = 2.0
 own_uv_tiling = 7.22
@@ -111,7 +115,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=16366316]
 script = ExtResource("scannerdata_node")
 type = "locket"
 period = "early 20th century"
@@ -119,7 +123,46 @@ materials = Array[String](["brass", "silver"])
 markings = Array[String](["hinge wear", "tarnish"])
 condition_note = "Dusty and tarnished; hinge moves with slight resistance."
 cultural_relevance = "A personal locket similar to keepsake jewelry kept in families across the Visayas. Specific origin and owner are not recorded."
-price_min = 100
-price_max = 240
-confidence = 1
+price_min = 500
+price_max = 700
 uncertainty_notes = "Metal composition is inferred from surface color and tarnish, not assay."
+
+[node name="OverlayBlackTarnish" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_black_tarnish")
+layer_order = 17
+
+[node name="OverlayGrease" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_grease")
+layer_order = 24
+
+[node name="OverlayMud" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_mud")
+layer_order = 28
+
+[node name="OverlayOldPaint" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_old_paint")
+layer_order = 16
+
+[node name="OverlaySaltCrust" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_salt_crust")
+layer_order = 26
+
+[node name="OverlaySoot" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_soot")
+layer_order = 27
+
+[node name="OverlayVerdigris" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_verdigris")
+layer_order = 18
+
+[node name="OverlayWax" type="Node3D" parent="."]
+script = ExtResource("ovl_script")
+condition_texture = ExtResource("ovl_tex_wax")
+layer_order = 25

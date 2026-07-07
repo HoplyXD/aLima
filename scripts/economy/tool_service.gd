@@ -47,11 +47,15 @@ func grant_tool(tool_id: String) -> ToolInstance:
 	return inst
 
 
-## All owned tool instances (including broken ones).
+## All owned tool instances (including broken ones). Debug-only tools are hidden in
+## release builds even if a debug save happens to contain them.
 func get_owned_tools() -> Array[ToolInstance]:
 	var out: Array[ToolInstance] = []
 	for raw in _game_state.save_state.loop.owned_tools:
 		if raw is Dictionary:
+			var tool_id := ModelUtils.as_string(raw.get("tool_id"))
+			if not _debug_tools_allowed() and _is_debug_only(tool_id):
+				continue
 			out.append(ToolInstance.from_dictionary(raw))
 	return out
 
@@ -59,6 +63,9 @@ func get_owned_tools() -> Array[ToolInstance]:
 func owns_uid(uid: String) -> bool:
 	for raw in _game_state.save_state.loop.owned_tools:
 		if raw is Dictionary and raw.get("uid") == uid:
+			var tool_id := ModelUtils.as_string(raw.get("tool_id"))
+			if not _debug_tools_allowed() and _is_debug_only(tool_id):
+				return false
 			return true
 	return false
 
@@ -161,6 +168,8 @@ func get_workbench_loadout() -> Array[ToolInstance]:
 	for uid in _game_state.save_state.loop.workbench_tools:
 		var inst := _find_owned(uid)
 		if inst != null and inst.is_usable():
+			if not _debug_tools_allowed() and _is_debug_only(inst.tool_id):
+				continue
 			out.append(inst)
 	return out
 
@@ -176,5 +185,19 @@ func get_restore_target() -> String:
 func _find_owned(uid: String) -> ToolInstance:
 	for raw in _game_state.save_state.loop.owned_tools:
 		if raw is Dictionary and raw.get("uid") == uid:
-			return ToolInstance.from_dictionary(raw)
+			var inst := ToolInstance.from_dictionary(raw)
+			if not _debug_tools_allowed() and _is_debug_only(inst.tool_id):
+				return null
+			return inst
 	return null
+
+
+## True when debug-only tools should be visible/usable (editor and debug exports).
+func _debug_tools_allowed() -> bool:
+	return OS.is_debug_build()
+
+
+## True when the tool definition is flagged debug-only.
+func _is_debug_only(tool_id: String) -> bool:
+	var tool := _repo.get_tool(tool_id)
+	return tool != null and tool.debug_only

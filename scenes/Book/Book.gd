@@ -18,6 +18,9 @@ extends Node3D
 
 signal presented_changed(presented: bool)  ## Emitted when the book moves to/from center.
 signal opened  ## Emitted the first time the cover is opened into the spread.
+## Emitted when a page turn settles, with the new left-page number (Day 0 finale
+## reads this to know when the player has reached / left Yuyu's letter).
+signal page_changed(page_number: int)
 
 const FRONT_COVER_FALLBACK := Color(0.36, 0.24, 0.16)
 const BACK_COVER_FALLBACK := Color(0.30, 0.20, 0.13)
@@ -410,12 +413,14 @@ func _on_animation_finished(anim_name):
 		_refresh_paper_spread()
 		static_page.show()
 		turning_page.hide()
+		page_changed.emit(current_page_number)
 		return
 	if anim_name == "TurnBack":
 		if _closing:
 			# Cover-close flip landed: settle back to the single front-cover page.
 			_closing = false
 			_apply_cover_visuals()
+			page_changed.emit(current_page_number)
 		# Otherwise this is the instant spawn-priming pose — leave it as-is.
 		return
 	if anim_name == "Turn1":
@@ -425,3 +430,4 @@ func _on_animation_finished(anim_name):
 	_refresh_paper_spread()
 	static_page.show()
 	turning_page.hide()
+	page_changed.emit(current_page_number)

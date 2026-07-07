@@ -16,7 +16,7 @@ extends Node3D
 const TOOL_SCENE := preload("res://scenes/restoration/restoration_tool.tscn")
 ## Debug tools (draw brush / universal eraser) render with their own tinted prop scene.
 const DEBUG_TOOL_SCENE := preload("res://scenes/restoration/restoration_tool_debug.tscn")
-const DEBUG_ENABLES: Array[String] = ["debug_draw", "debug_erase"]
+const DEBUG_ENABLES: Array[String] = ["debug_draw", "debug_erase", "debug_clean_all"]
 
 ## Resting layout (object space, on the bench top in front of the object).
 const BENCH_Y: float = -0.7

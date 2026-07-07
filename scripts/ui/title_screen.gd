@@ -35,12 +35,14 @@ const MAX_SEED: int = 2147483646
 ]
 @onready var _slot_back_button: Button = $SlotMenu/Back
 
-@onready var _seed_menu: VBoxContainer = $SeedMenu
-@onready var _seed_edit: LineEdit = $SeedMenu/SeedRow/SeedEdit
-@onready var _randomize_button: Button = $SeedMenu/SeedRow/Randomize
-@onready var _start_button: Button = $SeedMenu/Start
-@onready var _seed_back_button: Button = $SeedMenu/Back
-@onready var _seed_status: Label = $SeedMenu/Status
+@onready var _name_menu: VBoxContainer = $NameMenu
+@onready var _name_edit: LineEdit = $NameMenu/NameEdit
+@onready var _name_back_button: Button = $NameMenu/Back
+@onready var _name_status: Label = $NameMenu/Status
+
+@onready var _seed_edit: LineEdit = $NameMenu/SeedRow/SeedEdit
+@onready var _randomize_button: Button = $NameMenu/SeedRow/Randomize
+@onready var _start_button: Button = $NameMenu/Start
 
 @onready var _status_label: Label = $StatusLabel
 @onready var _overwrite_dialog: AcceptDialog = $OverwriteConfirm
@@ -53,12 +55,14 @@ var _time: float = 0.0
 var _parallax: Vector2 = Vector2.ZERO
 
 var _selected_slot: int = -1
+## Name confirmed on the NameMenu, applied to the save in _start_new_game().
+var _pending_player_name: String = ""
 
 
 func _ready() -> void:
 	_connect_main_menu()
 	_connect_slot_menu()
-	_connect_seed_menu()
+	_connect_name_menu()
 	_connect_overwrite_dialog()
 	_show_main_menu()
 	_refresh_continue_button()
@@ -104,18 +108,19 @@ func _show_main_menu() -> void:
 	_refresh_continue_button()
 
 
-func _show_seed_menu() -> void:
+func _show_name_menu() -> void:
 	_hide_all_menus()
-	_seed_menu.visible = true
+	_name_menu.visible = true
+	_name_edit.text = _pending_player_name
+	_name_status.text = ""
 	_seed_edit.text = ""
-	_seed_status.text = ""
-	_seed_edit.grab_focus()
+	_name_edit.grab_focus()
 
 
 func _hide_all_menus() -> void:
 	_main_menu.visible = false
 	_slot_menu.visible = false
-	_seed_menu.visible = false
+	_name_menu.visible = false
 
 
 # --- Main menu ----------------------------------------------------------------
@@ -181,9 +186,6 @@ func _on_slot_pressed(slot: int) -> void:
 	_selected_slot = slot
 	if SaveService.slot_exists(slot):
 		# Occupied slot: different behavior for New Game vs Continue.
-		if _seed_menu.visible:
-			# Should not happen; seed menu is only reached from an empty slot.
-			return
 		# We need to know whether we're in New Game or Continue flow.
 		# The slot menu is shown for one or the other; use a stored flag.
 		if _in_new_game_flow:
@@ -195,17 +197,23 @@ func _on_slot_pressed(slot: int) -> void:
 			_attempt_continue(slot)
 	else:
 		# Empty slot: only valid for New Game.
-		_show_seed_menu()
+		_show_name_menu()
 
 
-# --- Seed menu ----------------------------------------------------------------
+# --- Name menu ------------------------------------------------------------------
 
 
-func _connect_seed_menu() -> void:
-	_randomize_button.pressed.connect(_on_randomize_pressed)
+func _connect_name_menu() -> void:
 	_start_button.pressed.connect(_on_start_pressed)
-	_seed_back_button.pressed.connect(_show_slot_menu.bind(true))
+	_randomize_button.pressed.connect(_on_randomize_pressed)
+	_name_back_button.pressed.connect(_show_slot_menu.bind(true))
+	_name_edit.text_submitted.connect(func(_text: String) -> void: _on_start_pressed())
 	_seed_edit.text_changed.connect(_on_seed_text_changed)
+
+
+## Returns the trimmed name, or "" when invalid (blank/whitespace-only).
+func _parse_player_name(text: String) -> String:
+	return text.strip_edges()
 
 
 func _on_seed_text_changed(new_text: String) -> void:
@@ -226,9 +234,17 @@ func _on_randomize_pressed() -> void:
 
 
 func _on_start_pressed() -> void:
+	var parsed := _parse_player_name(_name_edit.text)
+	if parsed.is_empty():
+		_name_status.text = "Enter a name (letters, numbers, or spaces)."
+		return
+	_pending_player_name = parsed
+	# A blank seed rolls a random one (the hint promises it).
+	if _seed_edit.text.strip_edges().is_empty():
+		_on_randomize_pressed()
 	var seed := _parse_seed(_seed_edit.text)
 	if seed < 0:
-		_seed_status.text = "Enter a number from 0 to %d." % MAX_SEED
+		_name_status.text = "Seed must be a number from 0 to %d." % MAX_SEED
 		return
 	_start_new_game(_selected_slot, seed)
 
@@ -254,7 +270,7 @@ func _connect_overwrite_dialog() -> void:
 
 func _on_overwrite_confirmed() -> void:
 	SaveService.delete_slot(_selected_slot)
-	_show_seed_menu()
+	_show_name_menu()
 
 
 func _on_overwrite_canceled() -> void:
@@ -278,12 +294,18 @@ func _show_slot_menu(for_new_game: bool) -> void:
 func _start_new_game(slot: int, seed: int) -> void:
 	SaveService.select_slot(slot)
 	GameState.initialize("local-player")
+	# After initialize (it rebuilds save_state), stamp the chosen identity so the
+	# very first save already carries the player's name, and arm the Day 0
+	# tutorial: it runs exactly once per newly created save file (TUT).
+	GameState.save_state.persistent.player_name = _pending_player_name
+	GameState.save_state.persistent.tutorial_completed = false
 	GameState.new_run(seed)
 	var save_result := SaveService.save_game()
 	if not save_result.ok:
-		_seed_status.text = "Save failed: %s" % save_result.get("error", "")
+		_name_status.text = "Save failed: %s" % save_result.get("error", "")
 		return
-	SpaceManager.go_to_shop()
+	# Day 0 opens at the scrapyard gate where Yuyu waits (TUT).
+	SpaceManager.go_to(TutorialService.entry_space())
 
 
 func _attempt_continue(slot: int) -> void:
@@ -293,4 +315,5 @@ func _attempt_continue(slot: int) -> void:
 		_status_label.text = "Could not load slot %d: %s" % [slot + 1, load_result.get("error", "")]
 		_show_main_menu()
 		return
-	SpaceManager.go_to_shop()
+	# A mid-tutorial save resumes in the space its current step lives in.
+	SpaceManager.go_to(TutorialService.entry_space())

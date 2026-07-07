@@ -82,7 +82,9 @@ aLima's answer to the theme is structural rather than decorative: preservation i
 
 *(High-level premise. Specific arcs, dialogue, and the final artifact are in development — see the note at the top of this document.)*
 
-The player helps run a family junk shop. Their uncle — a "Chronographer" who studied the memories held within objects — disappeared, leaving only a worn journal bound in Chronos Emulsion. Before vanishing, he had entrusted five fragments of a regional heritage object to five people he trusted.
+The player helps run a family junk shop. Their uncle — **Yuyu**, a "Chronographer" who studied the memories held within objects — disappeared, leaving only a worn journal bound in Chronos Emulsion. Before vanishing, he had entrusted five fragments of a regional heritage object to five people he trusted.
+
+The game opens on **Day 0**, the day Yuyu disappears: the player (named at save creation; never shown on screen, gender left to the player's perception) arrives on Panay Island to visit Tito Yuyu's house and junkshop and learn about the artifacts of Panay. Across one clockless guided day Yuyu teaches the whole craft — foraging the scrapyard, handing scrap to Ayla, triage, cleaning, scanning, selling — then sends the player alone on a tricycle delivery to town. They return to an empty shop and a journal that wasn't there that morning; touching it blacks the world out, and the player wakes into Day 1 of the loop. Day 0 never repeats (a skip is offered in the pause menu), and time itself only begins with Day 1.
 
 The journal sits outside the flow of time: it is both what keeps the surrounding days looping and the one thing that survives each reset. New writing sometimes appears in it on its own. Inside its cover is an empty case cut for the five fragments. To break the loop, the player must complete the five characters' story routes — which release the fragments back into the local scrap stream — then track each fragment down, restore and open the ordinary object hiding it, and seat all five in the journal's case.
 

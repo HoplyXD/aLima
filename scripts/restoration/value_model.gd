@@ -8,7 +8,8 @@ class_name ValueModel
 ## sellable — just worth less. The result is FLOORED AT 1/4 OF THE TRUE VALUE (so a filthy piece is
 ## still worth something, but cleaning always pays off) and never exceeds the true value.
 
-## Fraction of the true value below which conditions can never push the price (the dirty-piece floor).
+## Fraction of the true value below which conditions can never push the price
+## (the dirty-piece floor).
 const MIN_VALUE_FRACTION := 0.25
 
 
@@ -28,15 +29,15 @@ static func current_value(
 		base = inst.value if inst.value > 0 else _template_mid(template)
 	if template == null or repo == null or base <= 0:
 		return maxi(base, 0)
-	var reduction := _reduction_percent(inst, repo)
+	var reduction := _reduction_percent(inst, template, repo)
 	var current := int(round(float(base) * (1.0 - reduction / 100.0)))
 	return clampi(current, mini(_floor_for(base), base), base)
 
 
-## Current value from an explicit {condition_id: {coverage 0..1, value_reduction percent}} map — used
-## by the restoration view to price authored-overlay artifacts off their LIVE overlay coverage and each
-## overlay's OWN value_reduction. The value climbs smoothly as the player cleans, floored at 1/4 of the
-## true value and capped at it.
+## Current value from an explicit {condition_id: {coverage 0..1, value_reduction percent}}
+## map — used by the restoration view to price authored-overlay artifacts off their LIVE overlay
+## coverage and each overlay's OWN value_reduction. The value climbs smoothly as the player
+## cleans, floored at 1/4 of the true value and capped at it.
 static func value_from_coverage(true_value: int, coverage: Dictionary) -> int:
 	if true_value <= 0:
 		return maxi(true_value, 0)
@@ -46,17 +47,25 @@ static func value_from_coverage(true_value: int, coverage: Dictionary) -> int:
 	for condition_id in coverage.keys():
 		var entry: Dictionary = coverage[condition_id]
 		reduction += (
-			float(entry.get("value_reduction", 0.0)) * clampf(float(entry.get("coverage", 0.0)), 0.0, 1.0)
+			float(entry.get("value_reduction", 0.0))
+			* clampf(float(entry.get("coverage", 0.0)), 0.0, 1.0)
 		)
 	var current := int(round(float(true_value) * (1.0 - reduction / 100.0)))
 	return clampi(current, mini(_floor_for(true_value), true_value), true_value)
 
 
 ## Total percent (0..100) of the true value removed by the instance's still-present conditions.
-static func _reduction_percent(inst: ObjectInstance, repo: DataRepository) -> float:
+static func _reduction_percent(
+	inst: ObjectInstance, template: ScrapObjectTemplate, repo: DataRepository
+) -> float:
 	var counts := _condition_counts(inst)
 	if counts.is_empty():
-		return 0.0
+		# Non-decal, non-overlay pieces (ordinary openables) have no per-condition data; derive the
+		# reduction directly from how close condition is to the clean-completion threshold.
+		var threshold := template.clean_completion_threshold if template != null else 100
+		if threshold <= 0:
+			threshold = 100
+		return clampf(1.0 - inst.condition / float(threshold), 0.0, 1.0) * 100.0
 	# Decal pieces track per-condition removal; authored pieces use overall cleanliness.
 	var use_decals := not inst.removed_decals.is_empty()
 	var dirty_fraction := clampf(1.0 - inst.condition / 100.0, 0.0, 1.0)

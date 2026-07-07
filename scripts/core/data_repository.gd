@@ -77,6 +77,7 @@ func load_from_filesystem() -> ValidationResult:
 	_validate_container_compatibility()
 
 	if _validation.is_valid():
+		_sanitize_loaded_fixtures()
 		_loaded = true
 	else:
 		_clear_state()
@@ -85,6 +86,12 @@ func load_from_filesystem() -> ValidationResult:
 
 func is_loaded() -> bool:
 	return _loaded
+
+
+## True only when the shared singleton has been created AND finished loading.
+## Safe to call from ObjectInstance.from_dictionary() without triggering re-load.
+static func is_singleton_loaded() -> bool:
+	return _singleton != null and _singleton.is_loaded()
 
 
 func get_validation_result() -> ValidationResult:
@@ -462,7 +469,13 @@ func _parse_marketplace_file(file_path: String) -> void:
 		match record_type:
 			"return_owner":
 				var id := ModelUtils.as_string(item.get("id"))
-				_add_record(return_owners, id, (item as Dictionary).duplicate(true), file_path, "return_owner")
+				_add_record(
+					return_owners,
+					id,
+					(item as Dictionary).duplicate(true),
+					file_path,
+					"return_owner"
+				)
 			"marketplace_listing":
 				# Authored listing fixtures are validated as models but not persisted here;
 				# runtime listings live in LoopState. Reserved for future tuning content.
@@ -642,6 +655,16 @@ func _validate_cross_references() -> void:
 				"cleaning_tool",
 				"unknown tool reference '%s'" % condition.cleaning_tool
 			)
+		if (
+			not condition.reveals_condition.is_empty()
+			and not surface_conditions.has(condition.reveals_condition)
+		):
+			_validation.add_field_error(
+				"data/journal",
+				condition_id,
+				"reveals_condition",
+				"unknown condition reference '%s'" % condition.reveals_condition
+			)
 
 	for buyer_id in buyer_personas.keys():
 		var persona: BuyerPersona = buyer_personas[buyer_id]
@@ -755,6 +778,11 @@ func _validate_container_compatibility() -> void:
 		return
 	for template_id in scrap_object_templates.keys():
 		var template: ScrapObjectTemplate = scrap_object_templates[template_id]
+		# Non-deliverable items (quest/given items like the salakot) are placed by
+		# bespoke code, never by the spawn director into a delivery container, so they
+		# do not require a compatible container.
+		if not template.deliverable:
+			continue
 		var candidate_tags := template.tags.duplicate()
 		candidate_tags.append(template.category)
 		if not template.openable_type.is_empty():
@@ -775,3 +803,17 @@ func _validate_container_compatibility() -> void:
 				"tags",
 				"no compatible placement container found for tags %s" % str(candidate_tags)
 			)
+
+
+## Clamps fixture true_value entries to their template range. This runs after the repository is
+## fully loaded so it cannot recurse into ObjectInstance.from_dictionary() during parse.
+func _sanitize_loaded_fixtures() -> void:
+	for uid in object_instance_fixtures.keys():
+		var fixture: ObjectInstance = object_instance_fixtures[uid]
+		var template: ScrapObjectTemplate = scrap_object_templates.get(fixture.template_id)
+		if template == null:
+			continue
+		var lo := int(template.base_value_range.x)
+		var hi := int(template.base_value_range.y)
+		if hi > lo:
+			fixture.true_value = clampi(fixture.true_value, lo, hi)

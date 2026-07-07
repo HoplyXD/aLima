@@ -93,9 +93,12 @@ func slot_summary(index: int) -> Dictionary:
 	var data: Dictionary = parsed
 	var loop_raw: Variant = data.get("loop")
 	var loop_data: Dictionary = loop_raw if loop_raw is Dictionary else {}
+	var persistent_raw: Variant = data.get("persistent")
+	var persistent_data: Dictionary = persistent_raw if persistent_raw is Dictionary else {}
 	return {
 		"schema_version": ModelUtils.as_int(data.get("schema_version"), 0),
 		"player_id": ModelUtils.as_string(data.get("player_id"), "local-player"),
+		"player_name": ModelUtils.as_string(persistent_data.get("player_name"), ""),
 		"run_seed": ModelUtils.as_int(data.get("run_seed"), 0),
 		"loop_index": ModelUtils.as_int(data.get("loop_index"), 0),
 		"current_day": ModelUtils.as_int(loop_data.get("current_day"), 1),
@@ -226,14 +229,35 @@ func _migrate(payload: Dictionary, from_version: int) -> Dictionary:
 		return {"ok": true, "payload": payload}
 	if from_version > SaveState.CURRENT_SCHEMA_VERSION:
 		return {"ok": false, "error": "unsupported future schema version %d" % from_version}
-	if from_version == 1:
-		var migrated: Dictionary = payload.duplicate(true)
-		migrated["schema_version"] = 2
-		migrated["run_seed"] = migrated.get("run_seed", 0)
-		migrated["loop_index"] = migrated.get("loop_index", 0)
-		return {"ok": true, "payload": migrated}
-	# Future migrations chain from older versions here.
-	return {"ok": false, "error": "no migration defined for schema version %d" % from_version}
+	var migrated: Dictionary = payload.duplicate(true)
+	var version := from_version
+	while version < SaveState.CURRENT_SCHEMA_VERSION:
+		match version:
+			1:
+				migrated["schema_version"] = 2
+				migrated["run_seed"] = migrated.get("run_seed", 0)
+				migrated["loop_index"] = migrated.get("loop_index", 0)
+			2:
+				migrated["schema_version"] = 3
+				var persistent_raw: Variant = migrated.get("persistent")
+				var persistent: Dictionary = (
+					persistent_raw if persistent_raw is Dictionary else {}
+				)
+				persistent["player_name"] = ModelUtils.as_string(
+					persistent.get("player_name"), ""
+				)
+				# Pre-v3 saves predate Day 0: they are past onboarding by definition,
+				# so they must never enter the tutorial.
+				persistent["tutorial_completed"] = true
+				persistent["tutorial_step"] = ""
+				migrated["persistent"] = persistent
+			_:
+				return {
+					"ok": false,
+					"error": "no migration defined for schema version %d" % version,
+				}
+		version += 1
+	return {"ok": true, "payload": migrated}
 
 
 ## Strict validation of a current-schema raw payload, catching what the models'

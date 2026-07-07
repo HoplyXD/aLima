@@ -22,11 +22,19 @@ signal closed
 ## Emitted when the player presses Restore on an artifact, so the shop can open the
 ## workbench on the chosen target.
 signal restore_requested(uid: String)
+## Emitted when the player presses Sell on a restored artifact, so the shop can
+## open the phone/negotiation UI instead of instantly selling.
+signal sell_requested(uid: String)
 
 const DETAIL_WIDTH: float = 360.0
 const BOX_MIN: Vector2 = Vector2(164, 196)
 const SLOT_MIN: Vector2 = Vector2(164, 196)
 const DRAG_KIND: String = "storage_tool"
+const ARTIFACT_DRAG_KIND: String = "storage_artifact"
+## The Artifacts tab always shows this grid of boxes, filled or not: 8 across, and at
+## least two full rows of slots so the storage reads as real shelf space.
+const ARTIFACT_GRID_COLUMNS: int = 8
+const ARTIFACT_GRID_MIN_SLOTS: int = 16
 
 ## Rotating 3D preview card + the artifact model, shared with the restoration bench.
 const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
@@ -177,14 +185,33 @@ func refresh() -> void:
 
 func _build_artifacts_tab() -> void:
 	var panes := _make_master_detail(_tab("Artifacts"))
-	# Five across, like the Tools tab, so a full delivery's worth of artifacts reads as a
-	# grid of rows and columns instead of a narrow three-wide strip.
-	var grid := _make_grid(5)
+	# A fixed shelf of boxes: 8 across, empty slots visible, artifacts draggable to
+	# reorder (the restoration bench's artifact bar follows this order).
+	var grid := _make_grid(ARTIFACT_GRID_COLUMNS)
 	(panes["content"] as VBoxContainer).add_child(grid)
 	var detail_host: VBoxContainer = panes["detail"]
 	var repo := DataRepository.singleton()
 	var target := _tools.get_restore_target()
-	var any := false
+	var display := _deliverable_instances()
+	for i in display.size():
+		var inst: ObjectInstance = display[i]
+		var template := repo.get_template(inst.template_id)
+		_make_artifact_slot(grid, i, inst, template, target == inst.uid)
+	# Pad to a full shelf: at least ARTIFACT_GRID_MIN_SLOTS boxes, always whole rows.
+	var total := maxi(ARTIFACT_GRID_MIN_SLOTS, display.size())
+	var remainder := total % ARTIFACT_GRID_COLUMNS
+	if remainder != 0:
+		total += ARTIFACT_GRID_COLUMNS - remainder
+	for i in range(display.size(), total):
+		_make_artifact_slot(grid, i, null, null, false)
+	_render_artifact_detail(detail_host, _selected_artifact_uid)
+
+
+## The deliverable (non-quest) artifact instances in their current inventory order —
+## the same order the restoration view's artifact bar shows.
+func _deliverable_instances() -> Array:
+	var repo := DataRepository.singleton()
+	var out: Array = []
 	for raw in GameState.save_state.loop.inventory:
 		if not (raw is Dictionary):
 			continue
@@ -192,15 +219,48 @@ func _build_artifacts_tab() -> void:
 		var template := repo.get_template(inst.template_id)
 		if template == null or not template.deliverable:
 			continue  # quest-given items live under Key Items.
-		any = true
-		_add_artifact_card(grid, inst, template, target == inst.uid)
-	if not any:
-		grid.add_child(_make_note("No restorable artifacts in storage yet."))
-	_render_artifact_detail(detail_host, _selected_artifact_uid)
+		out.append(inst)
+	return out
 
 
-## Adds a rotating 3D preview card for one artifact (model + its condition decals, so
-## the player can see what needs restoring). Clicking shows its detail.
+## One shelf box, added to `grid` immediately (the 3D preview must build while the
+## card is in the tree). Filled boxes carry the rotating preview and drag like tool
+## chips to reorder; empty boxes are visible drop targets.
+func _make_artifact_slot(
+	grid: GridContainer,
+	index: int,
+	inst: ObjectInstance,
+	template: ScrapObjectTemplate,
+	is_target: bool
+) -> ArtifactSlot:
+	var slot := ArtifactSlot.new()
+	slot.slot_index = index
+	slot.custom_minimum_size = SLOT_MIN
+	slot.on_drop_reorder = _reorder_artifact
+	grid.add_child(slot)  # in the tree first, so the preview builds in the card's world
+	if inst == null or template == null:
+		return slot
+	slot.artifact_uid = inst.uid
+	slot.preview_label = template.display_name + ("  ◆" if is_target else "")
+	slot.preview_color = _rarity_color(template.base_rarity)
+	slot.pressed.connect(_show_artifact.bind(inst.uid))
+	# Rotating 3D preview (model + its condition decals) inside the box.
+	if SettingsService.previews_enabled():
+		var card: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
+		slot.add_child(card)
+		card.set_anchors_preset(Control.PRESET_FULL_RECT)
+		var scene: PackedScene = ArtifactScenes.scene_for(template.id, ARTIFACT_OBJECT_SCENE)
+		var obj: RestorationObject3D = scene.instantiate()
+		card.set_preview(obj, slot.preview_label, slot.preview_color, PREVIEW_SCALE)
+		_restoration.present_object(obj, inst, template, inst.uid.hash())
+		ignore_mouse_recursive(card)
+	else:
+		slot.text = slot.preview_label
+	return slot
+
+
+## Adds a rotating 3D preview card for one artifact (model + its condition decals).
+## Still used by the Key Items tab; the Artifacts tab uses _make_artifact_slot boxes.
 func _add_artifact_card(
 	grid: GridContainer, inst: ObjectInstance, template: ScrapObjectTemplate, is_target: bool
 ) -> void:
@@ -213,6 +273,40 @@ func _add_artifact_card(
 	_restoration.present_object(obj, inst, template, inst.uid.hash())
 	var uid := inst.uid
 	card.clicked.connect(func() -> void: _show_artifact(uid))
+
+
+## Moves artifact `uid` to `to_display_index` within the deliverable ordering and
+## rewrites loop.inventory so every surface (this shelf, the bench's artifact bar)
+## follows. Quest/key items keep their exact positions.
+func _reorder_artifact(uid: String, to_display_index: int) -> void:
+	var display := _deliverable_instances()
+	var order: Array[String] = []
+	for inst in display:
+		order.append((inst as ObjectInstance).uid)
+	var from_index := order.find(uid)
+	var to_index := clampi(to_display_index, 0, order.size() - 1)
+	if from_index < 0 or from_index == to_index:
+		return
+	order.remove_at(from_index)
+	order.insert(clampi(to_index, 0, order.size()), uid)
+	# Rebuild the inventory: deliverable entries take the new order; other entries
+	# (quest items, malformed rows) stay exactly where they were.
+	var by_uid := {}
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary:
+			by_uid[str((raw as Dictionary).get("uid", ""))] = raw
+	var next_deliverable := 0
+	var rebuilt: Array = []
+	for raw in GameState.save_state.loop.inventory:
+		var entry_uid := str((raw as Dictionary).get("uid", "")) if raw is Dictionary else ""
+		if order.has(entry_uid):
+			rebuilt.append(by_uid[order[next_deliverable]])
+			next_deliverable += 1
+		else:
+			rebuilt.append(raw)
+	GameState.save_state.loop.inventory = rebuilt
+	SaveService.save_game()
+	refresh()
 
 
 func _show_artifact(uid: String) -> void:
@@ -252,8 +346,8 @@ func _render_artifact_detail(host: VBoxContainer, uid: String) -> void:
 	var action := Button.new()
 	action.focus_mode = Control.FOCUS_ALL
 	if _is_restored(inst):
-		action.text = "Sell for %s" % _peso(_sale_price(inst, template))
-		action.pressed.connect(func() -> void: sell_artifact(uid))
+		action.text = "Sell in market"
+		action.pressed.connect(func() -> void: sell_requested.emit(uid))
 	else:
 		var is_target := _tools.get_restore_target() == uid
 		action.text = "Restoring…" if is_target else "Restore"
@@ -784,6 +878,53 @@ func _peso(amount: int) -> String:
 
 ## A draggable tool tile. Subclasses Button so a plain click still selects it for
 ## the detail panel while a click-drag starts a loadout drag.
+## One box on the Artifacts shelf. Filled boxes drag exactly like tool chips (a copy
+## of the box follows the cursor); any box — filled or empty — accepts the drop and
+## reorders the dragged artifact to its position via `on_drop_reorder`.
+class ArtifactSlot:
+	extends Button
+	var artifact_uid: String = ""  ## "" = an empty shelf box (drop target only).
+	var slot_index: int = 0
+	var on_drop_reorder: Callable  ## func(uid: String, to_display_index: int)
+	var preview_label: String = ""
+	var preview_color: Color = Color.WHITE
+
+	func _ready() -> void:
+		# Empty boxes read as quiet, dashed-dark shelf space.
+		if artifact_uid.is_empty():
+			var style := StyleBoxFlat.new()
+			style.bg_color = Color(0.10, 0.10, 0.13, 0.7)
+			style.corner_radius_top_left = 8
+			style.corner_radius_top_right = 8
+			style.corner_radius_bottom_right = 8
+			style.corner_radius_bottom_left = 8
+			add_theme_stylebox_override("normal", style)
+			add_theme_stylebox_override("hover", style)
+			add_theme_stylebox_override("pressed", style)
+			disabled = false  # still a drop target
+			text = ""
+
+	func _get_drag_data(_at_position: Vector2) -> Variant:
+		if artifact_uid.is_empty():
+			return null  # nothing to drag out of an empty box
+		var preview := Label.new()
+		preview.text = preview_label
+		preview.add_theme_color_override("font_color", preview_color)
+		set_drag_preview(preview)
+		return {"kind": StorageScreen.ARTIFACT_DRAG_KIND, "uid": artifact_uid}
+
+	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+		return (
+			data is Dictionary
+			and str((data as Dictionary).get("kind", "")) == StorageScreen.ARTIFACT_DRAG_KIND
+			and str((data as Dictionary).get("uid", "")) != artifact_uid
+		)
+
+	func _drop_data(_at_position: Vector2, data: Variant) -> void:
+		if on_drop_reorder.is_valid():
+			on_drop_reorder.call(str((data as Dictionary).get("uid", "")), slot_index)
+
+
 class ToolChip:
 	extends Button
 	var tool_uid: String = ""

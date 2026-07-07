@@ -48,8 +48,14 @@ func set_number(value: int) -> void:
 	number = value
 	_clear_case_ui()
 	_number_label.text = ("- " + str(value - 3) + " -") if value >= 4 else ""
+	# Day 0 finale (TUT): the spread after the case holds Yuyu's last letter,
+	# replacing the Condition Guide the player has no use for yet.
 	if value == CASE_PAGE_NUMBER:
 		_render_case_page()
+	elif value == CONDITION_PAGE_NUMBER and _day0_finale_active():
+		_render_uncle_letter(false)
+	elif value == CONDITION_PAGE_2_NUMBER and _day0_finale_active():
+		_render_uncle_letter(true)
 	elif value == CONDITION_PAGE_NUMBER:
 		_render_condition_page(false)
 	elif value == CONDITION_PAGE_2_NUMBER:
@@ -180,6 +186,46 @@ func _render_case_page() -> void:
 	note.add_theme_font_size_override("font_size", 10)
 	note.add_theme_color_override("font_color", Color(0.4, 0.35, 0.3))
 	container.add_child(note)
+
+
+# --- Yuyu's last letter (Day 0 finale) ---------------------------------------
+
+
+func _day0_finale_active() -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		return false
+	var svc: Node = tree.root.get_node_or_null("TutorialService")
+	return svc != null and svc.call("is_tutorial_active")
+
+
+## Renders Yuyu's farewell across the spread after the case: the opening on the
+## left page, the plea to find the fragments on the right. Read silently by the
+## player — no dialogue box (DISP §4-N flavor is fine; this is narrative).
+func _render_uncle_letter(second_half: bool) -> void:
+	_text.visible = true
+	if not second_half:
+		_text.text = DialogueVars.format(
+			(
+				"[i]My dear {player},[/i]\n\n"
+				+ "If you are reading this, then I am gone — and the days have already "
+				+ "begun to fold back on themselves, just as I feared.\n\n"
+				+ "I am sorry. I brought you to Panay to share my work with you, not to "
+				+ "leave it on your shoulders. But there is no one else I trust with it."
+			)
+		)
+	else:
+		_text.text = DialogueVars.format(
+			(
+				"The Master Artifact was shattered into [b]five fragments[/b]. I hid each "
+				+ "one with someone I trusted, so no single hand could misuse it.\n\n"
+				+ "Find them. Clean them. Seat all five in this case, and the loop will "
+				+ "finally let go.\n\n"
+				+ "Take care of the shop. Take care of yourself.\n\n"
+				+ "[i]— Tito Yuyu[/i]"
+			)
+		)
+	_text.scroll_to_line(0)
 
 
 # --- Condition Guide (page 2) ------------------------------------------------

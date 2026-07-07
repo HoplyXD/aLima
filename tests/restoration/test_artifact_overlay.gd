@@ -1,11 +1,18 @@
 extends GutTest
 ## Validates the authored overlay: it builds an editable shell, rolls a random per-instance coverage
-## pattern from its min/max range, and cleaning fades it BY 3D POSITION (correct area, UV-independent).
+## pattern from its min/max range, and cleaning fades it BY 3D POSITION (correct area, UV-
+## independent).
 ## Rendering can't be checked headlessly, but the build + pattern + erase logic can.
 
 const ARTIFACT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
 const OVERLAY_SCENE := preload("res://scenes/restoration/artifact_overlay.tscn")
 const DUST_TEX := preload("res://assets/artifact_conditions/Dust.png")
+
+
+func before_each() -> void:
+	# The geometry cache is static, so clear it between tests so each test sees
+	# the cache behaviour it is exercising, not a previous test's cached mode.
+	ArtifactOverlay.clear_geometry_cache()
 
 
 func _make_object(cov_min: float, cov_max: float, seed: int) -> RestorationObject3D:
@@ -25,6 +32,21 @@ func _overlay(obj: Node) -> Node:
 		if child.has_method("cleaned_fraction"):
 			return child
 	return null
+
+
+func _make_simple_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_uv(Vector2(0.0, 0.0))
+	st.add_vertex(Vector3(-1.0, -1.0, 0.0))
+	st.set_uv(Vector2(1.0, 0.0))
+	st.add_vertex(Vector3(1.0, -1.0, 0.0))
+	st.set_uv(Vector2(0.5, 1.0))
+	st.add_vertex(Vector3(0.0, 1.0, 0.0))
+	st.generate_normals()
+	var mesh := ArrayMesh.new()
+	st.commit(mesh)
+	return mesh
 
 
 func test_overlay_is_discovered_and_built() -> void:
@@ -77,7 +99,9 @@ func test_condition_id_derives_from_texture_name() -> void:
 	var overlay: Node3D = OVERLAY_SCENE.instantiate()
 	overlay.condition_texture = preload("res://assets/artifact_conditions/Cracking.png")
 	add_child_autofree(overlay)
-	assert_eq(String(overlay.get_condition_id()), "crack", "Cracking.png derives the 'crack' condition")
+	assert_eq(
+		String(overlay.get_condition_id()), "crack", "Cracking.png derives the 'crack' condition"
+	)
 	overlay.condition_texture = preload("res://assets/artifact_conditions/Rust.png")
 	assert_eq(String(overlay.get_condition_id()), "rust", "Rust.png derives 'rust'")
 	overlay.condition_id = "explicit"
@@ -110,3 +134,40 @@ func test_cleaning_overlay_fades_it_by_3d_position() -> void:
 	var cleaned := obj.clean_overlays_ray(Vector3(0, 0, 3), Vector3(0, 0, -1))
 	assert_true(cleaned, "cleaning along a ray that meets the overlay succeeds")
 	assert_gt(overlay.cleaned_fraction(), before, "the cleaned area grows where the tool worked")
+
+
+func test_two_overlays_same_mesh_keep_distinct_uv_mode() -> void:
+	var mesh := _make_simple_mesh()
+	var own_uv: Node3D = OVERLAY_SCENE.instantiate()
+	own_uv.overlay_mesh = mesh
+	own_uv.use_own_uvs = true
+	own_uv.condition_texture = DUST_TEX
+	add_child_autofree(own_uv)
+	own_uv.build_with_fallback(mesh, 1.0, 0)
+
+	var triplanar: Node3D = OVERLAY_SCENE.instantiate()
+	triplanar.overlay_mesh = mesh
+	triplanar.triplanar = true
+	triplanar.condition_texture = DUST_TEX
+	add_child_autofree(triplanar)
+	triplanar.build_with_fallback(mesh, 1.0, 0)
+
+	assert_eq(own_uv._uv_mode, 0, "use_own_uvs resolves to authored UV mode")
+	assert_eq(
+		triplanar._uv_mode, 2, "triplanar resolves to triplanar mode even after a cached mesh"
+	)
+
+
+func test_use_own_uvs_preserves_mesh_uvs() -> void:
+	var mesh := _make_simple_mesh()
+	var overlay: Node3D = OVERLAY_SCENE.instantiate()
+	overlay.overlay_mesh = mesh
+	overlay.use_own_uvs = true
+	overlay.condition_texture = DUST_TEX
+	add_child_autofree(overlay)
+	overlay.build_with_fallback(mesh, 1.0, 0)
+
+	assert_eq(overlay._uv_mode, 0, "use_own_uvs is mode 0")
+	var uvs: Variant = overlay._arrays[Mesh.ARRAY_TEX_UV]
+	assert_not_null(uvs, "authored UVs are kept in the merged arrays")
+	assert_eq((uvs as PackedVector2Array).size(), 3, "the three vertices keep their UVs")

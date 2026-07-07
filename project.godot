@@ -42,6 +42,10 @@ SpaceManager="*res://scripts/core/space_manager.gd"
 AylaService="*res://scripts/delivery/ayla_service.gd"
 DispositionRouter="*res://scripts/economy/disposition_router.gd"
 EveningService="*res://scripts/economy/evening_service.gd"
+TutorialService="*res://scripts/tutorial/tutorial_service.gd"
+QuestService="*res://scripts/core/quest_service.gd"
+Day1Service="*res://scripts/tutorial/day1_service.gd"
+ServerLauncher="*res://scripts/core/server_launcher.gd"
 
 [display]
 

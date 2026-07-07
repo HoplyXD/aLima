@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" uid="uid://d80c57n5yr6v" path="res://scripts/restoration/tool_config.gd" id="2_config"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_bottle"]
+albedo_color = Color(0.32, 0.68, 0.62, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_nozzle"]
+albedo_color = Color(0.9, 0.9, 0.92, 1)
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="Mesh_bottle"]
+top_radius = 0.05
+bottom_radius = 0.06
+height = 0.2
+
+[sub_resource type="CylinderMesh" id="Mesh_nozzle"]
+top_radius = 0.02
+bottom_radius = 0.03
+height = 0.06
+
+[node name="mold_remover" type="Node3D"]
+script = ExtResource("2_config")
+max_durability = 160
+clean_radius = 0.12
+cleans = {
+"mold": 50,
+"moss": 45
+}
+
+[node name="CleanPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, -0.05)
+
+[node name="Bottle" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_bottle")
+surface_material_override/0 = SubResource("Mat_bottle")
+
+[node name="Nozzle" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.13, 0)
+mesh = SubResource("Mesh_nozzle")
+surface_material_override/0 = SubResource("Mat_nozzle")

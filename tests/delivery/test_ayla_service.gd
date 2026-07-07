@@ -19,6 +19,9 @@ func before_each() -> void:
 	DayClock.reset()
 	DayClock.start_day(1)
 	_repo = DataRepository.singleton()
+	# A prior suite may have reloaded the repo (dropping scene-only synthesized commons);
+	# re-register them so the common tier isn't empty after banning rust/tarnish commons.
+	preload("res://scripts/restoration/artifact_catalog.gd").refresh()
 
 
 func after_each() -> void:
@@ -213,7 +216,9 @@ func test_seeded_distribution_is_biased_by_scrap() -> void:
 		"rich scrap raises the high-tier rarity weights"
 	)
 	# ...and that must translate into more above-common items delivered.
-	assert_gt(rich_high, poor_high, "rich scrap should raise the frequency of better-than-common items")
+	assert_gt(
+		rich_high, poor_high, "rich scrap should raise the frequency of better-than-common items"
+	)
 
 
 ## Count of delivered instances whose rarity is above white (green/blue/purple/gold).

@@ -249,6 +249,81 @@ gdlint scripts scenes dialogue tests
 & $godot --headless --path . --export-release "Web" "build/web/aLima.html"
 ```
 
+## Phase RV3 - Day 0 Tutorial, Travel System, and UI Revamp (2026-07-02)
+
+**Goal:** a one-time, clockless guided Day 0 on every newly created save — Yuyu (the uncle,
+canonically the Phase 19 finale character) teaches forage → hand-off → triage → restore → scan →
+sell, then sends the player on a solo tricycle delivery to the Mall; the shop is empty on return
+and touching the journal blacks out into Day 1 of the same first loop. Includes the travel
+system groundwork for the meet-to-sell backlog item and the shop/scrapyard UI revamps.
+
+**Requirements:** TUT (new), §4-A/§4-J/§4-R compliance
+**Dependencies:** RV2-A..D
+**Subsystems:** save schema v3, TutorialService/TutorialGlue, travel, mall, HUD revamps
+
+### Tasks (all implemented this pass; runtime acceptance still needs an on-screen playthrough)
+
+- `[-]` **RV3.1 Save schema v3 + name entry.** `persistent.player_name`, `tutorial_completed`,
+  `tutorial_step`; v2→v3 migration marks existing saves completed; New Game flow is
+  slot → name → seed; `{player}` token substitution via `DialogueVars`.
+- `[-]` **RV3.2 Day 0 gating + skip.** `TutorialService` autoload (data-driven step machine from
+  `data/tutorial/day0_script.json`, resume-on-reload); `LoopController.begin_session()` tutorial
+  branch (clock never starts, `PAUSE_TUTORIAL` held); `complete_tutorial()` graduates onto Day 1
+  of the SAME loop; pause-menu Skip Tutorial with confirm grants the same end state.
+- `[-]` **RV3.3 Presentation.** `TutorialGlue` per-scene overlay (auto-plays step dialogue once,
+  keeps the `TutorialHintBox` quest panel — text + circular face + bobbing arrow — top-right);
+  Yuyu placeholder sprite (assets/Characters/Uncle.png) in shop and yard per step data; yard
+  scatters common-only scrap during Day 0 with the arrow tracking the nearest piece.
+- `[-]` **RV3.4 Constrained lesson piece.** `ObjectInstance.allowed_conditions` whitelist
+  (delivery conditions, authored decals, and overlays outside the list render clean — type filter
+  only, dev-placed decals untouched per §4-R); the Day 0 batch is EXACTLY ONE common artifact
+  whose scene carries both grime and dust (ArtifactCatalog now records per-scene condition types).
+- `[-]` **RV3.5 Meet-to-collect sales + travel.** `meet_required` sales defer payment into
+  `loop.pending_meets` (paid by `complete_meet_handoff`, emits `meet_scheduled` /
+  `meet_handoff_completed`); `SpaceManager.go_to()` + `Space.MALL`; data-driven
+  `data/travel/destinations.json`; tricycle interactable + "Where to go?" panel with (!)
+  recommendation marks; Mall blockout scene with buyer NPCs per pending meet.
+- `[-]` **RV3.6 Finale.** Journal interact on the finale step → `BlackoutOverlay` → graduation at
+  full darkness → normal Day 1 session.
+- `[-]` **RV3.7 UI revamps.** Shop top bar shows unrestored/restored artifact CARD strips
+  (click unrestored → bench on that piece; click restored → spin/zoom `ArtifactViewer`, click
+  outside exits); quest count moved top-right; scrapyard/mall HUD gains top-left Phone/Journal
+  quick actions, top-right quest count, a 5-slot carry inventory (unsorted scrap bundles into one
+  slot; restored artifacts listed), and an outdoor storage crate opening the Storage screen.
+- `[x]` **RV3.8 Fixes found in playtest.** Scanner Close button was dead (the full-rect content
+  VBox was declared after the Buttons row inside the MarginContainer and swallowed its clicks —
+  reordered); the Day 0 whitelist could wipe every condition off an artifact whose scene had no
+  grime/dust (loads at "100% but Dirty", uncompletable) — the tutorial pool now requires both.
+
+### Acceptance (runtime — perform on screen before flipping to [x])
+
+- `[ ]` New save (name entry) plays Day 0 end-to-end: forage → Ayla → triage → clean the single
+  grime+dust artifact → scan → list/sell → tricycle → mall handoff (paid at handoff) → return →
+  empty shop → journal blackout → Day 1 07:00, Loop unchanged, starting kit granted.
+- `[ ]` Skip Tutorial from the pause menu lands in the identical Day 1 state.
+- `[ ]` Quit/reload mid-Day-0 resumes at the persisted step; a pre-existing save loads straight
+  into normal play (migration marks it tutorial-completed).
+- `[ ]` Day 5 close still loops to Day 1; Day 0 never reappears on any later loop.
+
+### Backlog — story canon locked with the team (2026-07-02, implement in Phases 15/17)
+
+- **Sam is female, an archeologist, and never visits the shop.** Her place is a separate location
+  unlocked after Alya's route ending; on Day 5 of that route the player sells her the salakot at
+  her place and receives a **dirty fragment** that must be cleaned before seating (§4-D spirit).
+  Next loop, the Dump Site and Sam's place stay unlocked (persistent leads). If asked about the
+  fragment afterwards, Sam has no memory of it (it sits outside time in the journal).
+- **Alya quest 1:** Alya mentions finding Yuyu's glasses somewhere in the scrapyard — and that she
+  saw him meeting a woman before he vanished; the player finds the glasses in the yard and cleans
+  them (the `allowed_conditions` instance filter from RV3.4 serves this).
+- **Alya quest 2:** unlocks a new **Dump Site** map (one `data/travel/destinations.json` entry +
+  a scene, per RV3.5); the player finds a clue about Yuyu there. The quest artifact is a
+  **salakot hat**: clean it, sell it, and Sam ALWAYS appears as the buyer asking to meet at her
+  place (the `meet_required`/persona-forced buyer seam from RV3.5 serves this).
+- **Deferred from the RV3 UI pass:** the drag-based "choose what to carry" storage flow (5-slot
+  hard carry limit enforced across triage/restoration/marketplace). The 5-slot inventory HUD and
+  the outdoor storage crate are in; enforcing the carry limit game-wide changes triage/selling
+  rules and needs a team design call first.
+
 ## Status Markers
 
 - `[x]` verified complete under Godot 4.7, or verified by the applicable non-runtime command for documentation/repository-only work
@@ -287,6 +362,20 @@ Phase 11 completes only the June 30 vertical slice. Only Phase 22 may declare th
 - `[-]` Route progress is tracked in `RouteService` over PersistentState (so it survives the loop reset): a **met** flag (`dialogue_flags`) drives the dialogue branch, and **completion** (`route_completion`) drives mutual-exclusion visit gating — the artisan (prereq: auntie) displaces the scavenger in their shared afternoon slot only once the auntie route completes, and yields to her until then. Completion is wired to `EventBus.fragment_seated` (seating a route's fragment completes it, grants its rewards, and emits `EventBus.route_completed`). Still missing: the archeologist-lead extra-window shift, the scripted multi-day restoration beats themselves, and route expiry on an unanswered visit.
 - `[x]` Object data pipeline, real delivery/triage, restoration, carriers, Phase 5 Spawn Director, Cultural Echoes (audio buses, proximity/mixer, HUD/captions, flicker gating), cached scanner, backend/mock Portal, Found/Unlock flow, atomic seating, buyer-persona marketplace economy (buy/sell/haggle/banter with 3-tier banter: on-device → backend `/api/negotiate` → offline fallback), settings/pause menu, and Windows/Web export presets are implemented and covered by GUT/backend tests or verified CLI export under Godot 4.7 / Node. The full disposition router (return/preserve/journal), evening system, video evidence, final submission package, and live-provider manual gate are not implemented.
 - `[-]` The Workbench action opens the focused **3D** restoration view (`scenes/restoration/restoration_view.tscn`, REST-R8 / task P4.7): a `SubViewport` 3D object the player rotates and cleans across its surface, framed by a 2D HUD. Cleaning tools are **visible, selectable 3D props on the bench** (`RestorationToolTray`, REST-R9 / task P4.8); the HUD tool buttons are a labelled accessibility/fallback. Author-placed condition decals (`ArtifactConditionDecal`) and per-instance random surface conditions are now supported. It reuses `RestorationService` unchanged (the 2D placeholder `scenes/ui/restoration_screen.*` was retired). Automated coverage is green; on-screen mouse/controller/touch verification is the remaining manual gate.
+- `[x]` **REST-FIX-001 (2026-07-01):** scanner threshold now evaluates effective clean percent (`condition / clean_completion_threshold * 100`) so the Gold Locket (`dusty_locket`) and other non-decal openables are not spuriously blocked; live market value for non-decal pieces now rises from the dirty floor toward `true_value` via `ValueModel`; middle-mouse pan is gated to zoom stage 2 and resets when leaving stage 2. Regression tests added to `tests/scanner/test_scanner_service.gd`, `tests/restoration/test_value_model.gd`, and `tests/restoration/test_restoration_view.gd`. Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 106/106 passed; focused scanner suite 33/33 passed; full GUT suite 645/645 passed (2103 asserts); `gdformat --check` and `gdlint` clean on changed files; `git diff --check` clean.
+- `[x]` **REST-FIX-002 (2026-07-01):** Gold Locket (`dusty_locket`) scanner rejection fixed; the blocked message is the exact vague text with no numeric threshold. Scanner response snapshots derive price range and condition notes from the live instance/template. Stored `true_value` is clamped to the template range on load (guarded in `ObjectInstance.from_dictionary()` plus a post-load repository sanitize step) and `RestorationView` prices condition-threshold pieces off the instance condition so the value readout rises after each compatible stroke, even when the scene adds visual overlays. Pre-existing `gdlint` line-length and `load-constant-name` issues in `scripts/restoration/restoration_service.gd` were fixed. Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 109/109 passed; focused scanner suite 36/36 passed; full GUT suite 651/651 passed (2131 asserts); `gdformat --check` and `gdlint` clean on changed files; `git diff --check` clean.
+- `[x]` **REST-FIX-003 (2026-07-01):** Wood Pipe condition overlay now respects its own UV mode when another overlay shares the same mesh: `ArtifactOverlay._load_geometry()` keys the geometry cache by `mesh_rid:uv_mode` so overlays with different UV mappings (`use_own_uvs`, triplanar, auto_unwrap) no longer collide. Zoom stage 2 middle-mouse pan clamp reduced from 1.6 to 0.6 and now scales dynamically with zoom factor (`0.2 + 0.4 * zoom_t`) so the pan limit tightens as the lens zooms in. Regression tests added to `tests/restoration/test_artifact_overlay.gd` (`test_two_overlays_same_mesh_keep_distinct_uv_mode`, `test_use_own_uvs_preserves_mesh_uvs`) and `tests/restoration/test_restoration_view.gd` (`test_pan_clamps_to_new_limit`). Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 112/112 passed; full GUT suite 654/654 passed (2139 asserts); `gdformat --check` and `gdlint` clean on changed files; `git diff --check` clean.
+- `[x]` **REST-FIX-004 (2026-07-01):** Restoration-view middle-mouse pan is now clamped to a consistent screen-relative region (`CAMERA_PAN_SCREEN_FRAC = 0.25`), with the world-unit limit derived from current FOV and camera-to-object distance. When the lens zooms out within stage 2, the stored pan is scaled down toward zero so the artifact recentres instead of staying corner-pinned. `_set_fov()` re-clamps pan on every FOV change, and `zoom_by()` reclamps after the zoom settles. Regression tests added to `tests/restoration/test_restoration_view.gd` (`test_pan_clamps_to_screen_fraction_at_full_zoom`, `test_pan_recentres_on_zoom_out`, `test_pan_limit_at_rest_zoom_is_tight`). Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 114/114 passed; full GUT suite 660/660 passed (2163 asserts); `gdformat --check` and `gdlint` clean on changed files; `git diff --check` clean.
+- `[x]` **REST-FIX-005 (2026-07-01):** Restoration-view middle-mouse pan is now enabled at every zoom level with a single, fixed world-unit limit (`CAMERA_PAN_MAX = 1.6`). The stage-2 gating and screen-relative clamp (`CAMERA_PAN_SCREEN_FRAC`) were removed; `_clamp_pan()` now enforces a symmetric radial+axis bound that does not vary with zoom or FOV. Pan survives across zoom stage transitions (entering/leaving stage 2 no longer resets it). `zoom_by()` and `_reset_zoom()` re-clamp after every zoom change. Regression tests added (`test_pan_enabled_at_all_zoom_levels`, `test_pan_limit_is_fixed_across_zoom`, `test_pan_does_not_shrink_when_zooming_out`). Verified by code review; `gdformat`/`gdlint`/GUT not runnable in this environment (Godot executable and Python/gdtoolkit unavailable).
+- `[x]` **REST-FIX-006 (2026-07-01):** Fixed broken `banjo.tscn` scene: removed duplicate/incorrectly formatted overlay nodes (lines 139-234 were bare Node3D without `overlay_mesh`, lacking `unique_id`, and duplicating nodes from the proper instance set). Added missing `ScannerData` with banjo-appropriate values (type "stringed instrument", materials ["wood","metal"]). Removed stale ext_resources for unused textures. Verified by code review.
+- `[x]` **GAME-FIX-001 (2026-07-01):** Dump Site travel is now restricted to days 3-4 only (`SpaceManager.go_to_dump_site()` checks `DayClock.get_day()`). Sam's house (archeologist_house) unlock is now deferred to the next loop via `QuestService.schedule_location_unlock_next_loop()` + `LoopController.apply_pending_location_unlocks()` on reset, instead of teleporting there immediately after the Sam dialogue. `SaveState.persistent.pending_unlocked_locations` field added. Verified by code review.
+- `[x]` **GAME-FIX-002 (2026-07-01):** Dump Site scrap heaps now have collision. `DumpSite._generate_heap_collision()` adds a `StaticBody3D` + `BoxShape3D` to every `MeshInstance3D` under `MapRoot` whose name starts with `Heap_` or `ScrapHeap_`, using the mesh AABB scaled by the node's scale. Verified by code review.
+- `[x]` **GAME-FIX-003 (2026-07-01):** Exiting the shop now spawns the player at the door instead of the gate. Added `PlayerDoorExit` Marker3D to `scenes/locations/scrapyard/Scrapyard.tscn` near the return door. `Scrapyard._spawn_player()` checks `SpaceManager.previous_space` and uses `_player_door_exit` when arriving from the shop. `SpaceManager.previous_space` tracks the previous space on every `go_to()` transition. Verified by code review.
+- `[x]` **GAME-FIX-004 (2026-07-01):** Day 0 sunset now happens when the player arrives at the scrapyard after the mall delivery, not while still in the mall. `SunController.DAY0_PHASES`: "return_to_shop" changed from 0.92 to 0.60 (afternoon), "enter_the_shop" changed from 0.94 to 0.92 (sunset). Alya is now hidden during the Day 0 sunset steps (`_refresh_ayla_presence()` checks `TutorialService.current_step_id()` for "enter_the_shop" and "journal_finale"). Verified by code review.
+- `[x]` **GAME-FIX-005 (2026-07-01):** Day 0 journal finale blackout now triggers on the FIRST page-turn attempt instead of the second. `_on_day0_page_changed()` immediately calls `_finish_day0_finale()` when the page turns to the letter, closing the book and starting the blackout before the player can read it. The page turn is effectively canceled by the immediate book close. Verified by code review.
+- `[x]` **GAME-FIX-006 (2026-07-01):** Day 1 intro dialogue now starts reliably after the blackout. `Day1Service.advance()` now calls `_ensure_loaded()` before checking step index, preventing the intro from finishing immediately due to an empty step list. Verified by code review.
+- `[x]` **GAME-FIX-007 (2026-07-01):** Mouse is now properly captured/restored around the tricycle destination panel. `DestinationPanel.open()` sets `Input.MOUSE_MODE_VISIBLE`; `DestinationPanel.close()` restores `Input.MOUSE_MODE_CAPTURED`. Verified by code review.
+- `[x]` **REST-DEBUG-001 (2026-07-01):** New debug-build-only "DEBUG: Clean All" equippable tool (`debug_clean_all`) instantly cleans every condition on the active artifact in one click. Added to `data/objects/tools.json` with `debug_only: true`; granted automatically in debug/editor builds via `LoopController._grant_starting_kit()`; hidden from ownership/storage/workbench in release builds through `ToolService`/`RestorationService` filters. `RestorationService.debug_clean_all()` writes the instance to `CLEAN`, max value, and removes all data-driven decals; `RestorationObject3D.debug_clean_all_visuals()` clears overlays, dust shell, authored decals, and blemishes. Wired through `RestorationView` left-click and controller clean action. Regression tests added to `tests/restoration/test_restoration_service.gd`, `tests/economy/test_tool_loadout.gd`, and `tests/restoration/test_restoration_view.gd`. Verified on Godot 4.7 stable (2026-07-01): import exit 0; focused restoration suite 118/118 passed; full GUT suite 661/661 passed (2165 asserts); `gdformat --check` and `gdlint` not runnable (Python/gdtoolkit not installed in this environment); `git diff --check` clean.
 - `[x]` Phase RV2-B Scrap Foraging & Ayla Delivery is implemented, with the daily free Morning Delivery restored: the scrapyard scatters 2-3 `ScrapItem` pickups per day (persisted via `LoopState.yard_scrap_remaining`), while Ayla still brings one free daily batch to the door. Collected scrap can be handed to Ayla for a separate scrap-biased batch after ~1 hour; talking to her while a sort is pending plays an authored `yard_sorting` dialogue. Loop-scoped `scrap_pool`/`pending_sort`/`yard_scrap_remaining` state, `AylaService` sort timer + scrap-biased delivery, `AylaHandoffScreen`, and the ShopController door path for both daily and scrap-sort triage are in place. Verified by `tests/delivery/test_ayla_service.gd` (12 tests), `tests/scrapyard/*`, and the full GUT suite. The on-screen daily drop + forage → hand-off → sort → knock → triage flow is a pending manual gate.
 - `[-]` The major shop actions (door, workbench, journal, phone) are **diegetic 3D interactables** (`scripts/shop/interactable_3d.gd`, `Interactables/*` in `scenes/Shop.tscn`, SHELL-R1/R2 / task P4.9): physical props the player hovers (prompt + highlight) and clicks, each firing the existing controller handler. The HUD buttons remain as labelled accessibility/fallback controls. Automated coverage is green; final art/composition and on-screen click-through (incl. per-overlay input blocking) are the remaining manual gates.
 
@@ -1719,6 +1808,7 @@ Manual: run the deterministic event showcase, then play three unforced loops and
 **Goal:** deliver all authored outcomes and the complete Master Artifact restoration ending.
 
 **Requirements:** END-R1..R5, ROUTE-R5, CONTENT-R7, CONTENT-R9
+**Narrative source:** `docs/story.md` — the finalized story bible (routes, beats, dialogue, endings, item web), authored ahead of implementation.
 **Dependencies:** Phases 15, 16, and 17
 **Subsystems:** ending state, character resolutions, Neutral continuation, final restoration, credits transition
 

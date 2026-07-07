@@ -151,13 +151,24 @@ func _add_daily_allowance() -> void:
 		_wallets[persona.id] = buyer_cash(persona.id) + persona.daily_allowance
 
 
-## Tools currently listed for purchase (authored `buyable`).
+## Tools listed in the phone's ONLINE shop (authored `buyable`, shop == "online").
+## The mall's physical tool shop carries a different set — see get_mall_catalog().
 func get_catalog() -> Array[ToolDefinition]:
+	return _catalog_for_shop("online")
+
+
+## Tools sold at the MALL's physical tool shop (authored `buyable`, shop == "mall").
+## Bought in person: no shipment — the tool is carried home and owned immediately.
+func get_mall_catalog() -> Array[ToolDefinition]:
+	return _catalog_for_shop("mall")
+
+
+func _catalog_for_shop(shop: String) -> Array[ToolDefinition]:
 	var out: Array[ToolDefinition] = []
 	var repo := DataRepository.singleton()
 	for tool_id in repo.tool_definitions.keys():
 		var def: ToolDefinition = repo.tool_definitions[tool_id]
-		if def.buyable:
+		if def.buyable and def.shop == shop:
 			out.append(def)
 	out.sort_custom(func(a: ToolDefinition, b: ToolDefinition) -> bool: return a.id < b.id)
 	return out
@@ -170,6 +181,8 @@ func buy(tool_id: String) -> Dictionary:
 	var def := repo.get_tool(tool_id)
 	if def == null or not def.buyable:
 		return {"ok": false, "error": "That tool is not for sale.", "arrival_index": -1}
+	if def.shop == "mall":
+		return {"ok": false, "error": "Only sold in person at the mall.", "arrival_index": -1}
 
 	var loop := GameState.save_state.loop
 	if loop.money < def.cost:
@@ -181,6 +194,26 @@ func buy(tool_id: String) -> Dictionary:
 	SaveService.save_game()
 	EventBus.tool_purchased.emit(tool_id, arrival)
 	return {"ok": true, "error": "", "arrival_index": arrival}
+
+
+## Buys a tool IN PERSON at the mall's tool shop: money out, tool owned immediately
+## (no shipment queue — the player is standing in the store). Returns
+## {ok, error, tool_uid}. Only tools authored with shop == "mall" sell here.
+func buy_in_person(tool_id: String) -> Dictionary:
+	var repo := DataRepository.singleton()
+	var def := repo.get_tool(tool_id)
+	if def == null or not def.buyable or def.shop != "mall":
+		return {"ok": false, "error": "That tool is not sold here.", "tool_uid": ""}
+	var loop := GameState.save_state.loop
+	if loop.money < def.cost:
+		return {"ok": false, "error": "Not enough money.", "tool_uid": ""}
+	loop.money -= def.cost
+	var tools := ToolService.new(GameState, repo)
+	var inst := tools.grant_tool(tool_id)
+	SaveService.save_game()
+	EventBus.tool_purchased.emit(tool_id, _now_index())
+	EventBus.tool_arrived.emit(tool_id, inst.uid)
+	return {"ok": true, "error": "", "tool_uid": inst.uid}
 
 
 ## Pending shipments not yet delivered.
@@ -236,9 +269,7 @@ func get_active_listings() -> Array[MarketplaceListing]:
 
 ## Resolves a listing to SOLD or WITHDRAWN. No-op when there is no listing. Does not
 ## save (the caller owns persistence); idempotent.
-func resolve_listing(
-	uid: String, status: int, price: int = 0, buyer_id: String = ""
-) -> void:
+func resolve_listing(uid: String, status: int, price: int = 0, buyer_id: String = "") -> void:
 	var listing := get_listing(uid)
 	if listing == null:
 		return
@@ -335,6 +366,13 @@ func interested_buyers(uid: String) -> Array[BuyerPersona]:
 			continue
 		if _buyer_interested(persona, condition, value, scanned, historical):
 			out.append(persona)
+	# Quest items: normal buyers refuse them; only state-gate-ignoring buyers (Maverick) show up.
+	if inst != null and inst.is_quest_item:
+		var quest_only: Array[BuyerPersona] = []
+		for persona in out:
+			if persona.ignores_state_gates:
+				quest_only.append(persona)
+		return quest_only
 	return out
 
 
@@ -487,6 +525,39 @@ func complete_sale(uid: String, price: int, buyer_id: String) -> Dictionary:
 	var template: ScrapObjectTemplate = found["template"]
 
 	var loop := GameState.save_state.loop
+
+	# Meet-in-person sale (TUT / meet-to-sell groundwork): the deal is agreed but
+	# the buyer pays at the meeting place. The item leaves inventory (the player
+	# carries it out for delivery); money and best-sale land in
+	# complete_meet_handoff(). An undelivered meet dies with the loop (§4-A).
+	var destination_id := _meet_destination_for(buyer_id)
+	if not destination_id.is_empty():
+		_clear_negotiations_for(uid)
+		_remove_instance(uid)
+		(
+			loop
+			. pending_meets
+			. append(
+				{
+					"uid": uid,
+					"template_id": inst.template_id,
+					"buyer_id": buyer_id,
+					"price": price,
+					"destination_id": destination_id,
+					"condition": inst.condition,
+				}
+			)
+		)
+		SaveService.save_game()
+		EventBus.meet_scheduled.emit(uid, buyer_id, destination_id)
+		return {
+			"ok": true,
+			"error": "",
+			"price": price,
+			"meet_required": true,
+			"destination_id": destination_id,
+		}
+
 	loop.money += price
 	_deduct_cash(buyer_id, price)  # the buyer spends from their wallet
 	_clear_negotiations_for(uid)  # the item is gone; drop its cached haggles
@@ -495,6 +566,56 @@ func complete_sale(uid: String, price: int, buyer_id: String) -> Dictionary:
 	SaveService.save_game()
 	EventBus.sale_completed.emit(uid, buyer_id, price)
 	return {"ok": true, "error": "", "price": price}
+
+
+## The meet destination for this buyer, or "" for a normal online payment. Day 0
+## forces the tutorial buyer's meet at the authored destination; buyer-persona
+## payment modes plug in here later (docs/phase-task.md meet-to-sell backlog).
+func _meet_destination_for(_buyer_id: String) -> String:
+	if TutorialService.is_tutorial_active():
+		return ModelUtils.as_string(
+			TutorialService.get_config().get("buyer_destination_id"), "mall"
+		)
+	return ""
+
+
+## Pending meet-in-person sales waiting at `destination_id` (tricycle
+## recommendation marks and the buyer spawner read this).
+func pending_meets_for(destination_id: String) -> Array:
+	var out: Array = []
+	for raw in GameState.save_state.loop.pending_meets:
+		if raw is Dictionary and str(raw.get("destination_id")) == destination_id:
+			out.append(raw)
+	return out
+
+
+## Hands the item to the buyer at the meeting place: credits the deferred price,
+## records the best sale, and emits sale_completed + meet_handoff_completed.
+## Idempotent — an unknown/already-completed uid fails without side effects.
+func complete_meet_handoff(uid: String) -> Dictionary:
+	var loop := GameState.save_state.loop
+	for i in loop.pending_meets.size():
+		var raw: Variant = loop.pending_meets[i]
+		if not (raw is Dictionary) or str(raw.get("uid")) != uid:
+			continue
+		var meet: Dictionary = raw
+		var price := ModelUtils.as_int(meet.get("price"))
+		var buyer_id := ModelUtils.as_string(meet.get("buyer_id"))
+		var destination_id := ModelUtils.as_string(meet.get("destination_id"))
+		var template: ScrapObjectTemplate = DataRepository.singleton().get_template(
+			ModelUtils.as_string(meet.get("template_id"))
+		)
+		loop.pending_meets.remove_at(i)
+		loop.money += price
+		_deduct_cash(buyer_id, price)
+		_record_best_sale(
+			price, template, buyer_id, ModelUtils.as_float(meet.get("condition")), loop.current_day
+		)
+		SaveService.save_game()
+		EventBus.sale_completed.emit(uid, buyer_id, price)
+		EventBus.meet_handoff_completed.emit(uid, buyer_id, price, destination_id)
+		return {"ok": true, "error": "", "price": price}
+	return {"ok": false, "error": "No meet is pending for that item.", "price": 0}
 
 
 func _is_restored(inst: ObjectInstance) -> bool:

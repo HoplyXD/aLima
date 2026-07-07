@@ -13,6 +13,10 @@ extends CanvasLayer
 ## restores the camera to its default framing.
 
 signal closed
+## Forwarded from the inner JournalBook so hosts (e.g. the Day 0 finale) can
+## react without reaching into the book's private nodes.
+signal book_opened
+signal page_changed(page_number: int)
 
 const ZOOM_MIN: float = 1.0
 const ZOOM_MAX: float = 4.0
@@ -41,6 +45,8 @@ func _ready() -> void:
 	# We ray-pick the book ourselves, so the SubViewport doesn't need physics picking.
 	_subviewport.physics_object_picking = false
 	_input_catcher.gui_input.connect(_on_catcher_input)
+	_book.opened.connect(func() -> void: book_opened.emit())
+	_book.page_changed.connect(func(n: int) -> void: page_changed.emit(n))
 	set_process_input(false)
 
 

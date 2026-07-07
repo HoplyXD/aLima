@@ -80,13 +80,11 @@ func test_object_instance_overlay_keep_and_true_value_round_trip() -> void:
 	var inst := ObjectInstance.new()
 	inst.template_id = "brass_hand_bell"
 	inst.uid = "inst_overlay"
-	inst.true_value = 155
+	inst.true_value = 55
 	inst.value = 120
-	inst.overlay_keep = {
-		"DustOverlay": "AAAA", "RustOverlay": "f39/fw=="
-	}
+	inst.overlay_keep = {"DustOverlay": "AAAA", "RustOverlay": "f39/fw=="}
 	var round := ObjectInstance.from_dictionary(inst.to_dictionary())
-	assert_eq(round.true_value, 155, "rolled true value survives serialization")
+	assert_eq(round.true_value, 55, "rolled true value survives serialization")
 	assert_eq(round.overlay_keep.size(), 2, "overlay keep survives serialization")
 	assert_eq(round.overlay_keep.get("DustOverlay"), "AAAA")
 	assert_eq(round.overlay_keep.get("RustOverlay"), "f39/fw==")

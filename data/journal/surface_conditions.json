@@ -80,6 +80,140 @@
       "cleaning_tool": "consolidant",
       "description": "Structural cracks in a frame, glaze, or paint. Stabilise them with consolidant.",
       "value_reduction": 25
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "mud",
+      "display_name": "Mud",
+      "category": "surface_soil",
+      "color": "#7A5C3E",
+      "cleaning_tool": "soap_bar",
+      "description": "Dried, caked mud. Soap it off first — the grime it hides still needs its own cleaning.",
+      "value_reduction": 12,
+      "reveals_condition": "dirt"
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "soot",
+      "display_name": "Soot",
+      "category": "surface_soil",
+      "color": "#2E2A26",
+      "cleaning_tool": "soap_bar",
+      "description": "Black carbon from smoke or fire. A bar of soap and patience lift it away.",
+      "value_reduction": 10
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "grease",
+      "display_name": "Grease",
+      "category": "accretion",
+      "color": "#5C5636",
+      "cleaning_tool": "soap_bar",
+      "description": "Old machine grease. Soap cuts it — but expect tarnish on the metal underneath.",
+      "value_reduction": 14,
+      "reveals_condition": "tarnish"
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "mold",
+      "display_name": "Mold",
+      "category": "accretion",
+      "color": "#4E6B3A",
+      "cleaning_tool": "mold_remover",
+      "description": "Biological growth from damp storage. Treat it with mold remover — the water stain it grew from remains.",
+      "value_reduction": 16,
+      "reveals_condition": "water_stain"
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "wax",
+      "display_name": "Wax",
+      "category": "accretion",
+      "color": "#D9CDA8",
+      "cleaning_tool": "wax_scraper",
+      "description": "Hardened candle-wax drips. Ease them off with the wax scraper.",
+      "value_reduction": 8
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "verdigris",
+      "display_name": "Verdigris",
+      "category": "corrosion",
+      "color": "#3E8E6E",
+      "cleaning_tool": "metal_polish",
+      "description": "Green copper corrosion. Work it back with metal polish paste.",
+      "value_reduction": 18
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "salt_crust",
+      "display_name": "Salt Crust",
+      "category": "accretion",
+      "color": "#E4E0D2",
+      "cleaning_tool": "damp_cloth",
+      "description": "A white crust of sea salt. Dissolve it gently with a damp cloth.",
+      "value_reduction": 10
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "black_tarnish",
+      "display_name": "Black Tarnish",
+      "category": "corrosion",
+      "color": "#23211E",
+      "cleaning_tool": "polishing_cloth",
+      "description": "Heavy silver sulfide, near-black. Buff through it — ordinary tarnish still waits underneath.",
+      "value_reduction": 16,
+      "reveals_condition": "tarnish"
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "wood_rot",
+      "display_name": "Wood Rot",
+      "category": "structural_damage",
+      "color": "#4A3B28",
+      "cleaning_tool": "consolidant",
+      "description": "Soft, decayed timber. Stabilise the fibres with consolidant before they crumble.",
+      "value_reduction": 25
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "woodworm",
+      "display_name": "Woodworm",
+      "category": "structural_damage",
+      "color": "#6B5B45",
+      "cleaning_tool": "consolidant",
+      "description": "Pinholes and frass from wood-boring beetles. Treat and fill with consolidant.",
+      "value_reduction": 20
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "moss",
+      "display_name": "Moss",
+      "category": "accretion",
+      "color": "#4F7A3C",
+      "cleaning_tool": "mold_remover",
+      "description": "Green growth from years outdoors. Lift it with the mold remover.",
+      "value_reduction": 12
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "old_paint",
+      "display_name": "Old Paint",
+      "category": "accretion",
+      "color": "#8A4A5C",
+      "cleaning_tool": "solvent",
+      "description": "A careless coat of house paint over the original surface. Dissolve it with solvent.",
+      "value_reduction": 10
+    },
+    {
+      "record_type": "surface_condition",
+      "id": "dark_varnish",
+      "display_name": "Dark Varnish",
+      "category": "staining",
+      "color": "#5C4326",
+      "cleaning_tool": "solvent",
+      "description": "Varnish gone almost opaque with age. Thin it back with solvent to find the grain.",
+      "value_reduction": 12
     }
   ]
 }

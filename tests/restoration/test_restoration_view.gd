@@ -70,6 +70,18 @@ func _add_pendant(
 	GameState.save_state.loop.inventory.append(inst.to_dictionary())
 
 
+func _add_locket(uid: String, condition: float = 0.0, true_value: int = 200) -> void:
+	var inst := ObjectInstance.new()
+	inst.template_id = "dusty_locket"
+	inst.uid = uid
+	inst.condition = condition
+	inst.state = ModelEnums.ObjState.DIRTY
+	inst.value = 100
+	inst.true_value = true_value
+	inst.storage_cost = 1
+	GameState.save_state.loop.inventory.append(inst.to_dictionary())
+
+
 func _make_view() -> RestorationView:
 	var view: RestorationView = VIEW_SCENE.instantiate()
 	add_child_autofree(view)
@@ -79,6 +91,14 @@ func _make_view() -> RestorationView:
 
 func _instance_state(uid: String) -> int:
 	return RestorationService.new().find_instance_by_id(uid).state
+
+
+func _view_camera(view: RestorationView) -> Camera3D:
+	return view.get_node("ViewportContainer/SubViewport/World/Camera3D")
+
+
+func _view_viewport(view: RestorationView) -> SubViewport:
+	return view.get_node("ViewportContainer/SubViewport")
 
 
 func _clean_until_clean(view: RestorationView, uid: String) -> void:
@@ -101,8 +121,8 @@ func test_zoom_moves_the_artifact_within_clamped_range_and_resets() -> void:
 	# Zooming in moves the artifact toward the camera (larger position.z) than the rest pose.
 	_view.zoom_by(0.5)
 	assert_gt(_view.zoom_offset(), rest, "zooming in brings the artifact closer")
-	# A huge zoom-in is clamped at the DYNAMIC front limit (so the artifact's nearest point never pushes
-	# through the camera), and never past the fixed ZOOM_FRONT cap.
+	# A huge zoom-in is clamped at the DYNAMIC front limit (so the artifact's nearest point
+	# never pushes through the camera), and never past the fixed ZOOM_FRONT cap.
 	_view.zoom_by(100.0)
 	assert_almost_eq(_view.zoom_offset(), _view._zoom_front_limit(), 0.001)
 	assert_lte(_view.zoom_offset(), RestorationView.ZOOM_FRONT + 0.001, "never past the fixed cap")
@@ -112,6 +132,82 @@ func test_zoom_moves_the_artifact_within_clamped_range_and_resets() -> void:
 	# Reset returns the artifact to its authored rest position.
 	_view.reset_view()
 	assert_almost_eq(_view.zoom_offset(), rest, 0.001)
+
+
+func test_pan_enabled_at_all_zoom_levels() -> void:
+	_add_pendant("pan_all")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("pan_all")
+	_view.reset_view()
+
+	assert_false(_view._is_zoom_stage_2(), "rest zoom is stage 1")
+	_view._pan_camera(Vector2(100.0, 0.0))
+	assert_ne(_view._camera_pan, Vector2.ZERO, "pan changes at rest zoom")
+
+	_view.zoom_by(100.0)
+	assert_true(_view._is_zoom_stage_2(), "full zoom is stage 2")
+	var before := _view._camera_pan
+	_view._pan_camera(Vector2(100.0, 0.0))
+	assert_ne(_view._camera_pan, before, "pan changes at full zoom")
+
+
+func test_pan_limit_is_fixed_across_zoom() -> void:
+	_add_pendant("pan_fixed")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("pan_fixed")
+	_view.reset_view()
+
+	# At rest zoom, a huge drag is clamped to the fixed CAMERA_PAN_MAX.
+	_view._pan_camera(Vector2(10000.0, 0.0))
+	assert_almost_eq(abs(_view._camera_pan.x), RestorationView.CAMERA_PAN_MAX, 0.001)
+	assert_eq(_view._camera_pan.y, 0.0, "vertical pan stays zero on horizontal drag")
+
+	# Reset and zoom to full.
+	_view.reset_view()
+	_view.zoom_by(100.0)
+	assert_true(_view._is_zoom_stage_2(), "full zoom is stage 2")
+
+	# At full zoom, the same huge drag hits the SAME fixed limit.
+	_view._pan_camera(Vector2(0.0, 10000.0))
+	assert_almost_eq(abs(_view._camera_pan.y), RestorationView.CAMERA_PAN_MAX, 0.001)
+	assert_eq(_view._camera_pan.x, 0.0, "horizontal pan stays zero on vertical drag")
+
+
+func test_pan_does_not_shrink_when_zooming_out() -> void:
+	_add_pendant("pan_zoom_out")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("pan_zoom_out")
+
+	_view.zoom_by(100.0)
+	assert_true(_view._is_zoom_stage_2(), "starts at full lens zoom")
+	_view._pan_camera(Vector2(10000.0, 10000.0))
+	var pan_before := _view._camera_pan.length()
+	assert_gt(pan_before, 0.0, "pan is non-zero at full zoom")
+
+	# Zoom part-way out. With a fixed world-unit limit, the pan should stay
+	# clamped to the same boundary — it does NOT shrink toward centre.
+	_view.zoom_by(-0.5)
+	assert_true(_view._is_zoom_stage_2(), "still in stage 2 after partial zoom-out")
+	var pan_after := _view._camera_pan.length()
+	assert_almost_eq(pan_after, pan_before, 0.001, "pan magnitude stays fixed when zooming out")
+
+
+func test_value_label_updates_after_cleaning_stroke() -> void:
+	_add_locket("value_label", 0.0, 200)
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("value_label")
+	_view.select_tool("soft_cloth")
+
+	var before_text := _view._value_label.text
+	var result := _view.attempt_clean_with_ray(HIT_ORIGIN, HIT_DIR)
+	assert_not_null(result, "a surface hit cleans")
+	var after_text := _view._value_label.text
+	assert_ne(after_text, before_text, "value label text changes after a cleaning stroke")
+	assert_true(after_text.contains("P"), "value label still shows a peso value")
 
 
 func test_switching_artifacts_preserves_exact_cleaned_spots() -> void:
@@ -425,6 +521,25 @@ func test_unequipping_in_storage_drops_the_tool_from_the_bench() -> void:
 
 	assert_eq(_view.get_selected_tool_id(), "", "the held, now-unequipped tool is put down")
 	assert_false(_view.get_tool_tray().get_tool_ids().has("rust_brush"), "and it leaves the table")
+
+
+func test_debug_clean_all_tool_cleans_active_artifact() -> void:
+	var tools := ToolService.new(GameState, DataRepository.singleton())
+	tools.grant_tool("debug_clean_all")
+	_add_pendant("debug_view_pendant")
+	_view = await _make_view()
+	_view.open()
+	_view.load_instance("debug_view_pendant")
+
+	_view.select_tool("debug_clean_all")
+	assert_eq(_view.get_selected_tool_id(), "debug_clean_all", "debug tool is selected")
+
+	_view._debug_clean_all()
+	assert_eq(
+		_instance_state("debug_view_pendant"),
+		ModelEnums.ObjState.CLEAN,
+		"debug clean-all flips the instance to CLEAN"
+	)
 
 
 func _presentation_signature(view: RestorationView) -> Dictionary:

@@ -15,6 +15,10 @@ signal phone_pressed  ## Player wants to view the phone (marketplace).
 signal storage_pressed  ## Player wants to open Storage (bench loadout / restore target).
 signal morning_delivery_pressed  ## Player wants to start the morning delivery triage.
 signal dialogue_finished  ## Re-emitted when the dialogue box closes its queue.
+## Player clicked an unrestored artifact card: open the bench on that artifact.
+signal unrestored_card_selected(uid: String)
+## Player clicked a restored artifact card: open the 3D viewer on it.
+signal restored_card_selected(uid: String)
 
 enum Rarity { WHITE, GREEN, BLUE, PURPLE, GOLD }
 
@@ -40,12 +44,15 @@ const FALLBACK_BUTTONS_VISIBLE := false
 
 var _storage_button: Button
 
-@onready var _unrestored_counts: RichTextLabel = %UnrestoredCounts
-@onready var _restored_counts: RichTextLabel = %RestoredCounts
-@onready var _quest_count: Label = %QuestCount
+# Null-tolerant: the menu/loading backdrop scenes reuse this script with an
+# older HUD tree that has no card strips (they never call set_artifact_cards).
+@onready var _unrestored_cards: HBoxContainer = get_node_or_null("%UnrestoredCards")
+@onready var _restored_cards: HBoxContainer = get_node_or_null("%RestoredCards")
+@onready var _quest_count: Label = get_node_or_null("%QuestCount")
 @onready var _day_label: Label = %DayLabel
 @onready var _clock_label: Label = %ClockLabel
 @onready var _prompt_label: Label = $PromptLabel
+@onready var _hint_label: Label = $FallbackHint
 
 
 func _ready() -> void:
@@ -56,6 +63,7 @@ func _ready() -> void:
 	_morning_button.pressed.connect(func() -> void: morning_delivery_pressed.emit())
 	_dialogue.finished.connect(func() -> void: dialogue_finished.emit())
 	_build_storage_button()
+	_build_quest_tracker()
 
 
 ## The Storage button is created in code (the rest of the HUD is authored in
@@ -81,18 +89,61 @@ func _build_storage_button() -> void:
 	add_child(_storage_button)
 
 
-## counts: Dictionary keyed by Rarity enum -> int.
-func set_unrestored(counts: Dictionary) -> void:
-	_unrestored_counts.text = _format_counts(counts)
+const QUEST_TRACKER_SCENE := preload("res://scenes/ui/quest_tracker.tscn")
 
 
-## counts: Dictionary keyed by Rarity enum -> int (restored, ready to sell).
-func set_restored(counts: Dictionary) -> void:
-	_restored_counts.text = _format_counts(counts)
+## Node-based active-quest tracker (top-right). Lists active quests as QuestEntry
+## nodes; hides itself when there are none.
+func _build_quest_tracker() -> void:
+	var tracker: QuestTracker = QUEST_TRACKER_SCENE.instantiate()
+	tracker.name = "QuestTracker"
+	add_child(tracker)
+
+
+const ARTIFACT_CARD_SCENE := preload("res://scenes/restoration/artifact_card.tscn")
+
+
+## Rebuilds the two artifact card strips (like the bench's artifact bar).
+## `unrestored`/`restored` entries: {uid, display_name, color: Color}. The
+## controller follows up per card via `preview_provider.call(uid, card)` to
+## embed the rotating 3D preview (presentation stays state-free here).
+func set_artifact_cards(
+	unrestored: Array, restored: Array, previews_on: bool, preview_provider: Callable
+) -> void:
+	_fill_card_strip(_unrestored_cards, unrestored, previews_on, preview_provider, true)
+	_fill_card_strip(_restored_cards, restored, previews_on, preview_provider, false)
+
+
+func _fill_card_strip(
+	strip: HBoxContainer,
+	entries: Array,
+	previews_on: bool,
+	preview_provider: Callable,
+	is_unrestored: bool
+) -> void:
+	if strip == null:
+		return
+	for child in strip.get_children():
+		child.queue_free()
+	for raw in entries:
+		var entry: Dictionary = raw
+		var uid := str(entry.get("uid"))
+		var card: ArtifactCard = ARTIFACT_CARD_SCENE.instantiate()
+		strip.add_child(card)
+		card.configure(
+			uid, str(entry.get("display_name", uid)), entry.get("color", Color.WHITE), previews_on
+		)
+		if is_unrestored:
+			card.selected.connect(func(id: String) -> void: unrestored_card_selected.emit(id))
+		else:
+			card.selected.connect(func(id: String) -> void: restored_card_selected.emit(id))
+		if previews_on and preview_provider.is_valid():
+			preview_provider.call(uid, card)
 
 
 func set_quest_count(amount: int) -> void:
-	_quest_count.text = str(amount)
+	if _quest_count != null:
+		_quest_count.text = "Quest: %d" % amount
 
 
 ## Shows the diegetic hover prompt for a focused shop interactable (empty clears).
@@ -102,6 +153,12 @@ func set_prompt(text: String) -> void:
 
 func set_day(day: int, total_days: int) -> void:
 	_day_label.text = "Day %d of %d" % [day, total_days]
+
+
+## Day 0 (tutorial) presentation: time does not exist yet, so no clock readout.
+func set_day_zero() -> void:
+	_day_label.text = "Day 0"
+	_clock_label.text = ""
 
 
 ## hour: 24-hour value (the shop runs 7..20). minute: 0..59.
@@ -142,13 +199,22 @@ func start_dialogue(lines: Array) -> void:
 	_dialogue.start(lines)
 
 
-func _format_counts(counts: Dictionary) -> String:
-	var parts: PackedStringArray = []
-	for i in RARITY.size():
-		var info: Dictionary = RARITY[i]
-		var amount: int = int(counts.get(i, 0))
-		parts.append("[color=#%s]%s %d[/color]" % [info.color, info.name, amount])
-	return "   ".join(parts)
+## Show a persistent HUD hint (e.g. for tutorial guidance).  Empty text clears.
+func set_hint(speaker: String, text: String, _anchor: String = "") -> void:
+	if text.is_empty():
+		_hint_label.text = ""
+		_hint_label.hide()
+	else:
+		if speaker.is_empty():
+			_hint_label.text = text
+		else:
+			_hint_label.text = "%s: %s" % [speaker, text]
+		_hint_label.show()
+
+
+func clear_hint() -> void:
+	_hint_label.text = ""
+	_hint_label.hide()
 
 
 func _format_time(hour: int, minute: int = 0) -> String:

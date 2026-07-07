@@ -186,3 +186,76 @@ func _released_fragment() -> Fragment:
 	fragment.state = ModelEnums.FragmentState.RELEASED
 	fragment.echo_set_ref = "demo_echo_set"
 	return fragment
+
+
+# --- Revamp C: 8-column shelf + drag-reorder ------------------------------------
+
+
+func test_artifact_shelf_shows_empty_boxes_in_8_columns() -> void:
+	# Even with a single artifact the shelf pads out to full 8-wide rows of boxes.
+	_add_inventory("art_1", "rusted_tin")
+	var screen := await _open_screen()
+	var grid := _find_artifact_grid(screen)
+	assert_not_null(grid, "the artifacts tab hosts a GridContainer shelf")
+	assert_eq(grid.columns, StorageScreen.ARTIFACT_GRID_COLUMNS)
+	assert_gte(
+		grid.get_child_count(),
+		StorageScreen.ARTIFACT_GRID_MIN_SLOTS,
+		"empty boxes are visible even with few artifacts"
+	)
+	assert_eq(grid.get_child_count() % StorageScreen.ARTIFACT_GRID_COLUMNS, 0, "whole rows only")
+
+
+func test_reorder_artifact_rewrites_inventory_order() -> void:
+	_add_inventory("art_1", "rusted_tin")
+	_add_inventory("art_2", "brass_hand_bell")
+	_add_inventory("art_3", "wooden_rosary")
+	var screen := await _open_screen()
+	screen._reorder_artifact("art_3", 0)
+	var uids: Array[String] = []
+	for raw in GameState.save_state.loop.inventory:
+		uids.append(str((raw as Dictionary).get("uid")))
+	assert_eq(uids, ["art_3", "art_1", "art_2"] as Array[String])
+
+
+func test_reorder_keeps_quest_items_in_place() -> void:
+	_add_inventory("art_1", "rusted_tin")
+	_add_inventory("quest_1", "auntie_photo_faded")  # non-deliverable: must not move
+	_add_inventory("art_2", "wooden_rosary")
+	var screen := await _open_screen()
+	screen._reorder_artifact("art_2", 0)
+	var uids: Array[String] = []
+	for raw in GameState.save_state.loop.inventory:
+		uids.append(str((raw as Dictionary).get("uid")))
+	assert_eq(
+		uids,
+		["art_2", "quest_1", "art_1"] as Array[String],
+		"deliverables swap around the quest item, which keeps its slot"
+	)
+
+
+func test_reorder_to_same_slot_is_a_no_op() -> void:
+	_add_inventory("art_1", "rusted_tin")
+	_add_inventory("art_2", "wooden_rosary")
+	var screen := await _open_screen()
+	screen._reorder_artifact("art_1", 0)
+	var uids: Array[String] = []
+	for raw in GameState.save_state.loop.inventory:
+		uids.append(str((raw as Dictionary).get("uid")))
+	assert_eq(uids, ["art_1", "art_2"] as Array[String])
+
+
+## Finds the artifacts tab's shelf grid (the first GridContainer under that tab).
+func _find_artifact_grid(screen: StorageScreen) -> GridContainer:
+	var tab := screen._tab("Artifacts")
+	return _first_grid(tab)
+
+
+func _first_grid(node: Node) -> GridContainer:
+	if node is GridContainer:
+		return node
+	for child in node.get_children():
+		var found := _first_grid(child)
+		if found != null:
+			return found
+	return null

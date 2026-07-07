@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/mall/buyer_handoff.gd" id="1_buyer"]
+[ext_resource type="Texture2D" path="res://assets/Characters/Mysterious Buyer.png" id="2_buyer_tex"]
+
+[sub_resource type="BoxShape3D" id="Shape_buyer"]
+size = Vector3(1.6, 2.2, 1.6)
+
+[node name="BuyerNpc" type="Area3D"]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("1_buyer")
+prompt_text = "Hand over the artifact"
+proximity_prompt_text = "Press E to hand over the artifact"
+use_proximity = true
+
+[node name="Sprite" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+pixel_size = 0.0035
+billboard = 1
+texture_filter = 2
+texture = ExtResource("2_buyer_tex")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+shape = SubResource("Shape_buyer")

@@ -42,10 +42,11 @@ const PAUSE_STORAGE: String = "storage"
 const PAUSE_SHOWCASE: String = "showcase"
 const PAUSE_DEMO: String = "demo"
 const PAUSE_EVENING: String = "evening"
+const PAUSE_TUTORIAL: String = "tutorial"  ## Day 0 runs clockless (TUT).
 
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this (e.g. 0.1) to watch/verify the clock move faster (debug speed).
-var seconds_per_hour: float = 60.0
+var seconds_per_hour: float = 300.0
 
 ## Whether the auto-driver (the active scene's _process) should advance the clock
 ## via tick(). Tests leave this false and drive tick() directly so the simulation

@@ -1,0 +1,9 @@
+#!/bin/bash
+# After a route's door conversation, open its scripted showcase if a beat is due.
+if not finished_route_id.is_empty():
+	_maybe_open_showcase(finished_route_id)
+# Sam quest: after talking to Sam with the salakot, schedule archeologist house
+# for the NEXT loop (not immediate) so the player finishes the current loop normally.
+if finished_route_id == "sam":
+	QuestService.schedule_location_unlock_next_loop("archeologist_house")
+	return

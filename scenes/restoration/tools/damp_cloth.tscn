@@ -8,7 +8,8 @@ script = ExtResource("2_config")
 max_durability = 200
 clean_radius = 0.14
 cleans = {
-"dirt": 60
+"dirt": 60,
+"dust": 45
 }
 
 [node name="CleanPoint" type="Marker3D" parent="." unique_id=2073822560]

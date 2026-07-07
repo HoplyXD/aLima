@@ -1,114 +1,59 @@
-# Plan: Save-Slot + Seeded New Game + Real Main Menu + Pause Save & Quit
+# Plan: REST-FIX-005 — Zoom-Independent Camera Pan with Consistent Limit
 
 ## Context
-
-The current title screen has a single "Play" button that calls `SpaceManager.go_to_shop()`. The shop then calls `LoopController.begin_session()`, which starts Day 1 but never seeds a new run, so `GameState.run_seed` stays 0 and every fresh boot produces the same procedural world. The pause menu has Resume / Return-to-Title / Exit, but Return-to-Title does not save, and there is no Save & Quit. Saves are stored in a single fixed file `user://save.json`.
+Middle-mouse pan in `RestorationView` is currently gated to zoom stage 2 (lens-zoom FOV tighter than default). The clamp is screen-relative (`distance * tan(FOV/2) * aspect`), so the effective world-unit limit shrinks as you zoom in. At max zoom the limit becomes too small, making the artifact immovable. Pan also resets to zero when leaving stage 2.
 
 ## Goal
+Pan works identically at every zoom level with a single, symmetric, fixed world-unit limit of **1.6** around the camera's original centre. Zooming out keeps the offset clamped to the same limit.
 
-Implement a real main menu (New Game / Continue / Options / Quit), three save slots, a numeric seed entry, and an in-game pause menu with Save & Quit, while preserving the existing SaveService architecture, the persistent/loop split, and test isolation.
+## Key Decision
+- **D1 (CONFIRMED):** `CAMERA_PAN_MAX = 1.6` world units. Keep the original value, remove zoom scaling.
 
-## Files to change
+## Phases
 
-1. `scripts/models/save_state.gd` — bump schema to 2, add `run_seed` and `loop_index` to the top-level save contract.
-2. `scripts/core/save_service.gd` — add 3-slot API, v1→v2 migration, restore `GameState.run_seed/loop_index` on load, extend raw validation.
-3. `scripts/core/game_state.gd` — expose `restore_run_context(seed, loop_index)`, keep `new_run()` intact.
-4. `scripts/core/space_manager.gd` — no structural change; `go_to_shop()` will be called after seed+slot setup by the title screen.
-5. `scripts/ui/title_screen.gd` + `scenes/ui/title_screen.tscn` — replace Play with New Game / Continue, add slot picker + seed entry screens, preserve backdrop parallax.
-6. `scripts/ui/pause_menu.gd` + `scenes/ui/pause_menu.tscn` — add Save, Save & Quit, seed display; wire Esc to open pause without breaking overlay Esc-to-close.
-7. `tests/core/test_save_service.gd` — add v1→v2 migration, slot selection/summary, run_seed round-trip tests.
-8. `tests/core/test_game_state.gd` — add run context restoration test.
-9. `tests/core/test_title_screen.gd` (new) — headless tests for seed parsing, slot overwrite confirm, New Game flow seam.
-10. `docs/phase-task.md`, `docs/PROMPT_CONTEXT.md`, `docs/ai-disclosure.md` — update evidence and snapshot date.
+### Phase 1 — Remove zoom-stage gating
+- In `_pan_camera()`: remove `if not _is_zoom_stage_2(): return` guard.
+- In `_handle_mouse_button()` (middle-mouse): remove `_is_zoom_stage_2()` from `_pan_down` assignment.
+- In `_set_fov()`: remove the branch that zeros `_camera_pan` and `_pan_down` when leaving stage 2. Pan must survive across stage transitions.
+- In `zoom_by()`: remove the `_is_zoom_stage_2()` guard around `_clamp_pan()` / `_apply_camera_offset()`.
 
-## Implementation steps
+### Phase 2 — Replace clamp with fixed world-unit limit
+- Add `const CAMERA_PAN_MAX: float = 1.6` (replacing the screen-relative `CAMERA_PAN_SCREEN_FRAC = 0.25` semantic; the constant name can stay on the old line or be replaced).
+- Rewrite `_clamp_pan()`:
+  - Clamp `_camera_pan.length()` to `CAMERA_PAN_MAX`.
+  - Clamp each axis to `[-CAMERA_PAN_MAX, CAMERA_PAN_MAX]`.
+  - Remove all distance/FOV/aspect computations.
 
-### A. Save contract (SaveState + SaveService)
+### Phase 3 — Re-clamp pan after zoom changes
+- In `zoom_by()`: at the end, unconditionally call `_clamp_pan()` and `_apply_camera_offset()` (after `_object.position.z = _zoom_z`).
+- In `_reset_zoom()`: after setting `_camera_pan = Vector2.ZERO`, call `_clamp_pan()` and `_apply_camera_offset()` (already zeroed, but keeps the contract). Actually `_reset_zoom()` already sets `_camera.h_offset = 0.0` and `_camera.v_offset = 0.0`, but we should ensure `_apply_camera_offset()` is called so the FOV lean is also applied correctly. Wait, `_reset_zoom()` zeros `_fov_lean_ndc` so `_apply_camera_offset()` would just set offsets to zero. That's fine.
+- In `_set_fov()`: when staying in or entering stage 2, remove the `old_tan / new_tan` scaling of `_camera_pan`. Just call `_clamp_pan()` and `_apply_camera_offset()`.
 
-- Bump `SaveState.CURRENT_SCHEMA_VERSION` to 2.
-- Add `run_seed: int = 0` and `loop_index: int = 0` to `SaveState`, serialized in `to_dictionary` / `from_dictionary` / `validate`.
-- Implement `_migrate` v1→v2: inject `run_seed=0`, `loop_index=0` when `from_version == 1`.
-- Extend `_validate_raw_payload` to require numeric `run_seed` and `loop_index`.
-- On `load_game()`, after populating `save_state`, call `GameState.restore_run_context(save_state.run_seed, save_state.loop_index)` (new helper) so RNG determinism matches the saved run.
+### Phase 4 — Update tests
+- Remove / replace tests that assert stage-2-only pan:
+  - `test_pan_is_ignored_in_stage_1_and_active_in_stage_2` → replace with `test_pan_enabled_at_all_zoom_levels`.
+  - `test_pan_clamps_to_screen_fraction_at_full_zoom` → replace with `test_pan_limit_is_fixed_across_zoom`.
+  - `test_pan_limit_at_rest_zoom_is_tight` → remove (no longer applicable).
+  - `test_pan_resets_when_leaving_stage_2` → remove (no longer applicable).
+  - `test_pan_recentres_on_zoom_out` → update (with fixed limit, pan should NOT shrink when zooming out; it stays at the boundary if already at max).
+- Add `test_pan_enabled_at_all_zoom_levels`: at rest, mid, and full zoom, assert `_camera_pan` changes after a drag.
+- Add `test_pan_limit_is_fixed_across_zoom`: at rest and full zoom, huge drag, assert `abs(_camera_pan.x) == CAMERA_PAN_MAX` and same for y.
+- Remove `_pan_limit_h` and `_pan_limit_v` helper functions from test file (no longer needed).
+- Update any remaining assertions that expect pan to be zero at stage 1.
 
-### B. Slot-aware SaveService
+### Phase 5 — Run checks
+- `gdformat --check scripts/restoration/restoration_view.gd tests/restoration/test_restoration_view.gd`
+- `gdlint scripts/restoration/restoration_view.gd tests/restoration/test_restoration_view.gd`
+- Headless import: `& $godot --headless --editor --path . --quit`
+- GUT restoration suite: `& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/restoration -ginclude_subdirs -gexit`
+- Full GUT suite: `& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
 
-- Add constants `SLOT_COUNT = 3`, `DEFAULT_SLOT = 0`.
-- Add `_slot_index: int = DEFAULT_SLOT` and derived paths `user://save_slot_<i>.json` / `.tmp`.
-- Add `select_slot(index: int)`, `slot_count()`, `is_slot_valid(i)`, `slot_exists(i)`, `delete_slot(i)`.
-- Add `slot_summary(i: int) -> Dictionary` that reads only top-level metadata (`schema_version`, `player_id`, `run_seed`, `loop_index`, `loop.current_day`, `loop.current_hour`, `persistent` length hints, `last_played` timestamp if present) without full validation; returns `{}` on missing/corrupt.
-- Keep `set_save_paths()` and `DEFAULT_SAVE_PATH`/`DEFAULT_TEMP_PATH` intact for tests; slot selection sets the same `save_path`/`temp_path` fields.
-- `delete_save_files()` continues to delete the active slot's files.
+### Phase 6 — Doc update
+- Append evidence row to `docs/phase-task.md` and `docs/PROMPT_CONTEXT.md`.
 
-### C. GameState run-context restoration
-
-- Add `restore_run_context(seed: int, index: int) -> void` that sets `run_seed`, `loop_index`, and refreshes `run_context`.
-- Keep `new_run(seed)` as the only path that increments loop index and reseeds; New Game calls it, Continue calls `restore_run_context`.
-- In `initialize()`, keep the existing fresh-state path (used by tests and New Game setup), but remove the automatic `_new_run_context` that currently leaves seed at 0. New Game will explicitly call `new_run(seed)`.
-
-### D. Title screen rework
-
-- Replace the single VBoxContainer Play/Options/Quit with a screen stack:
-  - Main screen: New Game, Continue, Options, Quit.
-  - Slot screen: 3 slot buttons (show empty / summary), Back.
-  - Seed screen: LineEdit (digits only), Randomize button, Start, Back.
-  - Overwrite-confirm dialog (AcceptDialog or custom panel) for occupied slots.
-- Preserve the backdrop camera parallax animation.
-- All screens use Buttons with `grab_focus()` for controller/keyboard nav; headless-safe `get_node_or_null` usage.
-- New Game flow:
-  1. Show slot screen; pick empty or occupied slot.
-  2. If occupied, confirm overwrite; on confirm delete the slot.
-  3. Show seed screen; player types digits or presses Randomize.
-  4. Validate seed in `[0, 2147483646]`; blank or Randomize picks `randi_range(0, 2147483646)`.
-  5. `GameState.initialize("local-player")`, `SaveService.select_slot(slot)`, `GameState.new_run(seed)`, initial `SaveService.save_game()`, then `SpaceManager.go_to_shop()`.
-- Continue flow:
-  1. If no slots exist, disable Continue or show "No saves".
-  2. Show slot screen; pick a slot with a save.
-  3. `SaveService.select_slot(slot)`; `load_game()`; surface load errors in status label.
-  4. On success, `SpaceManager.go_to_shop()`.
-- Options/Quit unchanged.
-
-### E. Pause menu rework
-
-- Add Esc to the `pause` action (or open on `back` when no overlay consumed it). Current `_unhandled_input` already handles `pause` (Space) and `back` when open; add Esc as an additional `pause` event and keep overlays calling `set_input_as_handled()` so Esc-to-close wins.
-- Add a `SaveButton` and `SaveAndQuitButton`; keep Resume and rename Return-to-Title to "Return to Title (unsaved)" or add a save warning.
-- `save_game()` writes to the active slot; update `_status_label` with success/failure.
-- `save_and_quit_to_title()` saves, then `SpaceManager.return_to_title()`.
-- Add a seed readout label showing "Seed: N" and "Slot: N".
-- Ensure the menu remains headless-safe (DisplayServer checks already present).
-
-### F. Tests
-
-- `test_run_seed_and_loop_index_round_trip`: set seed/index, save, load into fresh state, assert restored.
-- `test_v1_migration_injects_run_seed_loop_index`: write a v1 payload, load, assert schema 2 and defaults 0/0.
-- `test_slot_selection_uses_distinct_files`: select slot 0, save, select slot 1, different state, assert each loads independently.
-- `test_slot_summary_reads_metadata_without_full_load`: write saves, assert summary returns expected seed/day without running full validation.
-- `test_new_game_seed_produces_deterministic_day1_delivery`: use redirected paths, run New Game flow with fixed seed, generate day-1 delivery, assert identical on second run; different seed diverges.
-- `test_continue_restores_seed_for_same_rolls`: start a run, save, continue from slot, assert `run_seed` and placement/delivery RNG reproduce.
-- Headless title-screen tests for seed parsing and overwrite dialog.
-
-### G. Documentation
-
-- `docs/phase-task.md`: add a new Phase 0/2 follow-up task or append under Phase 2 evidence; reference SAVE-R1, DISC-R6, INPUT-R1, PLAT-R4; leave manual gates unchecked.
-- `docs/PROMPT_CONTEXT.md`: refresh snapshot date, document slot saves, schema v2, New Game/Continue, pause Save & Quit.
-- `docs/ai-disclosure.md`: append AI-assisted code row.
-
-## Verification
-
-```powershell
-$godot = "C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe"
-& $godot --headless --editor --path . --quit
-& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/core -gexit
-& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-gdformat --check scripts scenes dialogue tests
-gdlint scripts scenes dialogue tests
-git diff --check
-```
-
-## Risks and mitigations
-
-- **Existing tests using `set_save_paths`**: slot selection routes through the same `save_path`/`temp_path` fields; tests that set explicit paths keep working. Default paths stay `user://save.json`/`user://save.tmp` when no slot is selected.
-- **LoopController `begin_session` currently resets clock but does not seed**: title screen will now own the `new_run` call; `begin_session` will only start the clock after a run context exists. This fixes the reported bug.
-- **Overwriting slots**: require explicit confirmation; never silently delete.
-- **Headless safety**: title screen checks `DisplayServer.get_name() == "headless"` for mouse-parallax; buttons still exist and are testable.
-- **Persistent/loop split**: `run_seed`/`loop_index` live at the top-level save contract, not inside `loop`, so loop reset never wipes the seed.
+## Guardrails
+- Do NOT leave pan disabled at any zoom level.
+- Do NOT leave the limit varying with zoom.
+- Do NOT leave existing tests red.
+- Do NOT change zoom speed, FOV, or rotation.
+- Do NOT auto-center on every frame.

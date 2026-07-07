@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "config": {
+    "sort_hours": 0,
+    "starter_tool_conditions": [
+      "dust",
+      "dirt"
+    ],
+    "artifact_pool": {
+      "rarity": "white"
+    },
+    "allowed_conditions": [
+      "dust",
+      "dirt"
+    ]
+  },
+  "steps": [
+    {
+      "id": "day1_blackout",
+      "space": "SHOP",
+      "npcs": [],
+      "dialogue": [
+        {
+          "speaker": "inner",
+          "text": "Ugh… my head…"
+        },
+        {
+          "speaker": "inner",
+          "text": "Did I… black out?"
+        },
+        {
+          "speaker": "inner",
+          "text": "The shop is quiet. Too quiet. Tito Yuyu is always here by now."
+        },
+        {
+          "speaker": "inner",
+          "text": "His glasses are still on the counter. His jacket is still on the hook. He never leaves without them."
+        },
+        {
+          "speaker": "inner",
+          "text": "Where is he?"
+        }
+      ],
+      "hint": {
+        "speaker": "inner",
+        "text": "Exit the house and look around.",
+        "anchor": "door"
+      },
+      "complete_on": {
+        "signal": "space_changed",
+        "space": "YARD"
+      }
+    },
+    {
+      "id": "day1_alya_intro",
+      "space": "YARD",
+      "npcs": [
+        "alya"
+      ],
+      "dialogue": [
+        {
+          "speaker": "inner",
+          "text": "There's someone at the gate."
+        },
+        {
+          "speaker": "alya",
+          "text": "Oh! You must be {player}. Tito Yuyu talks about you all the time."
+        },
+        {
+          "speaker": "alya",
+          "text": "I'm Alya. I… I help Tito sort scrap into restorable artifacts."
+        },
+        {
+          "speaker": "inner",
+          "text": "She looks worried. Like she's been waiting for a while."
+        },
+        {
+          "speaker": "alya",
+          "text": "Tito didn't come home last night. He's never done that before."
+        },
+        {
+          "speaker": "alya",
+          "text": "But the shop needs to keep running. If you find scrap in the yard, I can sort it for you."
+        },
+        {
+          "speaker": "alya",
+          "text": "Just bring me whatever you find and I'll turn it into something worth restoring."
+        }
+      ],
+      "hint": {
+        "speaker": "alya",
+        "text": "Find scrap in the yard and give it to me.",
+        "anchor": "scrap"
+      },
+      "complete_on": {
+        "signal": "scrap_submitted"
+      }
+    },
+    {
+      "id": "day1_triage",
+      "space": "YARD",
+      "npcs": [
+        "alya"
+      ],
+      "dialogue": [
+        {
+          "speaker": "alya",
+          "text": "Good find! I sorted your scrap into two pieces."
+        },
+        {
+          "speaker": "alya",
+          "text": "Keep only one for restoring — storage is tight. The other goes back to the recycler."
+        },
+        {
+          "speaker": "alya",
+          "text": "Pick the one that looks more promising. Don't worry, you'll get plenty more chances to find treasures."
+        }
+      ],
+      "hint": {
+        "speaker": "alya",
+        "text": "Keep one artifact, recycle the other.",
+        "anchor": "triage"
+      },
+      "complete_on": {
+        "signal": "triage_completed"
+      }
+    },
+    {
+      "id": "day1_start_time",
+      "space": "YARD",
+      "npcs": [
+        "alya"
+      ],
+      "dialogue": [
+        {
+          "speaker": "alya",
+          "text": "Nice choice! Head inside and start restoring. The shop needs you now."
+        },
+        {
+          "speaker": "alya",
+          "text": "I'll be here if you need more scrap sorted. And… if you hear anything about Tito, please tell me."
+        }
+      ],
+      "hint": {
+        "speaker": "alya",
+        "text": "Head inside the shop to start restoring.",
+        "anchor": "door"
+      },
+      "complete_on": {
+        "signal": "space_changed",
+        "space": "SHOP"
+      }
+    }
+  ]
+}

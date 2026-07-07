@@ -85,6 +85,11 @@ func _fit_object() -> void:
 func _visible_aabb(root: Node3D) -> AABB:
 	var acc := AABB()
 	var has := false
+	# A cleared/empty slot leaves the holder at zero scale (fill 0), so the
+	# global transform is degenerate — inverting it spams "det == 0". Skip the
+	# inverse (nothing to measure on an empty preview) when that happens.
+	if absf(root.global_transform.basis.determinant()) < 0.0000001:
+		return acc
 	var inv := root.global_transform.affine_inverse()
 	var stack: Array = [root]
 	while not stack.is_empty():
