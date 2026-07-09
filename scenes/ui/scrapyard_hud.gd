@@ -24,7 +24,7 @@ const RARITY_COLORS := {
 	"gold": Color(1.0, 0.72, 0.17),
 }
 
-const SLOT_EMPTY_COLOR := Color(0.12, 0.12, 0.12, 0.75)
+const SLOT_EMPTY_COLOR := Color(0.12, 0.10, 0.07, 0.78)  ## Warm ink for an empty carry slot.
 const SLOT_SCRAP_COLOR := Color(0.45, 0.4, 0.32)
 
 const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
@@ -215,17 +215,9 @@ func _set_slot(index: int, display_name: String, color: Color, preview: Node3D) 
 		preview = Node3D.new()
 	card.set_spin(true)
 	card.set_preview(preview, display_name, color, 0.9)
-	# Restore the card's panel style (dark background with rounded corners)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.1, 0.12, 0.85)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
-	style.content_margin_left = 6.0
-	style.content_margin_top = 6.0
-	style.content_margin_right = 6.0
-	style.content_margin_bottom = 6.0
+	# A filled carry slot: parchment panel with a faint brass edge, matching the shared UI.
+	var style := UiPalette.panel_style(Color(0.2, 0.17, 0.12, 0.9), Color(0.74, 0.56, 0.28, 0.45))
+	style.set_content_margin_all(6.0)
 	card.add_theme_stylebox_override("panel", style)
 
 
@@ -235,17 +227,9 @@ func _clear_slot(index: int) -> void:
 	var card: Preview3DCard = _cards[index]
 	card.set_spin(false)
 	card.set_preview(Node3D.new(), "", Color.WHITE, 0.0)
-	# Dark empty slot look
-	var style := StyleBoxFlat.new()
-	style.bg_color = SLOT_EMPTY_COLOR
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
-	style.content_margin_left = 6.0
-	style.content_margin_top = 6.0
-	style.content_margin_right = 6.0
-	style.content_margin_bottom = 6.0
+	# Empty slot: quiet warm-ink recess (no accent edge).
+	var style := UiPalette.panel_style(SLOT_EMPTY_COLOR)
+	style.set_content_margin_all(6.0)
 	card.add_theme_stylebox_override("panel", style)
 
 

@@ -47,35 +47,29 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if not _arrow_visible:
 		return
-	# A bobbing triangle hovering above the target, pointing down at it. Targets
-	# near the top edge (top-bar buttons like Scan & Judge / Close) flip the arrow
-	# BELOW the point, aiming up, so it never draws off-screen.
+	# A bobbing triangle hovering near the target, pointing at it. Targets near the
+	# top edge (top-bar buttons like Scan & Judge / Close) flip the arrow BELOW the
+	# point, aiming up, so it never draws off-screen.
 	var bob := sin(_time * 4.0) * ARROW_BOB
 	var half := ARROW_SIZE * 0.5
-	var flip := _arrow_target.y < TOP_FLIP_ZONE
 	var points: PackedVector2Array
-	if flip:
+	if _arrow_target.y < TOP_FLIP_ZONE:
+		# Below the target, tip pointing up at it.
 		var tip := _arrow_target + Vector2(0.0, ARROW_GAP - bob)
 		points = PackedVector2Array(
-			[
-				tip,
-				tip + Vector2(-half, ARROW_SIZE),
-				tip + Vector2(half, ARROW_SIZE),
-			]
+			[tip, tip + Vector2(-half, ARROW_SIZE), tip + Vector2(half, ARROW_SIZE)]
 		)
 	else:
+		# Above the target, tip pointing down at it.
 		var tip := _arrow_target + Vector2(0.0, -ARROW_GAP + bob)
 		points = PackedVector2Array(
-			[
-				tip,
-				tip + Vector2(-half, -ARROW_SIZE),
-				tip + Vector2(half, -ARROW_SIZE),
-			]
+			[tip, tip + Vector2(-half, -ARROW_SIZE), tip + Vector2(half, -ARROW_SIZE)]
 		)
-	draw_colored_polygon(points, Color(1.0, 0.85, 0.3, 0.95))
+	# Brass arrow with a deep-ink outline, matching the shared UI palette.
+	draw_colored_polygon(points, Color(0.90, 0.72, 0.36, 0.95))
 	draw_polyline(
 		PackedVector2Array([points[0], points[1], points[2], points[0]]),
-		Color(0.25, 0.18, 0.05, 0.9),
+		Color(0.12, 0.10, 0.07, 0.9),
 		2.0
 	)
 

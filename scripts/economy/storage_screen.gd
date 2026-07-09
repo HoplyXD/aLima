@@ -526,7 +526,7 @@ func _build_tools_tab() -> void:
 func _make_equip_area() -> Control:
 	var zone := ToolDropZone.new()
 	zone.on_drop = _on_equip_drop
-	_style_zone(zone, Color(0.16, 0.18, 0.22, 0.6))
+	_style_zone(zone, Color(0.26, 0.22, 0.16, 0.6))
 	var grid := GridContainer.new()
 	grid.columns = ToolService.MAX_WORKBENCH_TOOLS  # one column per bench slot (8)
 	grid.add_theme_constant_override("h_separation", 8)
@@ -538,7 +538,7 @@ func _make_equip_area() -> Control:
 		var slot := ToolSlot.new()
 		slot.slot_index = i
 		slot.on_drop_to_slot = _on_slot_drop
-		slot.setup(SLOT_MIN, Color(0.08, 0.09, 0.10, 0.5), Color(0.20, 0.34, 0.22, 0.95))
+		slot.setup(SLOT_MIN, Color(0.12, 0.10, 0.07, 0.5), Color(0.38, 0.50, 0.40, 0.95))
 		var inst: ToolInstance = null
 		if i < equipped.size():
 			inst = _find_owned(ModelUtils.as_string(equipped[i]))
@@ -556,7 +556,7 @@ func _make_equip_area() -> Control:
 func _make_owned_area() -> Control:
 	var zone := ToolDropZone.new()
 	zone.on_drop = _on_unequip_drop
-	_style_zone(zone, Color(0.10, 0.11, 0.13, 0.6))
+	_style_zone(zone, Color(0.14, 0.12, 0.08, 0.6))
 	# A VBox so an empty-state note spans the full width instead of being squeezed
 	# into one narrow grid cell (which wraps the text one letter per line).
 	var vbox := VBoxContainer.new()
@@ -633,7 +633,7 @@ func _make_slot_placeholder() -> Control:
 	label.text = "—"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.45))
+	label.add_theme_color_override("font_color", UiPalette.SMOKE)
 	return label
 
 
@@ -752,7 +752,7 @@ func _make_fragment_box(fragment: Fragment) -> Button:
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var state := ModelEnums.fragment_state_name(fragment.state).capitalize()
 	box.text = "Fragment %d\n%s" % [fragment.case_slot_index + 1, state]
-	box.add_theme_color_override("font_color", Color(0.85, 0.78, 0.5))
+	box.add_theme_color_override("font_color", UiPalette.BRASS)
 	return box
 
 
@@ -776,7 +776,7 @@ func _make_master_detail(tab: HBoxContainer) -> Dictionary:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(DETAIL_WIDTH, 0)
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_style_zone(panel, Color(0.10, 0.11, 0.13, 0.85))
+	_style_zone(panel, Color(0.14, 0.12, 0.08, 0.85))
 	var detail_margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		detail_margin.add_theme_constant_override("margin_%s" % side, 16)
@@ -819,7 +819,7 @@ func _make_title(text: String) -> Label:
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", 24)
-	label.add_theme_color_override("font_color", Color(0.95, 0.92, 0.8))
+	label.add_theme_color_override("font_color", UiPalette.BRASS_BRIGHT)
 	return label
 
 
@@ -827,7 +827,7 @@ func _make_sub(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", 15)
-	label.add_theme_color_override("font_color", Color(0.7, 0.72, 0.78))
+	label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	return label
 
 
@@ -836,7 +836,7 @@ func _make_body(text: String) -> Label:
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", 14)
-	label.add_theme_color_override("font_color", Color(0.82, 0.82, 0.85))
+	label.add_theme_color_override("font_color", UiPalette.BONE)
 	return label
 
 
@@ -846,13 +846,13 @@ func _make_kv(key: String, value: String) -> Control:
 	k.text = key
 	k.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	k.add_theme_font_size_override("font_size", 14)
-	k.add_theme_color_override("font_color", Color(0.65, 0.67, 0.72))
+	k.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	row.add_child(k)
 	var v := Label.new()
 	v.text = value
 	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v.add_theme_font_size_override("font_size", 14)
-	v.add_theme_color_override("font_color", Color(0.9, 0.9, 0.92))
+	v.add_theme_color_override("font_color", UiPalette.BONE)
 	row.add_child(v)
 	return row
 
@@ -862,7 +862,7 @@ func _make_note(text: String) -> Label:
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", 14)
-	label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+	label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	return label
 
 
@@ -964,17 +964,8 @@ func _state_word(inst: ObjectInstance) -> String:
 
 
 func _rarity_color(rarity: int) -> Color:
-	match rarity:
-		ModelEnums.Rarity.GREEN:
-			return Color(0.55, 0.85, 0.55)
-		ModelEnums.Rarity.BLUE:
-			return Color(0.5, 0.7, 0.95)
-		ModelEnums.Rarity.PURPLE:
-			return Color(0.78, 0.6, 0.9)
-		ModelEnums.Rarity.GOLD:
-			return Color(0.95, 0.82, 0.45)
-		_:
-			return Color(0.9, 0.9, 0.9)
+	# Single legend source (CLAUDE.md §4-E) — was a divergent local copy.
+	return UiPalette.rarity_color(rarity)
 
 
 func _instance_display_name(uid: String) -> String:
@@ -1008,7 +999,7 @@ class ArtifactSlot:
 		# Empty boxes read as quiet, dashed-dark shelf space.
 		if artifact_uid.is_empty():
 			var style := StyleBoxFlat.new()
-			style.bg_color = Color(0.10, 0.10, 0.13, 0.7)
+			style.bg_color = Color(0.14, 0.12, 0.08, 0.7)
 			style.corner_radius_top_left = 8
 			style.corner_radius_top_right = 8
 			style.corner_radius_bottom_right = 8

@@ -3,7 +3,9 @@
 [ext_resource type="Script" path="res://scripts/ui/quest_entry.gd" id="1_entry"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_entry"]
-bg_color = Color(0.12, 0.13, 0.17, 0.9)
+bg_color = Color(0.26, 0.22, 0.16, 0.92)
+border_width_left = 3
+border_color = Color(0.74, 0.56, 0.28, 0.75)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -31,7 +33,7 @@ text = "Quest"
 
 [node name="Objective" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.76, 0.82, 1)
+theme_override_colors/font_color = Color(0.72, 0.68, 0.58, 1)
 theme_override_font_sizes/font_size = 14
 text = "Objective"
 autowrap_mode = 2

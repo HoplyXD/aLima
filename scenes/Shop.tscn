@@ -37,7 +37,6 @@
 [ext_resource type="Texture2D" uid="uid://dx5tdmtsbisw8" path="res://assets/Characters/Archeologist.png" id="31_ep7b0"]
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_yh0ut"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_6tp7w"]
-[ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="36_yh0ut"]
 [ext_resource type="PackedScene" path="res://scenes/npc/yuyu_npc.tscn" id="40_yuyu"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4uftm"]
@@ -60,8 +59,9 @@ ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.55, 0.46, 1)
 ambient_light_energy = 0.95
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ni0rq"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yh0ut"]
 texture = ExtResource("35_yh0ut")
+expand_margin_bottom = 48.0
 
 [node name="Shop" type="Node3D" unique_id=395316236]
 script = ExtResource("5_ctrl")
@@ -450,93 +450,96 @@ horizontal_alignment = 1
 [node name="DialogueBox" parent="HUD" unique_id=896587535 instance=ExtResource("3_dlgbox")]
 visible = false
 
-[node name="TopPanel2" type="Panel" parent="HUD" unique_id=1722176874]
+[node name="TopPanel" type="Panel" parent="HUD" unique_id=854253305]
 anchors_preset = 10
 anchor_right = 1.0
 offset_right = -1.0
-offset_bottom = 200.0
+offset_bottom = 130.0
 grow_horizontal = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_ni0rq")
+theme_override_styles/panel = SubResource("StyleBoxTexture_yh0ut")
 
-[node name="Margin" type="MarginContainer" parent="HUD/TopPanel2" unique_id=1933300548]
+[node name="Margin" type="MarginContainer" parent="HUD/TopPanel" unique_id=1933300548]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -21.0
-offset_bottom = 21.0
+offset_bottom = 81.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 177
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 21
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_bottom = 20
 
-[node name="Bar" type="HBoxContainer" parent="HUD/TopPanel2/Margin" unique_id=1057700593]
+[node name="Bar" type="HBoxContainer" parent="HUD/TopPanel/Margin" unique_id=1057700593]
 layout_mode = 2
 theme_override_constants/separation = 80
 
-[node name="Unrestored" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=18342938]
+[node name="Unrestored" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=18342938]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Unrestored" unique_id=1773867073]
+[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=1773867073]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_yh0ut")
+theme_override_fonts/font = ExtResource("36_6tp7w")
 theme_override_font_sizes/font_size = 40
 text = "Unrestored"
 
-[node name="UnrestoredScroll" type="ScrollContainer" parent="HUD/TopPanel2/Margin/Bar/Unrestored" unique_id=737087264]
+[node name="UnrestoredScroll" type="ScrollContainer" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=737087264]
 custom_minimum_size = Vector2(560, 116)
 layout_mode = 2
 horizontal_scroll_mode = 2
 vertical_scroll_mode = 0
 
-[node name="UnrestoredCards" type="HBoxContainer" parent="HUD/TopPanel2/Margin/Bar/Unrestored/UnrestoredScroll" unique_id=737087265]
+[node name="UnrestoredCards" type="HBoxContainer" parent="HUD/TopPanel/Margin/Bar/Unrestored/UnrestoredScroll" unique_id=737087265]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Sep1" type="VSeparator" parent="HUD/TopPanel2/Margin/Bar" unique_id=516100664]
+[node name="Sep1" type="VSeparator" parent="HUD/TopPanel/Margin/Bar" unique_id=516100664]
 layout_mode = 2
 
-[node name="Restored" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=546177771]
+[node name="Restored" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=546177771]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Title" type="Label" parent="HUD/TopPanel2/Margin/Bar/Restored" unique_id=2121423419]
+[node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=2121423419]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_yh0ut")
+theme_override_fonts/font = ExtResource("36_6tp7w")
 theme_override_font_sizes/font_size = 40
 text = "Restored (click to view)"
 
-[node name="RestoredScroll" type="ScrollContainer" parent="HUD/TopPanel2/Margin/Bar/Restored" unique_id=1567502996]
+[node name="RestoredScroll" type="ScrollContainer" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=1567502996]
 custom_minimum_size = Vector2(560, 116)
 layout_mode = 2
 horizontal_scroll_mode = 2
 vertical_scroll_mode = 0
 
-[node name="RestoredCards" type="HBoxContainer" parent="HUD/TopPanel2/Margin/Bar/Restored/RestoredScroll" unique_id=1567502997]
+[node name="RestoredCards" type="HBoxContainer" parent="HUD/TopPanel/Margin/Bar/Restored/RestoredScroll" unique_id=1567502997]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Spacer" type="Control" parent="HUD/TopPanel2/Margin/Bar" unique_id=1020011671]
+[node name="Spacer" type="Control" parent="HUD/TopPanel/Margin/Bar" unique_id=1020011671]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Clock" type="VBoxContainer" parent="HUD/TopPanel2/Margin/Bar" unique_id=490636225]
+[node name="Clock" type="VBoxContainer" parent="HUD/TopPanel/Margin/Bar" unique_id=490636225]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 9
 
-[node name="QuestCount" type="Label" parent="HUD/TopPanel2/Margin/Bar/Clock" unique_id=43241348]
+[node name="Container" type="Container" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=319703225]
+layout_mode = 2
+
+[node name="QuestCount" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=43241348]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_fonts/font = ExtResource("36_6tp7w")
+theme_override_font_sizes/font_size = 38
 text = "Quest: 0"
 horizontal_alignment = 2
 
-[node name="DayLabel" type="Label" parent="HUD/TopPanel2/Margin/Bar/Clock" unique_id=767463733]
+[node name="DayLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=767463733]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("36_6tp7w")
@@ -544,11 +547,11 @@ theme_override_font_sizes/font_size = 35
 text = "Day 1 of 5"
 horizontal_alignment = 2
 
-[node name="ClockLabel" type="Label" parent="HUD/TopPanel2/Margin/Bar/Clock" unique_id=1483693581]
+[node name="ClockLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1483693581]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("36_6tp7w")
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 41
 text = "7:00 AM"
 horizontal_alignment = 2
 

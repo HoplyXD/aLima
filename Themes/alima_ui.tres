@@ -1,0 +1,141 @@
+[gd_resource type="Theme" format=3 uid="uid://driye332ttd10"]
+
+; aLima's shared UI theme — the muted old-world "junk-shop manuscript" look.
+; Colours mirror scripts/ui/ui_palette.gd (a Theme cannot reference script constants,
+; so the two are kept in sync by hand). Applied scoped to the tutorial + HUD + card
+; surfaces this pass; can later be promoted to project.godot gui/theme/custom.
+
+[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="1_body"]
+[ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="2_head"]
+
+[sub_resource type="StyleBoxFlat" id="Panel_parchment"]
+bg_color = Color(0.2, 0.17, 0.12, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.74, 0.56, 0.28, 0.55)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="Button_normal"]
+bg_color = Color(0.24, 0.2, 0.14, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.74, 0.56, 0.28, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="Button_hover"]
+bg_color = Color(0.3, 0.25, 0.17, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.72, 0.36, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="Button_pressed"]
+bg_color = Color(0.18, 0.15, 0.1, 1.0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.74, 0.56, 0.28, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="Button_focus"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.72, 0.36, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="Button_disabled"]
+bg_color = Color(0.18, 0.16, 0.13, 0.7)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.39, 0.35, 0.6)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="Progress_bg"]
+bg_color = Color(0.12, 0.1, 0.07, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.39, 0.35, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="Progress_fill"]
+bg_color = Color(0.74, 0.56, 0.28, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[resource]
+default_font = ExtResource("1_body")
+default_font_size = 18
+Button/colors/font_color = Color(0.9, 0.85, 0.74, 1)
+Button/colors/font_hover_color = Color(0.9, 0.72, 0.36, 1)
+Button/colors/font_pressed_color = Color(0.9, 0.72, 0.36, 1)
+Button/colors/font_disabled_color = Color(0.6, 0.57, 0.5, 1)
+Button/colors/font_focus_color = Color(0.9, 0.85, 0.74, 1)
+Button/styles/normal = SubResource("Button_normal")
+Button/styles/hover = SubResource("Button_hover")
+Button/styles/pressed = SubResource("Button_pressed")
+Button/styles/focus = SubResource("Button_focus")
+Button/styles/disabled = SubResource("Button_disabled")
+Label/colors/font_color = Color(0.9, 0.85, 0.74, 1)
+Panel/styles/panel = SubResource("Panel_parchment")
+PanelContainer/styles/panel = SubResource("Panel_parchment")
+ProgressBar/colors/font_color = Color(0.9, 0.85, 0.74, 1)
+ProgressBar/styles/background = SubResource("Progress_bg")
+ProgressBar/styles/fill = SubResource("Progress_fill")
+RichTextLabel/colors/default_color = Color(0.9, 0.85, 0.74, 1)

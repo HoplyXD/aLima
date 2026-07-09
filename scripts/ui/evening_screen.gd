@@ -218,7 +218,7 @@ func _on_resolve_storage() -> void:
 
 func _build_ui() -> void:
 	_backdrop = ColorRect.new()
-	_backdrop.color = Color(0.02, 0.03, 0.06, 0.88)
+	_backdrop.color = Color(0.05, 0.04, 0.03, 0.9)  # warm dusk scrim
 	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_backdrop)
@@ -229,6 +229,7 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(820, 620)
+	panel.theme = load("res://Themes/alima_ui.tres")  # parchment/brass shared UI
 	center.add_child(panel)
 
 	var margin := MarginContainer.new()
@@ -284,5 +285,5 @@ func _note(text: String) -> Label:
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", 13)
-	label.add_theme_color_override("font_color", Color(0.68, 0.7, 0.76))
+	label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	return label

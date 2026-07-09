@@ -14,13 +14,13 @@ func set_quest(
 	if _title == null:
 		return
 	var glyph := "◆ "
-	var color := Color(0.82, 0.87, 0.94)
+	var color := UiPalette.BONE
 	if done:
 		glyph = "✓ "
-		color = Color(0.45, 0.8, 0.5)
+		color = UiPalette.RARITY_GREEN
 	elif failed:
 		glyph = "✗ "
-		color = Color(0.85, 0.42, 0.42)
+		color = Color(0.82, 0.38, 0.36)  # readable wine for failed titles
 	_title.text = glyph + display_name
 	_title.add_theme_color_override("font_color", color)
 	_objective.text = objective
