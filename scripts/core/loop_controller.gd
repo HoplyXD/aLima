@@ -172,7 +172,13 @@ func _plan_carrier_placements() -> void:
 		push_error("LoopController: data repository failed to load")
 		return
 	var director := SpawnDirector.new(repo, GameState)
-	director.plan_loop_placements()
+	# The hidden-fragment hunt (team decision 2026-07-07): RELEASED fragments hide
+	# at hunt spots across the walkable spaces, re-planned every loop until found.
+	# Day 0 = loop-start planning, so day-windowed locations (Dump Site) qualify.
+	director.plan_hunt_spots(0)
+	# Legacy carrier-in-delivery placement, kept behind a data flag for tests.
+	if repo.get_spawn_config().legacy_carrier_delivery:
+		director.plan_loop_placements()
 
 
 ## Grants the authored starting kit: techniques persist, legacy tools persist, and

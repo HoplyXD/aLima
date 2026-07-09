@@ -14,6 +14,10 @@ const STORAGE_SCREEN_SCENE := preload("res://scenes/ui/storage_screen.tscn")
 const RESTORATION_ARTIFACT_SCENE := preload("res://scenes/restoration/restoration_artifact.tscn")
 const ShopArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
 const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
+const FRAGMENT_FIND_SCENE := preload("res://scenes/locations/scrapyard/fragment_find.tscn")
+## Maverick's Day-5 last offer (story canon §14.4 / decision D7): the one-loop
+## economy gate on the fifth fragment. Tuning to externalize into data at P15.
+const MAVERICK_LAST_OFFER_PRICE := 50_000
 
 ## Day 0 finale reading state (TUT): the player opens Yuyu's journal, reads his
 ## last letter, and only then does the blackout into Day 1 fire.
@@ -44,6 +48,10 @@ var _quest_artifacts := 1
 ## Route id of the character currently at the door, or "" for a non-visitor line.
 ## Marked "met" when their dialogue closes so the next visit plays the return set.
 var _active_visitor_route_id := ""
+## Pending outcome of Maverick's Day-5 last offer while his dialogue is up:
+## "" (none), "accept" (pay + release fragment_05 when the lines end), "short"
+## (player can't afford it; nothing happens, he returns next loop).
+var _maverick_offer_pending := ""
 ## True while Alya is waiting at the door with the morning delivery (answer the door).
 var _alya_waiting := false
 ## True while Alya's morning-delivery dialogue is up; triage opens when it ends.
@@ -144,6 +152,9 @@ func _ready() -> void:
 
 	AylaService.sort_ready.connect(_on_ayla_sort_ready)
 	EventBus.day_changed.connect(_on_day_changed)
+	# Visitor windows are hourly: re-check who is waiting at the door each hour so
+	# the knock portrait appears/disappears with the schedule.
+	EventBus.hour_changed.connect(func(_day: int, _hour: int) -> void: _refresh_ayla_knock())
 	# The window light tracks the clock (and Day 0's scripted sunrise/noon/sunset).
 	SunController.attach(self, get_node_or_null("DirectionalLight3D") as DirectionalLight3D)
 	# The evening runs interactively while the shop is the active scene; leaving the
@@ -174,6 +185,10 @@ func _ready() -> void:
 		# Day 1 intro: trigger the scripted blackout sequence when entering the shop.
 		if Day1Service.is_day1_intro_active():
 			_day1_intro_start()
+		# Hidden-fragment hunt: a RELEASED fragment can hide at a shop interior
+		# spot (pile markers). Seated shop = no proximity hunt, so the glint is
+		# always revealed and found by eye + click.
+		_spawn_shop_fragment_finds()
 
 	_refresh_ui()
 	print("[Shop] ready — HUD visible, buttons connected. Click them in the running game.")
@@ -234,6 +249,11 @@ func _on_day1_intro_finished() -> void:
 ## Shows a sequence of dialogue lines from a step.
 func _show_dialogue_lines(lines: Array) -> void:
 	if lines.is_empty():
+		return
+	# A Day 1 step can complete DURING a space transition (stepping out the door):
+	# this shop is already detached, so a child DialogueBox would never _ready()
+	# and crash on its nil labels. The new scene re-announces the step instead.
+	if not is_inside_tree():
 		return
 	var box: DialogueBox = DIALOGUE_BOX_SCENE.instantiate()
 	add_child(box)
@@ -346,7 +366,9 @@ func _attach_card_preview(uid: String, card: ArtifactCard) -> void:
 	var scene: PackedScene = ShopArtifactScenes.scene_for(template.id, RESTORATION_ARTIFACT_SCENE)
 	var preview: RestorationObject3D = scene.instantiate()
 	card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
-	service.present_object(preview, inst, template, uid.hash())
+	# Bench seed formula (restoration_view._artifact_seed) so the preview's condition
+	# mix matches what the player will actually clean.
+	service.present_object(preview, inst, template, uid.hash() ^ (GameState.loop_index * 104729))
 
 
 func _update_clock_display() -> void:
@@ -402,6 +424,10 @@ func _on_door_pressed() -> void:
 		_visitor2.visible = false
 		_alya_delivering = true
 		_visitor.texture = ALYA_PORTRAIT
+		# Day 0 (TUT): the door has been answered — suppress the hint arrow through
+		# Alya's greeting and the triage screen (released in _on_triage_closed).
+		if TutorialService.is_tutorial_active():
+			TutorialService.set_pointer_claim("shop_door", 30, TutorialService.POINTER_HIDE)
 		var lines: Array = []
 		if _ayla_source == AylaSource.DAILY:
 			lines = [
@@ -429,6 +455,12 @@ func _on_door_pressed() -> void:
 		var sam_route := DataRepository.singleton().get_route("sam")
 		if sam_route != null and not RouteService.is_visit_consumed("sam", DayClock.get_day()):
 			route = sam_route
+	# FINALE CAPSTONE (canon §14.4 / D7): with the other four fragments seated,
+	# Maverick waits at the door all of Day 5 with his last offer. Deterministic —
+	# it takes priority over ordinary scheduled visitors so it can never be missed.
+	if route == null and _maverick_last_offer_ready():
+		_start_maverick_last_offer()
+		return
 	if route == null:
 		route = RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
 	if route == null:
@@ -444,6 +476,8 @@ func _on_door_pressed() -> void:
 		if tex != null:
 			_visitor.texture = tex
 	_active_visitor_route_id = route.id
+	# Their waiting-at-the-door portrait is answered; the dialogue portrait takes over.
+	_visitor2.visible = false
 	_open_dialogue(lines, true)
 
 
@@ -465,6 +499,123 @@ func _has_quest_item_in_inventory(template_id: String) -> bool:
 		if raw is Dictionary and raw.get("template_id") == template_id:
 			return true
 	return false
+
+
+# --- Hidden-fragment hunt (shop interior spots) --------------------------------
+
+
+## Spawns a click-to-collect glint at each shop hiding spot holding a RELEASED
+## fragment this loop. The pickup fires the same Found -> Portal -> seat chain
+## as the yard hunt (team decision 2026-07-07).
+func _spawn_shop_fragment_finds() -> void:
+	for hunt in HuntService.spots_for_location("shop"):
+		var spot: HidingSpot = hunt["spot"]
+		var anchor := get_node_or_null(NodePath(spot.anchor)) as Node3D
+		if anchor == null:
+			push_warning("Shop: hiding spot anchor '%s' not found" % spot.anchor)
+			continue
+		var find: FragmentFind = FRAGMENT_FIND_SCENE.instantiate()
+		find.always_reveal = true
+		find.set_fragment_id(hunt["fragment_id"])
+		find.found.connect(_on_shop_fragment_found)
+		add_child(find)
+		find.global_position = anchor.global_position + Vector3(0.0, 0.1, 0.0)
+
+
+func _on_shop_fragment_found(fragment_id: String) -> void:
+	HuntService.mark_found(fragment_id)
+	EventBus.fragment_discovered.emit(fragment_id, "")
+
+
+# --- Maverick's Day-5 last offer (finale capstone) ------------------------------
+
+
+## Canon §14.4 / D7: once fragments 01-04 are seated, Maverick's Day-5 visit
+## offers everything he knows about the fifth for ~P50,000. Paying releases
+## fragment_05 into a guaranteed same-day hunt spot; the player tracks it down
+## that evening and the Perfect Loop closes. Coming up short just means the
+## week goes around again (money resets; the price is the one-loop mastery gate).
+func _maverick_last_offer_ready() -> bool:
+	if DayClock.get_day() != 5:
+		return false
+	if FragmentService.get_state("fragment_05") != ModelEnums.FragmentState.LOCKED:
+		return false
+	for fragment_id in ["fragment_01", "fragment_02", "fragment_03", "fragment_04"]:
+		if not FragmentService.is_seated(fragment_id):
+			return false
+	return true
+
+
+func _start_maverick_last_offer() -> void:
+	var route := DataRepository.singleton().get_route("buyer")
+	if route != null and not route.portrait.is_empty():
+		var tex: Texture2D = load(route.portrait)
+		if tex != null:
+			_visitor.texture = tex
+	_active_visitor_route_id = "buyer"
+	var money := GameState.save_state.loop.money
+	var lines: Array = []
+	if money >= MAVERICK_LAST_OFFER_PRICE:
+		_maverick_offer_pending = "accept"
+		lines = [
+			(
+				"Mr. Maverick: [i]No business-card performance this time. He's already "
+				+ "inside, gentler than before.[/i] Four pieces seated. I can hear the "
+				+ "week holding its breath."
+			),
+			(
+				"Mr. Maverick: Your Yuyu asked me to trace the fifth, the week before he "
+				+ "disappeared. I chased it through three cities and one bankrupt auction "
+				+ "house. Last month the trail ended — a mixed lot nobody could place, "
+				+ "tipped into your yard with the rest of the salvage."
+			),
+			(
+				"Mr. Maverick: My price for the ledger, the paper trail, and everything I "
+				+ "know: fifty thousand. Not for the piece — the piece was never mine to "
+				+ "sell. For nine years of my attention."
+			),
+			"You: [i]You count it out. All of it.[/i] Then we have a deal.",
+			(
+				"Mr. Maverick: [i]He closes the battered ledger and slides it across the "
+				+ "counter.[/i] I'm not the type to hand a man his own history, kid. Go "
+				+ "find it — it's out there waiting for you, same as it waited for me. "
+				+ "Listen on your way out. The yard is loud today."
+			),
+		]
+	else:
+		_maverick_offer_pending = "short"
+		lines = [
+			(
+				"Mr. Maverick: [i]He's already inside, gentler than before.[/i] Four "
+				+ "pieces seated. One left — and I know exactly where it landed."
+			),
+			(
+				"Mr. Maverick: My price is fifty thousand. For nine years of chasing it, "
+				+ "not for the piece itself. [i]A small, unreadable smile.[/i] Short? Then "
+				+ "the week will simply go around again. Have it in hand on a Friday, and "
+				+ "the fifth piece is yours to find."
+			),
+		]
+	_open_dialogue(lines, true)
+
+
+## Resolves the offer when Maverick's door dialogue ends.
+func _resolve_maverick_last_offer() -> void:
+	var outcome := _maverick_offer_pending
+	_maverick_offer_pending = ""
+	if outcome != "accept":
+		return
+	GameState.save_state.loop.money -= MAVERICK_LAST_OFFER_PRICE
+	# The encoded ledger is his authored reward (persistent legacy item).
+	if not GameState.save_state.persistent.legacy_items.has("encoded_ledger"):
+		GameState.save_state.persistent.legacy_items.append("encoded_ledger")
+	# Release -> HuntService plans a guaranteed same-day spot (day-windowed
+	# locations are filtered out on Day 5, so the spot is reachable tonight).
+	FragmentService.release_fragment("fragment_05", "maverick_last_offer")
+	var save_result := SaveService.save_game()
+	if not save_result.ok:
+		push_error("Shop: last-offer save failed: %s" % save_result.get("error", ""))
+	_refresh_ui()
 
 
 ## Top-bar card click on a RESTORED artifact: open the spin/zoom 3D viewer
@@ -586,8 +737,9 @@ func _on_phone_pressed() -> void:
 	_phone.open()
 
 
-## Day 0 (tutorial) gate: true when Yuyu should stop the player and tell them to scan first. `uid` ""
-## checks whether ANY piece has been scanned (phone gate); a uid checks that specific piece (sell gate).
+## Day 0 (tutorial) gate: true when Yuyu should stop the player and tell them to
+## scan first. `uid` "" checks whether ANY piece has been scanned (phone gate);
+## a uid checks that specific piece (sell gate).
 func _needs_scan_first(uid: String = "") -> bool:
 	if not TutorialService.is_tutorial_active():
 		return false
@@ -663,8 +815,12 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	await get_tree().process_frame
 	var repo := DataRepository.singleton()
 
-	# Plan carrier placements once per loop if missing.
-	if GameState.save_state.loop.current_carrier_placements.is_empty():
+	# Legacy carrier-in-delivery placement (superseded by the hidden-fragment
+	# hunt, team decision 2026-07-07): only plan when the data flag re-enables it.
+	if (
+		repo.get_spawn_config().legacy_carrier_delivery
+		and GameState.save_state.loop.current_carrier_placements.is_empty()
+	):
 		var director := SpawnDirector.new(repo, GameState)
 		director.plan_loop_placements()
 
@@ -741,7 +897,9 @@ func _refresh_ayla_knock() -> void:
 	if TutorialService.is_tutorial_active():
 		return
 	# Day 1 intro: no morning delivery; player finds scrap in the yard instead.
+	# Scheduled route visitors (e.g. Auntie's Day 1 window) still knock.
 	if DayClock.get_day() == 1 and not Day1Service.is_day1_intro_active():
+		_refresh_route_visitor_knock()
 		return
 	# Day 1 intro active: no daily delivery either; scrap-sort only.
 	if Day1Service.is_day1_intro_active():
@@ -751,6 +909,30 @@ func _refresh_ayla_knock() -> void:
 		_alya_waiting = true
 		_visitor2.texture = ALYA_PORTRAIT
 		_visitor2.visible = true
+		return
+	_refresh_route_visitor_knock()
+
+
+## Shows the scheduled route visitor's portrait at the door BEFORE the player
+## answers (same treatment as Alya's knock), so a knock is never a jump-scare.
+## Alya's knock always outranks it; the portrait clears once the visit is
+## answered/missed (resolve_visitor then returns null for the window).
+func _refresh_route_visitor_knock() -> void:
+	if _alya_waiting or _alya_delivering:
+		return
+	if TutorialService.is_tutorial_active() or Day1Service.is_day1_intro_active():
+		_visitor2.visible = false
+		return
+	var route := RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
+	if route == null or route.portrait.is_empty():
+		_visitor2.visible = false
+		return
+	var tex: Texture2D = load(route.portrait)
+	if tex == null:
+		_visitor2.visible = false
+		return
+	_visitor2.texture = tex
+	_visitor2.visible = true
 
 
 ## Wrapper for the AylaService sort_ready signal.
@@ -759,6 +941,8 @@ func _on_ayla_sort_ready(_day: int, _hour: int) -> void:
 
 
 func _on_triage_closed() -> void:
+	# Day 0 (TUT): the delivery flow is over — the hint arrow may aim again.
+	TutorialService.clear_pointer_claim("shop_door")
 	_set_interactables_enabled(true)
 	_refresh_ui()
 	_refresh_ayla_knock()
@@ -936,6 +1120,8 @@ func _on_dialogue_finished() -> void:
 		RouteService.mark_met(finished_route_id)
 		RouteService.notify_visit_answered(finished_route_id, DayClock.get_day())
 		_active_visitor_route_id = ""
+		# The answered visitor is gone from the door; re-check for the next knock.
+		_refresh_route_visitor_knock()
 	_hud.set_actions_visible(true)
 	# Restoring all actions can re-show buttons that sit under an open journal;
 	# re-apply the journal layout so it stays consistent.
@@ -950,6 +1136,11 @@ func _on_dialogue_finished() -> void:
 		var was_daily := _ayla_source == AylaSource.DAILY
 		_ayla_source = AylaSource.NONE
 		_generate_and_show_triage(was_daily)
+		return
+	# Maverick's Day-5 last offer resolves once his lines end (pay -> release the
+	# fifth fragment into a guaranteed same-day hunt).
+	if not _maverick_offer_pending.is_empty():
+		_resolve_maverick_last_offer()
 		return
 	# After a route's door conversation, open its scripted showcase if a beat is due.
 	if not finished_route_id.is_empty():

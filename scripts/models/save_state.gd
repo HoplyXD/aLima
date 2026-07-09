@@ -113,6 +113,9 @@ class PersistentState:
 	var quest_progress: Dictionary = {}
 	var day1_intro_completed: bool = false
 	var day1_step: String = ""
+	## The Perfect Loop: set once when the fifth fragment seats and the Yuyu
+	## finale has played. Guards the finale from re-triggering (END-R3/R5).
+	var perfect_loop_completed: bool = false
 
 	static func from_dictionary(data: Dictionary) -> PersistentState:
 		var p := PersistentState.new()
@@ -138,11 +141,14 @@ class PersistentState:
 		p.returns = SaveState._as_array(data.get("returns", []))
 		p.upkeep_learned = ModelUtils.as_string_array(data.get("upkeep_learned"))
 		p.unlocked_locations = ModelUtils.as_string_array(data.get("unlocked_locations"))
-		p.pending_unlocked_locations = ModelUtils.as_string_array(data.get("pending_unlocked_locations"))
+		p.pending_unlocked_locations = ModelUtils.as_string_array(
+			data.get("pending_unlocked_locations")
+		)
 		p.completed_quests = ModelUtils.as_string_array(data.get("completed_quests"))
 		p.quest_progress = data.get("quest_progress", {}) as Dictionary
 		p.day1_intro_completed = ModelUtils.as_bool(data.get("day1_intro_completed"))
 		p.day1_step = ModelUtils.as_string(data.get("day1_step"), "")
+		p.perfect_loop_completed = ModelUtils.as_bool(data.get("perfect_loop_completed"))
 		return p
 
 	func to_dictionary() -> Dictionary:
@@ -174,6 +180,7 @@ class PersistentState:
 			"quest_progress": quest_progress.duplicate(),
 			"day1_intro_completed": day1_intro_completed,
 			"day1_step": day1_step,
+			"perfect_loop_completed": perfect_loop_completed,
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:
@@ -208,6 +215,9 @@ class LoopState:
 	var current_delivery_ids: Array[String] = []
 	var last_delivery_day: int = 0  ## Day on which the most recent Morning Delivery arrived.
 	var current_carrier_placements: Dictionary = {}  ## fragment_id -> placement dict.
+	## Hunt placements for RELEASED fragments this loop: fragment_id ->
+	## {spot_id, location}. Re-planned every loop until the fragment is found.
+	var fragment_spots: Dictionary = {}
 	var owned_tools: Array = []  ## ToolInstance dictionaries (durability-tracked, loop-scoped).
 	var workbench_tools: Array[String] = []  ## Tool instance uids loaded into the bench (<= 5).
 	var tool_shipments: Array = []  ## Pending purchases: {tool_id, arrival_index}.
@@ -259,6 +269,7 @@ class LoopState:
 		l.current_delivery_ids = ModelUtils.as_string_array(data.get("current_delivery_ids"))
 		l.last_delivery_day = ModelUtils.as_int(data.get("last_delivery_day"), 0)
 		l.current_carrier_placements = data.get("current_carrier_placements", {}) as Dictionary
+		l.fragment_spots = ModelUtils.as_dictionary(data.get("fragment_spots"))
 		l.owned_tools = SaveState._as_array(data.get("owned_tools", []))
 		l.workbench_tools = ModelUtils.as_string_array(data.get("workbench_tools"))
 		l.tool_shipments = SaveState._as_array(data.get("tool_shipments", []))
@@ -294,6 +305,7 @@ class LoopState:
 			"current_delivery_ids": current_delivery_ids.duplicate(),
 			"last_delivery_day": last_delivery_day,
 			"current_carrier_placements": current_carrier_placements.duplicate(),
+			"fragment_spots": fragment_spots.duplicate(true),
 			"owned_tools": owned_tools.duplicate(),
 			"workbench_tools": workbench_tools.duplicate(),
 			"tool_shipments": tool_shipments.duplicate(),

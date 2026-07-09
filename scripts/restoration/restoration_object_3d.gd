@@ -186,8 +186,8 @@ var _dust_alive: PackedByteArray = PackedByteArray()
 var _dust_initial: int = 0  ## Triangles that START dusty, so cleaned-fraction is relative to them.
 var _clean_puff: GPUParticles3D  ## Dust burst spawned on the artifact where a tool cleans (runtime).
 
-var _yaw: float = AUTHORED_YAW
-var _pitch: float = AUTHORED_PITCH
+## Live orbit rotation (screen-space trackball; see rotate_view).
+var _orbit: Basis = Basis.from_euler(Vector3(AUTHORED_PITCH, AUTHORED_YAW, 0.0))
 var _authored_basis: Basis = Basis.IDENTITY
 ## Uniform scale the dev set on the artifact scene's ROOT node. Captured before the
 ## orientation system (which rebuilds `basis` as a pure rotation) can wipe it, and folded
@@ -274,19 +274,22 @@ func configure(template: ScrapObjectTemplate, inst: ObjectInstance) -> void:
 # --- Orientation -------------------------------------------------------------
 
 
-## Orbits the object by the given yaw/pitch deltas (radians). Pitch is clamped and
-## yaw wraps so the object can never reach an unusable upside-down/gimbal state.
+## Orbits the object by the given yaw/pitch deltas (radians) as a screen-space
+## trackball: yaw always spins about the SCREEN's vertical axis and pitch about
+## the SCREEN's horizontal axis (the bench camera looks straight down -Z), no
+## matter how the object is currently turned. Pre-multiplying the world-axis
+## rotations is what keeps the drag glued to the screen instead of to the
+## object's own (already-rotated) axes.
 func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
-	# Both axes wrap freely (no pitch clamp) so the artifact can be spun all the way over — top to bottom.
-	_yaw = fposmod(_yaw + delta_yaw, TAU)
-	_pitch = fposmod(_pitch + delta_pitch, TAU)
+	_orbit = (
+		Basis(Vector3.UP, delta_yaw) * Basis(Vector3.RIGHT, delta_pitch) * _orbit
+	).orthonormalized()
 	_apply_orientation()
 
 
 ## Returns the object to its authored rest orientation.
 func reset_orientation() -> void:
-	_yaw = AUTHORED_YAW
-	_pitch = AUTHORED_PITCH
+	_orbit = Basis.from_euler(Vector3(AUTHORED_PITCH, AUTHORED_YAW, 0.0))
 	_apply_orientation()
 
 
@@ -300,7 +303,7 @@ func get_authored_basis() -> Basis:
 
 func _apply_orientation() -> void:
 	# Rotation from the orbit controls, with the dev's authored root scale folded back in.
-	basis = Basis.from_euler(Vector3(_pitch, _yaw, 0.0)).scaled(Vector3.ONE * _authored_scale)
+	basis = _orbit.scaled(Vector3.ONE * _authored_scale)
 
 
 # --- Surface cleaning --------------------------------------------------------

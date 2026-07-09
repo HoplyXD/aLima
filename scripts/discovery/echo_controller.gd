@@ -23,6 +23,10 @@ const GAIN_EPSILON := 0.001
 var _proximity: EchoProximityService
 var _active_instance_id: String = ""
 var _active_fragment_id: String = ""
+## Hunt mode (hidden-fragment hunt, team decision 2026-07-07): the target is a
+## RELEASED fragment hidden at a hunt spot in the current walkable space, not an
+## inventory carrier instance. Mutually exclusive with the instance target.
+var _hunt_fragment_id: String = ""
 var _active_echo_set: EchoSet = null
 var _current_gains := {
 	EchoMixer.BAND_HUM: 0.0,
@@ -67,6 +71,35 @@ func set_carrier_position(pos: Vector3) -> void:
 	_proximity.target_position = pos
 
 
+## Targets a RELEASED fragment hidden at a hunt spot in the current scene.
+## The caller (the walkable space) feeds listener/carrier positions per frame.
+## Heartbeat is authorized: the hunt spot IS the true find (§4-I re-anchored).
+func set_hunt_target(fragment_id: String) -> void:
+	if _hunt_fragment_id == fragment_id:
+		return
+	if not _active_instance_id.is_empty():
+		_set_active_target("")
+	_hunt_fragment_id = fragment_id
+	_active_fragment_id = fragment_id
+	_active_echo_set = null
+	if fragment_id.is_empty():
+		_proximity.clear_target()
+		_audio.stop_all()
+		_audio.set_echo_set(null)
+		_current_gains = {
+			EchoMixer.BAND_HUM: 0.0,
+			EchoMixer.BAND_MELODY: 0.0,
+			EchoMixer.BAND_VOICE: 0.0,
+			EchoMixer.BAND_HEARTBEAT: 0.0
+		}
+	state_changed.emit(get_state())
+
+
+## Clears the hunt target (e.g. when the walkable space unloads).
+func clear_hunt_target() -> void:
+	set_hunt_target("")
+
+
 ## ---------------------------------------------------------------------------
 ## Public query API
 ## ---------------------------------------------------------------------------
@@ -93,8 +126,12 @@ func is_heartbeat_authorized(instance_id: String) -> bool:
 
 ## Returns a snapshot of the echo state for the HUD.
 func get_state() -> Dictionary:
-	var inst := _find_instance(_active_instance_id)
-	var valid := _is_target_valid(inst)
+	var valid := false
+	if not _hunt_fragment_id.is_empty():
+		valid = _is_hunt_target_valid()
+	else:
+		var inst := _find_instance(_active_instance_id)
+		valid = _is_target_valid(inst)
 	var active_bands: Array[String] = []
 	if valid:
 		active_bands = EchoMixer.active_bands(_current_gains)
@@ -144,6 +181,9 @@ func _update_internal(delta: float) -> void:
 	if GameState.save_state == null:
 		return
 	_proximity.update(delta)
+	if not _hunt_fragment_id.is_empty():
+		_update_hunt(delta)
+		return
 	var inst := _find_instance(_active_instance_id)
 	var valid := _is_target_valid(inst)
 
@@ -187,6 +227,58 @@ func _update_internal(delta: float) -> void:
 		_active_instance_id, _proximity.smoothed_proximity, _dominant_band(gains)
 	)
 	state_changed.emit(get_state())
+
+
+## Hunt-mode update: the target is a hidden RELEASED fragment, not an inventory
+## instance. Heartbeat is authorized — the spot is the true find, and decoy
+## spots do not exist, so it stays physically impossible anywhere else.
+func _update_hunt(delta: float) -> void:
+	if not _is_hunt_target_valid():
+		if _audio.is_playing():
+			_audio.stop_all()
+		if _any_gain_audible():
+			_current_gains = {
+				EchoMixer.BAND_HUM: 0.0,
+				EchoMixer.BAND_MELODY: 0.0,
+				EchoMixer.BAND_VOICE: 0.0,
+				EchoMixer.BAND_HEARTBEAT: 0.0
+			}
+			state_changed.emit(get_state())
+		return
+
+	if _active_echo_set == null:
+		var fragment: Fragment = GameState.save_state.persistent.fragments.get(_hunt_fragment_id)
+		if fragment != null:
+			_active_echo_set = DataRepository.singleton().get_echo_set(fragment.echo_set_ref)
+		if _active_echo_set != null:
+			_proximity.far_radius = _active_echo_set.far_radius
+			_proximity.near_radius = _active_echo_set.near_radius
+			_proximity.smoothing_time = _active_echo_set.smoothing_time
+			_audio.set_echo_set(_active_echo_set)
+
+	if _active_echo_set == null:
+		return
+
+	if not _audio.is_playing():
+		_audio.play_all()
+
+	var gains := EchoMixer.calculate_band_gains(
+		_proximity.smoothed_proximity, _active_echo_set, true
+	)
+	_audio.apply_gains(gains)
+	_current_gains = gains
+	_update_pulse(delta, _current_gains.get(EchoMixer.BAND_HEARTBEAT, 0.0))
+	EventBus.echo_proximity_changed.emit(
+		_hunt_fragment_id, _proximity.smoothed_proximity, _dominant_band(gains)
+	)
+	state_changed.emit(get_state())
+
+
+func _is_hunt_target_valid() -> bool:
+	if GameState.save_state == null or _hunt_fragment_id.is_empty():
+		return false
+	var fragment: Fragment = GameState.save_state.persistent.fragments.get(_hunt_fragment_id)
+	return fragment != null and fragment.state == ModelEnums.FragmentState.RELEASED
 
 
 func _update_pulse(delta: float, heartbeat_linear: float) -> void:
@@ -297,21 +389,29 @@ func _any_gain_audible() -> bool:
 
 
 func _on_carrier_activated(instance_id: String, _fragment_id: String) -> void:
-	if _active_instance_id.is_empty():
+	if _active_instance_id.is_empty() and _hunt_fragment_id.is_empty():
 		_set_active_target(instance_id)
 
 
 func _on_fragment_discovered(fragment_id: String, instance_id: String) -> void:
+	if _hunt_fragment_id == fragment_id:
+		clear_hunt_target()
+		return
 	if _active_fragment_id == fragment_id or _active_instance_id == instance_id:
 		_set_active_target("")
 
 
 func _on_fragment_seated(fragment_id: String, _slot_index: int) -> void:
+	if _hunt_fragment_id == fragment_id:
+		clear_hunt_target()
+		return
 	if _active_fragment_id == fragment_id:
 		_set_active_target("")
 
 
 func _on_loop_reset(_loop_index: int) -> void:
+	if not _hunt_fragment_id.is_empty():
+		clear_hunt_target()
 	_set_active_target("")
 
 

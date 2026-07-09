@@ -509,6 +509,20 @@ class SaveState:
 
 > This section is the complete discovery specification. **Carrier is a role, not an object type** (§4-C); echoes guide, heartbeat disambiguates; clean→open gate applies.
 
+> **AMENDED 2026-07-07 (team-lead decision — the hidden-fragment hunt).** A `RELEASED` fragment now
+> hides **bare** at a Spawn-Director-planned **hiding spot** across the walkable spaces
+> (`data/delivery/hiding_spots.json`: yard, Dump Site, Forbidden Zone, shop interior), re-planned
+> every loop until found; picking it up at the spot fires `fragment_discovered` → Found → Portal →
+> seat directly (no carrier nesting, no clean→open on this path). Availability is a hard filter
+> (location unlocked / Safe code / day windows — mid-loop releases only use spots reachable that
+> day), never-twice applies per **spot** with the documented soft reset, and the heartbeat is
+> authorized only at the true find (`EchoController` hunt mode). DISC-R1–R6 map onto
+> `SpawnDirector.plan_hunt_spot(s)`; DISC-R7/R10/R11 are unchanged; DISC-R8/R9 re-anchor from
+> "carrier instance" to "hidden fragment / true find". The carrier-based rules below (DISC-R2,
+> R12–R14, and the delivery injection) continue to govern **NPC-scripted grants** (Sam's dirty
+> bag) and the data-flagged legacy path (`spawn_config.legacy_carrier_delivery`). Reconciled in
+> CLAUDE.md §4-B/C/D/E/H/I; story.md flags N7/N8 resolve accordingly.
+
 ### 12.1 Spawn Director
 - **DISC-R1 (P0).** At loop start, for each `RELEASED` fragment, output a placement `{carrier_instance, scrapyard_location (and/or outer_container), day}`. The carrier hides in the walkable scrapyard and the player tracks it by Cultural Echo proximity (DISC-R7). (Location/container → carrier → fragment; the fragment is always nested in a carrier, never loose.)
 - **DISC-R2 (P0).** **Promote** an ordinary openable instance to carrier (set `is_carrier`, `fragment_id`); do not spawn a special object. *(Invariant §4-C.)*
@@ -583,7 +597,7 @@ Five fragment-holders (Auntie, Artisan, Scavenger, Archeologist, Buyer); the unc
 - **ROUTE-R2 (P1).** **Ayla is the permanent scrapyard delivery NPC, not a gated visitor.** She is present every open day, sorts foraged scrap into the delivery (§7), and her route advances through daily hand-offs and milestone beats (notably foraging her late father's lunchbox) independent of the Auntie. The **Artisan** is unlocked when the Auntie is helped (he is her grandson) and offered in his Days 2/4/5 window; he no longer replaces or excludes Ayla. Both fragment-holders can be pursued in one loop. *(Supersedes the former same-slot mutual exclusion; see `docs/route-dialogue-compendium.md`.)*
 - **ROUTE-R3 (P1).** Completing a route **releases** its fragment (`LOCKED→RELEASED`) into the scrap stream (§12), with in-fiction justification — never handed directly. *(Invariant §4-B / §12.)*
 - **ROUTE-R4 (P1).** Route completion + leads persist (§5); a known lead makes gated content available earlier on later loops (e.g., Archeologist from Day 1).
-- **ROUTE-R5 (P1).** The Buyer has no ending; after qualifying deals, his Day 5 encounter deterministically releases the fifth fragment into a guaranteed special delivery. The Spawn Director still promotes an ordinary carrier and places it; the Buyer never hands over the fragment directly.
+- **ROUTE-R5 (P1, amended 2026-07-07).** The Buyer has no ending. Once fragments 01–04 are seated, his deterministic Day-5 **last offer** (canon §14.4: ~₱50,000 — the one-loop economy gate, since money resets) releases the fifth fragment into a **guaranteed same-day hunt spot** planned in a location reachable that day; the Buyer never hands over the fragment directly.
 - **ROUTE-R6 (P1).** An unanswered visit within a window is consumed (CLOCK-R4) and may close that route for the loop.
 - **ROUTE-R7 (P1).** **One route completion per loop.** A loop has room to complete at most one fragment-holder route — scheduled characters' windows conflict, and Ayla's completion has its own multi-step gate (ROUTE-R8). Finding/seating an already-`RELEASED` fragment in the scrapyard is a parallel yard activity and does **not** count against this. Re-running a completed route in a later loop replays scenes but releases no new fragment.
 - **ROUTE-R8 (P1).** **Ayla's cross-route completion gate.** Ayla is the permanent scrapyard delivery NPC; her **Archeologist lead** is earned early from daily contact (not from completing her). Her own completion is gated behind **Sam's excavation tool**: with it the player digs her father's lunchbox from the yard, restores it (initials reveal), and selects a "Show Ayla the lunchbox" interaction to finish the route and release her fragment. This decouples the former Ayla→Sam→Ayla dependency cycle (lead from contact; fragment from the tool + lunchbox).

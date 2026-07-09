@@ -27,7 +27,7 @@ func test_map_root_exists_for_glb_swap() -> void:
 
 
 func test_anchors_exist() -> void:
-	for anchor_name in ["PlayerSpawn", "AylaAnchor", "DeliveryBay"]:
+	for anchor_name in ["PlayerGateSpawn", "PlayerDoorSpawn", "AylaAnchor", "DeliveryBay"]:
 		var anchor := _yard.get_node_or_null("Anchors/%s" % anchor_name)
 		assert_not_null(anchor, "%s anchor should exist" % anchor_name)
 		assert_is(anchor, Marker3D, "%s should be a Marker3D" % anchor_name)

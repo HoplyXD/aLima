@@ -111,6 +111,29 @@
       "holds_fragment_id": "fragment_02",
       "rewards": ["delicate_tool"],
       "has_ending": true,
+      "beats": [
+        {
+          "id": "artisan_beat_1",
+          "day": 2,
+          "title": "The Santo and the Dulom",
+          "object_template": "small_santo",
+          "summary": "Nong Lave leaves the old wooden santo on the bench. Dry brush and damp cloth only — the dark on the wood is not dirt, it is eighty years of hands. Clean it without stripping the dulom."
+        },
+        {
+          "id": "artisan_beat_2",
+          "day": 4,
+          "title": "His Lola's Photographs",
+          "object_template": "cracked_photo_frame",
+          "summary": "He trusts you with the framed photographs his Lola wrote on. Lift the foxing and the old tape with the delicate tools without erasing a word of her margin notes — 'the man who taught me to look, not with the eyes, with the hands.'"
+        },
+        {
+          "id": "artisan_beat_3",
+          "day": 5,
+          "title": "The Carved Dedication",
+          "object_template": "wooden_rosary",
+          "summary": "The last of her keepsakes, dark with candle wax. Work the grime out of the carving until the dedication reads again — 'the hand that teaches does not hold on' — and a small spiral, pressed deep. Completing it releases his fragment into the yard."
+        }
+      ],
       "dialogue": {
         "intro": [
           {
@@ -282,33 +305,39 @@
         "q1_start": [
           {
             "name": "Ayla",
-            "text": "Oy, hulat anay. [i]She tugs at the hem of her shirt, not quite looking at you.[/i] May gusto ko i-share sa imo parte sa akon Tatay... kag kay Yuyu."
+            "text": "Oy, wait. [i]She tugs at the hem of her shirt, not quite looking at you.[/i] Before you ask anything — yes, I eat. But this lunch box… it stopped being for food a long time ago."
           },
           {
             "name": "Ayla",
-            "text": "Sang una, si Yuyu kag akon Tatay close gid. Parang mag-utod. Kon may makita si Yuyu nga vintage nga butang, ginahatud niya kay Tatay. Siling ni Tatay, 'Si Yuyu lang ang tawo nga indi mag-haggle — bayad siya sang amo sang gusto mo.'"
+            "text": "Tito Yuyu and my Tatay were close. Like brothers. When Tatay passed, it was Tito who took us in. This dented old thing is from those days."
           },
           {
             "name": "Ayla",
-            "text": "Kon indi na si Tatay, si Yuyu ang nag-atipan sa amon. Ginbulig niya sa akon Nanay. Gani, ginahatag niya ang iya old glasses sa akon — sabi niya, 'Daw indi na ko makakita sang maayo, Ayla. Pero ikaw, you see things I don't.'"
-          },
-          {
-            "name": "Ayla",
-            "text": "[i]Her voice cracks slightly.[/i] Pero sang nag-disappear si Yuyu... nawala man ang iya glasses. Ginhalungkat ko ang tibuok scrapyard, pero wala ko makita. Siguro, nabilin diri sa basurahan. [i]She looks up at you.[/i] Kon makakita ka... ginahatag ko ang akon kabuhi para mabalik lang sa iya."
+            "text": "[i]She holds it out with both hands, suddenly formal.[/i] Clean it for me? Careful with the lid, ha. I'll be right here."
           }
         ],
-        "q1_glasses_found": [
+        "q1_lunchbox_dirty": [
           {
             "name": "Ayla",
-            "text": "[i]She takes the glasses with both hands, turning them over.[/i] ...Amo gid ini. [i]Her thumb traces the worn frame.[/i] Tito's glasses. Ginahatag niya ini sa akon sang bata pa ko. Sabi niya, 'Wear these when you read, Ayla. Make your eyes strong.'"
+            "text": "Not like this, ha? [i]She pushes it gently back toward you.[/i] Clean it properly first. I've waited years — I can wait one more bench session."
+          }
+        ],
+        "q1_lunchbox_done": [
+          {
+            "name": "Ayla",
+            "text": "[i]She takes the lunch box with both hands and goes quiet for the first time since you met her.[/i] …There. That's the sticker. That's the dent from the jeepney. Thank you. Thank you gid."
           },
           {
             "name": "Ayla",
-            "text": "Thank you. [i]She wipes her eyes quickly.[/i] Thank you gid. Indi ko ma-explain kon ano ang ini para sa akon."
+            "text": "You: Alya — did you ever find out where Tito Yuyu went?"
           },
           {
             "name": "Ayla",
-            "text": "Oy, abi mo, may lugar pa ko nga gusto ko ipakita sa imo. Ang Dump Site — didto kami nag-estar sang una pa, before everything. [i]She looks toward the distant heaps.[/i] Pwede ka na magbisita didto. May mga butang pa nga nagahulat."
+            "text": "[i]She frowns, remembering.[/i] Last I saw him, he'd been talking with some girl. Serious type — notebook, measuring eyes. Then he tells me, 'Alya, I'm going to your old house. The final piece is there.'"
+          },
+          {
+            "name": "Ayla",
+            "text": "My old house is the Dump Site now. [i]A short, unfunny laugh.[/i] Literally a dump. I'll show you where — there are things out there still waiting."
           }
         ],
         "q2_start": [
@@ -363,6 +392,56 @@
           {
             "name": "Ayla",
             "text": "Take it back to the shop, [i]she whispers.[/i] Someone important will come looking for it. I can feel it."
+          }
+        ],
+        "lunchbox_start": [
+          {
+            "name": "Ayla",
+            "text": "[i]She eyes the worn excavation kit Sam gave you.[/i] So the serious one handed over her digging tools. ...Then can I ask you for something? For me, this time."
+          },
+          {
+            "name": "Ayla",
+            "text": "My Tatay's lunchbox — the dented one I tried to show you once. I threw it back where I found it. Deep, where hand-digging doesn't reach."
+          },
+          {
+            "name": "Ayla",
+            "text": "It's out in the Dump Site somewhere. It was his, and I want it back. You've got the tools now — dig it out for me, ha? Days 3 and 4, while the gate is open."
+          },
+          {
+            "text": "[b]Note saved:[/b] Dig Ayla's father's dented lunchbox out of the Dump Site heaps with Sam's excavation tools (Days 3-4)."
+          }
+        ],
+        "lunchbox_remind": [
+          {
+            "name": "Ayla",
+            "text": "The lunchbox is somewhere deep in the Dump Site heaps — Days 3 and 4, while the gate is open. Bring the digging kit, ha?"
+          }
+        ],
+        "lunchbox_dirty": [
+          {
+            "name": "Ayla",
+            "text": "[i]She looks at the rusted lunchbox and looks away just as fast.[/i] Not like this, ha? Clean it first. If it's really his, the rust isn't the part I want to see."
+          }
+        ],
+        "lunchbox_show": [
+          {
+            "name": "Ayla",
+            "text": "[i]She goes very quiet. The last rust is gone; scratched initials and a date sit plain in the tin.[/i] ...That's my Tatay's initials."
+          },
+          {
+            "name": "Ayla",
+            "text": "He used to sell scrap to a Manong with a notebook — always paid fair, never haggled mean, even when all you had was junk. Your Yuyu. It must have been."
+          },
+          {
+            "name": "Ayla",
+            "text": "Tatay kept one thing for him. Small, heavy for its size, wrapped in a rag — 'keep it hidden, even if I don't come back.' It was in the cart I sold after the funeral. It never left town. It's out in the yards somewhere, with everything else this place loses."
+          },
+          {
+            "name": "Ayla",
+            "text": "Find it, ha? Because I can't be the one who goes digging for it. [i]She sets the lunchbox on her cart, dead center, where the light hits.[/i] This one's not for sale. Ever."
+          },
+          {
+            "text": "[b]Note saved:[/b] Ayla's father hid a wrapped piece for Yuyu in his cart's toolbox, sold into the junk stream after the funeral. The journal is listening."
           }
         ]
       }
@@ -448,6 +527,11 @@
           "days": [1, 2, 3, 4, 5],
           "start_hour": 17,
           "end_hour": 18
+        },
+        {
+          "days": [5],
+          "start_hour": 7,
+          "end_hour": 9
         }
       ],
       "prerequisites": [],

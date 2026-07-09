@@ -6,7 +6,7 @@ extends Node3D
 ##   - Collision: Godot-side StaticBody3D floor + perimeter walls.
 ##   - Anchors: permanent Marker3D/Area3D gameplay points that survive an art swap.
 ##
-## The player is spawned at PlayerSpawn, the return door uses the same
+## The player is spawned at PlayerGateSpawn, the return door uses the same
 ## Interactable3D component as the shop door, and the day clock keeps ticking
 ## while the yard is loaded.
 ##
@@ -18,6 +18,8 @@ extends Node3D
 const PLAYER_SCENE := preload("res://scenes/locations/scrapyard/player.tscn")
 const SCRAP_ITEM_SCENE := preload("res://scenes/locations/scrapyard/scrap_item.tscn")
 const QUEST_ITEM_SCENE := preload("res://scenes/locations/scrapyard/quest_item.tscn")
+const FRAGMENT_FIND_SCENE := preload("res://scenes/locations/scrapyard/fragment_find.tscn")
+const ECHO_HUD_SCENE := preload("res://scenes/ui/echo_hud.tscn")
 const AYLA_HANDOFF_SCENE := preload("res://scenes/locations/scrapyard/ayla_handoff_screen.tscn")
 const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
 const INTERACTABLE_SCRIPT := preload("res://scripts/shop/interactable_3d.gd")
@@ -48,8 +50,8 @@ const INSPECTION_OVERLAY_SCENE := preload("res://scenes/ui/item_inspection_overl
 ## of separate bodies, which matters on low-end devices and the web target.
 @export var merge_map_collision: bool = true
 
-@onready var _player_spawn: Marker3D = $Anchors/PlayerSpawn
-@onready var _player_door_exit: Marker3D = $Anchors/PlayerDoorExit
+@onready var _player_spawn: Marker3D = $Anchors/PlayerGateSpawn
+@onready var _player_door_exit: Marker3D = $Anchors/PlayerDoorSpawn
 @onready var _door_return: Interactable3D = $Anchors/DoorReturn
 @onready var _ayla_anchor: Marker3D = $Anchors/AylaAnchor
 @onready var _ayla_sprite: Sprite3D = $Anchors/AylaAnchor/Ayla
@@ -77,6 +79,10 @@ var _book_viewport: BookViewport
 var _storage_screen: StorageScreen
 var _storage_interactable: Interactable3D
 var _inspection_overlay: ItemInspectionOverlay
+## Hidden-fragment hunt state for this space: the spawned finds, the echo HUD,
+## and which fragment currently drives the EchoController hunt target.
+var _echo_hud: EchoHud
+var _hunt_target_id: String = ""
 
 const YUYU_PORTRAIT := preload("res://assets/Characters/Uncle.png")
 
@@ -115,6 +121,7 @@ func _ready() -> void:
 	_setup_scrap_items_root()
 	_spawn_scrap_items()
 	_spawn_pending_quest_items()
+	_spawn_fragment_finds()
 	_setup_outdoor_storage()
 	if _hud != null:
 		_hud.phone_pressed.connect(_open_phone_overlay)
@@ -153,6 +160,7 @@ func _process(delta: float) -> void:
 	_update_hud()
 	_update_sun()
 	_update_tutorial_targets()
+	_update_hunt_echo()
 
 
 func _maybe_swap_map() -> void:
@@ -170,10 +178,15 @@ func _spawn_player() -> void:
 	add_child(_player)
 	if _hud != null:
 		_player.scrap_prompt_changed.connect(_hud.set_prompt)
-	# Leaving the SHOP always drops the player at the door exit (even during the Day 0 tutorial), so
-	# stepping out is consistent. Any other arrival (from the title / another location) uses the gate.
+	# Only a genuine shop exit drops the player at the door. Every other arrival —
+	# the Day 0 opening (title → yard; previous_space still holds its SHOP default)
+	# and any tricycle return from another location — uses the gate spawn.
 	var spawn_point := _player_spawn
-	if SpaceManager.previous_space == SpaceManager.Space.SHOP and _player_door_exit != null:
+	if (
+		SpaceManager.previous_space == SpaceManager.Space.SHOP
+		and not SpaceManager.came_from_title
+		and _player_door_exit != null
+	):
 		spawn_point = _player_door_exit
 	if spawn_point != null:
 		_player.global_position = spawn_point.global_position
@@ -345,22 +358,35 @@ func _open_handoff() -> void:
 		_enter_overlay()
 		return
 
-	# Quest 1: Start dialogue when Day 1 intro is complete
+	# Quest 1 (v3): Alya hands over her lunch box to clean once Day 1's intro is done.
 	if quest_progress.is_empty() and GameState.save_state.persistent.day1_intro_completed:
 		if not QuestService.is_completed("alya_quest_line"):
 			_dialogue_box.start(
-				_ayla_lines("q1_start", "Ayla: Hey, can I tell you something about Yuyu?")
+				_ayla_lines(
+					"q1_start", "Ayla: This lunch box... clean it for me? Careful with the lid, ha."
+				)
 			)
 			_pending_dialogue_action = "q1_start"
 			_enter_overlay()
 			return
 
-	# Quest 1: Player found Yuyu's glasses
-	if quest_progress == "q1_glasses" and _has_quest_item_in_inventory("yuyu_glasses"):
-		_dialogue_box.start(
-			_ayla_lines("q1_glasses_found", "Ayla: These are Tito's glasses! Thank you so much!")
-		)
-		_pending_dialogue_action = "q1_glasses_found"
+	# Quest 1 (v3): the lunch box comes back — cleaned, or not yet.
+	if quest_progress == "q1_lunchbox":
+		var lunchbox := _find_quest_item_in_inventory("ayla_lunchbox")
+		if lunchbox != null and lunchbox.state != ModelEnums.ObjState.DIRTY:
+			_dialogue_box.start(
+				_ayla_lines(
+					"q1_lunchbox_done",
+					"Ayla: ...That's the sticker. That's the dent. Thank you gid."
+				)
+			)
+			_pending_dialogue_action = "q1_done"
+		else:
+			_dialogue_box.start(
+				_ayla_lines(
+					"q1_lunchbox_dirty", "Ayla: Not like this, ha? Clean it properly first."
+				)
+			)
 		_enter_overlay()
 		return
 
@@ -390,6 +416,32 @@ func _open_handoff() -> void:
 		if _handoff_screen != null:
 			_handoff_screen.open()
 		_enter_overlay()
+
+
+## Hands a fresh, dirty quest-item instance straight into the loop inventory
+## (v3: Alya gives her lunch box in person — no yard pickup). Tracked as
+## quest-essential so selling it fails the quest instead of banking pesos.
+func _grant_quest_item_to_inventory(template_id: String, quest_giver: String) -> void:
+	if _has_quest_item_in_inventory(template_id):
+		return
+	var template := DataRepository.singleton().get_template(template_id)
+	if template == null:
+		return
+	var instance := ObjectInstance.new()
+	instance.template_id = template_id
+	instance.uid = (
+		"quest_%s_%d_%d_%d"
+		% [template_id, GameState.loop_index, Time.get_unix_time_from_system(), randi()]
+	)
+	instance.condition = 0.0
+	instance.state = ModelEnums.ObjState.DIRTY
+	instance.is_quest_item = true
+	instance.storage_cost = template.storage_cost
+	instance.value = int(template.base_value_range.x)
+	instance.true_value = int(template.base_value_range.x)
+	GameState.save_state.loop.inventory.append(instance.to_dictionary())
+	QuestService.track_quest_item(instance.uid, template_id, quest_giver)
+	_refresh_hud_hotbar()
 
 
 ## Loads an authored Ayla dialogue block from the scavenger route, falling back to
@@ -657,7 +709,9 @@ func _refresh_hud_hotbar() -> void:
 	if _hud == null:
 		return
 	var scrap_total := _total_scrap_count()
-	_hud.set_inventory(scrap_total, _restored_inventory_entries())
+	_hud.set_inventory(
+		scrap_total, _restored_inventory_entries(), GameState.save_state.loop.scrap_pool
+	)
 	_hud.set_quest_count(_count_seated_fragments())
 
 
@@ -823,15 +877,23 @@ func _open_inspection_overlay(data: Dictionary) -> void:
 func _on_dialogue_finished() -> void:
 	match _pending_dialogue_action:
 		"q1_start":
+			# v3: she hands the lunch box over on the spot — no yard hunt.
 			QuestService.start_quest("alya_quest_line")
-			QuestService.advance_quest("alya_quest_line", "q1_glasses")
-			_spawn_quest_item("yuyu_glasses", _get_scrap_bounds())
+			QuestService.advance_quest("alya_quest_line", "q1_lunchbox")
+			_grant_quest_item_to_inventory("ayla_lunchbox", "ayla")
 			_pending_dialogue_action = ""
 			_exit_overlay()
-		"q1_glasses_found":
-			_remove_quest_item_from_inventory("yuyu_glasses")
+		"q1_done":
+			# The cleaned lunch box goes home with her (a permanent keepsake), and
+			# her Yuyu lead opens the Dump Site chain (v3, story.md §16).
+			_remove_quest_item_from_inventory("ayla_lunchbox")
+			if not GameState.save_state.persistent.legacy_items.has("ayla_lunchbox"):
+				GameState.save_state.persistent.legacy_items.append("ayla_lunchbox")
 			QuestService.advance_quest("alya_quest_line", "q1_completed")
 			QuestService.unlock_location("dump_site")
+			var save_result := SaveService.save_game()
+			if not save_result.ok:
+				push_error("Scrapyard: Q1 save failed: %s" % save_result.get("error", ""))
 			_pending_dialogue_action = ""
 			_exit_overlay()
 		"yard_welcome_back":
@@ -877,6 +939,116 @@ func _set_yard_interactables_enabled(enabled: bool) -> void:
 			var interactable := child as Interactable3D
 			if interactable != null:
 				interactable.set_enabled(enabled)
+
+
+# --- Hidden-fragment hunt ------------------------------------------------------
+#
+# Team decision 2026-07-07: RELEASED fragments hide at Spawn-Director-planned
+# hiding spots in the walkable spaces. The player tracks the spot by Cultural
+# Echoes (EchoController hunt mode + EchoHud); picking the find up fires the
+# existing Found -> Portal -> seat chain directly.
+
+
+## The hiding-spot location key this space serves. DumpSite overrides.
+func _hunt_location_id() -> String:
+	return "yard"
+
+
+func _spawn_fragment_finds() -> void:
+	# Day 0 has no released fragments and no hunt; skip the HUD entirely.
+	if TutorialService.is_tutorial_active():
+		return
+	var hunts := HuntService.spots_for_location(_hunt_location_id())
+	if hunts.is_empty():
+		return
+	var space := get_world_3d().direct_space_state
+	for hunt in hunts:
+		var spot: HidingSpot = hunt["spot"]
+		var find: FragmentFind = FRAGMENT_FIND_SCENE.instantiate()
+		find.set_fragment_id(hunt["fragment_id"])
+		find.position = _ground_snap(spot.x, spot.z, space)
+		find.found.connect(_on_fragment_found)
+		_scrap_items_root.add_child(find)
+	_setup_echo_hud()
+
+
+func _setup_echo_hud() -> void:
+	if _echo_hud != null:
+		return
+	_echo_hud = ECHO_HUD_SCENE.instantiate()
+	add_child(_echo_hud)
+
+
+## Drives the EchoController hunt target: the nearest unfound find in this
+## space. Silence rules stay in the controller; this only feeds positions.
+func _update_hunt_echo() -> void:
+	var nearest := _nearest_fragment_find()
+	if nearest == null:
+		if not _hunt_target_id.is_empty():
+			_hunt_target_id = ""
+			EchoController.clear_hunt_target()
+		return
+	if nearest.fragment_id != _hunt_target_id:
+		_hunt_target_id = nearest.fragment_id
+		EchoController.set_hunt_target(_hunt_target_id)
+	EchoController.set_carrier_position(nearest.global_position)
+	if _player != null:
+		EchoController.set_listener_position(_player.global_position)
+
+
+func _nearest_fragment_find() -> FragmentFind:
+	if _scrap_items_root == null:
+		return null
+	var best: FragmentFind = null
+	var best_distance := INF
+	for child in _scrap_items_root.get_children():
+		var find := child as FragmentFind
+		if find == null or find.is_queued_for_deletion():
+			continue
+		var distance := INF
+		if _player != null:
+			distance = (find.global_position - _player.global_position).length_squared()
+		if distance < best_distance:
+			best_distance = distance
+			best = find
+	return best
+
+
+func _on_fragment_found(fragment_id: String) -> void:
+	# Free the mouse and freeze the player for the Found -> Unlock overlay; the
+	# portal flow signals back when it ends (unlocked or backed out).
+	_enter_overlay()
+	PortalFlowController.flow_finished.connect(_on_portal_flow_finished, CONNECT_ONE_SHOT)
+	if not _hunt_target_id.is_empty():
+		_hunt_target_id = ""
+		EchoController.clear_hunt_target()
+	HuntService.mark_found(fragment_id)
+	EventBus.fragment_discovered.emit(fragment_id, "")
+
+
+func _on_portal_flow_finished(_fragment_id: String) -> void:
+	_exit_overlay()
+	_refresh_hud_hotbar()
+
+
+## Raycasts down to sit the find on the actual ground at the authored x/z.
+func _ground_snap(x: float, z: float, space: PhysicsDirectSpaceState3D) -> Vector3:
+	var query := PhysicsRayQueryParameters3D.new()
+	query.from = Vector3(x, 50.0, z)
+	query.to = Vector3(x, -10.0, z)
+	query.collision_mask = 1
+	var result := space.intersect_ray(query)
+	if result.is_empty():
+		return Vector3(x, 0.3, z)
+	var pos: Vector3 = result.position
+	pos.y += 0.1
+	return pos
+
+
+func _exit_tree() -> void:
+	if not _hunt_target_id.is_empty():
+		_hunt_target_id = ""
+		EchoController.clear_hunt_target()
 
 
 # --- Quest helpers -----------------------------------------------------------
@@ -936,11 +1108,18 @@ func _spawn_quest_item(template_id: String, bounds: Dictionary) -> void:
 	_scrap_items_root.add_child(item)
 
 
-func _on_quest_item_collected(_template_id: String) -> void:
+func _on_quest_item_collected(template_id: String) -> void:
+	# The lunchbox is quest-essential: selling it to anyone fails the quest
+	# (it can only be shown to Ayla, never traded).
+	if template_id == "ayla_lunchbox":
+		var lunchbox := _find_quest_item_in_inventory("ayla_lunchbox")
+		if lunchbox != null:
+			QuestService.track_quest_item(lunchbox.uid, "ayla_lunchbox", "ayla")
 	_refresh_hud_hotbar()
 
 
 func _spawn_pending_quest_items() -> void:
-	var progress := QuestService.get_progress("alya_quest_line")
-	if progress == "q1_glasses" and not _has_quest_item_in_inventory("yuyu_glasses"):
-		_spawn_quest_item("yuyu_glasses", _get_scrap_bounds())
+	# v3: the yard itself has no quest-item spawns (Alya hands Q1's lunch box over
+	# in person). Kept as a seam — the Dump Site subclass overrides it to spawn
+	# the sling bag and the salakot.
+	pass

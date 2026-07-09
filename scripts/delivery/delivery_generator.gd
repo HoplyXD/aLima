@@ -80,10 +80,14 @@ func _group_templates_by_rarity() -> Dictionary:
 	# Make sure scene-only artifacts are synthesized + registered before we snapshot the template keys.
 	_ArtifactCatalog.ensure_ready()
 	var required_conditions := _tutorial_allowed_conditions()
+	var excluded := _tutorial_excluded_templates()
 	for id in _repo.scrap_object_templates.keys():
 		var template: ScrapObjectTemplate = _repo.scrap_object_templates[id]
 		if not template.deliverable:
 			# Quest/given items (e.g. Auntie's photos) never enter the random pool.
+			continue
+		if excluded.has(id):
+			# Day 0 (TUT): templates the tutorial config bans from the taught batch.
 			continue
 		if not _ArtifactScenes.has_scene(id):
 			# Only artifacts with a real authored model spawn — never placeholder shapes.
@@ -237,6 +241,13 @@ func _assign_random_conditions(inst: ObjectInstance, rng: RandomNumberGenerator)
 func _tutorial_allowed_conditions() -> Array[String]:
 	if TutorialService.is_tutorial_active():
 		return ModelUtils.as_string_array(TutorialService.get_config().get("allowed_conditions"))
+	return [] as Array[String]
+
+
+## Template ids the Day 0 config bans from the taught batch, or [] in normal play.
+func _tutorial_excluded_templates() -> Array[String]:
+	if TutorialService.is_tutorial_active():
+		return ModelUtils.as_string_array(TutorialService.get_config().get("excluded_templates"))
 	return [] as Array[String]
 
 

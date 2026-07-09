@@ -30,6 +30,7 @@ var evening_config: Dictionary = {}  ## Evening upkeep/plan tuning (Phase 14).
 var delivery_config: DeliveryConfig = DeliveryConfig.new()
 var spawn_config: SpawnConfig = SpawnConfig.new()
 var scrap_config: ScrapConfig = ScrapConfig.new()
+var hiding_spots: Dictionary = {}  ## id -> HidingSpot (hunt placement spots).
 var starting_kit: Dictionary = {"tool_ids": [], "technique_ids": []}
 
 var _loaded := false
@@ -197,6 +198,20 @@ func get_scrap_config() -> ScrapConfig:
 	return scrap_config
 
 
+func get_hiding_spot(spot_id: String) -> HidingSpot:
+	return hiding_spots.get(spot_id)
+
+
+## Hiding spots sorted by id so iteration order is deterministic.
+func get_hiding_spots_sorted() -> Array[HidingSpot]:
+	var ids := hiding_spots.keys()
+	ids.sort()
+	var out: Array[HidingSpot] = []
+	for id in ids:
+		out.append(hiding_spots[id])
+	return out
+
+
 func _clear_state() -> void:
 	_loaded = false
 	scrap_object_templates.clear()
@@ -217,6 +232,7 @@ func _clear_state() -> void:
 	delivery_config = DeliveryConfig.new()
 	spawn_config = SpawnConfig.new()
 	scrap_config = ScrapConfig.new()
+	hiding_spots.clear()
 	starting_kit = {"tool_ids": [], "technique_ids": []}
 
 
@@ -382,6 +398,13 @@ func _parse_delivery_file(file_path: String) -> void:
 		var spawn_cfg := SpawnConfig.from_dictionary(doc)
 		spawn_cfg.validate(_validation, file_path)
 		spawn_config = spawn_cfg
+	elif file_name == "hiding_spots.json":
+		var items := _get_items(doc, file_path)
+		for item in items:
+			if item is Dictionary:
+				var spot := HidingSpot.from_dictionary(item)
+				_add_record(hiding_spots, spot.id, spot, file_path, "hiding_spot")
+				spot.validate(_validation, file_path)
 	else:
 		var delivery_cfg := DeliveryConfig.from_dictionary(doc)
 		delivery_cfg.validate(_validation, file_path)

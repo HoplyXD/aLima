@@ -1,8 +1,9 @@
 extends GutTest
 
 ## Headless tests for the ScrapyardHud 5-slot carry inventory (3D preview
-## cards): unsorted scrap bundles into one slot, restored artifacts fill the
-## rest, and each filled slot carries inspection data for the overlay.
+## cards): each unsorted scrap piece takes its own slot (non-stackable), only
+## overflowing into a stacked final slot; restored artifacts keep their slots,
+## and each filled slot carries inspection data for the overlay.
 
 const HUD_SCENE := preload("res://scenes/ui/scrapyard_hud.tscn")
 
@@ -18,27 +19,50 @@ func _slot_name(hud: ScrapyardHud, index: int) -> String:
 	return card.get_node("%NameLabel").text
 
 
-func test_scrap_pool_bundles_into_one_slot() -> void:
+func test_each_scrap_piece_takes_its_own_slot() -> void:
 	var hud := _make_hud()
-	hud.set_inventory(8, [] as Array[Dictionary])
-	assert_eq(_slot_name(hud, 0), "Scrap x8", "All unsorted scrap counts as one item")
-	for i in range(1, ScrapyardHud.INVENTORY_SLOTS):
+	hud.set_inventory(3, [] as Array[Dictionary], {"white": 2, "gold": 1})
+	for i in 3:
+		assert_eq(_slot_name(hud, i), "Scrap", "Each scrap piece is its own slot")
+		assert_true(bool(hud._slot_data[i].get("is_scrap", false)))
+		assert_not_null(hud._slot_data[i].get("preview"), "Each scrap slot carries a 3D preview")
+	for i in range(3, ScrapyardHud.INVENTORY_SLOTS):
 		assert_eq(_slot_name(hud, i), "", "Remaining slots stay empty")
-	assert_true(bool(hud._slot_data[0].get("is_scrap", false)))
-	assert_not_null(hud._slot_data[0].get("preview"), "The scrap slot carries a 3D preview")
 
 
-func test_restored_artifacts_fill_remaining_slots() -> void:
+func test_scrap_overflow_collapses_into_stacked_last_slot() -> void:
+	var hud := _make_hud()
+	hud.set_inventory(8, [] as Array[Dictionary], {"white": 8})
+	for i in range(0, ScrapyardHud.INVENTORY_SLOTS - 1):
+		assert_eq(_slot_name(hud, i), "Scrap", "Leading slots hold single pieces")
+	# 4 singles + the remaining 4 stacked in the last slot.
+	assert_eq(
+		_slot_name(hud, ScrapyardHud.INVENTORY_SLOTS - 1),
+		"Scrap x4",
+		"Overflow stacks into the final scrap slot"
+	)
+
+
+func test_restored_artifacts_keep_their_slots_over_scrap() -> void:
 	var hud := _make_hud()
 	var restored: Array[Dictionary] = [
 		{"display_name": "Gold Locket", "color": Color.GOLD, "preview": Node3D.new()},
 		{"display_name": "Cup", "color": Color.WHITE, "preview": Node3D.new()},
 	]
-	hud.set_inventory(1, restored)
-	assert_eq(_slot_name(hud, 0), "Scrap x1")
+	hud.set_inventory(1, restored, {"white": 1})
+	assert_eq(_slot_name(hud, 0), "Scrap")
 	assert_eq(_slot_name(hud, 1), "Gold Locket")
 	assert_eq(_slot_name(hud, 2), "Cup")
 	assert_eq(_slot_name(hud, 3), "")
+
+
+func test_scrap_without_breakdown_still_fills_slots() -> void:
+	# Callers that pass no breakdown (legacy signature) still get one slot per piece.
+	var hud := _make_hud()
+	hud.set_inventory(2, [] as Array[Dictionary])
+	assert_eq(_slot_name(hud, 0), "Scrap")
+	assert_eq(_slot_name(hud, 1), "Scrap")
+	assert_eq(_slot_name(hud, 2), "")
 
 
 func test_no_scrap_starts_artifacts_at_slot_zero() -> void:

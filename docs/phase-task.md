@@ -161,31 +161,40 @@ Manual: a full forage → hand-off → sort → knock → triage run.
 
 ## Phase RV2-C - Scrapyard Discovery (relocate the headline mechanic)
 
-**Goal:** a released carrier hides in the walkable yard; the four-band Cultural Echo intensifies as the player walks toward it; pickup resolves the heartbeat into a carried-aura that persists until seated.
+> **Implemented 2026-07-07 as the hidden-fragment hunt** (team-lead decision; supersedes the
+> carried-aura/carrier framing below — see PRD §12 amendment, CLAUDE.md §4-B/C/D/E/H/I, decisions
+> D14/D15). A released fragment hides **bare** at a Spawn-Director-planned hiding spot across the
+> walkable spaces (`data/delivery/hiding_spots.json`: yard, Dump Site, Forbidden Zone, shop
+> interior); the four-band echo hunt (`EchoController` hunt mode + `EchoHud` in the yard HUD)
+> leads to the find, whose pickup fires Found → Portal → seat directly. Carrier-in-delivery
+> placement is parked behind `spawn_config.legacy_carrier_delivery` (default off).
 
-**Requirements:** DISC-R1, DISC-R7..R11, CLAUDE.md §4-I
+**Goal:** a released fragment hides in the walkable spaces; the four-band Cultural Echo intensifies as the player walks toward it; the pickup at the spot is the discovery.
+
+**Requirements:** DISC-R1, DISC-R7..R11, CLAUDE.md §4-I (as amended 2026-07-07)
 **Dependencies:** RV2-A, Phase 5 (Spawn Director), Phase 6 (Cultural Echoes)
-**Subsystems:** spawn placement (yard spots), spatial echo proximity, carried-aura state
+**Subsystems:** spawn placement (hiding spots), spatial echo proximity, fragment-find pickup
 
 ### Tasks
 
-- `[ ]` **RV2-C.1 Relocate placement + echo proximity to the yard.**
-  - Spawn Director places the carrier at a yard hiding spot; never-twice keyed to yard spots.
-  - Echo proximity is driven by the player's walking distance to the carrier; flicker reveals only at proximity (`GLOW_REVEAL_AT`); heartbeat stays gated to `is_carrier == true`.
-  - On pickup the hunt bands resolve and a soft carried-aura plays until the fragment is cleaned/opened/seated, then silence (§4-I).
+- `[x]` **RV2-C.1 Relocate placement + echo proximity to the walkable spaces.** *(2026-07-07)*
+  - `SpawnDirector.plan_hunt_spot(s)`: availability hard filter (unlocks/Safe code/day windows), never-twice keyed to hiding spots with the documented soft reset, seeded audit log; planned at loop reset and immediately on mid-loop release (reachable-today filter; Maverick's Day-5 release is guaranteed same-day).
+  - Echo proximity driven by the player's walking distance to the find (`scrapyard.gd`/`dump_site.gd`/`forbidden_zone_controller.gd` feed `EchoController` hunt mode); glint flicker reveals only at proximity ≥ `GLOW_REVEAL_AT`; heartbeat authorized only at the true find.
+  - Pickup fires `fragment_discovered` → Artifact Found → Portal → seat; the hunt goes silent (found/seated/loop-reset all clear the target).
 
 ### Acceptance
 
-- `[ ]` Three seeded runs hide the carrier at visibly different yard spots; never a repeat (carrier, spot) for the player.
-- `[ ]` Walking toward the carrier raises the bands; the heartbeat never fires on a decoy; flicker only at proximity.
-- `[ ]` Pickup → carried-aura → carry inside → clean → open → seat → aura goes silent.
+- `[-]` Seeded runs hide the fragment at different spots; never a repeat (fragment, spot) for the player. *(Automated: `tests/discovery/hunt/` never-twice + soft-reset green. Manual two-loop on-screen check pending.)*
+- `[-]` Walking toward the find raises the bands; the heartbeat never fires anywhere else; flicker only at proximity. *(Automated: hunt-mode gating tests green. Manual audio/caption walk pending.)*
+- `[ ]` Pickup → Artifact Found → Portal Unlock → journal slot fills, on camera.
 
 ### Verification
 
 ```powershell
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/discovery -ginclude_subdirs -gexit
 ```
-Manual: a complete echo-walk to the carrier with captions/resonance meter.
+Ran 2026-07-07: discovery suite 90/90 (incl. 17 new hunt/finale tests); full suite 757/757.
+Manual: a complete echo-walk to the find with captions/resonance meter (pending).
 
 ---
 
@@ -199,12 +208,13 @@ Manual: a complete echo-walk to the carrier with captions/resonance meter.
 
 ### Tasks
 
-- `[ ]` **RV2-D.1 Reauthor Ayla + one-ending-per-loop + remove the exclusion.** (ROUTE-R7, ROUTE-R8)
+- `[-]` **RV2-D.1 Reauthor Ayla + one-ending-per-loop + remove the exclusion.** (ROUTE-R7, ROUTE-R8)
+  - *(2026-07-07: the lunchbox completion arc is implemented as the "The Manong's Keeping" quest — `data/quests/ayla_lunchbox.json`, gated on her questline + Sam's `excavation_tools`, dug in the Dump Site, cleaned, "shown" at the hand-off, releasing `fragment_03` into the hunt. Remaining: scheduling/one-per-loop enforcement review + routes.json v2 schedule catch-up.)*
   - Ayla present every open day (delivery NPC). Her **Archeologist lead** comes free from daily contact; her **completion** is gated behind **Sam's excavation tool** → dig her father's lunchbox from a yard spot → restore it → a "Show Ayla the lunchbox" interaction releases her fragment. (Decouples the Ayla→Sam→Ayla cycle.)
   - Enforce **one route completion per loop** (conflicting windows; Ayla via the tool/lunchbox gate); finding/seating an already-`RELEASED` fragment in the yard is parallel and exempt.
   - Remove the temporal Artisan/Scavenger mutual exclusion in `RouteService`; Lave stays Auntie-gated. Update `data/routes/routes.json`.
-- `[ ]` **RV2-D.2 Maverick release fix.**
-  - His qualifying Day-5 encounter **releases** the 5th fragment into a Spawn-Director yard carrier (echo-hunt) with no hand-over. Update his flow/dialogue per `docs/route-dialogue-compendium.md`.
+- `[x]` **RV2-D.2 Maverick release fix.** *(2026-07-07 — implemented as the ₱50k last offer, decisions D16/N6.)*
+  - With fragments 01–04 seated, his deterministic Day-5 door visit offers everything he knows for ₱50,000; paying grants the `encoded_ledger` and **releases** the 5th fragment into a guaranteed same-day hunt spot (echo hunt) with no hand-over (`shop_controller.gd` `_maverick_last_offer_*`; Day-5 07:00–09:00 buyer window added to `routes.json`). Manual on-screen check pending.
 
 ### Acceptance
 
@@ -1668,7 +1678,7 @@ Manual (pending):
 
 ### Tasks
 
-- `[ ]` **P15.1 Author three progression beats for each route.** Complete Auntie, Artisan, Scavenger, Archeologist, and Buyer data with prerequisites, object/return hooks, dialogue, rewards, and release beat.
+- `[-]` **P15.1 Author three progression beats for each route.** Complete Auntie, Artisan, Scavenger, Archeologist, and Buyer data with prerequisites, object/return hooks, dialogue, rewards, and release beat. *(2026-07-07: Artisan's 3 beats authored in `routes.json` — santo/dulom, Lola's photographs, carved dedication — flowing through the existing showcase → final-beat release into the hunt (`fragment_02`). Ayla's completion arc is the lunchbox quest (see RV2-D.1); the Buyer path is the ₱50k last offer (RV2-D.2). Remaining: Archeologist route beats — his fragment currently ships via the Sam questline — plus the C6 English dialogue catch-up.)*
 - `[ ]` **P15.2 Implement authoritative scheduling.** Evaluate windows at open time, consume unanswered visits, preserve pause ownership, and enforce the temporal Artisan/Scavenger exclusion.
 - `[ ]` **P15.3 Implement persistent route progression.** Persist beats, leads, completion, unlocked dialogue, legacy rewards, and released fragments across loops.
 - `[ ]` **P15.4 Integrate route returns and restoration requests.** Required objects flow through restoration, judgment, and return rather than scripted bypasses.
@@ -1816,9 +1826,9 @@ Manual: run the deterministic event showcase, then play three unforced loops and
 
 - `[ ]` **P19.1 Implement four character endings.** Resolve Auntie, Artisan, Scavenger, and Archeologist through their completed route state and authored final scenes.
 - `[ ]` **P19.2 Implement Neutral continuation.** Completing no route repeats the loop without corrupting persistent progress or falsely ending the game.
-- `[ ]` **P19.3 Complete the Buyer release path.** Qualifying dealings release the fifth fragment into a guaranteed Director-placed special delivery.
-- `[ ]` **P19.4 Build the Master Artifact restoration.** Assemble the five seated components through a final tactile sequence using locked artifact data.
-- `[ ]` **P19.5 Implement the Yuyu finale.** Resolve the uncle, release the loop, create the assembled museum record, and transition to credits/postgame state.
+- `[x]` **P19.3 Complete the Buyer release path.** Qualifying dealings release the fifth fragment into a guaranteed Director-placed special delivery. *(2026-07-07: the ₱50k last offer — Day 5, fragments 01–04 seated → pay → guaranteed same-day hunt spot; decisions D16. Manual on-screen check pending.)*
+- `[ ]` **P19.4 Build the Master Artifact restoration.** Assemble the five seated components through a final tactile sequence using locked artifact data. *(Still blocked on the D1 artifact lock.)*
+- `[-]` **P19.5 Implement the Yuyu finale.** Resolve the uncle, release the loop, create the assembled museum record, and transition to credits/postgame state. *(2026-07-07: minimal slice shipped — `FinaleService` autoload: fifth seat → waits for the Portal flow → clock held → Yuyu return scene + "Saturday — Day 6" end card, fires exactly once (`persistent.perfect_loop_completed`), postgame continues freely. Remaining: assembled museum record + full credits + the P19.4 assembly.)*
 - `[ ]` **P19.6 Test ending reachability and exclusivity.** Cover all character endings, Neutral, fifth-seat trigger, reloads, duplicate prevention, and post-finale state.
 
 ### Acceptance

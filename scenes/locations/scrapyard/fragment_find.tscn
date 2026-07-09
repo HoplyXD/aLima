@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://dfragf1nd3sp0"]
+
+[ext_resource type="Script" path="res://scripts/scrapyard/fragment_find.gd" id="1_fragment_find"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_find"]
+radius = 0.45
+
+[sub_resource type="SphereMesh" id="SphereMesh_find"]
+radius = 0.28
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_find"]
+albedo_color = Color(0.42, 0.36, 0.28, 1)
+roughness = 0.95
+
+[node name="FragmentFind" type="Area3D" groups=["fragment_find"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_fragment_find")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+shape = SubResource("SphereShape3D_find")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_find")
+surface_material_override/0 = SubResource("StandardMaterial3D_find")

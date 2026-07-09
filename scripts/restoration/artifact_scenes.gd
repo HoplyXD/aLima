@@ -26,6 +26,10 @@ const _SCENES := {
 	preload("res://scenes/restoration/artifacts/Basic Artifacts/bronze_pendant.tscn"),
 	"brass_hand_bell":
 	preload("res://scenes/restoration/artifacts/Basic Artifacts/brass_hand_bell.tscn"),
+	# Template id is "ayla_lunchbox" but the authored scene file is "alya_…" — the
+	# folder scan registers the filename slug, so this explicit mapping bridges it.
+	"ayla_lunchbox":
+	preload("res://scenes/restoration/artifacts/Event Quest Artifacts/Scavenger/alya_lunchbox.tscn"),
 }
 
 

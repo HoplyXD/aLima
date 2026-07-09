@@ -67,9 +67,28 @@ func update_anchor(anchor_name: String, node: Node) -> void:
 
 
 func _process(_delta: float) -> void:
-	# 3D anchors track the camera; Control anchors are static.
-	if _anchor_node is Node3D and _hint_box != null and _hint_box.visible:
+	if _hint_box == null or not _hint_box.visible:
+		return
+	# UI screens may claim the arrow (Scan button, phone app buttons, ...); the
+	# highest-priority live claim wins over the step's authored anchor.
+	var claim: Variant = TutorialService.resolve_pointer_claim()
+	if claim is StringName and claim == TutorialService.POINTER_HIDE:
+		_hint_box.clear_pointer()
+		return
+	if claim is Control:
+		_hint_box.point_at_control(claim as Control)
+		return
+	if claim is Callable:
+		_hint_box.point_at_screen_pos((claim as Callable).call())
+		return
+	# Default: the authored anchor. 3D anchors track the camera; Controls are
+	# re-applied so the arrow recovers after a claim is released.
+	if _anchor_node is Node3D:
 		_point_at_node3d(_anchor_node as Node3D)
+	elif _anchor_node is Control:
+		_hint_box.point_at_control(_anchor_node as Control)
+	else:
+		_hint_box.clear_pointer()
 
 
 func _on_step_changed(_step_id: String) -> void:

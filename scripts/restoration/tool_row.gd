@@ -32,6 +32,11 @@ func _ready() -> void:
 	gui_input.connect(_on_gui_input)
 	_highlight.visible = false
 	_build_model()
+	# The WHOLE row is the click target: children that default to consuming mouse
+	# input (the durability ProgressBar, labels, holders) pass clicks up instead,
+	# so tapping the tool image or the bar still selects the tool. PASS (not
+	# IGNORE) keeps their hover tooltips working.
+	_make_children_click_through(self)
 
 
 ## Drops a compact, still (non-spinning) tool preview into the authored ModelHolder. The
@@ -110,6 +115,8 @@ func _build_conditions(conditions: Array) -> void:
 		var cell: ToolCondition = CONDITION_SCENE.instantiate()
 		_conditions.add_child(cell)
 		cell.configure(entry)
+	# Late-built cells must not swallow the row's click either.
+	_make_children_click_through(_conditions)
 
 
 ## Recursively makes a subtree mouse-transparent so it never intercepts the row's clicks.
@@ -118,6 +125,15 @@ func _set_subtree_ignore_mouse(node: Node) -> void:
 		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for child in node.get_children():
 		_set_subtree_ignore_mouse(child)
+
+
+## Downgrades every consuming (STOP) child to PASS so clicks bubble up to the row
+## while tooltips/hover still work. The row's own PanelContainer keeps STOP.
+func _make_children_click_through(node: Node) -> void:
+	for child in node.get_children():
+		if child is Control and (child as Control).mouse_filter == Control.MOUSE_FILTER_STOP:
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_PASS
+		_make_children_click_through(child)
 
 
 func _on_gui_input(event: InputEvent) -> void:

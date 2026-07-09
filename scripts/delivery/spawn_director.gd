@@ -15,8 +15,9 @@ class_name SpawnDirector
 
 const PLACEMENT_STREAM := "spawn_director"
 const DAY_SELECTION_STREAM := "spawn_director_day"
+const HUNT_STREAM := "spawn_director_hunt"
 ## Carriers must be real artifacts with an authored folder scene (no scene-less placeholders).
-const _ArtifactScenes := preload("res://scripts/restoration/artifact_scenes.gd")
+const ARTIFACT_SCENES := preload("res://scripts/restoration/artifact_scenes.gd")
 
 var _repo: DataRepository
 var _game_state: GameState
@@ -96,6 +97,150 @@ func _plan_fragment(
 	return plan
 
 
+## ---------------------------------------------------------------------------
+## Hunt-spot planning (the hidden-fragment hunt).
+##
+## Team decision 2026-07-07 (supersedes carrier-in-delivery placement): when a
+## character's story releases their fragment, the fragment itself hides at a
+## hiding spot across the walkable spaces and the player tracks it by Cultural
+## Echoes. Same guarantees as carrier placement: availability is a hard filter
+## (never unreachable that run), per-player never-twice spot history with a
+## documented soft reset, seeded weighted selection, and an audit log.
+## ---------------------------------------------------------------------------
+
+
+## Plans hunt spots for every RELEASED, unseated fragment that has no spot yet
+## this loop. `current_day` > 0 restricts day-windowed locations to ones open
+## today (mid-loop releases must stay reachable immediately); 0 means loop-start
+## planning where any window inside the loop is acceptable.
+func plan_hunt_spots(current_day: int = 0) -> Dictionary:
+	var plans: Dictionary = _game_state.save_state.loop.fragment_spots
+	var taken := {}
+	for fragment_id in plans.keys():
+		var existing: Dictionary = plans[fragment_id]
+		taken[existing.get("spot_id", "")] = true
+
+	for fragment_id in _repo.fragments.keys():
+		var fragment: Fragment = _repo.fragments[fragment_id]
+		if fragment.state != ModelEnums.FragmentState.RELEASED:
+			continue
+		if _is_seated(fragment_id):
+			continue
+		if plans.has(fragment_id):
+			continue
+		var plan := plan_hunt_spot(fragment_id, current_day, taken)
+		if plan.is_empty():
+			continue
+		plans[fragment_id] = plan
+		taken[plan["spot_id"]] = true
+
+	_game_state.save_state.loop.fragment_spots = plans
+	return plans
+
+
+## Plans a hunt spot for one fragment. `occupied` excludes spots already used by
+## another fragment this loop. Records never-twice history when a plan lands.
+func plan_hunt_spot(
+	fragment_id: String, current_day: int = 0, occupied: Dictionary = {}
+) -> Dictionary:
+	var eligible: Array[HidingSpot] = []
+	var rejected: Array[Dictionary] = []
+	for spot in _repo.get_hiding_spots_sorted():
+		var reason := _hunt_spot_rejection(spot, current_day, occupied)
+		if reason.is_empty():
+			eligible.append(spot)
+		else:
+			rejected.append({"spot_id": spot.id, "reason": reason})
+
+	# Never-twice: exclude previously used spots for this fragment; when every
+	# eligible spot has been used, soft-reset (only the most recent stays banned).
+	var used := _hunt_history_spot_ids(fragment_id)
+	var fresh: Array[HidingSpot] = []
+	for spot in eligible:
+		if not used.has(spot.id):
+			fresh.append(spot)
+	var soft_reset := false
+	if fresh.is_empty() and not eligible.is_empty():
+		soft_reset = true
+		var most_recent := used[used.size() - 1] if not used.is_empty() else ""
+		for spot in eligible:
+			if spot.id != most_recent:
+				fresh.append(spot)
+		if fresh.is_empty():
+			fresh = eligible
+
+	if fresh.is_empty():
+		_last_audit_log = _build_hunt_audit_log(fragment_id, rejected, null, soft_reset, true)
+		return {}
+
+	var rng := _game_state.make_rng(HUNT_STREAM)
+	var selected: HidingSpot = fresh[rng.randi_range(0, fresh.size() - 1)]
+	var plan := {
+		"fragment_id": fragment_id,
+		"spot_id": selected.id,
+		"location": selected.location,
+		"soft_reset": soft_reset,
+	}
+	_record_hunt_history(fragment_id, plan)
+	_last_audit_log = _build_hunt_audit_log(fragment_id, rejected, selected, soft_reset, false)
+	return plan
+
+
+func _hunt_spot_rejection(spot: HidingSpot, current_day: int, occupied: Dictionary) -> String:
+	if occupied.get(spot.id, false):
+		return "spot_occupied"
+	if not spot.is_available(_game_state.save_state.persistent):
+		return "requirement_unmet"
+	if not spot.is_open_on_day(current_day):
+		return "location_closed_today"
+	return ""
+
+
+func _hunt_history_spot_ids(fragment_id: String) -> Array[String]:
+	var out: Array[String] = []
+	var history: Array = _game_state.save_state.persistent.spawn_history.get(fragment_id, [])
+	for entry in history:
+		if entry is Dictionary and entry.has("spot_id"):
+			out.append(String(entry["spot_id"]))
+	return out
+
+
+func _record_hunt_history(fragment_id: String, plan: Dictionary) -> void:
+	var entry := {
+		"loop": _game_state.loop_index,
+		"seed": _game_state.run_seed,
+		"fragment_id": fragment_id,
+		"spot_id": plan["spot_id"],
+		"location": plan["location"],
+		"soft_reset": plan.get("soft_reset", false),
+	}
+	if not _game_state.save_state.persistent.spawn_history.has(fragment_id):
+		_game_state.save_state.persistent.spawn_history[fragment_id] = []
+	_game_state.save_state.persistent.spawn_history[fragment_id].append(entry)
+
+
+func _build_hunt_audit_log(
+	fragment_id: String,
+	rejected: Array[Dictionary],
+	selected: HidingSpot,
+	soft_reset: bool,
+	failed: bool
+) -> Dictionary:
+	return {
+		"player_id": _game_state.player_id,
+		"loop_index": _game_state.loop_index,
+		"run_seed": _game_state.run_seed,
+		"fragment_id": fragment_id,
+		"mode": "hunt_spot",
+		"rejected_spots": rejected,
+		"selected_spot": selected.id if selected != null else "",
+		"selected_location": selected.location if selected != null else "",
+		"prior_spot_exclusions": _hunt_history_spot_ids(fragment_id),
+		"soft_reset": soft_reset,
+		"failed": failed,
+	}
+
+
 ## Enumerates all (template, container) candidates for the fragment and applies
 ## hard filters. Does not mutate game state. Public so tests can inspect the
 ## candidate list (P5.1).
@@ -161,7 +306,7 @@ func _apply_hard_filters(
 
 	# A carrier must be a REAL artifact the player can see and clean — never a scene-less placeholder
 	# (e.g. small_santo). Checked last so tool-gating still records its own reason for the audit.
-	if not _ArtifactScenes.has_scene(candidate.template_id):
+	if not ARTIFACT_SCENES.has_scene(candidate.template_id):
 		candidate.rejection_reason = "missing_scene"
 		return
 

@@ -107,9 +107,13 @@ func _on_unlock_closed() -> void:
 
 
 func _on_found_closed() -> void:
+	var fragment_id := _pending_fragment_id
 	_pending_fragment_id = ""
 	_close_screens()
 	_release_pause()
+	# The flow ended without an unlock (player backed out). Emit flow_finished so
+	# scene controllers waiting to restore input (e.g. the yard) always resume.
+	flow_finished.emit(fragment_id)
 
 
 func _close_screens() -> void:

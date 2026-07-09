@@ -56,6 +56,30 @@
       "value": "deterministic_special_delivery",
       "rationale": "The Buyer's qualifying Day 5 encounter releases the fifth fragment into a guaranteed special delivery; no character hands a fragment over directly (CLAUDE.md §4-B). Resolved in-fiction; recorded here as versioned design data.",
       "references": []
+    },
+    {
+      "id": "D14_hidden_fragment_hunt",
+      "title": "Hidden-fragment hunt: bare finds at hiding spots across the maps",
+      "status": "RESOLVED",
+      "value": "bare_find_at_hiding_spot",
+      "rationale": "Team-lead decision 2026-07-07. A story completion RELEASES its fragment, which hides bare at a Spawn-Director-planned hiding spot (data/delivery/hiding_spots.json) across the scrapyard, Dump Site, Forbidden Zone, and shop interior; the player hunts it by Cultural Echoes and the pickup fires Found -> Portal -> seat directly (no carrier nesting or clean->open on the hunt path). NPC-scripted grants (Sam's dirty bag) keep the clean->open carrier flow. Never-twice per spot with soft reset; availability (unlocks, Safe code, day windows) is a hard filter. Supersedes carrier-in-delivery placement (kept behind spawn_config.legacy_carrier_delivery). CLAUDE.md §4-B/C/D/E/H/I and PRD §12 amended.",
+      "references": []
+    },
+    {
+      "id": "D15_echo_target",
+      "title": "Cultural Echo target: hidden fragments, not historical artifacts",
+      "status": "RESOLVED",
+      "value": "fragments",
+      "rationale": "Team-lead decision 2026-07-07, resolving story.md N8: the story.md §15.3 proposal (echoes emitted by fragment-unlocked historical artifacts) is rejected. Echoes stay bound to the hidden fragments of the secret artifact; historical artifacts (Oton Death Mask and the §15.4 roster) remain gold museum collectibles with no echo binding.",
+      "references": []
+    },
+    {
+      "id": "D16_maverick_last_offer",
+      "title": "Fifth-fragment gate: Maverick's Day-5 P50,000 last offer",
+      "status": "RESOLVED",
+      "value": "50000",
+      "rationale": "Team-lead decision 2026-07-07, resolving story.md N6 (canon §14.4): with fragments 01-04 seated, Maverick waits at the shop door all of Day 5; paying P50,000 grants the encoded_ledger and releases fragment_05 into a guaranteed same-day hunt spot. Coming up short retries next loop (money resets - the one-loop economy mastery gate). The §8 spiral-mark trust flow stays unwired (lore only). Price currently a code constant (shop_controller MAVERICK_LAST_OFFER_PRICE); externalize to data at P15.",
+      "references": []
     }
   ]
 }

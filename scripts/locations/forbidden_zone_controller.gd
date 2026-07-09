@@ -6,6 +6,13 @@ class_name ForbiddenZone
 
 const PLAYER_SCENE := preload("res://scenes/locations/scrapyard/player.tscn")
 const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
+const FRAGMENT_FIND_SCENE := preload("res://scenes/locations/scrapyard/fragment_find.tscn")
+const ECHO_HUD_SCENE := preload("res://scenes/ui/echo_hud.tscn")
+
+var _player: CharacterBody3D
+var _echo_hud: EchoHud
+var _hunt_target_id: String = ""
+var _finds: Array[FragmentFind] = []
 
 @onready var _hud: ScrapyardHud = $HUD
 @onready var _player_spawn: Node3D = $PlayerSpawn
@@ -16,13 +23,24 @@ func _ready() -> void:
 	_spawn_player()
 	_setup_return()
 	_spawn_salakot_if_needed()
+	_spawn_fragment_finds()
 	_setup_hud()
 
 
+func _process(_delta: float) -> void:
+	_update_hunt_echo()
+
+
+func _exit_tree() -> void:
+	if not _hunt_target_id.is_empty():
+		_hunt_target_id = ""
+		EchoController.clear_hunt_target()
+
+
 func _spawn_player() -> void:
-	var player := PLAYER_SCENE.instantiate() as CharacterBody3D
-	player.global_position = _player_spawn.global_position
-	add_child(player)
+	_player = PLAYER_SCENE.instantiate() as CharacterBody3D
+	_player.global_position = _player_spawn.global_position
+	add_child(_player)
 
 
 func _setup_return() -> void:
@@ -43,7 +61,7 @@ func _spawn_salakot_if_needed() -> void:
 
 
 const SALAKOT_MODEL_PATH := (
-	"res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Salakot/salakot.glb"
+	"res://assets/3d Assets/Artifacts/Orignal Artifacts Assets" + "/Salakot/salakot.glb"
 )
 
 
@@ -155,3 +173,68 @@ func _show_found_dialogue() -> void:
 
 func _setup_hud() -> void:
 	_hud.visible = true
+
+
+# --- Hidden-fragment hunt ------------------------------------------------------
+
+
+func _spawn_fragment_finds() -> void:
+	var hunts := HuntService.spots_for_location("forbidden_zone")
+	if hunts.is_empty():
+		return
+	for hunt in hunts:
+		var spot: HidingSpot = hunt["spot"]
+		var find: FragmentFind = FRAGMENT_FIND_SCENE.instantiate()
+		find.set_fragment_id(hunt["fragment_id"])
+		find.position = Vector3(spot.x, 0.3, spot.z)
+		find.found.connect(_on_fragment_found)
+		add_child(find)
+		_finds.append(find)
+	if _echo_hud == null:
+		_echo_hud = ECHO_HUD_SCENE.instantiate()
+		add_child(_echo_hud)
+
+
+func _update_hunt_echo() -> void:
+	var nearest: FragmentFind = null
+	var best := INF
+	for find in _finds:
+		if find == null or not is_instance_valid(find) or find.is_queued_for_deletion():
+			continue
+		var distance := INF
+		if _player != null:
+			distance = (find.global_position - _player.global_position).length_squared()
+		if distance < best:
+			best = distance
+			nearest = find
+	if nearest == null:
+		if not _hunt_target_id.is_empty():
+			_hunt_target_id = ""
+			EchoController.clear_hunt_target()
+		return
+	if nearest.fragment_id != _hunt_target_id:
+		_hunt_target_id = nearest.fragment_id
+		EchoController.set_hunt_target(_hunt_target_id)
+	EchoController.set_carrier_position(nearest.global_position)
+	if _player != null:
+		EchoController.set_listener_position(_player.global_position)
+
+
+func _on_fragment_found(fragment_id: String) -> void:
+	if not _hunt_target_id.is_empty():
+		_hunt_target_id = ""
+		EchoController.clear_hunt_target()
+	if _player != null and _player.has_method("set_input_enabled"):
+		_player.set_input_enabled(false)
+	if DisplayServer.get_name() != "headless":
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	PortalFlowController.flow_finished.connect(_on_portal_flow_finished, CONNECT_ONE_SHOT)
+	HuntService.mark_found(fragment_id)
+	EventBus.fragment_discovered.emit(fragment_id, "")
+
+
+func _on_portal_flow_finished(_fragment_id: String) -> void:
+	if _player != null and _player.has_method("set_input_enabled"):
+		_player.set_input_enabled(true)
+	if DisplayServer.get_name() != "headless":
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)

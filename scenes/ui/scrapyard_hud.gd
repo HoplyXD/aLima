@@ -127,37 +127,53 @@ func set_time(hour: int, minute: int = 0) -> void:
 	_clock_label.text = _format_time(hour, minute)
 
 
-## Refreshes the 5-slot carry inventory. The whole unsorted scrap pool bundles
-## into ONE slot (it still needs Ayla's sorting before restoration); `restored`
+## Refreshes the 5-slot carry inventory. Each unsorted scrap piece takes its OWN
+## slot (non-stackable, tinted by its rarity from `scrap_breakdown`); when scrap
+## outnumbers the slots left after the restored entries, the final scrap slot
+## collapses into a stacked "Scrap xN" so nothing is ever hidden. `restored`
 ## entries fill the remaining slots as 3D rotating preview cards.
-func set_inventory(scrap_total: int, restored_data: Array[Dictionary]) -> void:
+func set_inventory(
+	scrap_total: int, restored_data: Array[Dictionary], scrap_breakdown: Dictionary = {}
+) -> void:
 	var slot_index := 0
 	# Clear all slots first
 	for i in INVENTORY_SLOTS:
 		_clear_slot(i)
 		_slot_data[i] = {}
 
-	if scrap_total > 0:
-		# A little scrap heap (matches the round yard pickups, not a plain cube).
-		var scrap_mesh := Node3D.new()
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = SLOT_SCRAP_COLOR
-		var offsets := [Vector3.ZERO, Vector3(0.28, -0.06, 0.1), Vector3(-0.22, -0.1, -0.12)]
-		var radii := [0.22, 0.16, 0.13]
-		for i in offsets.size():
-			var lump := MeshInstance3D.new()
-			var ball := SphereMesh.new()
-			ball.radius = radii[i]
-			ball.height = radii[i] * 1.6
-			lump.mesh = ball
-			lump.material_override = mat
-			lump.position = offsets[i]
-			scrap_mesh.add_child(lump)
-		_set_slot(slot_index, "Scrap x%d" % scrap_total, SLOT_SCRAP_COLOR, scrap_mesh)
+	# One entry per scrap piece (its rarity name), from the breakdown when given;
+	# callers without a breakdown fall back to anonymous pieces.
+	var units: Array[String] = []
+	if not scrap_breakdown.is_empty():
+		for rarity_name in RARITY_COLORS.keys():
+			for i in int(scrap_breakdown.get(rarity_name, 0)):
+				units.append(rarity_name)
+	else:
+		for i in scrap_total:
+			units.append("")
+
+	# Restored pieces keep their slots; scrap fills what remains (min. one slot).
+	var restored_slots := mini(restored_data.size(), INVENTORY_SLOTS)
+	var scrap_slots := 0
+	if not units.is_empty():
+		scrap_slots = clampi(INVENTORY_SLOTS - restored_slots, 1, units.size())
+	for s in scrap_slots:
+		var is_overflow_slot := s == scrap_slots - 1 and units.size() > scrap_slots
+		var rarity_name := units[s]
+		var color := (
+			SLOT_SCRAP_COLOR
+			if is_overflow_slot or rarity_name.is_empty()
+			else RARITY_COLORS.get(rarity_name, SLOT_SCRAP_COLOR) as Color
+		)
+		var display_name := (
+			"Scrap x%d" % (units.size() - s) if is_overflow_slot else "Scrap"
+		)
+		var scrap_mesh := _make_scrap_heap(color)
+		_set_slot(slot_index, display_name, color, scrap_mesh)
 		_slot_data[slot_index] = {
 			"preview": scrap_mesh,
-			"display_name": "Scrap x%d" % scrap_total,
-			"color": SLOT_SCRAP_COLOR,
+			"display_name": display_name,
+			"color": color,
 			"description": "Unsorted scrap from the yard.",
 			"is_scrap": true,
 		}
@@ -186,6 +202,25 @@ func set_inventory(scrap_total: int, restored_data: Array[Dictionary]) -> void:
 	while slot_index < INVENTORY_SLOTS:
 		_clear_slot(slot_index)
 		slot_index += 1
+
+
+## A little scrap heap (matches the round yard pickups, not a plain cube).
+func _make_scrap_heap(color: Color) -> Node3D:
+	var scrap_mesh := Node3D.new()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	var offsets := [Vector3.ZERO, Vector3(0.28, -0.06, 0.1), Vector3(-0.22, -0.1, -0.12)]
+	var radii := [0.22, 0.16, 0.13]
+	for i in offsets.size():
+		var lump := MeshInstance3D.new()
+		var ball := SphereMesh.new()
+		ball.radius = radii[i]
+		ball.height = radii[i] * 1.6
+		lump.mesh = ball
+		lump.material_override = mat
+		lump.position = offsets[i]
+		scrap_mesh.add_child(lump)
+	return scrap_mesh
 
 
 func _set_slot(index: int, display_name: String, color: Color, preview: Node3D) -> void:

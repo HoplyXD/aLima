@@ -63,7 +63,14 @@ func test_day0_steps_map_sunrise_noon_sunset() -> void:
 	assert_almost_eq(
 		float(SunController.DAY0_PHASES["scan_artifact"]), 0.5, 0.1, "post-clean = noon"
 	)
-	assert_gt(float(SunController.DAY0_PHASES["return_to_shop"]), 0.85, "heading home = sunset")
+	# The Day 0 sunset lands on the yard arrival home (GAME-FIX-005), so the
+	# tricycle ride back sits in late afternoon and entering the shop is dusk.
+	assert_gt(
+		float(SunController.DAY0_PHASES["return_to_shop"]),
+		float(SunController.DAY0_PHASES["deliver_to_buyer"]),
+		"heading home is later than the mall handoff"
+	)
+	assert_gt(float(SunController.DAY0_PHASES["enter_the_shop"]), 0.85, "arriving home = sunset")
 
 
 func test_clock_hours_map_across_the_shop_day() -> void:

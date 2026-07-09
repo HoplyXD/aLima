@@ -33,6 +33,12 @@ func _resolve_list() -> VBoxContainer:
 	return _first_vbox(self)
 
 
+## The live row for a tool id, or null (Day 0 aims the tutorial arrow at it).
+func row_for(tool_id: String) -> ToolRow:
+	var row: Variant = _rows.get(tool_id)
+	return row if row is ToolRow and is_instance_valid(row) else null
+
+
 func _first_vbox(node: Node) -> VBoxContainer:
 	for child in node.get_children():
 		if child is VBoxContainer:
