@@ -65,6 +65,7 @@ func start(lines: Array) -> void:
 	_lines = lines
 	_index = 0
 	show()
+	UiAnimations.fade_to(self, 1.0, 0.2)
 	_show_line()
 
 
@@ -148,15 +149,15 @@ func _advance() -> void:
 
 func _close() -> void:
 	_stop_blink()
+	UiAnimations.fade_to(self, 0.0, 0.18)
+	await get_tree().create_timer(0.18).timeout
 	hide()
 	_lines = []
 	finished.emit()
 
 
 func _start_blink() -> void:
-	_blink_tween = create_tween().set_loops()
-	_blink_tween.tween_property(_continue_indicator, "modulate:a", 0.2, 0.5)
-	_blink_tween.tween_property(_continue_indicator, "modulate:a", 1.0, 0.5)
+	UiAnimations.bob(_continue_indicator, 4.0, 1.0)
 
 
 func _stop_blink() -> void:

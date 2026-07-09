@@ -20,6 +20,7 @@ const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 @onready var _status_label: Label = %StatusLabel
 @onready var _seed_label: Label = %SeedLabel
 @onready var _slot_label: Label = %SlotLabel
+@onready var _root: Control = $Root
 
 var _open: bool = false
 
@@ -31,6 +32,7 @@ func _ready() -> void:
 	_populate_resolutions()
 	_connect_signals()
 	visible = false
+	UiAnimations.add_dust_particles(_root, 24)
 
 
 ## Registers the global input scheme: "back" (Esc) closes/returns out of overlays, and
@@ -103,11 +105,13 @@ func open() -> void:
 	visible = true
 	get_tree().paused = true
 	_refresh()
+	UiAnimations.popup_open(_root, 0.25)
 	_resume_button.grab_focus()
 
 
 func close() -> void:
 	_open = false
+	UiAnimations.popup_close(_root, 0.18)
 	visible = false
 	get_tree().paused = false
 

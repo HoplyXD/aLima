@@ -22,12 +22,14 @@ const MAX_SEED: int = 2147483646
 @export var parallax_smooth: float = 4.0
 
 @onready var _main_menu: VBoxContainer = $MainMenu
+@onready var _main_menu_plaque: Panel = $MainMenuPlaque
 @onready var _new_game_button: Button = $MainMenu/NewGame
 @onready var _continue_button: Button = $MainMenu/Continue
 @onready var _options_button: Button = $MainMenu/Options
 @onready var _quit_button: Button = $MainMenu/Quit
 
 @onready var _slot_menu: VBoxContainer = $SlotMenu
+@onready var _slot_menu_plaque: Panel = $SlotMenuPlaque
 @onready var _slot_buttons: Array[Button] = [
 	$SlotMenu/Slot0,
 	$SlotMenu/Slot1,
@@ -36,6 +38,7 @@ const MAX_SEED: int = 2147483646
 @onready var _slot_back_button: Button = $SlotMenu/Back
 
 @onready var _name_menu: VBoxContainer = $NameMenu
+@onready var _name_menu_plaque: Panel = $NameMenuPlaque
 @onready var _name_edit: LineEdit = $NameMenu/NameEdit
 @onready var _name_back_button: Button = $NameMenu/Back
 @onready var _name_status: Label = $NameMenu/Status
@@ -73,6 +76,9 @@ func _ready() -> void:
 	else:
 		set_process(false)
 
+	UiAnimations.add_dust_particles(self, 32)
+	UiAnimations.popup_open(_main_menu, 0.45)
+
 
 func _process(delta: float) -> void:
 	_time += delta
@@ -104,6 +110,8 @@ func _process(delta: float) -> void:
 func _show_main_menu() -> void:
 	_hide_all_menus()
 	_main_menu.visible = true
+	_main_menu_plaque.visible = true
+	UiAnimations.popup_open(_main_menu, 0.3)
 	_new_game_button.grab_focus()
 	_refresh_continue_button()
 
@@ -111,6 +119,8 @@ func _show_main_menu() -> void:
 func _show_name_menu() -> void:
 	_hide_all_menus()
 	_name_menu.visible = true
+	_name_menu_plaque.visible = true
+	UiAnimations.popup_open(_name_menu, 0.3)
 	_name_edit.text = _pending_player_name
 	_name_status.text = ""
 	_seed_edit.text = ""
@@ -119,8 +129,11 @@ func _show_name_menu() -> void:
 
 func _hide_all_menus() -> void:
 	_main_menu.visible = false
+	_main_menu_plaque.visible = false
 	_slot_menu.visible = false
+	_slot_menu_plaque.visible = false
 	_name_menu.visible = false
+	_name_menu_plaque.visible = false
 
 
 # --- Main menu ----------------------------------------------------------------
@@ -307,6 +320,8 @@ func _show_slot_menu(for_new_game: bool) -> void:
 	_in_new_game_flow = for_new_game
 	_hide_all_menus()
 	_slot_menu.visible = true
+	_slot_menu_plaque.visible = true
+	UiAnimations.popup_open(_slot_menu, 0.3)
 	_refresh_slot_buttons(for_new_game)
 	_slot_back_button.grab_focus()
 

@@ -27,10 +27,12 @@ func open() -> void:
 	_selection.clear()
 	_refresh()
 	visible = true
+	UiAnimations.popup_open(_panel)
 	_submit.grab_focus()
 
 
 func close() -> void:
+	UiAnimations.popup_close(_panel)
 	visible = false
 	closed.emit()
 

@@ -49,6 +49,7 @@ func set_banter_client(c: Object) -> void:
 
 
 @onready var _dim: ColorRect = $Dim
+@onready var _body: PanelContainer = $Dim/Center/Body
 @onready var _home_button: Button = %HomeButton
 @onready var _home: VBoxContainer = %Home
 @onready var _app_grid: GridContainer = %AppGrid
@@ -83,12 +84,18 @@ func open() -> void:
 	# so time keeps flowing while you browse — which lets new buyers arrive over time.
 	if not visible:
 		visible = true
+	UiAnimations.popup_open(_body)
+	UiAnimations.fade_to(_dim, 1.0, 0.2)
+	if _dim.get_node_or_null("DustParticles") == null:
+		UiAnimations.add_dust_particles(_dim, 16)
 	show_home()
 	_home_button.grab_focus()
 
 
 func close() -> void:
 	if visible:
+		UiAnimations.popup_close(_body)
+		UiAnimations.fade_to(_dim, 0.0, 0.15)
 		visible = false
 		_release_pause_if_owned()
 	TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)

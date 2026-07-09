@@ -4,34 +4,41 @@
 
 [sub_resource type="Environment" id="Environment_card"]
 background_mode = 1
-background_color = Color(0.1, 0.09, 0.08, 0)
+background_color = Color(0.09, 0.08, 0.07, 0)
 ambient_light_source = 2
-ambient_light_color = Color(0.6, 0.56, 0.5, 1)
-ambient_light_energy = 0.7
+ambient_light_color = Color(0.62, 0.58, 0.52, 1)
+ambient_light_energy = 0.8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
-bg_color = Color(0.1, 0.1, 0.12, 0.85)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.15, 0.13, 0.1, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.74, 0.56, 0.28, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 content_margin_left = 6.0
 content_margin_top = 6.0
 content_margin_right = 6.0
 content_margin_bottom = 6.0
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 4
 
 [node name="ArtifactCard" type="PanelContainer"]
-custom_minimum_size = Vector2(100, 118)
+custom_minimum_size = Vector2(108, 132)
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 script = ExtResource("1_card")
 
 [node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 5
 
 [node name="PreviewContainer" type="SubViewportContainer" parent="VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(84, 84)
+custom_minimum_size = Vector2(92, 92)
 layout_mode = 2
 stretch = true
 
@@ -39,7 +46,7 @@ stretch = true
 own_world_3d = true
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(84, 84)
+size = Vector2i(92, 92)
 render_target_update_mode = 4
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="VBox/PreviewContainer/Preview"]
@@ -58,13 +65,13 @@ unique_name_in_owner = true
 [node name="Swatch" type="ColorRect" parent="VBox"]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(84, 84)
+custom_minimum_size = Vector2(92, 92)
 layout_mode = 2
 
 [node name="NameLabel" type="Label" parent="VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 autowrap_mode = 2
 text = "Artifact"
@@ -73,5 +80,6 @@ text = "Artifact"
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.72, 0.68, 0.58, 1)
 horizontal_alignment = 1
 text = ""

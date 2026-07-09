@@ -30,9 +30,7 @@ func _ready() -> void:
 func reveal() -> void:
 	if _content == null:
 		return
-	_content.modulate.a = 0.0
-	var tween := create_tween()
-	tween.tween_property(_content, "modulate:a", 1.0, content_fade_duration)
+	UiAnimations.fade_to(_content, 1.0, content_fade_duration)
 
 
 ## Optional progress hook (0.0–1.0). Wire to a ProgressBar/Label here if the design adds one.

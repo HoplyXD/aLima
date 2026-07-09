@@ -42,6 +42,7 @@ var _committed: bool = false
 @onready var _verdict_buttons: HBoxContainer = %VerdictButtons
 @onready var _confirm_button: Button = %ConfirmButton
 @onready var _close_button: Button = %CloseButton
+@onready var _panel: Panel = $Panel
 
 
 func _ready() -> void:
@@ -66,6 +67,7 @@ func open(instance: ObjectInstance) -> void:
 	_committed = false
 	_service = ScannerService.new()
 	visible = true
+	UiAnimations.popup_open(_panel, 0.25)
 	if not _owns_pause:
 		DayClock.request_pause(DayClock.PAUSE_SCANNER)
 		_owns_pause = true
@@ -80,6 +82,7 @@ func open(instance: ObjectInstance) -> void:
 ## Closes the screen and releases pause ownership exactly once.
 func close() -> void:
 	if visible:
+		UiAnimations.popup_close(_panel, 0.18)
 		visible = false
 		_release_pause_if_owned()
 	closed.emit()

@@ -55,6 +55,7 @@ var _selected_tool_uid: String = ""
 @onready var _tabs: TabContainer = %Tabs
 @onready var _status_label: Label = %StatusLabel
 @onready var _close_button: Button = %CloseButton
+@onready var _frame: Panel = $Frame
 
 
 func _ready() -> void:
@@ -68,6 +69,7 @@ func _ready() -> void:
 func open() -> void:
 	if not visible:
 		visible = true
+		UiAnimations.popup_open(_frame, 0.25)
 		if not _owns_pause:
 			DayClock.request_pause(DayClock.PAUSE_STORAGE)
 			_owns_pause = true
@@ -146,9 +148,7 @@ func _maybe_show_day0_drag_dialogue() -> void:
 	if _day0_drag_shown:
 		return
 	_day0_drag_shown = true
-	var blocks := ModelUtils.as_dictionary(
-		TutorialService.get_config().get("bench_tools_dialogue")
-	)
+	var blocks := ModelUtils.as_dictionary(TutorialService.get_config().get("bench_tools_dialogue"))
 	var raw_lines: Variant = blocks.get("drag")
 	if not (raw_lines is Array):
 		return
@@ -175,6 +175,7 @@ func _maybe_show_day0_drag_dialogue() -> void:
 
 func close() -> void:
 	if visible:
+		UiAnimations.popup_close(_frame, 0.18)
 		visible = false
 		_release_pause_if_owned()
 	TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
@@ -867,11 +868,7 @@ func _make_note(text: String) -> Label:
 
 
 func _style_zone(node: Control, color: Color) -> void:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = color
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(8)
-	node.add_theme_stylebox_override("panel", sb)
+	node.add_theme_stylebox_override("panel", UiPalette.manuscript_card_style(color))
 
 
 func _clear(container: Node) -> void:
@@ -996,17 +993,11 @@ class ArtifactSlot:
 	var preview_color: Color = Color.WHITE
 
 	func _ready() -> void:
-		# Empty boxes read as quiet, dashed-dark shelf space.
+		# Empty boxes: dark parchment bronze frame.
 		if artifact_uid.is_empty():
-			var style := StyleBoxFlat.new()
-			style.bg_color = Color(0.14, 0.12, 0.08, 0.7)
-			style.corner_radius_top_left = 8
-			style.corner_radius_top_right = 8
-			style.corner_radius_bottom_right = 8
-			style.corner_radius_bottom_left = 8
-			add_theme_stylebox_override("normal", style)
-			add_theme_stylebox_override("hover", style)
-			add_theme_stylebox_override("pressed", style)
+			add_theme_stylebox_override("normal", UiPalette.inventory_slot_style(&"normal"))
+			add_theme_stylebox_override("hover", UiPalette.inventory_slot_style(&"hover"))
+			add_theme_stylebox_override("pressed", UiPalette.inventory_slot_style(&"normal"))
 			disabled = false  # still a drop target
 			text = ""
 
@@ -1134,11 +1125,11 @@ class ToolSlot:
 	var _highlight_style: StyleBoxFlat
 	var _lit: bool = false
 
-	func setup(min_size: Vector2, base: Color, highlight: Color) -> void:
+	func setup(min_size: Vector2, _base: Color, _highlight: Color) -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		custom_minimum_size = min_size
-		_base_style = _flat(base, Color(0, 0, 0, 0))
-		_highlight_style = _flat(highlight, Color(0.55, 0.9, 0.55, 0.95))
+		_base_style = UiPalette.inventory_slot_style(&"normal")
+		_highlight_style = UiPalette.inventory_slot_style(&"selected")
 		add_theme_stylebox_override("panel", _base_style)
 
 	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
@@ -1173,11 +1164,4 @@ class ToolSlot:
 		_lit = on
 
 	static func _flat(bg: Color, border: Color) -> StyleBoxFlat:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = bg
-		sb.set_corner_radius_all(6)
-		sb.set_content_margin_all(4)
-		if border.a > 0.0:
-			sb.set_border_width_all(2)
-			sb.border_color = border
-		return sb
+		return UiPalette.panel_style(bg, border)

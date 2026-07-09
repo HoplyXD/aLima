@@ -7,6 +7,7 @@ signal closed
 
 var _fragment_id: String = ""
 
+@onready var _panel_container: PanelContainer = $CanvasLayer/PanelContainer
 @onready var _title_label: Label = %TitleLabel
 @onready var _name_label: Label = %NameLabel
 @onready var _origin_label: Label = %OriginLabel
@@ -22,6 +23,8 @@ func _ready() -> void:
 	_error_label.visible = false
 	if _continue_button != null:
 		_continue_button.pressed.connect(_on_continue)
+	if get_node_or_null("DustParticles") == null:
+		UiAnimations.add_dust_particles(self, 20)
 
 
 func present(fragment: Fragment, instance: ObjectInstance) -> void:
@@ -55,6 +58,7 @@ func present(fragment: Fragment, instance: ObjectInstance) -> void:
 		_condition_label.text = "Condition: %d%%" % condition
 	if _progress_label != null:
 		_progress_label.text = "Fragments: %d / %d" % [seated_count, total]
+	UiAnimations.popup_open(_panel_container)
 
 
 func show_loading(is_loading: bool) -> void:

@@ -18,6 +18,7 @@ const ZOOM_STEP: float = 0.25
 const DRAG_RADIANS_PER_PIXEL: float = 0.012
 
 var _dim: ColorRect
+var _frame: PanelContainer
 var _viewport_container: SubViewportContainer
 var _viewport: SubViewport
 var _camera: Camera3D
@@ -33,16 +34,23 @@ func _ready() -> void:
 	_service = RestorationService.new()
 
 	_dim = ColorRect.new()
-	_dim.color = Color(0, 0, 0, 0.6)
+	_dim.color = Color(0.05, 0.035, 0.025, 0.7)
 	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	_dim.gui_input.connect(_on_dim_input)
 	add_child(_dim)
+	if _dim.get_node_or_null("DustParticles") == null:
+		UiAnimations.add_dust_particles(_dim, 18)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
+
+	_frame = PanelContainer.new()
+	_frame.custom_minimum_size = Vector2(660, 660)
+	_frame.add_theme_stylebox_override("panel", UiPalette.wooden_panel_style())
+	center.add_child(_frame)
 
 	_viewport_container = SubViewportContainer.new()
 	_viewport_container.custom_minimum_size = Vector2(640, 640)
@@ -88,12 +96,16 @@ func open(uid: String) -> void:
 	_service.present_object(_object, inst, template, uid.hash())
 	_camera.position.z = CAMERA_REST_Z
 	visible = true
+	UiAnimations.popup_open(_frame)
+	UiAnimations.fade_to(_dim, 1.0, 0.2)
 	DayClock.request_pause(DayClock.PAUSE_SHOWCASE)
 
 
 func close() -> void:
 	if not visible:
 		return
+	UiAnimations.popup_close(_frame)
+	UiAnimations.fade_to(_dim, 0.0, 0.15)
 	visible = false
 	DayClock.release_pause(DayClock.PAUSE_SHOWCASE)
 	closed.emit()

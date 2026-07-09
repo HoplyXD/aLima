@@ -31,6 +31,7 @@ var _owns_pause: bool = false
 var _completed: bool = false
 
 var _backdrop: ColorRect
+var _panel: PanelContainer
 var _portrait: TextureRect
 var _photo: ColorRect
 var _title_label: Label
@@ -43,6 +44,8 @@ func _ready() -> void:
 	layer = 80
 	visible = false
 	_build_ui()
+	if _backdrop.get_node_or_null("DustParticles") == null:
+		UiAnimations.add_dust_particles(_backdrop, 20)
 
 
 ## Opens the showcase for a route beat. `beat` is the authored beat dict
@@ -69,6 +72,7 @@ func open(route: CharacterRoute, beat: Dictionary) -> void:
 			_portrait.texture = tex
 
 	visible = true
+	UiAnimations.popup_open(_panel)
 	if not _owns_pause:
 		DayClock.request_pause(DayClock.PAUSE_SHOWCASE)
 		_owns_pause = true
@@ -94,6 +98,7 @@ func advance() -> void:
 
 func close() -> void:
 	if visible:
+		UiAnimations.popup_close(_panel)
 		visible = false
 		_release_pause_if_owned()
 	closed.emit()
@@ -136,7 +141,7 @@ func _release_pause_if_owned() -> void:
 
 func _build_ui() -> void:
 	_backdrop = ColorRect.new()
-	_backdrop.color = Color(0, 0, 0, 0.78)
+	_backdrop.color = Color(0.05, 0.035, 0.025, 0.78)
 	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_backdrop)
@@ -145,14 +150,15 @@ func _build_ui() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(760, 520)
-	center.add_child(panel)
+	_panel = PanelContainer.new()
+	_panel.custom_minimum_size = Vector2(760, 520)
+	_panel.add_theme_stylebox_override("panel", UiPalette.wooden_panel_style())
+	center.add_child(_panel)
 
 	var margin := MarginContainer.new()
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, 28)
-	panel.add_child(margin)
+	_panel.add_child(margin)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 16)
@@ -160,6 +166,7 @@ func _build_ui() -> void:
 
 	_title_label = Label.new()
 	_title_label.add_theme_font_size_override("font_size", 28)
+	_title_label.add_theme_color_override("font_color", UiPalette.ANTIQUE_GOLD)
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_title_label)
 
@@ -188,14 +195,22 @@ func _build_ui() -> void:
 	_summary_label.bbcode_enabled = true
 	_summary_label.fit_content = true
 	_summary_label.custom_minimum_size = Vector2(0, 90)
+	_summary_label.add_theme_color_override("default_color", UiPalette.BONE)
 	col.add_child(_summary_label)
 
 	_caption_label = Label.new()
 	_caption_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_caption_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_caption_label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	col.add_child(_caption_label)
 
 	_primary_button = Button.new()
 	_primary_button.custom_minimum_size = Vector2(0, 48)
+	_primary_button.add_theme_stylebox_override("normal", UiPalette.bronze_button_style(&"normal"))
+	_primary_button.add_theme_stylebox_override("hover", UiPalette.bronze_button_style(&"hover"))
+	_primary_button.add_theme_stylebox_override(
+		"pressed", UiPalette.bronze_button_style(&"pressed")
+	)
+	_primary_button.add_theme_stylebox_override("focus", UiPalette.bronze_button_style(&"hover"))
 	_primary_button.pressed.connect(advance)
 	col.add_child(_primary_button)

@@ -2,12 +2,24 @@
 
 [ext_resource type="Script" uid="uid://crxpsad5lskcv" path="res://scenes/ui/echo_hud.gd" id="1_8g3wj"]
 [ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_i0krg"]
-[ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="3_gqxa3"]
+[ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="3_gqxa3"]
 [ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="4_gqxa3"]
 [ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="5_gqxa3"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vvsy4"]
-texture = ExtResource("2_i0krg")
+[sub_resource type="StyleBoxFlat" id="StyleBoxTexture_vvsy4"]
+bg_color = Color(0.13, 0.09, 0.06, 0.92)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.55, 0.38, 0.2, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
 
 [node name="EchoHud" type="CanvasLayer" unique_id=397439411]
 script = ExtResource("1_8g3wj")
@@ -45,6 +57,7 @@ theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=2011515508]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_fonts/font = ExtResource("4_gqxa3")
 theme_override_font_sizes/font_size = 52
 text = "Cultural Echo"

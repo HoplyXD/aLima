@@ -59,9 +59,20 @@ ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.55, 0.46, 1)
 ambient_light_energy = 0.95
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yh0ut"]
-texture = ExtResource("35_yh0ut")
-expand_margin_bottom = 48.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yh0ut"]
+content_margin_left = 16.0
+content_margin_top = 12.0
+content_margin_right = 16.0
+content_margin_bottom = 12.0
+bg_color = Color(0.13, 0.09, 0.06, 0.93)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 6
+border_color = Color(0.55, 0.38, 0.2, 0.9)
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 8
+shadow_offset = Vector2(0, 4)
 
 [node name="Shop" type="Node3D" unique_id=395316236]
 script = ExtResource("5_ctrl")
@@ -456,7 +467,7 @@ anchor_right = 1.0
 offset_right = -1.0
 offset_bottom = 130.0
 grow_horizontal = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_yh0ut")
+theme_override_styles/panel = SubResource("StyleBoxFlat_yh0ut")
 
 [node name="Margin" type="MarginContainer" parent="HUD/TopPanel" unique_id=1933300548]
 layout_mode = 1
@@ -481,8 +492,9 @@ theme_override_constants/separation = 0
 
 [node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=1773867073]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_fonts/font = ExtResource("36_6tp7w")
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 36
 text = "Unrestored"
 
 [node name="UnrestoredScroll" type="ScrollContainer" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=737087264]
@@ -505,8 +517,9 @@ theme_override_constants/separation = 0
 
 [node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=2121423419]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_fonts/font = ExtResource("36_6tp7w")
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 36
 text = "Restored (click to view)"
 
 [node name="RestoredScroll" type="ScrollContainer" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=1567502996]
@@ -534,24 +547,27 @@ layout_mode = 2
 [node name="QuestCount" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=43241348]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)
 theme_override_fonts/font = ExtResource("36_6tp7w")
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 34
 text = "Quest: 0"
 horizontal_alignment = 2
 
 [node name="DayLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=767463733]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)
 theme_override_fonts/font = ExtResource("36_6tp7w")
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 32
 text = "Day 1 of 5"
 horizontal_alignment = 2
 
 [node name="ClockLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1483693581]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_fonts/font = ExtResource("36_6tp7w")
-theme_override_font_sizes/font_size = 41
+theme_override_font_sizes/font_size = 38
 text = "7:00 AM"
 horizontal_alignment = 2
 

@@ -63,11 +63,13 @@ const ZOOM_NEAR_MARGIN: float = 0.15
 ## Distance one mouse-wheel notch moves the artifact.
 const ZOOM_WHEEL_STEP: float = 0.25
 ## Stage 2 — once the artifact can't come any closer, further zoom-in TIGHTENS the camera FOV
-## (a lens zoom) down to MIN_FOV; zooming back out widens the FOV before the artifact pulls away.
+## (a lens zoom) down to min_fov; zooming back out widens the FOV before the artifact pulls away.
 ## Exported so they can be drag-tuned live in the inspector while the scene plays.
-@export var MIN_FOV: float = 22.0  ## Tightest lens zoom (smaller = more magnified).
-@export var FOV_DEGREES_PER_UNIT: float = 26.0  ## FOV change per notch; higher = snappier lens zoom.
-@export var FOV_LEAN_MAX: float = 0.55  ## How far the view leans toward the cursor at full lens zoom.
+@export var min_fov: float = 22.0  ## Tightest lens zoom (smaller = more magnified).
+@export var fov_degrees_per_unit: float = 26.0
+## FOV change per notch; higher = snappier lens zoom.
+@export var fov_lean_max: float = 0.55
+## How far the view leans toward the cursor at full lens zoom.
 ## Middle-mouse pan: drag the (lens-zoomed) view around. Speed is world units of camera offset
 ## per pixel dragged; the pan is clamped so the artifact can't be shoved off-screen.
 const CAMERA_PAN_SPEED: float = 0.004
@@ -138,7 +140,7 @@ var _object_scene_path: String = "res://scenes/restoration/restoration_artifact.
 var _zoom_rest_z: float = 0.0
 var _zoom_z: float = 0.0
 ## The camera's authored FOV (the widest / un-zoomed lens), captured on ready. Stage-2 lens zoom
-## tightens from here toward MIN_FOV.
+## tightens from here toward min_fov.
 var _default_fov: float = 70.0
 ## Last cursor position (normalised -1..1 from viewport centre) used to bias the stage-2 lens zoom
 ## toward where the mouse is, so it magnifies that spot rather than the screen centre.
@@ -186,6 +188,7 @@ var _cursor_tilt: float = 0.0
 @onready var _reset_button: Button = %ResetButton
 @onready var _scan_button: Button = %ScanButton
 @onready var _close_button: Button = %CloseButton
+@onready var _hud: Control = $HUD
 @onready var _journal_button: Button = %JournalButton
 @onready var _phone_button: Button = %PhoneButton
 @onready var _storage_button: Button = %StorageButton
@@ -201,7 +204,7 @@ func _ready() -> void:
 	_zoom_rest_z = _object.position.z
 	_zoom_z = _zoom_rest_z
 	if is_instance_valid(_camera):
-		_default_fov = _camera.fov  # the lens-zoom stage tightens FOV from here down to MIN_FOV
+		_default_fov = _camera.fov  # the lens-zoom stage tightens FOV from here down to min_fov
 	_scanner_screen = SCANNER_SCREEN_SCENE.instantiate()
 	add_child(_scanner_screen)
 	_scanner_screen.closed.connect(_on_scanner_closed)
@@ -258,6 +261,8 @@ func _update_clock() -> void:
 func open() -> void:
 	visible = true
 	_is_open = true
+	_hud.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	UiAnimations.fade_to(_hud, 1.0, 0.25)
 	# The bench no longer pauses the in-game clock (like the phone) — time keeps moving
 	# while you restore. Only dialogue and the pause menu freeze time.
 	set_process(true)
@@ -289,6 +294,7 @@ func close() -> void:
 		# Preserve the current artifact's cleaned spots so reopening restores them.
 		_cache_current_dirt()
 		_is_open = false
+		UiAnimations.fade_to(_hud, 0.0, 0.18)
 		visible = false
 		set_process(false)
 		TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
@@ -427,9 +433,7 @@ func _maybe_show_bench_lesson_dialogue(stage: String) -> void:
 	if _bench_lesson_shown.get(stage, false):
 		return
 	_bench_lesson_shown[stage] = true
-	var blocks := ModelUtils.as_dictionary(
-		TutorialService.get_config().get("bench_tools_dialogue")
-	)
+	var blocks := ModelUtils.as_dictionary(TutorialService.get_config().get("bench_tools_dialogue"))
 	var raw_lines: Variant = blocks.get(stage)
 	if not (raw_lines is Array):
 		return
@@ -1356,7 +1360,9 @@ func _refresh(inst: ObjectInstance, template: ScrapObjectTemplate) -> void:
 	# The scan button is always available; the scan itself reports "too dirty" below the threshold.
 	_scan_button.visible = true
 	if is_clean:
-		_clasp_prompt.text = "%s is clean — scan and judge, or click the clasp to open." % template.display_name
+		_clasp_prompt.text = (
+			"%s is clean — scan and judge, or click the clasp to open." % template.display_name
+		)
 	elif is_open:
 		_clasp_prompt.visible = false
 
@@ -1483,7 +1489,7 @@ func rotate_view(delta_yaw: float, delta_pitch: float) -> void:
 
 ## Two-stage zoom. STAGE 1: the artifact moves toward the camera (amount > 0 = in) up to the dynamic
 ## near limit. STAGE 2: once it can't get closer, the leftover tightens the camera FOV (a lens zoom)
-## down to MIN_FOV. Zooming out reverses it — FOV widens back to default first, then the
+## down to min_fov. Zooming out reverses it — FOV widens back to default first, then the
 ## artifact pulls away. The camera position never moves; only the artifact distance and the FOV
 ## change.
 func zoom_by(amount: float, cursor_pos: Vector2 = Vector2.INF) -> void:
@@ -1503,13 +1509,13 @@ func zoom_by(amount: float, cursor_pos: Vector2 = Vector2.INF) -> void:
 			_zoom_z += used
 			remaining -= used
 		if remaining > 0.0 and is_instance_valid(_camera):
-			_set_fov(_camera.fov - remaining * FOV_DEGREES_PER_UNIT)
+			_set_fov(_camera.fov - remaining * fov_degrees_per_unit)
 	else:
 		# Zoom OUT: widen FOV back to default first, then pull the artifact away.
 		if is_instance_valid(_camera) and _camera.fov < _default_fov:
-			var fov_units := (_default_fov - _camera.fov) / FOV_DEGREES_PER_UNIT
+			var fov_units := (_default_fov - _camera.fov) / fov_degrees_per_unit
 			var used := minf(-remaining, fov_units)
-			_set_fov(_camera.fov + used * FOV_DEGREES_PER_UNIT)
+			_set_fov(_camera.fov + used * fov_degrees_per_unit)
 			remaining += used
 		if remaining < 0.0:
 			_zoom_z = maxf(ZOOM_BACK, _zoom_z + remaining)
@@ -1522,7 +1528,7 @@ func zoom_by(amount: float, cursor_pos: Vector2 = Vector2.INF) -> void:
 func _set_fov(fov: float) -> void:
 	if not is_instance_valid(_camera):
 		return
-	_camera.fov = clampf(fov, MIN_FOV, _default_fov)
+	_camera.fov = clampf(fov, min_fov, _default_fov)
 	# Pan is a stage-2-only affordance: the moment the lens widens all the way back to the
 	# default FOV (dropping to stage 1), snap the camera home by clearing any manual pan.
 	if _camera.fov >= _default_fov:
@@ -1543,15 +1549,16 @@ func _apply_camera_offset() -> void:
 	if not is_instance_valid(_camera):
 		return
 	var zoom_t := clampf(
-		(_default_fov - _camera.fov) / maxf(0.001, _default_fov - MIN_FOV), 0.0, 1.0
+		(_default_fov - _camera.fov) / maxf(0.001, _default_fov - min_fov), 0.0, 1.0
 	)
 	# Manual middle-mouse pan applies at every zoom level (the zoom-to-cursor lean is added on top,
 	# scaled by how far the lens is zoomed).
-	_camera.h_offset = _fov_lean_ndc.x * FOV_LEAN_MAX * zoom_t + _camera_pan.x
-	_camera.v_offset = _fov_lean_ndc.y * FOV_LEAN_MAX * zoom_t + _camera_pan.y
+	_camera.h_offset = _fov_lean_ndc.x * fov_lean_max * zoom_t + _camera_pan.x
+	_camera.v_offset = _fov_lean_ndc.y * fov_lean_max * zoom_t + _camera_pan.y
 
 
-## Clamps the manual pan to a fixed, symmetric world-unit radius around the camera's original centre.
+## Clamps the manual pan to a fixed, symmetric world-unit radius
+## around the camera's original centre.
 ## The limit does NOT vary with zoom or FOV.
 func _clamp_pan() -> void:
 	if not is_instance_valid(_camera):

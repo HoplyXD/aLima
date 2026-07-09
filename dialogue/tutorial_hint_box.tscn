@@ -1,39 +1,40 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://3sm0whvxqhy8"]
 
-[ext_resource type="Script" path="res://dialogue/tutorial_hint_box.gd" id="1_hintbox"]
+[ext_resource type="Script" uid="uid://sels3yficpdu" path="res://dialogue/tutorial_hint_box.gd" id="1_hintbox"]
 [ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="2_theme"]
+[ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="3_n18dh"]
 
 [sub_resource type="StyleBoxFlat" id="Style_hint_panel"]
-bg_color = Color(0.2, 0.17, 0.12, 0.94)
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.18, 0.15, 0.11, 0.95)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.74, 0.56, 0.28, 0.7)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-content_margin_left = 12.0
-content_margin_top = 10.0
-content_margin_right = 12.0
-content_margin_bottom = 10.0
-shadow_color = Color(0, 0, 0, 0.35)
-shadow_size = 4
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 8
 
 [sub_resource type="StyleBoxFlat" id="Style_hint_circle"]
-bg_color = Color(0.9, 0.85, 0.74, 1)
+bg_color = Color(0.22, 0.18, 0.13, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.74, 0.56, 0.28, 0.9)
-corner_radius_top_left = 24
-corner_radius_top_right = 24
-corner_radius_bottom_right = 24
-corner_radius_bottom_left = 24
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
 
-[node name="TutorialHintBox" type="Control"]
+[node name="TutorialHintBox" type="Control" unique_id=1116456476]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -44,26 +45,28 @@ mouse_filter = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_hintbox")
 
-[node name="HintPanel" type="PanelContainer" parent="."]
+[node name="HintPanel" type="PanelContainer" parent="." unique_id=340216997]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = -1
 anchor_left = 1.0
+anchor_top = 0.059000004
 anchor_right = 1.0
+anchor_bottom = 0.059000004
 offset_left = -616.0
-offset_top = 64.0
+offset_top = 57.279995
 offset_right = -16.0
-offset_bottom = 196.0
+offset_bottom = 172.28
 grow_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_hint_panel")
 
-[node name="HBox" type="HBoxContainer" parent="HintPanel"]
+[node name="HBox" type="HBoxContainer" parent="HintPanel" unique_id=1879803654]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 14
 
-[node name="PortraitCircle" type="Panel" parent="HintPanel/HBox"]
+[node name="PortraitCircle" type="Panel" parent="HintPanel/HBox" unique_id=1727376374]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
@@ -71,7 +74,7 @@ size_flags_vertical = 4
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_hint_circle")
 
-[node name="PortraitInitial" type="Label" parent="HintPanel/HBox/PortraitCircle"]
+[node name="PortraitInitial" type="Label" parent="HintPanel/HBox/PortraitCircle" unique_id=122029521]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -79,13 +82,13 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.08, 0.07, 0.06, 1)
+theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)
 theme_override_font_sizes/font_size = 26
+text = "?"
 horizontal_alignment = 1
 vertical_alignment = 1
-text = "?"
 
-[node name="PortraitTexture" type="TextureRect" parent="HintPanel/HBox/PortraitCircle"]
+[node name="PortraitTexture" type="TextureRect" parent="HintPanel/HBox/PortraitCircle" unique_id=1315788063]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -97,23 +100,25 @@ grow_vertical = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="VBox" type="VBoxContainer" parent="HintPanel/HBox"]
+[node name="VBox" type="VBoxContainer" parent="HintPanel/HBox" unique_id=1461733133]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="SpeakerLabel" type="Label" parent="HintPanel/HBox/VBox"]
+[node name="SpeakerLabel" type="Label" parent="HintPanel/HBox/VBox" unique_id=712245015]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.72, 0.36, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_fonts/font = ExtResource("3_n18dh")
+theme_override_font_sizes/font_size = 37
 text = "Speaker"
 
-[node name="HintText" type="Label" parent="HintPanel/HBox/VBox"]
+[node name="HintText" type="Label" parent="HintPanel/HBox/VBox" unique_id=1809985492]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 22
-autowrap_mode = 3
+theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)
+theme_override_font_sizes/font_size = 30
 text = "Hint text"
+autowrap_mode = 3
