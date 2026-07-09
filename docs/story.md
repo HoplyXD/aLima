@@ -77,7 +77,7 @@ physical — people talk while their hands are busy.
   - **cultural object nouns** that are also in-game item names — *ampaw*, *santo*, *baul*,
     *banga*, *bahay-na-bato*;
   - **two concept words, glossed where they appear** — *alima* (hand / five; the title) and
-    *dulom* (Nong Lave's word for the patina, "the old dark");
+	*dulom* (Nong Lave's word for the patina, "the old dark");
   - **light interjections** natural to Philippine English — "Oy!", "Ay—", "…ha?".
 
   If the team wants those trimmed as well, it is a find-and-replace-scale edit to this document.
@@ -911,13 +911,13 @@ team directed that all dialogue be written in English for implementability; this
 converted (English sentences throughout; only the §1.4 retained terms remain). Two consequences to
 resolve, not silently absorb:
   1. **GDD parity (§4-M).** `README.md` §3 promises "Kinaray-a and Hiligaynon cultural lines,
-     always subtitled," and §10/§12 promise native-speaker-reviewed Kinaray-a lines. The team must
-     either update the GDD/PRD wording to match the English-dialogue decision (e.g., narrowing the
-     promise to the Voice-band audio + retained cultural terms) or plan a dialect re-localization
-     pass later with native speakers. A product promise must not be silently downgraded.
+	 always subtitled," and §10/§12 promise native-speaker-reviewed Kinaray-a lines. The team must
+	 either update the GDD/PRD wording to match the English-dialogue decision (e.g., narrowing the
+	 promise to the Voice-band audio + retained cultural terms) or plan a dialect re-localization
+	 pass later with native speakers. A product promise must not be silently downgraded.
   2. **Data catch-up.** The authored dialogue in `data/routes/routes.json` still contains the
-     Hiligaynon/Kinaray-a mix. The English renderings in this document are the canonical
-     replacements; apply them to data at P15.1 together with C1–C3.
+	 Hiligaynon/Kinaray-a mix. The English renderings in this document are the canonical
+	 replacements; apply them to data at P15.1 together with C1–C3.
 
 **N1 — Kinship canonized (new decision, team may revise).** This bible fixes: Yuyu = the player's
 grand-uncle, the elder brother of **Lola** (the player's grandmother, who ran the shop and coined
@@ -945,9 +945,9 @@ decal sets, tools, and `deliverable: false` where appropriate (following the Aun
 
 - [ ] Team read-through: flow, beats, endings, item web approved.
 - [ ] Cultural review of retained terms, folklore framing, material-culture depictions, and the
-      Voice-band Kinaray-a audio phrases (record in `docs/reviews/`).
+	  Voice-band Kinaray-a audio phrases (record in `docs/reviews/`).
 - [ ] C6 resolution: update the GDD/PRD language promise (or schedule a dialect re-localization
-      pass), and apply the English dialogue to `data/routes/routes.json` at P15.1.
+	  pass), and apply the English dialogue to `data/routes/routes.json` at P15.1.
 - [ ] C1–C3 data updates scheduled into Phase 15 implementation.
 - [ ] D1 artifact lock → revisit §4.4, §9.1, §9.3 for the locked artifact's specifics.
 

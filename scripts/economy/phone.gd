@@ -10,8 +10,22 @@ extends CanvasLayer
 
 signal closed
 
+const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
+
+## Day 0 (TUT): pointer-claim identity for the sell-flow arrow, and the controls
+## the arrow chains through (Marketplace app -> List -> Message). See
+## TutorialService.set_pointer_claim; this outranks the bench's claim (10).
+const TUTORIAL_POINTER_SOURCE := "phone"
+const TUTORIAL_POINTER_PRIORITY := 20
+
 var _owns_pause: bool = false
 var _current_app: String = ""
+
+var _market_app_button: Button = null
+var _tutorial_list_button: Button = null
+var _tutorial_message_button: Button = null
+var _tutorial_banter_shown: bool = false
+var _tutorial_dialogue: DialogueBox = null
 
 # Marketplace sub-navigation: "home" (buy + sell list), "buyers" (pick a buyer for
 # the listed item), "haggle" (negotiate with the chosen buyer).
@@ -77,11 +91,76 @@ func close() -> void:
 	if visible:
 		visible = false
 		_release_pause_if_owned()
+	TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
 	closed.emit()
 
 
 func _exit_tree() -> void:
+	TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
 	_release_pause_if_owned()
+
+
+# --- Day 0 pointer (TUT) -------------------------------------------------------
+
+
+## Steers the tutorial arrow through the sell flow while the phone is open:
+## home -> the Marketplace app, market home -> List, buyer picker -> Message,
+## haggle -> hidden (the banter dialogue explains that part instead).
+func _process(_delta: float) -> void:
+	if not visible or not TutorialService.is_tutorial_active():
+		return
+	if TutorialService.current_step_id() != "list_and_sell":
+		TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
+		return
+	var target: Variant = null
+	if _current_app.is_empty():
+		target = _market_app_button
+	elif _current_app == "marketplace":
+		match _market_view:
+			"home":
+				target = _tutorial_list_button
+			"buyers":
+				target = _tutorial_message_button
+			"haggle":
+				target = TutorialService.POINTER_HIDE
+	if target == null:
+		TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
+	else:
+		TutorialService.set_pointer_claim(
+			TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, target
+		)
+
+
+## Day 0 (TUT): the first time the player opens a buyer chat, Yuyu explains the
+## banter (lines authored in day0_script.json config.banter_dialogue).
+func _maybe_show_tutorial_banter_dialogue() -> void:
+	if _tutorial_banter_shown or not TutorialService.is_tutorial_active():
+		return
+	if TutorialService.current_step_id() != "list_and_sell":
+		return
+	_tutorial_banter_shown = true
+	var lines: Array = []
+	var raw_lines: Variant = TutorialService.get_config().get("banter_dialogue")
+	if not (raw_lines is Array):
+		return
+	for raw in raw_lines:
+		if raw is Dictionary:
+			var speaker_id := ModelUtils.as_string((raw as Dictionary).get("speaker"), "yuyu")
+			(
+				lines
+				. append(
+					{
+						"name": TutorialHintBox.speaker_display_name(speaker_id),
+						"text": ModelUtils.as_string((raw as Dictionary).get("text")),
+					}
+				)
+			)
+	if lines.is_empty():
+		return
+	if _tutorial_dialogue == null:
+		_tutorial_dialogue = DIALOGUE_BOX_SCENE.instantiate()
+		add_child(_tutorial_dialogue)
+	_tutorial_dialogue.start(lines)
 
 
 func _release_pause_if_owned() -> void:
@@ -162,7 +241,8 @@ func _build_app_grid() -> void:
 	for child in _app_grid.get_children():
 		child.queue_free()
 	_app_grid.add_child(_make_app_icon("Local PH\nTools Shop", "tools_shop", false))
-	_app_grid.add_child(_make_app_icon("Marketplace", "marketplace", false))
+	_market_app_button = _make_app_icon("Marketplace", "marketplace", false)
+	_app_grid.add_child(_market_app_button)
 	# The flashlight is an offline app that works even during a brownout.
 	_app_grid.add_child(_make_app_icon("Flashlight", "flashlight", false))
 
@@ -239,6 +319,7 @@ func _render_marketplace_offline() -> void:
 
 
 func _render_market_home() -> void:
+	_tutorial_list_button = null
 	var money := Label.new()
 	money.text = "Money: ₱%d" % GameState.save_state.loop.money
 	money.add_theme_font_size_override("font_size", 18)
@@ -324,6 +405,9 @@ func _make_sell_row(inst: ObjectInstance) -> Control:
 	var uid := inst.uid
 	list_button.pressed.connect(func() -> void: open_buyers(uid))
 	row.add_child(list_button)
+	# Day 0 (TUT): the sell-flow arrow aims at the first List button.
+	if _tutorial_list_button == null:
+		_tutorial_list_button = list_button
 	return row
 
 
@@ -347,6 +431,7 @@ func open_buyers(uid: String) -> void:
 
 
 func _render_buyer_picker() -> void:
+	_tutorial_message_button = null
 	_app_content.add_child(_make_back_button())
 	var template := DataRepository.singleton().get_template(_sold_template_id())
 	var title := Label.new()
@@ -419,6 +504,9 @@ func _make_buyer_row(persona: BuyerPersona) -> Control:
 	var persona_id := persona.id
 	talk.pressed.connect(func() -> void: begin_haggle(persona_id))
 	row.add_child(talk)
+	# Day 0 (TUT): the sell-flow arrow aims at the first Message button.
+	if _tutorial_message_button == null:
+		_tutorial_message_button = talk
 	return row
 
 
@@ -433,6 +521,7 @@ func begin_haggle(persona_id: String) -> void:
 		_back_to_market_home()
 		return
 	_market_view = "haggle"
+	_maybe_show_tutorial_banter_dialogue()
 	# Probe the backend once per haggle entry (online mode only); skip in headless so tests
 	# never make real HTTP calls, and skip entirely offline since the backend isn't used.
 	if (

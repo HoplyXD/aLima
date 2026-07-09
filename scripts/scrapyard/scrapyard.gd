@@ -6,7 +6,7 @@ extends Node3D
 ##   - Collision: Godot-side StaticBody3D floor + perimeter walls.
 ##   - Anchors: permanent Marker3D/Area3D gameplay points that survive an art swap.
 ##
-## The player is spawned at PlayerSpawn, the return door uses the same
+## The player is spawned at PlayerGateSpawn, the return door uses the same
 ## Interactable3D component as the shop door, and the day clock keeps ticking
 ## while the yard is loaded.
 ##
@@ -50,8 +50,8 @@ const INSPECTION_OVERLAY_SCENE := preload("res://scenes/ui/item_inspection_overl
 ## of separate bodies, which matters on low-end devices and the web target.
 @export var merge_map_collision: bool = true
 
-@onready var _player_spawn: Marker3D = $Anchors/PlayerSpawn
-@onready var _player_door_exit: Marker3D = $Anchors/PlayerDoorExit
+@onready var _player_spawn: Marker3D = $Anchors/PlayerGateSpawn
+@onready var _player_door_exit: Marker3D = $Anchors/PlayerDoorSpawn
 @onready var _door_return: Interactable3D = $Anchors/DoorReturn
 @onready var _ayla_anchor: Marker3D = $Anchors/AylaAnchor
 @onready var _ayla_sprite: Sprite3D = $Anchors/AylaAnchor/Ayla
@@ -178,10 +178,15 @@ func _spawn_player() -> void:
 	add_child(_player)
 	if _hud != null:
 		_player.scrap_prompt_changed.connect(_hud.set_prompt)
-	# Leaving the SHOP always drops the player at the door exit (even during the Day 0 tutorial), so
-	# stepping out is consistent. Any other arrival (from the title / another location) uses the gate.
+	# Only a genuine shop exit drops the player at the door. Every other arrival —
+	# the Day 0 opening (title → yard; previous_space still holds its SHOP default)
+	# and any tricycle return from another location — uses the gate spawn.
 	var spawn_point := _player_spawn
-	if SpaceManager.previous_space == SpaceManager.Space.SHOP and _player_door_exit != null:
+	if (
+		SpaceManager.previous_space == SpaceManager.Space.SHOP
+		and not SpaceManager.came_from_title
+		and _player_door_exit != null
+	):
 		spawn_point = _player_door_exit
 	if spawn_point != null:
 		_player.global_position = spawn_point.global_position

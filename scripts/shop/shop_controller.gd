@@ -358,7 +358,9 @@ func _attach_card_preview(uid: String, card: ArtifactCard) -> void:
 	var scene: PackedScene = ShopArtifactScenes.scene_for(template.id, RESTORATION_ARTIFACT_SCENE)
 	var preview: RestorationObject3D = scene.instantiate()
 	card.attach_preview(preview)  # in-tree first, so geometry builds in the card's world
-	service.present_object(preview, inst, template, uid.hash())
+	# Bench seed formula (restoration_view._artifact_seed) so the preview's condition
+	# mix matches what the player will actually clean.
+	service.present_object(preview, inst, template, uid.hash() ^ (GameState.loop_index * 104729))
 
 
 func _update_clock_display() -> void:
@@ -414,6 +416,10 @@ func _on_door_pressed() -> void:
 		_visitor2.visible = false
 		_alya_delivering = true
 		_visitor.texture = ALYA_PORTRAIT
+		# Day 0 (TUT): the door has been answered — suppress the hint arrow through
+		# Alya's greeting and the triage screen (released in _on_triage_closed).
+		if TutorialService.is_tutorial_active():
+			TutorialService.set_pointer_claim("shop_door", 30, TutorialService.POINTER_HIDE)
 		var lines: Array = []
 		if _ayla_source == AylaSource.DAILY:
 			lines = [
@@ -899,6 +905,8 @@ func _on_ayla_sort_ready(_day: int, _hour: int) -> void:
 
 
 func _on_triage_closed() -> void:
+	# Day 0 (TUT): the delivery flow is over — the hint arrow may aim again.
+	TutorialService.clear_pointer_claim("shop_door")
 	_set_interactables_enabled(true)
 	_refresh_ui()
 	_refresh_ayla_knock()

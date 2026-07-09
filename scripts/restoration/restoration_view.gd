@@ -119,11 +119,11 @@ var _dirt_cache: Dictionary = {}
 ## pattern itself regenerates deterministically from the instance seed).
 var _overlay_cache: Dictionary = {}
 ## Auto-finish rule (REST): once the surface is ≥95% clean AND has been so for AUTO_FINISH_HOLD_S
-## real seconds, the next clean stroke snaps to 100%; ≥98% snaps immediately. This timestamps when
+## real seconds, the next clean stroke snaps to 100%; ≥99% snaps immediately. This timestamps when
 ## the CURRENT artifact first crossed 95% in the session (-1 = not yet / fell back below 95%).
 const AUTO_FINISH_HOLD_S: float = 30.0
 const AUTO_FINISH_NEAR: float = 0.95
-const AUTO_FINISH_SNAP: float = 0.98
+const AUTO_FINISH_SNAP: float = 0.99
 var _overlay_at95_ms: int = -1
 var _scanner_screen: ScannerScreen
 var _journal_viewport: BookViewport
@@ -280,6 +280,7 @@ func close() -> void:
 		_is_open = false
 		visible = false
 		set_process(false)
+		TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
 		if _cursor_tool != null:
 			_cursor_tool.visible = false  # its CanvasLayer is independent of this view's visibility
 		_set_os_cursor_hidden(false)  # restore the pointer the bench may have hidden
@@ -329,6 +330,54 @@ func _on_scan_pressed() -> void:
 		return
 	# Always open the scanner; it reports "too dirty" below the clean threshold, evidence above it.
 	_scanner_screen.open(inst)
+
+
+# --- Day 0 pointer (TUT) -------------------------------------------------------
+
+const TUTORIAL_POINTER_SOURCE := "bench"
+const TUTORIAL_POINTER_PRIORITY := 10
+
+
+## Steers the tutorial hint arrow at the bench control the current step needs:
+## the Scan & Judge button, the phone on the bench (sell flow), or Close (Esc)
+## once the meet is scheduled. The Phone overlay outranks this while it is open.
+func _update_tutorial_pointer() -> void:
+	if not TutorialService.is_tutorial_active():
+		return
+	# A covering overlay (scanner) hides the arrow rather than aiming through it.
+	if _scanner_screen != null and _scanner_screen.visible:
+		TutorialService.set_pointer_claim(
+			TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, TutorialService.POINTER_HIDE
+		)
+		return
+	match TutorialService.current_step_id():
+		"scan_artifact":
+			TutorialService.set_pointer_claim(
+				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _scan_button
+			)
+		"list_and_sell":
+			TutorialService.set_pointer_claim(
+				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _bench_phone_screen_pos
+			)
+		"ride_to_mall":
+			TutorialService.set_pointer_claim(
+				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _close_button
+			)
+		_:
+			TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
+
+
+## Screen-space position of the 3D phone prop on the bench, mapped through the
+## SubViewportContainer so the glue's arrow (a plain CanvasLayer) can hover it.
+func _bench_phone_screen_pos() -> Vector2:
+	if _camera == null or _phone_prop == null or not _phone_prop.is_inside_tree():
+		return Vector2.ZERO
+	var rect := _viewport_container.get_global_rect()
+	var vp_size := Vector2(_viewport.size)
+	if vp_size.x <= 0.0 or vp_size.y <= 0.0:
+		return rect.get_center()
+	var pos := _camera.unproject_position(_phone_prop.global_transform.origin)
+	return rect.position + pos * (rect.size / vp_size)
 
 
 ## The shared journal viewer (a BookViewport) is handed in by the Shop so the bench
@@ -1469,6 +1518,7 @@ func _process(delta: float) -> void:
 		return
 	# Time keeps moving at the bench now, so keep the Day/time readout live.
 	_update_clock()
+	_update_tutorial_pointer()
 	var rx := (
 		Input.get_action_strength("restoration_rotate_right")
 		- Input.get_action_strength("restoration_rotate_left")
@@ -1841,7 +1891,7 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 			if _overlay_at95_ms >= 0
 			else 0.0
 		)
-		# Auto-finish: snap to 100% immediately at ≥98%, or once the piece has held ≥95% for
+		# Auto-finish: snap to 100% immediately at ≥99%, or once the piece has held ≥95% for
 		# AUTO_FINISH_HOLD_S (this next stroke completes it) — so the player isn't chasing specks,
 		# but completion is no longer instant the moment the surface looks nearly done.
 		var should_finish := (

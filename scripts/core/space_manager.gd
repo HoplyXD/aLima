@@ -41,6 +41,11 @@ var current_space: Space = Space.SHOP
 ## can decide which spawn point to use (e.g. shop door vs scrapyard gate).
 var previous_space: Space = Space.SHOP
 
+## True when the last transition originated on the title screen (previous_space
+## defaults to SHOP, so scenes need this to tell a real shop exit apart from a
+## fresh session — e.g. Day 0 opens at the yard gate, not the shop door).
+var came_from_title: bool = false
+
 ## True while the title screen is showing. Reset on the first shop entry.
 var _on_title: bool = true
 
@@ -58,6 +63,7 @@ func go_to(space: Space) -> void:
 		)
 		return
 	# Any gameplay space leaves the title (a fresh save can open in the yard).
+	came_from_title = _on_title
 	_on_title = false
 	previous_space = current_space
 	current_space = space

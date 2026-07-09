@@ -252,7 +252,10 @@ func _make_artifact_slot(
 		var scene: PackedScene = ArtifactScenes.scene_for(template.id, ARTIFACT_OBJECT_SCENE)
 		var obj: RestorationObject3D = scene.instantiate()
 		card.set_preview(obj, slot.preview_label, slot.preview_color, PREVIEW_SCALE)
-		_restoration.present_object(obj, inst, template, inst.uid.hash())
+		# Bench seed formula so the preview's condition mix matches the workbench.
+		_restoration.present_object(
+			obj, inst, template, inst.uid.hash() ^ (GameState.loop_index * 104729)
+		)
 		ignore_mouse_recursive(card)
 	else:
 		slot.text = slot.preview_label
@@ -270,7 +273,10 @@ func _add_artifact_card(
 	var obj: RestorationObject3D = scene.instantiate()
 	var name_text := template.display_name + ("  ◆" if is_target else "")
 	card.set_preview(obj, name_text, _rarity_color(template.base_rarity), PREVIEW_SCALE)
-	_restoration.present_object(obj, inst, template, inst.uid.hash())
+	# Bench seed formula so the preview's condition mix matches the workbench.
+	_restoration.present_object(
+		obj, inst, template, inst.uid.hash() ^ (GameState.loop_index * 104729)
+	)
 	var uid := inst.uid
 	card.clicked.connect(func() -> void: _show_artifact(uid))
 

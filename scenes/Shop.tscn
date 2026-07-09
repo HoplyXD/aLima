@@ -30,14 +30,10 @@
 [ext_resource type="PackedScene" uid="uid://cqhhs0yectt5r" path="res://assets/3d Assets/Candles/trn_Candle_half.fbx" id="20_th3tq"]
 [ext_resource type="PackedScene" uid="uid://crsj05vrurj8y" path="res://assets/3d Assets/Candles/trn_CandleFlame.fbx" id="21_b267u"]
 [ext_resource type="Material" uid="uid://bsw4qlo6eig1s" path="res://assets/3d Assets/Walls and Floors/Ceiling.tres" id="22_gk81f"]
-[ext_resource type="PackedScene" uid="uid://c2grr1ds06ewm" path="res://assets/3d Assets/Fireplace/trn_Fireplace.fbx" id="23_040fg"]
-[ext_resource type="PackedScene" uid="uid://b4mxplnagjpw0" path="res://assets/3d Assets/Fireplace/trn_Fireplace_Tube.fbx" id="24_5vv4h"]
 [ext_resource type="PackedScene" uid="uid://by2nidw1p7qwf" path="res://assets/3d Assets/Walls and Floors/Floating Shelf.glb" id="25_ujw1w"]
 [ext_resource type="PackedScene" uid="uid://32xn2r7g3h3x" path="res://assets/3d Assets/Paper/Debris Papers.glb" id="26_ialvq"]
 [ext_resource type="PackedScene" uid="uid://b1mi44jnsk07v" path="res://assets/3d Assets/Paper/Envelopes.glb" id="27_tc17g"]
 [ext_resource type="PackedScene" uid="uid://c758vciy6cv7n" path="res://assets/3d Assets/Bookcase/books.glb" id="28_vylhb"]
-[ext_resource type="PackedScene" uid="uid://7wc33npp34v8" path="res://assets/3d Assets/FireLog/trn_Log.fbx" id="29_ay5bd"]
-[ext_resource type="PackedScene" uid="uid://bk05oms0otiob" path="res://assets/3d Assets/FireLog/Fire.glb" id="30_q2l85"]
 [ext_resource type="Texture2D" uid="uid://dx5tdmtsbisw8" path="res://assets/Characters/Archeologist.png" id="31_ep7b0"]
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_yh0ut"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_6tp7w"]
@@ -74,7 +70,7 @@ script = ExtResource("5_ctrl")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1951499, -1.6482215, -0.96410084)
 
 [node name="DoorInteractable" type="Area3D" parent="Interactables" unique_id=1749336697]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.1997547, 2.8291411, -6.607295)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.632072, 2.8291411, -6.607295)
 script = ExtResource("10_inter")
 prompt_text = "Answer the door"
 
@@ -235,7 +231,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0055418015, 0.0049431324, 
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0055418015, 0.0049431324, -3.9919057)
 
 [node name="Plants - Assorted shelf plants" parent="Floor/Floor3/Floor2/Floor/Floor" unique_id=1841981454 instance=ExtResource("15_dcccv")]
-transform = Transform3D(-8.742278e-08, 0, 2, 0, 2, 0, -2, 0, -8.742278e-08, 0.44969177, 2.1095874, -2.4386373)
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -1.0350266, 2.1095874, -4.7746344)
+
+[node name="Plants - Assorted shelf plants2" parent="Floor/Floor3/Floor2/Floor/Floor" unique_id=167618568 instance=ExtResource("15_dcccv")]
+transform = Transform3D(-8.742278e-08, 0, 2, 0, 2, 0, -2, 0, -8.742278e-08, 0.48420617, 2.1095874, -1.9449239)
 
 [node name="Bookcase2" parent="." unique_id=561925204 instance=ExtResource("16_gp7gd")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -7.0222726, 0.20925331, -6.86525)
@@ -278,15 +277,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0848688, 2.7500036, 1.1032
 current = true
 fov = 71.5
 
-[node name="trn_Fireplace" parent="." unique_id=938934939 instance=ExtResource("23_040fg")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -1.0830443, 0.24112129, -6.562172)
-
-[node name="trn_Fireplace_Tube" parent="." unique_id=1223467540 instance=ExtResource("24_5vv4h")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -1.1029317, 3.2389612, -6.586598)
-
-[node name="trn_Fireplace_Tube2" parent="trn_Fireplace_Tube" unique_id=1213470420 instance=ExtResource("24_5vv4h")]
-transform = Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, -0.005886376, 1.648076, 0.023694992)
-
 [node name="Shelf" parent="." unique_id=912868180 instance=ExtResource("25_ujw1w")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 1.7352841, 2.2612643, -7.4431257)
 
@@ -311,21 +301,6 @@ transform = Transform3D(-0.10452851, 0, -0.9945219, 0, 1, 0, 0.9945219, 0, -0.10
 [node name="trn_CandleFlame3" parent="trn_Candle_half" unique_id=1185665592 instance=ExtResource("21_b267u")]
 transform = Transform3D(0.010438109, 0, 0.012225077, 0, 0.016, 0, -0.012225055, 0, 0.010370575, 0.0010666847, 0.17145848, -0.0024114847)
 
-[node name="trn_Log" parent="." unique_id=1821023922 instance=ExtResource("29_ay5bd")]
-transform = Transform3D(1.6905321, 0, 0.39029005, 0, 1.735, 0, -0.39029005, 0, 1.6905321, -1.4072738, 0.6164464, -6.534982)
-
-[node name="trn_Log2" parent="trn_Log" unique_id=651937600 instance=ExtResource("29_ay5bd")]
-transform = Transform3D(0.8400303, 0.043359913, -0.62007564, 0, 1.0424544, 0.07289551, 0.62158984, -0.058597554, 0.83798414, 0.30557054, 0.003451854, -0.122153044)
-
-[node name="trn_Log3" parent="trn_Log" unique_id=1864299837 instance=ExtResource("29_ay5bd")]
-transform = Transform3D(0.9710037, -0.03377083, 0.48294532, 0, 1.082357, 0.07568578, -0.4841246, -0.067733794, 0.9686386, 0.16919363, -0.016824573, 0.046563625)
-
-[node name="trn_Log4" parent="trn_Log" unique_id=1283964199 instance=ExtResource("29_ay5bd")]
-transform = Transform3D(0.27429837, 0.07969918, -1.1397514, 0, 1.1721377, 0.08196385, 1.1425346, -0.019134084, 0.27363017, 0.15694249, 0.003451854, 0.11034751)
-
-[node name="Fire" parent="." unique_id=641002825 instance=ExtResource("30_q2l85")]
-transform = Transform3D(2.586602, 0, -1.4628434, 0, 3.053, 0, 1.7883375, 0, 2.590235, -1.1094544, 0.982775, -6.5365744)
-
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=937924131]
 environment = SubResource("Environment_frvnf")
 
@@ -345,7 +320,7 @@ pixel_size = 0.0015
 billboard = 1
 
 [node name="Visitor2" type="Sprite3D" parent="." unique_id=550226125]
-transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.051, 3.2593844, 1.6406353, -6.7467704)
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.051, -0.9071295, 1.6406353, -6.7467704)
 pixel_size = 0.0015
 billboard = 1
 texture = ExtResource("2_eo1la")

@@ -85,6 +85,62 @@ func is_tutorial_active() -> bool:
 	return not GameState.save_state.persistent.tutorial_completed
 
 
+# --- Day 0 pointer claims ------------------------------------------------------
+#
+# UI screens steer the TutorialGlue hint arrow at their own controls (the Scan
+# button, the phone's Marketplace app, a List/Message button) by registering a
+# claim; the glue resolves the highest-priority live claim every frame and falls
+# back to the step's authored anchor when none is active. A claim target may be:
+#   - a Control (arrow at its top-center),
+#   - a Callable returning a screen-space Vector2 (e.g. an unprojected 3D prop),
+#   - POINTER_HIDE (suppress the arrow, e.g. while a covering overlay is open).
+
+const POINTER_HIDE := &"hide"
+
+var _pointer_claims: Dictionary = {}  ## source -> {"priority": int, "target": Variant}
+
+
+## Registers/updates a named pointer claim. Higher priority wins.
+func set_pointer_claim(source: String, priority: int, target: Variant) -> void:
+	_pointer_claims[source] = {"priority": priority, "target": target}
+
+
+func clear_pointer_claim(source: String) -> void:
+	_pointer_claims.erase(source)
+
+
+func clear_all_pointer_claims() -> void:
+	_pointer_claims.clear()
+
+
+## The highest-priority live claim target, or null when no claim applies.
+## Dead Controls/Callables are dropped so a freed screen never wedges the arrow.
+func resolve_pointer_claim() -> Variant:
+	var best: Variant = null
+	var best_priority := -1
+	var stale: Array[String] = []
+	for source in _pointer_claims.keys():
+		var claim: Dictionary = _pointer_claims[source]
+		var target: Variant = claim.get("target")
+		if target is Control:
+			var control := target as Control
+			if not is_instance_valid(control) or not control.is_inside_tree():
+				stale.append(source)
+				continue
+			if not control.is_visible_in_tree():
+				continue
+		elif target is Callable and not (target as Callable).is_valid():
+			stale.append(source)
+			continue
+		var priority := int(claim.get("priority", 0))
+		if priority > best_priority:
+			best_priority = priority
+			best = target
+	for source in stale:
+		_pointer_claims.erase(source)
+	return best
+
+
 ## Tutorial tuning block (sort_hours, allowed_conditions, ...). Empty when the
 ## script failed to load.
 func get_config() -> Dictionary:
@@ -192,6 +248,7 @@ func skip() -> void:
 
 ## Called by LoopController.complete_tutorial() once graduation is saved.
 func notify_completed() -> void:
+	clear_all_pointer_claims()
 	tutorial_finished.emit()
 
 

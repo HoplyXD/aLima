@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://ch81j5athff1"
+path="res://.godot/imported/Alya bag Overlay.obj-cdbc128321231146048c5fe4924d8f77.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Alya bag Overlay.obj-cdbc128321231146048c5fe4924d8f77.mesh"]
+
+source_file="res://assets/3d Assets/Artifacts/Orignal Artifacts Assets/Alya Bag/Alya bag Overlay.obj"
+dest_files=["res://.godot/imported/Alya bag Overlay.obj-cdbc128321231146048c5fe4924d8f77.mesh", "res://.godot/imported/Alya bag Overlay.obj-cdbc128321231146048c5fe4924d8f77.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

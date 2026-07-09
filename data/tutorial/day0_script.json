@@ -14,7 +14,17 @@
       "dirt"
     ],
     "tutorial_buyer_id": "mysterious_buyer",
-    "buyer_destination_id": "mall"
+    "buyer_destination_id": "mall",
+    "banter_dialogue": [
+      {
+        "speaker": "yuyu",
+        "text": "Don't just take the first number, {player}. Banter with him - talk a little, then name your own price in the message."
+      },
+      {
+        "speaker": "yuyu",
+        "text": "When the offer feels fair, accept it. A good deal is a conversation, not a menu."
+      }
+    ]
   },
   "steps": [
     {
@@ -106,13 +116,32 @@
       "grants": {
         "tools_for_conditions": [
           "dust",
-          "dirt"
+          "dirt",
+          "tape_residue",
+          "rust",
+          "tarnish",
+          "water_stain",
+          "mud",
+          "crack",
+          "fading",
+          "mold",
+          "wax",
+          "verdigris",
+          "soot",
+          "grease",
+          "salt_crust",
+          "black_tarnish",
+          "wood_rot",
+          "woodworm",
+          "moss",
+          "old_paint",
+          "dark_varnish"
         ]
       },
       "dialogue": [
         {
           "speaker": "yuyu",
-          "text": "Now the real work. Take these - my old soft brush for dust, and a damp cloth for grime. They were my first tools too."
+          "text": "Now the real work. Take my whole kit - the soft brush and damp cloth for today's dust and grime, and the rest of my old tools for whatever the yard throws at you."
         },
         {
           "speaker": "yuyu",
@@ -159,7 +188,7 @@
       "hint": {
         "speaker": "yuyu",
         "text": "Scan the artifact and set your own verdict.",
-        "anchor": "phone"
+        "anchor": "workbench"
       },
       "complete_on": {
         "signal": "scanner_verdict_committed"
