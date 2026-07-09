@@ -6,45 +6,76 @@
 [ext_resource type="Texture2D" uid="uid://dbh551gf1chhr" path="res://assets/Characters/Scavenger.png" id="4_ayla"]
 [ext_resource type="PackedScene" uid="uid://cjm8k2o6gqmv1" path="res://scenes/ui/scrapyard_hud.tscn" id="5_hud"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(16, 0.1, 12)
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(40, 0.1, 40)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall"]
-size = Vector3(16, 4, 0.2)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+albedo_color = Color(0.18, 0.35, 0.12, 1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_side"]
-size = Vector3(0.2, 4, 12)
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(40, 0.1, 40)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
-size = Vector3(2, 3, 0.2)
+[sub_resource type="BoxShape3D" id="BoxShape3D_house"]
+size = Vector3(6, 4, 5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.6, 0.55, 0.5, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_house"]
+albedo_color = Color(0.55, 0.42, 0.28, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_floor"]
-size = Vector3(16, 0.1, 12)
+[sub_resource type="BoxMesh" id="BoxMesh_house"]
+size = Vector3(6, 4, 5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_color = Color(0.85, 0.8, 0.75, 1)
+[sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
+size = Vector3(4, 3, 0.2)
 
-[sub_resource type="BoxMesh" id="BoxMesh_wall"]
-size = Vector3(16, 4, 0.2)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gate_frame"]
+albedo_color = Color(0.35, 0.35, 0.37, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_wall_side"]
-size = Vector3(0.2, 4, 12)
+[sub_resource type="BoxMesh" id="BoxMesh_gate_frame"]
+size = Vector3(4, 3, 0.2)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
-albedo_color = Color(0.45, 0.3, 0.2, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gate_bars"]
+albedo_color = Color(0.28, 0.28, 0.3, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_door"]
-size = Vector3(2, 3, 0.2)
+[sub_resource type="BoxMesh" id="BoxMesh_gate_bars"]
+size = Vector3(0.15, 2.8, 0.15)
 
-[sub_resource type="Environment" id="Environment_house"]
-background_mode = 1
-background_color = Color(0.1, 0.08, 0.06, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tree_trunk"]
+albedo_color = Color(0.35, 0.22, 0.12, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_tree_trunk"]
+top_radius = 0.22
+bottom_radius = 0.32
+height = 3.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tree_foliage"]
+albedo_color = Color(0.12, 0.42, 0.08, 1)
+
+[sub_resource type="SphereMesh" id="Mesh_tree_top_big"]
+radius = 2.0
+height = 3.0
+
+[sub_resource type="SphereMesh" id="Mesh_tree_top_mid"]
+radius = 1.5
+height = 2.0
+
+[sub_resource type="SphereMesh" id="Mesh_tree_top_small"]
+radius = 1.0
+height = 1.5
+size = Vector3(1.2, 2, 1.2)
+
+[sub_resource type="Environment" id="Environment_forest"]
+background_mode = 2
+sky_top_color = Color(0.35, 0.55, 0.75, 1)
+sky_horizon_color = Color(0.65, 0.75, 0.85, 1)
+ground_bottom_color = Color(0.12, 0.25, 0.08, 1)
+ground_horizon_color = Color(0.25, 0.4, 0.15, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.7, 0.65, 0.55, 1)
-ambient_light_energy = 0.8
+ambient_light_color = Color(0.8, 0.85, 0.75, 1)
+ambient_light_energy = 1.2
+fog_enabled = true
+fog_light_color = Color(0.55, 0.7, 0.55, 1)
+fog_density = 0.008
+fog_sky_affect = 0.3
 
 [node name="ArcheologistHouse" type="Node3D"]
 script = ExtResource("1_archhouse")
@@ -52,67 +83,440 @@ script = ExtResource("1_archhouse")
 [node name="Collision" type="StaticBody3D" parent="."]
 collision_mask = 0
 
-[node name="Floor" type="CollisionShape3D" parent="Collision"]
+[node name="Ground" type="CollisionShape3D" parent="Collision"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
-shape = SubResource("BoxShape3D_floor")
+shape = SubResource("BoxShape3D_ground")
 
-[node name="WallBack" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -6)
-shape = SubResource("BoxShape3D_wall")
-
-[node name="WallLeft" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, 0)
-shape = SubResource("BoxShape3D_wall_side")
-
-[node name="WallRight" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0)
-shape = SubResource("BoxShape3D_wall_side")
-
-[node name="WallFront" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 6)
-shape = SubResource("BoxShape3D_wall")
+[node name="HouseCollision" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -8)
+shape = SubResource("BoxShape3D_house")
 
 [node name="MapRoot" type="Node3D" parent="."]
 
-[node name="FloorMesh" type="MeshInstance3D" parent="MapRoot"]
+[node name="GroundMesh" type="MeshInstance3D" parent="MapRoot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
-mesh = SubResource("BoxMesh_floor")
-surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
 
-[node name="WallBackMesh" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -6)
-mesh = SubResource("BoxMesh_wall")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="HouseMesh" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -8)
+mesh = SubResource("BoxMesh_house")
+surface_material_override/0 = SubResource("StandardMaterial3D_house")
 
-[node name="WallLeftMesh" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, 0)
-mesh = SubResource("BoxMesh_wall_side")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="Tree1_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1.75, -12)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
 
-[node name="WallRightMesh" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0)
-mesh = SubResource("BoxMesh_wall_side")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="Tree1_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4.0, -12)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
 
-[node name="WallFrontMesh" type="MeshInstance3D" parent="MapRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 6)
-mesh = SubResource("BoxMesh_wall")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="Tree1_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 5.0, -12)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree1_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 5.7, -12)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree2_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1.75, -8)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree2_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 4.0, -8)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree2_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 5.0, -8)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree2_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 5.7, -8)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree3_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 1.75, -2)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree3_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 4.0, -2)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree3_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 5.0, -2)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree3_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 5.7, -2)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree4_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 1.75, 5)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree4_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 4.0, 5)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree4_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 5.0, 5)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree4_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 5.7, 5)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree5_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 1.75, 10)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree5_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 4.0, 10)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree5_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 5.0, 10)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree5_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 5.7, 10)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree6_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1.75, 14)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree6_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 4.0, 14)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree6_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 5.0, 14)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree6_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 5.7, 14)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree7_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.75, 16)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree7_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 4.0, 16)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree7_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 5.0, 16)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree7_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 5.7, 16)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree8_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 18)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree8_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, 18)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree8_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.0, 18)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree8_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.7, 18)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree9_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1.75, 16)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree9_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 4.0, 16)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree9_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 5.0, 16)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree9_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 5.7, 16)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree10_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.75, 14)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree10_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 4.0, 14)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree10_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 5.0, 14)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree10_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 5.7, 14)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree11_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1.75, 10)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree11_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 4.0, 10)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree11_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 5.0, 10)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree11_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 5.7, 10)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree12_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 1.75, 5)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree12_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 4.0, 5)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree12_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 5.0, 5)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree12_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 5.7, 5)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree13_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 1.75, -2)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree13_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 4.0, -2)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree13_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 5.0, -2)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree13_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 5.7, -2)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree14_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1.75, -8)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree14_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 4.0, -8)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree14_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 5.0, -8)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree14_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 5.7, -8)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree15_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1.75, -12)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree15_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.0, -12)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree15_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 5.0, -12)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree15_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 5.7, -12)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree16_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.75, -6)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree16_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 4.0, -6)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree16_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.0, -6)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree16_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.7, -6)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree17_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.75, -6)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree17_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 4.0, -6)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree17_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 5.0, -6)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree17_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 5.7, -6)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree18_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.75, 12)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree18_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 4.0, 12)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree18_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 5.0, 12)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree18_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 5.7, 12)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree19_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.75, 10)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree19_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 4.0, 10)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree19_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 5.0, 10)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree19_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 5.7, 10)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree20_Trunk" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.75, 2)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_trunk")
+
+[node name="Tree20_Foliage" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.0, 2)
+mesh = SubResource("Mesh_tree_top_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree20_FoliageMid" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 5.0, 2)
+mesh = SubResource("Mesh_tree_top_mid")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
+
+[node name="Tree20_FoliageTop" type="MeshInstance3D" parent="MapRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 5.7, 2)
+mesh = SubResource("Mesh_tree_top_small")
+surface_material_override/0 = SubResource("StandardMaterial3D_tree_foliage")
 
 [node name="Anchors" type="Node3D" parent="."]
 
 [node name="PlayerSpawn" type="Marker3D" parent="Anchors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 6)
 
 [node name="SamNpc" type="Sprite3D" parent="Anchors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.1, -3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.1, -4)
 pixel_size = 0.00055
 billboard = 2
 alpha_cut = 1
 texture = ExtResource("3_sam")
 
 [node name="AylaNpc" type="Sprite3D" parent="Anchors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.1, -2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1.1, -3)
 pixel_size = 0.00055
 billboard = 2
 alpha_cut = 1
@@ -120,30 +524,45 @@ texture = ExtResource("4_ayla")
 
 [node name="Interactables" type="Node3D" parent="."]
 
-[node name="DoorInteractable" type="Area3D" parent="Interactables"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5.8)
+[node name="GateInteractable" type="Area3D" parent="Interactables"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8)
 script = ExtResource("2_interactable")
-prompt_text = "Return to the shop"
-proximity_prompt_text = "Press E to return to the shop"
+prompt_text = "Return through the gate"
+proximity_prompt_text = "Press E to return through the gate"
 use_proximity = true
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Interactables/DoorInteractable"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Interactables/GateInteractable"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-shape = SubResource("BoxShape3D_door")
+shape = SubResource("BoxShape3D_gate")
 
-[node name="DoorMesh" type="MeshInstance3D" parent="Interactables/DoorInteractable"]
+[node name="GateFrame" type="MeshInstance3D" parent="Interactables/GateInteractable"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-mesh = SubResource("BoxMesh_door")
-surface_material_override/0 = SubResource("StandardMaterial3D_door")
+mesh = SubResource("BoxMesh_gate_frame")
+surface_material_override/0 = SubResource("StandardMaterial3D_gate_frame")
+
+[node name="GateBarLeft" type="MeshInstance3D" parent="Interactables/GateInteractable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
+mesh = SubResource("BoxMesh_gate_bars")
+surface_material_override/0 = SubResource("StandardMaterial3D_gate_bars")
+
+[node name="GateBarMid" type="MeshInstance3D" parent="Interactables/GateInteractable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_gate_bars")
+surface_material_override/0 = SubResource("StandardMaterial3D_gate_bars")
+
+[node name="GateBarRight" type="MeshInstance3D" parent="Interactables/GateInteractable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
+mesh = SubResource("BoxMesh_gate_bars")
+surface_material_override/0 = SubResource("StandardMaterial3D_gate_bars")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 8, 4)
 light_color = Color(1, 0.95, 0.82, 1)
-light_energy = 2.0
+light_energy = 2.5
 shadow_enabled = true
 shadow_bias = 0.05
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_house")
+environment = SubResource("Environment_forest")
 
 [node name="ScrapyardHud" parent="." instance=ExtResource("5_hud")]

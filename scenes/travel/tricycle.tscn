@@ -176,8 +176,9 @@ surface_material_override/0 = SubResource("Mat_light")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1, 0.1)
 shape = SubResource("Shape_trike")
 
-[node name="SolidBody" type="StaticBody3D" parent="."]
+[node name="SolidBody" type="StaticBody3D" parent="." unique_id=804425084]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.28268874, 0, 0)
 
-[node name="SolidShape" type="CollisionShape3D" parent="SolidBody"]
+[node name="SolidShape" type="CollisionShape3D" parent="SolidBody" unique_id=1569591702]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1, 0.1)
 shape = SubResource("Shape_trike")

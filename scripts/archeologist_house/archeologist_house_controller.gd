@@ -20,7 +20,7 @@ const ALYA_PORTRAIT := preload("res://assets/Characters/Scavenger.png")
 
 @onready var _sam_npc: Sprite3D = $Anchors/SamNpc
 @onready var _alya_npc: Sprite3D = $Anchors/AylaNpc
-@onready var _door_interactable: Interactable3D = $Interactables/DoorInteractable
+@onready var _gate_interactable: Interactable3D = $Interactables/GateInteractable
 @onready var _player_spawn: Marker3D = $Anchors/PlayerSpawn
 
 var _player: ScrapyardPlayer
@@ -31,7 +31,7 @@ var _pending_dialogue_action: String = ""
 func _ready() -> void:
 	get_viewport().physics_object_picking = true
 	_spawn_player()
-	_door_interactable.activated.connect(_on_exit_pressed)
+	_gate_interactable.activated.connect(_on_exit_pressed)
 	_setup_dialogue_box()
 	if QuestService.is_completed("alya_quest_line"):
 		_play_welcome_back()
