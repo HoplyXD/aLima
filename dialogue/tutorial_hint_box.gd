@@ -24,6 +24,8 @@ static var _speakers_loaded: bool = false
 var _arrow_target: Vector2 = Vector2.ZERO
 var _arrow_visible: bool = false
 var _time: float = 0.0
+var _show_tween: Tween
+var _hide_tween: Tween
 
 @onready var _panel: PanelContainer = %HintPanel
 @onready var _portrait_bg: Panel = %PortraitCircle
@@ -35,7 +37,10 @@ var _time: float = 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_apply_style()
 	hide()
+	modulate.a = 0.0
+	scale = Vector2.ONE * 0.98
 
 
 func _process(delta: float) -> void:
@@ -66,7 +71,7 @@ func _draw() -> void:
 			[tip, tip + Vector2(-half, -ARROW_SIZE), tip + Vector2(half, -ARROW_SIZE)]
 		)
 	# Brass arrow with a deep-ink outline, matching the shared UI palette.
-	draw_colored_polygon(points, Color(0.90, 0.72, 0.36, 0.95))
+	draw_colored_polygon(points, UiPalette.SOFT_GOLD)
 	draw_polyline(
 		PackedVector2Array([points[0], points[1], points[2], points[0]]),
 		Color(0.12, 0.10, 0.07, 0.9),
@@ -77,6 +82,8 @@ func _draw() -> void:
 ## Shows the hint text as `speaker_id` (resolved from speakers.json; unknown ids
 ## fall back to the raw id with a neutral face). Text supports {player} tokens.
 func show_hint(speaker_id: String, text: String) -> void:
+	if _hide_tween != null and _hide_tween.is_valid():
+		_hide_tween.kill()
 	var speaker := _resolve_speaker(speaker_id)
 	_speaker_label.text = DialogueVars.format(str(speaker.get("display_name", speaker_id)))
 	_text_label.text = DialogueVars.format(text)
@@ -91,11 +98,12 @@ func show_hint(speaker_id: String, text: String) -> void:
 	_initial_label.visible = texture == null
 	_initial_label.text = _speaker_label.text.left(1).to_upper()
 	show()
+	_animate_show()
 
 
 func hide_hint() -> void:
 	clear_pointer()
-	hide()
+	_animate_hide()
 
 
 ## Aims the arrow at a screen-space point (e.g. an unprojected 3D interactable).
@@ -119,6 +127,46 @@ func point_at_control(target: Control) -> void:
 func clear_pointer() -> void:
 	_arrow_visible = false
 	queue_redraw()
+
+
+func _apply_style() -> void:
+	if _panel != null:
+		_panel.add_theme_stylebox_override("panel", UiPalette.manuscript_card_style())
+	if _portrait_bg != null:
+		_portrait_bg.add_theme_stylebox_override(
+			"panel",
+			UiPalette.panel_style(Color(0.17, 0.14, 0.10, 1.0), UiPalette.SOFT_GOLD, 24)
+		)
+	if _speaker_label != null:
+		_speaker_label.add_theme_color_override("font_color", UiPalette.SOFT_GOLD)
+	if _text_label != null:
+		_text_label.add_theme_color_override("default_color", UiPalette.BONE)
+		_text_label.add_theme_color_override("font_color", UiPalette.BONE)
+
+
+func _animate_show() -> void:
+	if _show_tween != null and _show_tween.is_valid():
+		_show_tween.kill()
+	modulate.a = 0.0
+	scale = Vector2.ONE * 0.98
+	_show_tween = create_tween()
+	_show_tween.set_trans(Tween.TRANS_SINE)
+	_show_tween.set_ease(Tween.EASE_OUT)
+	_show_tween.tween_property(self, "modulate:a", 1.0, 0.16)
+	_show_tween.parallel().tween_property(self, "scale", Vector2.ONE, 0.18)
+
+
+func _animate_hide() -> void:
+	if _show_tween != null and _show_tween.is_valid():
+		_show_tween.kill()
+	if _hide_tween != null and _hide_tween.is_valid():
+		_hide_tween.kill()
+	_hide_tween = create_tween()
+	_hide_tween.set_trans(Tween.TRANS_SINE)
+	_hide_tween.set_ease(Tween.EASE_IN)
+	_hide_tween.tween_property(self, "modulate:a", 0.0, 0.12)
+	_hide_tween.parallel().tween_property(self, "scale", Vector2.ONE * 0.98, 0.12)
+	_hide_tween.finished.connect(func() -> void: hide())
 
 
 ## Test/introspection seams.

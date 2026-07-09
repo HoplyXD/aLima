@@ -7,10 +7,6 @@
 [ext_resource type="Texture2D" uid="uid://dvon5n1qg4s5o" path="res://assets/UI assets/game/gui/namebox.png" id="4_4inpj"]
 [ext_resource type="Texture2D" uid="uid://fea2iartni8r" path="res://assets/UI assets/game/gui/separator.png" id="6_4inpj"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8fwbo"]
-texture = ExtResource("3_4inpj")
-expand_margin_left = 60.0
-expand_margin_right = 60.0
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=122240877]
 script = ExtResource("1_pause")
@@ -50,7 +46,6 @@ theme = ExtResource("2_8uki6")
 [node name="Panel" type="PanelContainer" parent="Root/Center" unique_id=1328663820]
 custom_minimum_size = Vector2(600, 0)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_8fwbo")
 
 [node name="Margin" type="MarginContainer" parent="Root/Center/Panel" unique_id=498994826]
 layout_mode = 2
@@ -90,7 +85,7 @@ layout_mode = 2
 
 [node name="DisplaySection" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=1931862920]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_constants/line_spacing = 73
 theme_override_font_sizes/font_size = 30
 text = "Display"
@@ -138,7 +133,7 @@ theme_override_constants/separation = 13
 
 [node name="OnlineSection" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=1921418985]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_font_sizes/font_size = 30
 text = "Online"
 
@@ -166,7 +161,7 @@ theme_override_constants/separation = 13
 
 [node name="PerformanceSection" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=1815719782]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_font_sizes/font_size = 30
 text = "Performance"
 
@@ -192,8 +187,8 @@ theme_override_constants/separation = 13
 [node name="StatusLabel" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=956113385]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.75, 0.8, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.72, 0.68, 0.58, 1)
+theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -204,7 +199,7 @@ texture = ExtResource("6_4inpj")
 [node name="SeedLabel" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=956113390]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.75, 0.8, 1)
+theme_override_colors/font_color = Color(0.72, 0.68, 0.58, 1)
 theme_override_font_sizes/font_size = 20
 text = "Seed: —"
 horizontal_alignment = 1
@@ -212,7 +207,7 @@ horizontal_alignment = 1
 [node name="SlotLabel" type="Label" parent="Root/Center/Panel/Margin/VBox" unique_id=956113391]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.75, 0.8, 1)
+theme_override_colors/font_color = Color(0.72, 0.68, 0.58, 1)
 theme_override_font_sizes/font_size = 20
 text = "Slot: —"
 horizontal_alignment = 1
