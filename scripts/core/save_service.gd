@@ -103,7 +103,9 @@ func slot_summary(index: int) -> Dictionary:
 		"loop_index": ModelUtils.as_int(data.get("loop_index"), 0),
 		"current_day": ModelUtils.as_int(loop_data.get("current_day"), 1),
 		"current_hour": ModelUtils.as_int(loop_data.get("current_hour"), 7),
+		"current_minute": ModelUtils.as_int(loop_data.get("current_minute"), 0),
 		"money": ModelUtils.as_int(loop_data.get("money"), 0),
+		"tutorial_completed": ModelUtils.as_bool(persistent_data.get("tutorial_completed")),
 	}
 
 

@@ -237,8 +237,19 @@ func _ready() -> void:
 
 ## Refreshes the top-right Day/time readout from the global clock.
 func _update_clock() -> void:
+	var money: int = GameState.save_state.loop.money
+	# Day 0 (tutorial) is clockless: it is Sunday, and only the money shows.
+	if TutorialService.is_tutorial_active():
+		_clock_label.text = "Sunday · ₱%d" % money
+		return
 	_clock_label.text = (
-		"Day %d · %02d:%02d" % [DayClock.get_day(), DayClock.get_hour(), DayClock.get_minute()]
+		"%s · %02d:%02d · ₱%d"
+		% [
+			DayClock.weekday_name(DayClock.get_day()),
+			DayClock.get_hour(),
+			DayClock.get_minute(),
+			money,
+		]
 	)
 
 

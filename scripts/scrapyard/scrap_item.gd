@@ -103,6 +103,9 @@ static func build_display_node(rarity_name: String) -> Node3D:
 	var heap := pick_heap_mesh()
 	if heap != null:
 		mesh.mesh = heap
+		# Kit meshes carry off-center origins; recentre so the preview card frames
+		# the heap in the middle of the slot instead of floating high.
+		mesh.position = -heap.get_aabb().get_center()
 	else:
 		var ball := SphereMesh.new()
 		ball.radius = 0.2

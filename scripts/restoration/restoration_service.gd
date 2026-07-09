@@ -269,6 +269,13 @@ func _is_debug_only(tool_id: String) -> bool:
 ## owned tools and the bench loadout, and EventBus.tool_broke is emitted. Tools
 ## owned only via the id-set (starting kit / legacy) never wear.
 func _consume_tool_durability(tool_id: String) -> void:
+	# The artisan's blessing (v3, story.md §16): once his route is complete, half
+	# of all cleans cost no durability — permanently, across loops.
+	if (
+		_game_state.save_state.persistent.techniques_learned.has("artisan_durability_technique")
+		and randf() < 0.5
+	):
+		return
 	var owned: Array = _game_state.save_state.loop.owned_tools
 	var best := -1
 	var best_durability := 0

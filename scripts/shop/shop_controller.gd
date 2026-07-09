@@ -26,7 +26,9 @@ enum Day0Finale { INACTIVE, VIEWER_OPEN, CASE_SHOWN, LETTER_SHOWN }
 ## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
 ## Lower this in the inspector (e.g. 0.1) to watch the clock move faster while
 ## testing; the value is forwarded to the DayClock on ready.
-@export var seconds_per_hour: float = 60.0
+## v3 pacing: 5 real seconds = 1 in-game minute (300 s/hour). Matches DayClock's
+## own default — this export exists only for debug speed-ups in the editor.
+@export var seconds_per_hour: float = 300.0
 
 # --- Placeholder count state until the delivery/restoration systems exist --
 var _unrestored := {
@@ -389,6 +391,7 @@ func _attach_card_preview(uid: String, card: ArtifactCard) -> void:
 
 
 func _update_clock_display() -> void:
+	_hud.set_money(GameState.save_state.loop.money)
 	# Day 0 (tutorial) is clockless: show the day tag only (TUT).
 	if TutorialService.is_tutorial_active():
 		_hud.set_day_zero()

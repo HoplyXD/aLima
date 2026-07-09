@@ -224,6 +224,39 @@ func get_active_quests() -> Array[String]:
 	return out
 
 
+# --- Tracked quest target (v3 quest UI) ----------------------------------------
+
+## The highlighted target changed (HUD trackers refresh their rows on this).
+signal tracked_quest_changed(quest_id: String)
+
+var _tracked_quest_id: String = ""
+
+
+## The quest the HUD highlights as the current target. Falls back to the first
+## active quest when unset or the tracked one is no longer active.
+func tracked_quest() -> String:
+	if is_active(_tracked_quest_id):
+		return _tracked_quest_id
+	var active := get_active_quests()
+	return active[0] if not active.is_empty() else ""
+
+
+func set_tracked_quest(quest_id: String) -> void:
+	if not is_active(quest_id) or quest_id == _tracked_quest_id:
+		return
+	_tracked_quest_id = quest_id
+	tracked_quest_changed.emit(quest_id)
+
+
+## Cycles the target through the active quests (the outside Q key).
+func cycle_tracked_quest() -> void:
+	var active := get_active_quests()
+	if active.size() < 2:
+		return
+	var idx := active.find(tracked_quest())
+	set_tracked_quest(active[(idx + 1) % active.size()])
+
+
 func get_quest_definition(quest_id: String) -> QuestDefinition:
 	return _quests.get(quest_id) as QuestDefinition
 

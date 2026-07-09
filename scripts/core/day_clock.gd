@@ -28,6 +28,16 @@ const DAY_START_HOUR: int = 7  ## Shop opens 07:00.
 const DAY_END_HOUR: int = 20  ## Shop closes at the authoritative 20:00 boundary.
 const TOTAL_DAYS: int = 5  ## Five-day loop.
 const MINUTES_PER_HOUR: int = 60  ## In-game minutes shown in one clock hour.
+## Weekday names by day number: Day 0 (the clockless tutorial) is Sunday; the
+## five loop days run Monday..Friday (v3 date presentation).
+const WEEKDAY_NAMES: Array[String] = [
+	"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"
+]
+
+
+## The weekday label for a day number (0 = Sunday .. 5 = Friday).
+static func weekday_name(day: int) -> String:
+	return WEEKDAY_NAMES[clampi(day, 0, WEEKDAY_NAMES.size() - 1)]
 
 ## Stable pause-owner IDs for the full-screen systems that freeze shop time
 ## (CLOCK-R5). Each owner acquires/releases exactly one pause.
@@ -124,6 +134,24 @@ func tick(delta: float) -> void:
 		if _hour >= DAY_END_HOUR:
 			_hour = DAY_END_HOUR
 			_hour_elapsed = 0.0
+			_closed = true
+			day_closed.emit(_day)
+			return
+		hour_changed.emit(_day, _hour)
+
+
+## Jumps the clock forward by whole in-game hours (the tricycle's travel cost).
+## Mirrors tick()'s transition semantics exactly: one hour_changed per crossed
+## hour, and reaching 20:00 latches closed + emits day_closed once. No-op while
+## already closed; travel ignores pauses (the ride itself is the time spent).
+func advance_hours(count: int) -> void:
+	for i in count:
+		if _closed:
+			return
+		_hour_elapsed = 0.0
+		_hour += 1
+		if _hour >= DAY_END_HOUR:
+			_hour = DAY_END_HOUR
 			_closed = true
 			day_closed.emit(_day)
 			return

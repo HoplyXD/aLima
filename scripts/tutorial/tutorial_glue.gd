@@ -143,6 +143,10 @@ func _point_at_node3d(target: Node3D) -> void:
 		_hint_box.clear_pointer()
 		return
 	var world_pos := target.global_transform.origin
+	# Billboard NPC sprites are anchored at chest height — hover the arrow above
+	# the head instead of stabbing them in the sternum.
+	if target is Sprite3D:
+		world_pos += Vector3.UP * 1.2
 	if camera.is_position_behind(world_pos):
 		_hint_box.clear_pointer()
 		return

@@ -364,6 +364,11 @@ func _grant_rewards(rewards: Array) -> void:
 			# v3: the yard Safe only opens on a LATER loop than the one the code
 			# was learned in ("numbers keep better than promises").
 			persistent.safe_code_loop = GameState.loop_index
+		elif id.ends_with("_technique"):
+			# Permanent learned techniques (v3: the artisan's durability blessing)
+			# persist across loops like any technique (§4-A).
+			if not persistent.techniques_learned.has(id):
+				persistent.techniques_learned.append(id)
 		elif id.ends_with("_lead"):
 			if not persistent.leads.has(id):
 				persistent.leads.append(id)
