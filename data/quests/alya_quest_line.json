@@ -8,10 +8,10 @@
   "is_repeatable": false,
   "beats": [
     {
-      "id": "q1_glasses",
+      "id": "q1_lunchbox",
       "day": 1,
-      "summary": "Find Yuyu's lost glasses in the scrapyard.",
-      "object_template": "yuyu_glasses"
+      "summary": "Clean Alya's lunch box and bring it back to her.",
+      "object_template": "ayla_lunchbox"
     },
     {
       "id": "q2_bag",

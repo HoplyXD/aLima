@@ -148,7 +148,12 @@ func _on_skip_tutorial_pressed() -> void:
 func _on_skip_tutorial_confirmed() -> void:
 	TutorialService.skip()
 	close()
-	SpaceManager.go_to_shop()
+	# Skipping from inside the shop needs an in-place reload (go_to_shop()'s
+	# same-space guard would reject it and Day 1 would never initialize).
+	if SpaceManager.current_space == SpaceManager.Space.SHOP:
+		SpaceManager.reload_current_space()
+	else:
+		SpaceManager.go_to_shop()
 
 
 ## Syncs the controls to the saved/effective settings each time the menu opens.

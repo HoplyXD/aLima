@@ -305,33 +305,39 @@
         "q1_start": [
           {
             "name": "Ayla",
-            "text": "Oy, hulat anay. [i]She tugs at the hem of her shirt, not quite looking at you.[/i] May gusto ko i-share sa imo parte sa akon Tatay... kag kay Yuyu."
+            "text": "Oy, wait. [i]She tugs at the hem of her shirt, not quite looking at you.[/i] Before you ask anything — yes, I eat. But this lunch box… it stopped being for food a long time ago."
           },
           {
             "name": "Ayla",
-            "text": "Sang una, si Yuyu kag akon Tatay close gid. Parang mag-utod. Kon may makita si Yuyu nga vintage nga butang, ginahatud niya kay Tatay. Siling ni Tatay, 'Si Yuyu lang ang tawo nga indi mag-haggle — bayad siya sang amo sang gusto mo.'"
+            "text": "Tito Yuyu and my Tatay were close. Like brothers. When Tatay passed, it was Tito who took us in. This dented old thing is from those days."
           },
           {
             "name": "Ayla",
-            "text": "Kon indi na si Tatay, si Yuyu ang nag-atipan sa amon. Ginbulig niya sa akon Nanay. Gani, ginahatag niya ang iya old glasses sa akon — sabi niya, 'Daw indi na ko makakita sang maayo, Ayla. Pero ikaw, you see things I don't.'"
-          },
-          {
-            "name": "Ayla",
-            "text": "[i]Her voice cracks slightly.[/i] Pero sang nag-disappear si Yuyu... nawala man ang iya glasses. Ginhalungkat ko ang tibuok scrapyard, pero wala ko makita. Siguro, nabilin diri sa basurahan. [i]She looks up at you.[/i] Kon makakita ka... ginahatag ko ang akon kabuhi para mabalik lang sa iya."
+            "text": "[i]She holds it out with both hands, suddenly formal.[/i] Clean it for me? Careful with the lid, ha. I'll be right here."
           }
         ],
-        "q1_glasses_found": [
+        "q1_lunchbox_dirty": [
           {
             "name": "Ayla",
-            "text": "[i]She takes the glasses with both hands, turning them over.[/i] ...Amo gid ini. [i]Her thumb traces the worn frame.[/i] Tito's glasses. Ginahatag niya ini sa akon sang bata pa ko. Sabi niya, 'Wear these when you read, Ayla. Make your eyes strong.'"
+            "text": "Not like this, ha? [i]She pushes it gently back toward you.[/i] Clean it properly first. I've waited years — I can wait one more bench session."
+          }
+        ],
+        "q1_lunchbox_done": [
+          {
+            "name": "Ayla",
+            "text": "[i]She takes the lunch box with both hands and goes quiet for the first time since you met her.[/i] …There. That's the sticker. That's the dent from the jeepney. Thank you. Thank you gid."
           },
           {
             "name": "Ayla",
-            "text": "Thank you. [i]She wipes her eyes quickly.[/i] Thank you gid. Indi ko ma-explain kon ano ang ini para sa akon."
+            "text": "You: Alya — did you ever find out where Tito Yuyu went?"
           },
           {
             "name": "Ayla",
-            "text": "Oy, abi mo, may lugar pa ko nga gusto ko ipakita sa imo. Ang Dump Site — didto kami nag-estar sang una pa, before everything. [i]She looks toward the distant heaps.[/i] Pwede ka na magbisita didto. May mga butang pa nga nagahulat."
+            "text": "[i]She frowns, remembering.[/i] Last I saw him, he'd been talking with some girl. Serious type — notebook, measuring eyes. Then he tells me, 'Alya, I'm going to your old house. The final piece is there.'"
+          },
+          {
+            "name": "Ayla",
+            "text": "My old house is the Dump Site now. [i]A short, unfunny laugh.[/i] Literally a dump. I'll show you where — there are things out there still waiting."
           }
         ],
         "q2_start": [

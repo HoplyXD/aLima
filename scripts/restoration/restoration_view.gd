@@ -336,6 +336,11 @@ func _on_scan_pressed() -> void:
 
 const TUTORIAL_POINTER_SOURCE := "bench"
 const TUTORIAL_POINTER_PRIORITY := 10
+const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
+
+## Day 0 bench-tools lesson: which one-shot Yuyu stage lines have played.
+var _bench_lesson_shown: Dictionary = {}
+var _tutorial_dialogue: DialogueBox = null
 
 
 ## Steers the tutorial hint arrow at the bench control the current step needs:
@@ -351,6 +356,8 @@ func _update_tutorial_pointer() -> void:
 		)
 		return
 	match TutorialService.current_step_id():
+		"restore_artifact":
+			_update_bench_tools_lesson()
 		"scan_artifact":
 			TutorialService.set_pointer_claim(
 				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _scan_button
@@ -365,6 +372,87 @@ func _update_tutorial_pointer() -> void:
 			)
 		_:
 			TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
+
+
+## Day 0's bench-tools lesson (the tools grant arrives UNEQUIPPED): guide the
+## player from the empty bench to the storage box, then to picking up the tool.
+##   Stage "storage": no tool equipped -> arrow at the storage box + Yuyu line.
+##   (Storage open: its own dialogue instructs the drag; the arrow hides.)
+##   Stage "select": tool equipped but none held -> arrow at its sidebar row.
+##   Held tool -> lesson over; the step's own cleaning captions take it from there.
+func _update_bench_tools_lesson() -> void:
+	if _storage_screen != null and _storage_screen.visible:
+		TutorialService.set_pointer_claim(
+			TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, TutorialService.POINTER_HIDE
+		)
+		return
+	var equipped := _service.get_workbench_tools()
+	if equipped.is_empty():
+		_maybe_show_bench_lesson_dialogue("storage")
+		TutorialService.set_pointer_claim(
+			TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _bench_storage_screen_pos
+		)
+		return
+	if _selected_tool_id.is_empty():
+		_maybe_show_bench_lesson_dialogue("select")
+		var row: Control = null
+		if _tool_sidebar != null:
+			row = _tool_sidebar.row_for(equipped[0].id)
+		if row != null:
+			TutorialService.set_pointer_claim(
+				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, row
+			)
+		else:
+			TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
+		return
+	# Tool in hand: teach the camera controls once, then the lesson is over.
+	_maybe_show_bench_lesson_dialogue("clean")
+	TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
+
+
+## One-shot Yuyu lines for a bench-lesson stage, authored in day0_script.json
+## config.bench_tools_dialogue[stage].
+func _maybe_show_bench_lesson_dialogue(stage: String) -> void:
+	if _bench_lesson_shown.get(stage, false):
+		return
+	_bench_lesson_shown[stage] = true
+	var blocks := ModelUtils.as_dictionary(
+		TutorialService.get_config().get("bench_tools_dialogue")
+	)
+	var raw_lines: Variant = blocks.get(stage)
+	if not (raw_lines is Array):
+		return
+	var lines: Array = []
+	for raw in raw_lines:
+		if raw is Dictionary:
+			var speaker_id := ModelUtils.as_string((raw as Dictionary).get("speaker"), "yuyu")
+			(
+				lines
+				. append(
+					{
+						"name": TutorialHintBox.speaker_display_name(speaker_id),
+						"text": ModelUtils.as_string((raw as Dictionary).get("text")),
+					}
+				)
+			)
+	if lines.is_empty():
+		return
+	if _tutorial_dialogue == null:
+		_tutorial_dialogue = DIALOGUE_BOX_SCENE.instantiate()
+		add_child(_tutorial_dialogue)
+	_tutorial_dialogue.start(lines)
+
+
+## Screen-space position of the 3D storage box on the bench (see the phone helper).
+func _bench_storage_screen_pos() -> Vector2:
+	if _camera == null or _storage_prop == null or not _storage_prop.is_inside_tree():
+		return Vector2.ZERO
+	var rect := _viewport_container.get_global_rect()
+	var vp_size := Vector2(_viewport.size)
+	if vp_size.x <= 0.0 or vp_size.y <= 0.0:
+		return rect.get_center()
+	var pos := _camera.unproject_position(_storage_prop.global_transform.origin)
+	return rect.position + pos * (rect.size / vp_size)
 
 
 ## Screen-space position of the 3D phone prop on the bench, mapped through the
@@ -1685,13 +1773,19 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		else:
 			_right_down = false
 	elif event.button_index == MOUSE_BUTTON_MIDDLE:
-		# Hold middle-mouse to PAN the (lens-zoomed) view by dragging.
-		_pan_down = event.pressed and _pointer_over_viewport(pos)
+		# Hold middle-mouse to PAN the view — a stage-2 affordance only: panning
+		# needs the lens zoom engaged (zoomed all the way in), never at stage 1.
+		_pan_down = event.pressed and _pointer_over_viewport(pos) and _lens_zoom_active()
+
+
+## True while the stage-2 lens (FOV) zoom is engaged — the gate for panning.
+func _lens_zoom_active() -> bool:
+	return _camera != null and _camera.fov < _default_fov - 0.01
 
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	var pos := event.position
-	if _pan_down:
+	if _pan_down and _lens_zoom_active():
 		_pan_camera(event.relative)
 	elif _left_down and _mode == Mode.CLEAN and _stroke_active:
 		if _paint_stroke:

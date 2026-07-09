@@ -62,6 +62,7 @@ func _ready() -> void:
 	_tools = ToolService.new()
 	_restoration = RestorationService.new()
 	_close_button.pressed.connect(close)
+	_tabs.tab_changed.connect(_on_day0_tab_changed)
 
 
 func open() -> void:
@@ -72,16 +73,112 @@ func open() -> void:
 			_owns_pause = true
 	refresh()
 	_close_button.grab_focus()
+	_refresh_day0_lesson()
+
+
+## --- Day 0 bench-tools lesson (TUT) --------------------------------------------
+## Storage opens on the Artifacts tab, so the lesson first aims the hint arrow at
+## the TOOLS tab; selecting it plays Yuyu's drag instruction (authored in
+## day0_script.json config.bench_tools_dialogue.drag) and releases the arrow.
+
+const DAY0_POINTER_SOURCE := "storage"
+const DAY0_POINTER_PRIORITY := 15  ## Above the bench (10), below the phone (20).
+
+var _day0_drag_shown: bool = false
+var _day0_dialogue: DialogueBox = null
+
+
+## True while the guided first equip is still due.
+func _day0_lesson_active() -> bool:
+	return (
+		TutorialService.is_tutorial_active()
+		and TutorialService.current_step_id() == "restore_artifact"
+		and GameState.save_state.loop.workbench_tools.is_empty()
+	)
+
+
+## Aims the arrow at the Tools tab until the player is on it (already there:
+## straight to Yuyu's drag instruction).
+func _refresh_day0_lesson() -> void:
+	if not visible or not _day0_lesson_active():
+		TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
+		return
+	if _tabs.current_tab == _tools_tab_index():
+		TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
+		_maybe_show_day0_drag_dialogue()
+		return
+	TutorialService.set_pointer_claim(
+		DAY0_POINTER_SOURCE, DAY0_POINTER_PRIORITY, _tools_tab_screen_pos
+	)
+
+
+func _on_day0_tab_changed(tab: int) -> void:
+	if not _day0_lesson_active():
+		return
+	if tab == _tools_tab_index():
+		TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
+		_maybe_show_day0_drag_dialogue()
+	else:
+		_refresh_day0_lesson()
+
+
+func _tools_tab_index() -> int:
+	for i in _tabs.get_tab_count():
+		if _tabs.get_tab_title(i) == "Tools":
+			return i
+	return 1
+
+
+## Screen-space point at the Tools tab's title button, for the tutorial arrow.
+func _tools_tab_screen_pos() -> Vector2:
+	var bar := _tabs.get_tab_bar()
+	if bar == null:
+		return _tabs.get_global_rect().position
+	var rect := bar.get_tab_rect(_tools_tab_index())
+	return bar.get_global_rect().position + rect.position + Vector2(rect.size.x * 0.5, 0.0)
+
+
+func _maybe_show_day0_drag_dialogue() -> void:
+	if _day0_drag_shown:
+		return
+	_day0_drag_shown = true
+	var blocks := ModelUtils.as_dictionary(
+		TutorialService.get_config().get("bench_tools_dialogue")
+	)
+	var raw_lines: Variant = blocks.get("drag")
+	if not (raw_lines is Array):
+		return
+	var lines: Array = []
+	for raw in raw_lines:
+		if raw is Dictionary:
+			var speaker_id := ModelUtils.as_string((raw as Dictionary).get("speaker"), "yuyu")
+			(
+				lines
+				. append(
+					{
+						"name": TutorialHintBox.speaker_display_name(speaker_id),
+						"text": ModelUtils.as_string((raw as Dictionary).get("text")),
+					}
+				)
+			)
+	if lines.is_empty():
+		return
+	if _day0_dialogue == null:
+		_day0_dialogue = preload("res://dialogue/dialogue_box.tscn").instantiate()
+		add_child(_day0_dialogue)
+	_day0_dialogue.start(lines)
 
 
 func close() -> void:
 	if visible:
 		visible = false
 		_release_pause_if_owned()
+	TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
 	closed.emit()
 
 
 func _exit_tree() -> void:
+	TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
 	_release_pause_if_owned()
 
 

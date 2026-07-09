@@ -71,6 +71,18 @@ func go_to(space: Space) -> void:
 	space_changed.emit(current_space)
 
 
+## Reloads the current space's scene in place (Day 0 graduation / tutorial skip
+## while already inside the shop): go_to()'s same-space guard would reject the
+## transition, but graduation NEEDS the fresh scene so begin_session() starts the
+## Day 1 clock and the Day 1 intro on the reloaded shop.
+func reload_current_space() -> void:
+	came_from_title = _on_title
+	_on_title = false
+	previous_space = current_space
+	_load(SPACE_SCENES[current_space])
+	space_changed.emit(current_space)
+
+
 ## Transitions to the seated shop. From the title screen this begins the live
 ## session; from the yard it returns without resetting the clock.
 func go_to_shop() -> void:

@@ -472,7 +472,7 @@ gated on her own arc (this is what breaks the Ayla↔Sam dependency cycle, ROUTE
 >
 > **You:** A digger? Like, an archeologist?
 >
-> **Ayla:** That's what they call it when you've got the diploma. [i]She scribbles on the back of a receipt with a pencil stub.[/i] Sam. Tell him I sent you — and don't clown around with him, ha? That's a serious man.
+> **Ayla:** That's what they call it when you've got the diploma. [i]She scribbles on the back of a receipt with a pencil stub.[/i] Sam. Tell her I sent you — and don't clown around with her, ha? That's a serious woman.
 >
 > [b]Lead saved:[/b] Sam, the Archeologist — Ayla's contact who digs old things professionally, outside the city.
 
@@ -975,39 +975,40 @@ the world out into Day 1, Loop 1. Day 0 never recurs (persistent flag).
 
 ### 14.2 Day 1 — waking into the loop
 
-The player wakes on the shop floor ("Did I… black out?"). Yuyu's glasses are on the counter, his
+The player wakes on the shop floor ("Did I… black out?"). Yuyu's mug is still on the counter, his
 jacket on the hook. Stepping outside, **Alya** — Yuyu's goddaughter, the scavenger — is at the
 gate; she becomes the daily scrap-sorting partner and the emotional heart of the first loop.
+*(v3: Yuyu's glasses are cut as an item/quest — Alya's Q1 is the lunchbox, §16.)*
 
-### 14.3 Alya's questline (implemented end-to-end)
+### 14.3 Alya's questline (v3 — 2026-07-09; supersedes the glasses opener)
 
-* **Q1 — Yuyu's Glasses (yard, any day):** Alya mentions Yuyu lost his glasses — a gift from her
-  late father. Find them in the scrapyard, return them → she opens up → **unlocks the Dump Site**
-  ("It's where I used to live with my parents.").
-* **Q2 — The Cute Bag (Dump Site):** the Dump Site is Alya's childhood home — including her
-  family's **typhoon-broken house**, abandoned after the storms. Find the bag her father gave
-  her, **clean it, open it** → a note from Papa + a small artifact → **₱1000** and the bag
-  becomes a permanent legacy item.
-* **Q3 — The Salakot (Day 5):** the forbidden-zone fence is suddenly broken. Inside lies the
-  **salakot Yuyu wore when he disappeared**. Bring it back: **Sam** — a woman archeologist who
-  never normally visits — appears at the door first, recognises it, and asks to meet at her
-  house.
-* **At Sam's house:** Sam and Yuyu investigated the Master Artifact together and were ambushed
-  in the Dump Site. Sam **buys the salakot back (₱3000)**. Alya realises the bag's lining holds
-  something heavy — Sam has the player take the **dirty bag home, clean it, and open it**: the
-  archeologist fragment (`fragment_04`), released as a carrier per §4-B/§4-D (never handed over
-  seated). **Selling the salakot to any other buyer fails the quest** for the loop.
-* Next loop, the Dump Site and Sam's house stay unlocked (persistent leads).
+* **Q1 — The Lunch Box (yard, Days 1–4):** talk to Alya; she **hands over her lunch box to
+  clean**. Returning it, the player asks about Yuyu — she remembers him **meeting a girl**
+  ("serious type, notebook"), then telling her he was headed to **her old house — the Dump
+  Site — for the final piece.** *(The glasses quest is cut; the lunchbox is the opener now.)*
+* **Q2 — The Sling Bag (Days 2–4):** her story: Yuyu adopted her after her father — Yuyu's best
+  friend — passed. **Unlocks the Dump Site (persists to later loops).** Amid evidence of Yuyu,
+  her **sling bag spawns at a random Dump Site spot** (only after Q1): her father's last gift,
+  lost years ago — the real reason she became a scavenger. She begs the player to **clean it**
+  (carrier: clean → open, §4-D).
+* **Q3 — The Salakot (Day 5):** with Q2 done, the **Forbidden Zone opens on Day 5**; a
+  **salakot spawns at a random spot inside**. It is **SAM'S hat** — lost on her last dig with
+  Yuyu (v3 ownership fix: it was never Yuyu's). Cleaning it summons **one guaranteed buyer:
+  Sam**. Selling it to her **unlocks Sam's place (next loops)**. Meeting her, Alya recognises
+  **the notebook girl** — and remembers something heavy sewn under the bag's lining: **the
+  fragment**, seated via the cleaned-and-opened bag (§4-B/§4-D). **Selling the salakot to any
+  other buyer fails the quest** for the loop.
+* Next loop, the Dump Site and Sam's place stay unlocked (persistent leads).
 
 ### 14.4 Fragment sourcing canon (team decision, partially implemented)
 
 | Fragment | Keeper | How it's earned |
 |---|---|---|
-| `fragment_01` | Nang Shine (auntie) | found **inside the shop safe** once the safe code is learned |
-| `fragment_02` | Nong Lave (artisan) | given after completing his **final cleaning quest** |
-| `fragment_03` | Ayla (scavenger) | the lunchbox quest — dig/clean/show, then the hunt (**implemented 2026-07-07**; see N5) |
-| `fragment_04` | Sam (archeologist) | the salakot → bag carrier flow above (**implemented**) |
-| `fragment_05` | Mr. Maverick (buyer) | his **end-of-Day-5 "last offer"**: **₱50,000** once the other four are seated → releases into a guaranteed same-day hunt (**implemented 2026-07-07**; see N6) |
+| `fragment_01` | Nang Shine (auntie) | the **yard Safe** (code revealed in her Q3 photo): next loop it opens → **₱1,000 + the fragment** (v3, §16) |
+| `fragment_02` | Nong Lave (artisan) | given after completing his **final cleaning quest** (v3: + the permanent durability technique) |
+| `fragment_03` | Ayla (scavenger) → Sam | **the sling-bag carrier** at the end of her v3 chain (lunchbox → Dump Site bag → salakot → Sam), clean → open (§16) |
+| `fragment_04` | Sam (archeologist) | her **next-loop exploration route** (v3: content TBD — was the salakot-bag flow, now re-homed to Ayla's chain) |
+| `fragment_05` | Mr. Maverick (buyer) | v3: buy his **overpriced daily artifact all five days** (18:00–20:00) → Day 5 he sells the fragment for **₱5,000** (replaces the ₱50k last offer; see §16) |
 
 ### 14.5 Schedules & spaces (implemented)
 
@@ -1129,3 +1130,37 @@ Death Mask and the §15.4 roster) remain ordinary gold museum collectibles with 
 
 **N9 — Historical artifact roster (15.4):** confirm the 5+ pieces to model and log each in
 `docs/sources/`. *(Still open — museum content only; decoupled from the echo hunt by N8.)*
+
+---
+
+## 16. Story revamp v3 — quest chains, schedules & dialogue (owner decision, Jorge, 2026-07-09)
+
+> **Status: CANON.** Supersedes §4–§8 route beats and the §14.3–§14.5 details where they
+> conflict. Full working spec + draft dialogue: **`docs/story-revamp-v3.md`** (single source for
+> implementation). Summary of record:
+
+### 16.1 The five routes at a glance
+
+| Route | Window | Chain | Fragment path |
+|---|---|---|---|
+| **Nang Shine (auntie)** | Shop door **12:00–16:00**, Days **1** (→3 fallback) / **3** / **5** (Day 5 from 09:00) | Clean 3 photos (Q1 = the Artisan as a child → unlocks Artisan next day; Q2 frame; Q3 = young Shine & Yuyu). Hand-offs happen **outside, at the gate beside Alya** | Q3 photo shows the **Safe code** → next loop the **yard Safe** opens: ₱1,000 + fragment (bare find) |
+| **Nong Lave (artisan)** | Shop **09:00–16:00**, Day **2** (→4 fallback), gated on Auntie Q1 same-loop | Clean one of his crafts per quest (pieces TBD); each completion = **pick 1 of 3 random tools** | Q3: fragment (scripted grant) + **permanent technique: 50% chance a clean costs no durability** |
+| **Alya (scavenger)** | Yard, Days **1–4** | Q1 lunchbox (she hands it over) → the "Yuyu met a girl / final piece at my old house" lead. Q2 Dump Site unlock + her **sling bag** random-spawns there → clean it. Q3 Day-5 **Forbidden Zone** + **Sam's salakot** random-spawns | Bag = carrier: after meeting Sam, Alya remembers the weight in the lining → **clean → open → seat** |
+| **Sam (archeologist)** | Her place, **next loop** after Alya Q3 (salakot sold to her) | Exploration-focused; content TBD | TBD (route reserved) |
+| **Mr. Maverick (buyer)** | Shop, **daily 18:00–20:00** — he **SELLS** | One overpriced artifact per day: D1 ₱300–700 (white–green) · D2 ₱300–700 (white–blue) · D3 ₱900–1,100 (green–blue) · D4 ₱1,400–1,600 (blue–purple) · D5 ₱1,400–1,600 (purple) | Bought **all five** → Day 5 he also sells **the fragment, ₱5,000** (replaces the ₱50k last offer, N6) |
+
+### 16.2 Canon corrections locked with v3
+
+- **The salakot is SAM'S hat** — lost on her last dig with Yuyu; that is why she appears as the
+  guaranteed buyer on Day 5 and why selling it to anyone else fails the quest. *(It was never
+  Yuyu's; §14.3 pre-v3 text said otherwise and is corrected above.)*
+- **Yuyu's glasses are cut** (item, quest, and template) — Alya's opener is the **lunch box**.
+- **Sam is a woman** ("the girl with the notebook"); §6.2's old line is corrected.
+- **The Safe** moves to the **yard** as a physical interactable with a no-code monologue.
+- Buyer prices use the fixed glow legend (§4-E): "rare"→blue, "epic"→purple; no new glow states.
+
+### 16.3 Persistence (per §4-A)
+
+Persists: Safe-code knowledge · Dump Site / Forbidden-Zone / Sam's-place unlocks · the artisan
+durability **technique** · seated fragments. Loop-scoped: the Safe's ₱1,000 (money resets), the
+buyer's daily artifacts (ordinary inventory).

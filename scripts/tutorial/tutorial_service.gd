@@ -265,7 +265,10 @@ func run_finale() -> bool:
 	overlay.blacked_out.connect(
 		func() -> void:
 			LoopController.complete_tutorial()
-			SpaceManager.go_to_shop()
+			# The finale plays inside the shop, so go_to_shop()'s same-space guard
+			# would reject the transition — reload the scene in place instead so
+			# the fresh shop starts the Day 1 clock and the Day 1 intro.
+			SpaceManager.reload_current_space()
 			overlay.fade_out()
 	)
 	overlay.begin()
@@ -299,6 +302,11 @@ func _apply_step_grants(step: Dictionary) -> void:
 			GameState.save_state.loop.tool_items.append(tool_id)
 		if not _owns_tool_instance(tool_id):
 			tools.grant_tool(tool_id)
+	# Day 0 teaches equipping from Storage: the granted tools arrive UNEQUIPPED —
+	# the bench opens empty and Yuyu walks the player through dragging tools out
+	# of the storage box (the bench's tools lesson). Day 1's starting kit
+	# re-grants with the normal auto-equip.
+	GameState.save_state.loop.workbench_tools.clear()
 
 
 ## Soft-lock guard: reaching the restoration step with nothing restorable (the

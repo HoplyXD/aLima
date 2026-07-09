@@ -320,13 +320,9 @@ func _spawn_pending_quest_items() -> void:
 	var progress := QuestService.get_progress("alya_quest_line")
 	if progress == "q2_bag" and not _has_quest_item_in_inventory("cute_bag"):
 		_spawn_quest_item("cute_bag", _get_dump_site_bounds())
-	# Salakot is now in the Forbidden Zone (separate location) — don't spawn it here
-	# The Manong's Keeping: her father's lunchbox is buried here until dug out.
-	if (
-		QuestService.get_progress("ayla_lunchbox") == "lb_dig"
-		and not _has_quest_item_in_inventory("ayla_lunchbox")
-	):
-		_spawn_quest_item("ayla_lunchbox", _get_dump_site_bounds())
+	# Salakot is now in the Forbidden Zone (separate location) — don't spawn it here.
+	# (v3: the Manong's Keeping dig is retired — Alya hands the lunch box over in
+	# person as Quest 1; see story.md §16.)
 
 
 func _get_dump_site_bounds() -> Dictionary:

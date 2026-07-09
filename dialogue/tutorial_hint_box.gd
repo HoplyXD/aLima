@@ -14,6 +14,9 @@ const SPEAKERS_PATH := "res://data/tutorial/speakers.json"
 const ARROW_SIZE: float = 26.0
 const ARROW_GAP: float = 14.0  ## Hover distance above the target point.
 const ARROW_BOB: float = 8.0
+## Targets above this screen y flip the arrow below the point (aiming up), so
+## top-bar buttons (Scan & Judge, Close) never push it off-screen.
+const TOP_FLIP_ZONE: float = 90.0
 
 static var _speakers: Dictionary = {}
 static var _speakers_loaded: bool = false
@@ -44,17 +47,31 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if not _arrow_visible:
 		return
-	# A bobbing triangle hovering above the target, pointing down at it.
+	# A bobbing triangle hovering above the target, pointing down at it. Targets
+	# near the top edge (top-bar buttons like Scan & Judge / Close) flip the arrow
+	# BELOW the point, aiming up, so it never draws off-screen.
 	var bob := sin(_time * 4.0) * ARROW_BOB
-	var tip := _arrow_target + Vector2(0.0, -ARROW_GAP + bob)
 	var half := ARROW_SIZE * 0.5
-	var points := PackedVector2Array(
-		[
-			tip,
-			tip + Vector2(-half, -ARROW_SIZE),
-			tip + Vector2(half, -ARROW_SIZE),
-		]
-	)
+	var flip := _arrow_target.y < TOP_FLIP_ZONE
+	var points: PackedVector2Array
+	if flip:
+		var tip := _arrow_target + Vector2(0.0, ARROW_GAP - bob)
+		points = PackedVector2Array(
+			[
+				tip,
+				tip + Vector2(-half, ARROW_SIZE),
+				tip + Vector2(half, ARROW_SIZE),
+			]
+		)
+	else:
+		var tip := _arrow_target + Vector2(0.0, -ARROW_GAP + bob)
+		points = PackedVector2Array(
+			[
+				tip,
+				tip + Vector2(-half, -ARROW_SIZE),
+				tip + Vector2(half, -ARROW_SIZE),
+			]
+		)
 	draw_colored_polygon(points, Color(1.0, 0.85, 0.3, 0.95))
 	draw_polyline(
 		PackedVector2Array([points[0], points[1], points[2], points[0]]),
@@ -95,9 +112,14 @@ func point_at_screen_pos(pos: Vector2) -> void:
 
 
 ## Aims the arrow at the center-top of a Control (e.g. the tool sidebar).
+## Top-bar controls are aimed at from BELOW their bottom edge instead (the
+## arrow flips upward in _draw), so it never covers the button or leaves the screen.
 func point_at_control(target: Control) -> void:
 	var rect := target.get_global_rect()
-	point_at_screen_pos(Vector2(rect.get_center().x, rect.position.y))
+	if rect.position.y < TOP_FLIP_ZONE:
+		point_at_screen_pos(Vector2(rect.get_center().x, rect.end.y))
+	else:
+		point_at_screen_pos(Vector2(rect.get_center().x, rect.position.y))
 
 
 func clear_pointer() -> void:

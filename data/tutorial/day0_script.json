@@ -13,8 +13,41 @@
       "dust",
       "dirt"
     ],
+    "excluded_templates": [
+      "wood_pipe"
+    ],
     "tutorial_buyer_id": "mysterious_buyer",
     "buyer_destination_id": "mall",
+    "bench_tools_dialogue": {
+      "storage": [
+        {
+          "speaker": "yuyu",
+          "text": "The bench is bare, {player}. My old tools are in that storage box - open it up."
+        }
+      ],
+      "drag": [
+        {
+          "speaker": "yuyu",
+          "text": "There - the Tools shelf. Drag my Soft Brush and Damp Cloth onto the bench slots, then close the box."
+        }
+      ],
+      "select": [
+        {
+          "speaker": "yuyu",
+          "text": "Good. Now pick it up - click the tool's button on the left, or press its number key."
+        }
+      ],
+      "clean": [
+        {
+          "speaker": "yuyu",
+          "text": "That's it. Work the tool across the dirt. Hold RIGHT CLICK and drag to turn the piece over, and roll the mouse wheel to lean in close."
+        },
+        {
+          "speaker": "yuyu",
+          "text": "When you're leaned all the way in, hold the MIDDLE button to shift the piece around. Gently does it, ha?"
+        }
+      ]
+    },
     "banter_dialogue": [
       {
         "speaker": "yuyu",
@@ -141,7 +174,7 @@
       "dialogue": [
         {
           "speaker": "yuyu",
-          "text": "Now the real work. Take my whole kit - the soft brush and damp cloth for today's dust and grime, and the rest of my old tools for whatever the yard throws at you."
+          "text": "Now the real work. My whole kit is in the storage box by the bench - the soft brush and damp cloth for today's dust and grime, and the rest for whatever the yard throws at you."
         },
         {
           "speaker": "yuyu",

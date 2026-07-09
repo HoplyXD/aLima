@@ -8,7 +8,7 @@ const BACKEND_URL_SETTING := "network/portal/backend_url"
 const DEFAULT_BACKEND_URL := "http://localhost:3000"
 const ENDPOINT := "/api/negotiate"
 const STATUS_ENDPOINT := "/api/negotiate/status"
-const TIMEOUT_S := 6.0
+const TIMEOUT_S := 10.0  ## Generous enough for slow local/self-hosted providers.
 
 var _backend_url := ""
 var _live := false
@@ -59,6 +59,10 @@ func fetch_banter(
 	}
 	var res := await _request(_backend_url + ENDPOINT, body, HTTPClient.METHOD_POST)
 	if not res.get("ok", false):
+		# The backend stopped answering (crashed/offline): flip live off so the
+		# AI label tells the truth instead of a stale "live". The next haggle
+		# entry re-probes, so this self-heals the moment the server is back.
+		_live = false
 		return {"ok": false}
 	var data: Dictionary = res.data
 	if bool(data.get("fallback", false)):

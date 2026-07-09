@@ -346,12 +346,6 @@ func _setup_scrap_items_root() -> void:
 func _open_handoff() -> void:
 	var quest_progress := QuestService.get_progress("alya_quest_line")
 
-	# The Manong's Keeping (fragment_03): Ayla's post-questline lunchbox arc runs
-	# through daily contact. Checked before the welcome-back line so her story
-	# can continue past the first questline.
-	if _handle_lunchbox_dialogue():
-		return
-
 	# Next-loop welcome: Alya greets returning players who completed the quest line
 	if QuestService.is_completed("alya_quest_line"):
 		_dialogue_box.start(
@@ -364,22 +358,35 @@ func _open_handoff() -> void:
 		_enter_overlay()
 		return
 
-	# Quest 1: Start dialogue when Day 1 intro is complete
+	# Quest 1 (v3): Alya hands over her lunch box to clean once Day 1's intro is done.
 	if quest_progress.is_empty() and GameState.save_state.persistent.day1_intro_completed:
 		if not QuestService.is_completed("alya_quest_line"):
 			_dialogue_box.start(
-				_ayla_lines("q1_start", "Ayla: Hey, can I tell you something about Yuyu?")
+				_ayla_lines(
+					"q1_start", "Ayla: This lunch box... clean it for me? Careful with the lid, ha."
+				)
 			)
 			_pending_dialogue_action = "q1_start"
 			_enter_overlay()
 			return
 
-	# Quest 1: Player found Yuyu's glasses
-	if quest_progress == "q1_glasses" and _has_quest_item_in_inventory("yuyu_glasses"):
-		_dialogue_box.start(
-			_ayla_lines("q1_glasses_found", "Ayla: These are Tito's glasses! Thank you so much!")
-		)
-		_pending_dialogue_action = "q1_glasses_found"
+	# Quest 1 (v3): the lunch box comes back — cleaned, or not yet.
+	if quest_progress == "q1_lunchbox":
+		var lunchbox := _find_quest_item_in_inventory("ayla_lunchbox")
+		if lunchbox != null and lunchbox.state != ModelEnums.ObjState.DIRTY:
+			_dialogue_box.start(
+				_ayla_lines(
+					"q1_lunchbox_done",
+					"Ayla: ...That's the sticker. That's the dent. Thank you gid."
+				)
+			)
+			_pending_dialogue_action = "q1_done"
+		else:
+			_dialogue_box.start(
+				_ayla_lines(
+					"q1_lunchbox_dirty", "Ayla: Not like this, ha? Clean it properly first."
+				)
+			)
 		_enter_overlay()
 		return
 
@@ -411,49 +418,30 @@ func _open_handoff() -> void:
 		_enter_overlay()
 
 
-## The Manong's Keeping (fragment_03) dialogue chain, keyed on quest progress.
-## Gated on Alya's questline being done and Sam's excavation tools being owned
-## (the ROUTE-R8 cross-route gate). Returns true when it presented dialogue.
-func _handle_lunchbox_dialogue() -> bool:
-	var progress := QuestService.get_progress("ayla_lunchbox")
-	if progress == "completed" or progress == "failed":
-		return false
-	if progress.is_empty():
-		if not QuestService.is_completed("alya_quest_line"):
-			return false
-		if not GameState.save_state.persistent.legacy_items.has("excavation_tools"):
-			return false
-		if FragmentService.get_state("fragment_03") != ModelEnums.FragmentState.LOCKED:
-			return false
-		_dialogue_box.start(
-			_ayla_lines(
-				"lunchbox_start",
-				"Ayla: My Tatay's lunchbox is still out there. Dig it out for me, ha?"
-			)
-		)
-		_pending_dialogue_action = "lunchbox_start"
-		_enter_overlay()
-		return true
-	# progress == "lb_dig": the arc advances by what the player is carrying.
-	var lunchbox := _find_quest_item_in_inventory("ayla_lunchbox")
-	if lunchbox == null:
-		_dialogue_box.start(
-			_ayla_lines(
-				"lunchbox_remind",
-				"Ayla: The lunchbox is deep in the Dump Site heaps — Days 3 and 4, ha?"
-			)
-		)
-		_pending_dialogue_action = "lunchbox_remind"
-	elif lunchbox.state == ModelEnums.ObjState.DIRTY:
-		_dialogue_box.start(
-			_ayla_lines("lunchbox_dirty", "Ayla: Not like this, ha? Clean it first.")
-		)
-		_pending_dialogue_action = "lunchbox_dirty"
-	else:
-		_dialogue_box.start(_ayla_lines("lunchbox_show", "Ayla: ...That's my Tatay's initials."))
-		_pending_dialogue_action = "lunchbox_show"
-	_enter_overlay()
-	return true
+## Hands a fresh, dirty quest-item instance straight into the loop inventory
+## (v3: Alya gives her lunch box in person — no yard pickup). Tracked as
+## quest-essential so selling it fails the quest instead of banking pesos.
+func _grant_quest_item_to_inventory(template_id: String, quest_giver: String) -> void:
+	if _has_quest_item_in_inventory(template_id):
+		return
+	var template := DataRepository.singleton().get_template(template_id)
+	if template == null:
+		return
+	var instance := ObjectInstance.new()
+	instance.template_id = template_id
+	instance.uid = (
+		"quest_%s_%d_%d_%d"
+		% [template_id, GameState.loop_index, Time.get_unix_time_from_system(), randi()]
+	)
+	instance.condition = 0.0
+	instance.state = ModelEnums.ObjState.DIRTY
+	instance.is_quest_item = true
+	instance.storage_cost = template.storage_cost
+	instance.value = int(template.base_value_range.x)
+	instance.true_value = int(template.base_value_range.x)
+	GameState.save_state.loop.inventory.append(instance.to_dictionary())
+	QuestService.track_quest_item(instance.uid, template_id, quest_giver)
+	_refresh_hud_hotbar()
 
 
 ## Loads an authored Ayla dialogue block from the scavenger route, falling back to
@@ -721,7 +709,9 @@ func _refresh_hud_hotbar() -> void:
 	if _hud == null:
 		return
 	var scrap_total := _total_scrap_count()
-	_hud.set_inventory(scrap_total, _restored_inventory_entries())
+	_hud.set_inventory(
+		scrap_total, _restored_inventory_entries(), GameState.save_state.loop.scrap_pool
+	)
 	_hud.set_quest_count(_count_seated_fragments())
 
 
@@ -887,26 +877,23 @@ func _open_inspection_overlay(data: Dictionary) -> void:
 func _on_dialogue_finished() -> void:
 	match _pending_dialogue_action:
 		"q1_start":
+			# v3: she hands the lunch box over on the spot — no yard hunt.
 			QuestService.start_quest("alya_quest_line")
-			QuestService.advance_quest("alya_quest_line", "q1_glasses")
-			_spawn_quest_item("yuyu_glasses", _get_scrap_bounds())
+			QuestService.advance_quest("alya_quest_line", "q1_lunchbox")
+			_grant_quest_item_to_inventory("ayla_lunchbox", "ayla")
 			_pending_dialogue_action = ""
 			_exit_overlay()
-		"q1_glasses_found":
-			_remove_quest_item_from_inventory("yuyu_glasses")
+		"q1_done":
+			# The cleaned lunch box goes home with her (a permanent keepsake), and
+			# her Yuyu lead opens the Dump Site chain (v3, story.md §16).
+			_remove_quest_item_from_inventory("ayla_lunchbox")
+			if not GameState.save_state.persistent.legacy_items.has("ayla_lunchbox"):
+				GameState.save_state.persistent.legacy_items.append("ayla_lunchbox")
 			QuestService.advance_quest("alya_quest_line", "q1_completed")
 			QuestService.unlock_location("dump_site")
-			_pending_dialogue_action = ""
-			_exit_overlay()
-		"lunchbox_start":
-			QuestService.start_quest("ayla_lunchbox")
-			QuestService.advance_quest("ayla_lunchbox", "lb_dig")
-			# The dig item lives in the Dump Site; if that's this scene, spawn now.
-			_spawn_pending_quest_items()
-			_pending_dialogue_action = ""
-			_exit_overlay()
-		"lunchbox_show":
-			_complete_lunchbox_quest()
+			var save_result := SaveService.save_game()
+			if not save_result.ok:
+				push_error("Scrapyard: Q1 save failed: %s" % save_result.get("error", ""))
 			_pending_dialogue_action = ""
 			_exit_overlay()
 		"yard_welcome_back":
@@ -916,20 +903,6 @@ func _on_dialogue_finished() -> void:
 			_pending_dialogue_action = ""
 			_exit_overlay()
 	_refresh_hud_hotbar()
-
-
-## Showing Ayla the restored lunchbox completes her arc: the lunchbox becomes a
-## permanent keepsake (never sold) and her fragment RELEASES into the hunt.
-func _complete_lunchbox_quest() -> void:
-	_remove_quest_item_from_inventory("ayla_lunchbox")
-	if not GameState.save_state.persistent.legacy_items.has("ayla_lunchbox"):
-		GameState.save_state.persistent.legacy_items.append("ayla_lunchbox")
-	QuestService.ensure_active("ayla_lunchbox")
-	QuestService.complete_quest("ayla_lunchbox")
-	FragmentService.release_fragment("fragment_03", "ayla_lunchbox")
-	var save_result := SaveService.save_game()
-	if not save_result.ok:
-		push_error("Scrapyard: lunchbox save failed: %s" % save_result.get("error", ""))
 
 
 func _enter_overlay() -> void:
@@ -1146,6 +1119,7 @@ func _on_quest_item_collected(template_id: String) -> void:
 
 
 func _spawn_pending_quest_items() -> void:
-	var progress := QuestService.get_progress("alya_quest_line")
-	if progress == "q1_glasses" and not _has_quest_item_in_inventory("yuyu_glasses"):
-		_spawn_quest_item("yuyu_glasses", _get_scrap_bounds())
+	# v3: the yard itself has no quest-item spawns (Alya hands Q1's lunch box over
+	# in person). Kept as a seam — the Dump Site subclass overrides it to spawn
+	# the sling bag and the salakot.
+	pass

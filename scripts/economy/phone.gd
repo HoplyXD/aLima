@@ -702,6 +702,8 @@ func haggle_chat(text: String) -> void:
 		_negotiation.add_buyer_line(reply)
 	if _current_app == "marketplace" and _market_view == "haggle":
 		_render_marketplace()
+		# The fetch may have discovered the backend is down; keep the label honest.
+		_refresh_ai_label()
 
 
 ## Shows a "buyer is typing" placeholder on the spoken-line label while we await a reply.

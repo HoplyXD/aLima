@@ -18,7 +18,10 @@ extends Node
 const _MET_PREFIX := "route_met:"
 
 ## Visit ordering scanned by resolve_visitor when (rarely) windows overlap.
-const _VISIT_PRIORITY: Array[String] = ["archeologist", "auntie", "scavenger", "artisan", "buyer"]
+## "archeologist" is intentionally absent (team request 2026-07-09): Sam's shop
+## visits are superseded by the salakot-quest flow (the shop door's dedicated
+## "sam" route branch); his scheduled-window dialogue is outdated.
+const _VISIT_PRIORITY: Array[String] = ["auntie", "scavenger", "artisan", "buyer"]
 
 ## Loop-scoped record of which scheduled visits the player answered or let expire,
 ## keyed "day:route_id". Cleared on loop reset. Not persisted: a visit that closes

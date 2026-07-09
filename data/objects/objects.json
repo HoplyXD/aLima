@@ -773,47 +773,6 @@
 	},
 	{
 	  "record_type": "template",
-	  "id": "yuyu_glasses",
-	  "display_name": "Yuyu's Old Glasses",
-	  "description": "A pair of thick-rimmed glasses. The lenses are scratched, but the frame is still sturdy. Yuyu never went anywhere without them.",
-	  "category": "accessory",
-	  "base_rarity": "white",
-	  "weight_range": [
-		0.05,
-		0.15
-	  ],
-	  "materials": [
-		"plastic",
-        "glass"
-	  ],
-	  "tags": [
-		"accessory",
-		"small",
-        "quest"
-	  ],
-	  "is_openable": false,
-	  "openable_type": "",
-	  "required_clean_tool": "soft_cloth",
-	  "clean_minigame": "glasses_wipe",
-	  "clean_completion_threshold": 100,
-	  "clean_progress_per_action": 25,
-	  "clean_value_bonus": 5,
-	  "wrong_tool_condition_damage": 10,
-	  "wrong_tool_value_damage": 5,
-	  "wrong_tool_feedback": "The wrong tool scratches the delicate lenses.",
-	  "base_value_range": [
-		0,
-		50
-	  ],
-	  "storage_cost": 1,
-	  "counterfeit_profile": "",
-	  "historical_fact_ref": "",
-	  "can_hold_temporal_echo": false,
-	  "deliverable": false,
-	  "is_quest_item": true
-	},
-	{
-	  "record_type": "template",
 	  "id": "cute_bag",
 	  "display_name": "Alya's Cute Bag",
 	  "description": "A small hand-sewn bag with faded floral patterns. Alya's father gave this to her when she was little. The zipper is rusted shut.",

@@ -152,6 +152,9 @@ func _ready() -> void:
 
 	AylaService.sort_ready.connect(_on_ayla_sort_ready)
 	EventBus.day_changed.connect(_on_day_changed)
+	# Visitor windows are hourly: re-check who is waiting at the door each hour so
+	# the knock portrait appears/disappears with the schedule.
+	EventBus.hour_changed.connect(func(_day: int, _hour: int) -> void: _refresh_ayla_knock())
 	# The window light tracks the clock (and Day 0's scripted sunrise/noon/sunset).
 	SunController.attach(self, get_node_or_null("DirectionalLight3D") as DirectionalLight3D)
 	# The evening runs interactively while the shop is the active scene; leaving the
@@ -246,6 +249,11 @@ func _on_day1_intro_finished() -> void:
 ## Shows a sequence of dialogue lines from a step.
 func _show_dialogue_lines(lines: Array) -> void:
 	if lines.is_empty():
+		return
+	# A Day 1 step can complete DURING a space transition (stepping out the door):
+	# this shop is already detached, so a child DialogueBox would never _ready()
+	# and crash on its nil labels. The new scene re-announces the step instead.
+	if not is_inside_tree():
 		return
 	var box: DialogueBox = DIALOGUE_BOX_SCENE.instantiate()
 	add_child(box)
@@ -468,6 +476,8 @@ func _on_door_pressed() -> void:
 		if tex != null:
 			_visitor.texture = tex
 	_active_visitor_route_id = route.id
+	# Their waiting-at-the-door portrait is answered; the dialogue portrait takes over.
+	_visitor2.visible = false
 	_open_dialogue(lines, true)
 
 
@@ -887,7 +897,9 @@ func _refresh_ayla_knock() -> void:
 	if TutorialService.is_tutorial_active():
 		return
 	# Day 1 intro: no morning delivery; player finds scrap in the yard instead.
+	# Scheduled route visitors (e.g. Auntie's Day 1 window) still knock.
 	if DayClock.get_day() == 1 and not Day1Service.is_day1_intro_active():
+		_refresh_route_visitor_knock()
 		return
 	# Day 1 intro active: no daily delivery either; scrap-sort only.
 	if Day1Service.is_day1_intro_active():
@@ -897,6 +909,30 @@ func _refresh_ayla_knock() -> void:
 		_alya_waiting = true
 		_visitor2.texture = ALYA_PORTRAIT
 		_visitor2.visible = true
+		return
+	_refresh_route_visitor_knock()
+
+
+## Shows the scheduled route visitor's portrait at the door BEFORE the player
+## answers (same treatment as Alya's knock), so a knock is never a jump-scare.
+## Alya's knock always outranks it; the portrait clears once the visit is
+## answered/missed (resolve_visitor then returns null for the window).
+func _refresh_route_visitor_knock() -> void:
+	if _alya_waiting or _alya_delivering:
+		return
+	if TutorialService.is_tutorial_active() or Day1Service.is_day1_intro_active():
+		_visitor2.visible = false
+		return
+	var route := RouteService.resolve_visitor(DayClock.get_day(), DayClock.get_hour())
+	if route == null or route.portrait.is_empty():
+		_visitor2.visible = false
+		return
+	var tex: Texture2D = load(route.portrait)
+	if tex == null:
+		_visitor2.visible = false
+		return
+	_visitor2.texture = tex
+	_visitor2.visible = true
 
 
 ## Wrapper for the AylaService sort_ready signal.
@@ -1084,6 +1120,8 @@ func _on_dialogue_finished() -> void:
 		RouteService.mark_met(finished_route_id)
 		RouteService.notify_visit_answered(finished_route_id, DayClock.get_day())
 		_active_visitor_route_id = ""
+		# The answered visitor is gone from the door; re-check for the next knock.
+		_refresh_route_visitor_knock()
 	_hud.set_actions_visible(true)
 	# Restoring all actions can re-show buttons that sit under an open journal;
 	# re-apply the journal layout so it stays consistent.
