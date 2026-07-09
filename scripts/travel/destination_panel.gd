@@ -14,6 +14,8 @@ const PANEL_LAYER: int = 60
 
 var _travel: TravelService
 
+@onready var _panel: PanelContainer = $Center/Panel
+@onready var _dim: ColorRect = $Dim
 @onready var _buttons_box: VBoxContainer = %DestinationButtons
 @onready var _cancel_button: Button = %CancelButton
 
@@ -35,6 +37,10 @@ func open(travel: TravelService = null) -> void:
 	_travel = travel if travel != null else TravelService.new()
 	_rebuild_buttons()
 	visible = true
+	UiAnimations.popup_open(_panel)
+	UiAnimations.fade_to(_dim, 1.0, 0.2)
+	if _dim.get_node_or_null("DustParticles") == null:
+		UiAnimations.add_dust_particles(_dim, 16)
 	if DisplayServer.get_name() != "headless":
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if _buttons_box.get_child_count() > 0:
@@ -46,6 +52,8 @@ func open(travel: TravelService = null) -> void:
 func close() -> void:
 	if not visible:
 		return
+	UiAnimations.popup_close(_panel)
+	UiAnimations.fade_to(_dim, 0.0, 0.15)
 	visible = false
 	if DisplayServer.get_name() != "headless":
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)

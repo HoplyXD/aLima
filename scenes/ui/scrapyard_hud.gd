@@ -46,11 +46,44 @@ func _ready() -> void:
 	set_day(1, 5)
 	set_time(7, 0)
 	set_prompt("")
+	_build_panels()
 	_build_top_left_buttons()
 	_build_quest_label()
 	_build_quest_tracker()
 	_build_hotbar()
 	set_inventory(0, [])
+
+
+## Decorative panels behind the day/clock readout and bottom prompt.
+func _build_panels() -> void:
+	var top_panel := Panel.new()
+	top_panel.name = "TopPanel"
+	top_panel.anchor_left = 1.0
+	top_panel.anchor_right = 1.0
+	top_panel.offset_left = -280.0
+	top_panel.offset_top = 12.0
+	top_panel.offset_right = -16.0
+	top_panel.offset_bottom = 188.0
+	top_panel.add_theme_stylebox_override("panel", UiPalette.wooden_panel_style())
+	add_child(top_panel)
+	var prompt_panel := Panel.new()
+	prompt_panel.name = "PromptPanel"
+	prompt_panel.anchor_left = 0.5
+	prompt_panel.anchor_top = 1.0
+	prompt_panel.anchor_right = 0.5
+	prompt_panel.anchor_bottom = 1.0
+	prompt_panel.offset_left = -340.0
+	prompt_panel.offset_top = -170.0
+	prompt_panel.offset_right = 340.0
+	prompt_panel.offset_bottom = -126.0
+	prompt_panel.add_theme_stylebox_override("panel", UiPalette.manuscript_card_style())
+	add_child(prompt_panel)
+	# Send panels to the back so labels draw on top.
+	move_child(top_panel, 0)
+	move_child(prompt_panel, 1)
+	_day_label.add_theme_color_override("font_color", UiPalette.BONE)
+	_clock_label.add_theme_color_override("font_color", UiPalette.SOFT_GOLD)
+	_prompt_label.add_theme_color_override("font_color", UiPalette.BONE)
 
 
 ## Top-left quick actions: phone (marketplace) and journal, usable outdoors.
@@ -62,13 +95,13 @@ func _build_top_left_buttons() -> void:
 	add_child(row)
 	_phone_button = Button.new()
 	_phone_button.text = "Phone"
-	_phone_button.custom_minimum_size = Vector2(120, 48)
+	_phone_button.custom_minimum_size = Vector2(130, 52)
 	_phone_button.focus_mode = Control.FOCUS_ALL
 	_phone_button.pressed.connect(func() -> void: phone_pressed.emit())
 	row.add_child(_phone_button)
 	_journal_button = Button.new()
 	_journal_button.text = "Journal"
-	_journal_button.custom_minimum_size = Vector2(120, 48)
+	_journal_button.custom_minimum_size = Vector2(130, 52)
 	_journal_button.focus_mode = Control.FOCUS_ALL
 	_journal_button.pressed.connect(func() -> void: journal_pressed.emit())
 	# Day 0 (TUT): the journal doesn't exist yet — the player only finds it at the
@@ -85,11 +118,12 @@ func _build_quest_label() -> void:
 	_quest_label.anchor_right = 1.0
 	# Below the tutorial quest panel (top-right, y 64..196) so they never overlap.
 	_quest_label.offset_left = -260.0
-	_quest_label.offset_right = -24.0
-	_quest_label.offset_top = 204.0
-	_quest_label.offset_bottom = 236.0
+	_quest_label.offset_right = -36.0
+	_quest_label.offset_top = 210.0
+	_quest_label.offset_bottom = 242.0
 	_quest_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_quest_label.add_theme_font_size_override("font_size", 22)
+	_quest_label.add_theme_color_override("font_color", UiPalette.BONE)
 	add_child(_quest_label)
 
 
@@ -161,13 +195,14 @@ func set_inventory(
 		var is_overflow_slot := s == scrap_slots - 1 and units.size() > scrap_slots
 		var rarity_name := units[s]
 		var color := (
-			SLOT_SCRAP_COLOR
-			if is_overflow_slot or rarity_name.is_empty()
-			else RARITY_COLORS.get(rarity_name, SLOT_SCRAP_COLOR) as Color
+			(
+				SLOT_SCRAP_COLOR
+				if is_overflow_slot or rarity_name.is_empty()
+				else RARITY_COLORS.get(rarity_name, SLOT_SCRAP_COLOR)
+			)
+			as Color
 		)
-		var display_name := (
-			"Scrap x%d" % (units.size() - s) if is_overflow_slot else "Scrap"
-		)
+		var display_name := "Scrap x%d" % (units.size() - s) if is_overflow_slot else "Scrap"
 		var scrap_mesh := _make_scrap_heap(color)
 		_set_slot(slot_index, display_name, color, scrap_mesh)
 		_slot_data[slot_index] = {
@@ -231,9 +266,8 @@ func _set_slot(index: int, display_name: String, color: Color, preview: Node3D) 
 		preview = Node3D.new()
 	card.set_spin(true)
 	card.set_preview(preview, display_name, color, 0.9)
-	# A filled carry slot: parchment panel with a faint brass edge, matching the shared UI.
-	var style := UiPalette.panel_style(Color(0.2, 0.17, 0.12, 0.9), Color(0.74, 0.56, 0.28, 0.45))
-	style.set_content_margin_all(6.0)
+	# Filled carry slot: bronze-framed parchment with a subtle rarity glow.
+	var style := UiPalette.inventory_slot_style(&"normal", color)
 	card.add_theme_stylebox_override("panel", style)
 
 
@@ -243,9 +277,8 @@ func _clear_slot(index: int) -> void:
 	var card: Preview3DCard = _cards[index]
 	card.set_spin(false)
 	card.set_preview(Node3D.new(), "", Color.WHITE, 0.0)
-	# Empty slot: quiet warm-ink recess (no accent edge).
-	var style := UiPalette.panel_style(SLOT_EMPTY_COLOR)
-	style.set_content_margin_all(6.0)
+	# Empty slot: dark parchment bronze frame.
+	var style := UiPalette.inventory_slot_style(&"normal")
 	card.add_theme_stylebox_override("panel", style)
 
 

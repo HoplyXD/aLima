@@ -1,9 +1,11 @@
 [gd_scene format=3 uid="uid://cjm8k2o6gqmv1"]
 
 [ext_resource type="Script" uid="uid://bptc52vqr0q8s" path="res://scenes/ui/scrapyard_hud.gd" id="1_hud"]
+[ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="2_theme"]
 
 [node name="ScrapyardHud" type="CanvasLayer"]
 script = ExtResource("1_hud")
+theme = ExtResource("2_theme")
 
 [node name="DayLabel" type="Label" parent="."]
 anchors_preset = 1

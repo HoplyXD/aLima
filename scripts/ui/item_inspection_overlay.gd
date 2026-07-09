@@ -19,6 +19,8 @@ var _dragging: bool = false
 var _zoom: float = 1.0
 var _base_holder_scale: Vector3 = Vector3.ONE
 
+@onready var _panel: PanelContainer = $Panel
+@onready var _background: ColorRect = $Background
 @onready var _name_label: Label = %NameLabel
 @onready var _close_button: Button = %CloseButton
 @onready var _preview_container: SubViewportContainer = %PreviewContainer
@@ -70,6 +72,10 @@ func _set_zoom(value: float) -> void:
 func open(data: Dictionary) -> void:
 	visible = true
 	set_process(true)
+	UiAnimations.popup_open(_panel)
+	UiAnimations.fade_to(_background, 1.0, 0.2)
+	if _background.get_node_or_null("DustParticles") == null:
+		UiAnimations.add_dust_particles(_background, 16)
 
 	var display_name: String = str(data.get("display_name", "Item"))
 	var color: Color = data.get("color", Color.WHITE)
@@ -110,6 +116,8 @@ func open(data: Dictionary) -> void:
 
 
 func close() -> void:
+	UiAnimations.popup_close(_panel)
+	UiAnimations.fade_to(_background, 0.0, 0.15)
 	visible = false
 	set_process(false)
 	_spin = true

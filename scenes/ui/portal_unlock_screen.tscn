@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cge5utsulwk57"]
 
 [ext_resource type="Script" uid="uid://ej62il7w8jxu" path="res://scripts/portal/portal_unlock_screen.gd" id="1_unlock"]
+[ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="ui_theme"]
 [ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_i5qhx"]
 [ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="3_pvpp0"]
 [ext_resource type="Texture2D" uid="uid://dvon5n1qg4s5o" path="res://assets/UI assets/game/gui/namebox.png" id="4_g0ere"]
@@ -8,16 +9,54 @@
 [ext_resource type="Texture2D" uid="uid://dxr4jmbwn30dm" path="res://assets/UI assets/game/gui/bar/left.png" id="6_nx055"]
 [ext_resource type="Texture2D" uid="uid://dprq1wdcmqdih" path="res://assets/UI assets/game/gui/bar/right.png" id="7_ou1tt"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_624o5"]
-texture = ExtResource("2_i5qhx")
+[sub_resource type="StyleBoxFlat" id="StyleBoxTexture_624o5"]
+bg_color = Color(0.2, 0.17, 0.12, 0.95)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(0.13, 0.09, 0.06, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 12
+shadow_offset = Vector2(0, 5)
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8wgif"]
+[sub_resource type="StyleBoxLine" id="StyleBoxEmpty_8wgif"]
+color = Color(0.55, 0.38, 0.2, 0.8)
+thickness = 2
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_62nj6"]
-texture = ExtResource("6_nx055")
+[sub_resource type="StyleBoxFlat" id="StyleBoxTexture_62nj6"]
+bg_color = Color(0.32, 0.18, 0.1, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.74, 0.56, 0.28, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tq64y"]
-texture = ExtResource("7_ou1tt")
+[sub_resource type="StyleBoxFlat" id="StyleBoxTexture_tq64y"]
+bg_color = Color(0.42, 0.28, 0.18, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.95, 0.8, 0.42, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0.95, 0.8, 0.42, 0.35)
+shadow_size = 8
+shadow_offset = Vector2(0, 2)
 
 [node name="PortalUnlockScreen" type="Control" unique_id=1613488357]
 layout_mode = 3
@@ -26,6 +65,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("ui_theme")
 script = ExtResource("1_unlock")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2056786324]
@@ -43,6 +83,7 @@ offset_right = 300.0
 offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("ui_theme")
 theme_override_styles/panel = SubResource("StyleBoxTexture_624o5")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/PanelContainer" unique_id=1833571364]
@@ -53,6 +94,7 @@ alignment = 1
 [node name="TitleLabel" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=63451347]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_fonts/font = ExtResource("3_pvpp0")
 theme_override_font_sizes/font_size = 64
 text = "Portal Unlock"
@@ -84,6 +126,7 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.32, 0.28, 1)
 theme_override_fonts/font = ExtResource("5_05ey3")
 theme_override_font_sizes/font_size = 40
 text = "Offline fallback result"
@@ -100,8 +143,8 @@ custom_minimum_size = Vector2(500, 40)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_fonts/font = ExtResource("5_05ey3")
 theme_override_font_sizes/font_size = 33
 theme_override_styles/normal = SubResource("StyleBoxTexture_62nj6")

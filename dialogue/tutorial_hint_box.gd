@@ -103,6 +103,7 @@ func show_hint(speaker_id: String, text: String) -> void:
 
 func hide_hint() -> void:
 	clear_pointer()
+	hide()
 	_animate_hide()
 
 
@@ -134,8 +135,7 @@ func _apply_style() -> void:
 		_panel.add_theme_stylebox_override("panel", UiPalette.manuscript_card_style())
 	if _portrait_bg != null:
 		_portrait_bg.add_theme_stylebox_override(
-			"panel",
-			UiPalette.panel_style(Color(0.17, 0.14, 0.10, 1.0), UiPalette.SOFT_GOLD, 24)
+			"panel", UiPalette.panel_style(Color(0.17, 0.14, 0.10, 1.0), UiPalette.SOFT_GOLD, 24)
 		)
 	if _speaker_label != null:
 		_speaker_label.add_theme_color_override("font_color", UiPalette.SOFT_GOLD)

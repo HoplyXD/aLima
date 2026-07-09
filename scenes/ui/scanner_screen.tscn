@@ -6,10 +6,28 @@
 [ext_resource type="Texture2D" uid="uid://fea2iartni8r" path="res://assets/UI assets/game/gui/separator.png" id="4_mmpfc"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ddhd"]
-bg_color = Color(1, 1, 1, 1)
+bg_color = Color(0.32, 0.18, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.74, 0.56, 0.28, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ldtip"]
-bg_color = Color(0.9200223, 0.4488619, 1.347661e-06, 1)
+bg_color = Color(0.42, 0.28, 0.18, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.8, 0.42, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="ScannerScreen" type="CanvasLayer" unique_id=884118485]
 process_mode = 3
@@ -60,22 +78,25 @@ theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox" unique_id=912121541]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_fonts/font = ExtResource("3_vlm2r")
-theme_override_font_sizes/font_size = 138
+theme_override_font_sizes/font_size = 72
 text = "Scanner Analysis"
 horizontal_alignment = 1
 
 [node name="ObjectLabel" type="Label" parent="Panel/Margin/VBox" unique_id=1491595722]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 69
+theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)
+theme_override_font_sizes/font_size = 42
 text = "Object: ---"
 horizontal_alignment = 1
 
 [node name="StatusLabel" type="Label" parent="Panel/Margin/VBox" unique_id=134753127]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.72, 0.68, 0.58, 1)
+theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
 
 [node name="TextureRect" type="TextureRect" parent="Panel/Margin/VBox" unique_id=454945875]
@@ -107,13 +128,15 @@ theme_override_constants/separation = 10
 [node name="VerdictTitle" type="Label" parent="Panel/Margin/VBox/VerdictSection" unique_id=1316355784]
 layout_mode = 2
 theme = ExtResource("2_vlm2r")
-theme_override_font_sizes/font_size = 50
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
+theme_override_font_sizes/font_size = 38
 text = "Your Verdict"
 
 [node name="VerdictHint" type="Label" parent="Panel/Margin/VBox/VerdictSection" unique_id=45697635]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(0.72, 0.68, 0.58, 1)
+theme_override_font_sizes/font_size = 26
 text = "Choose one. The scanner cannot decide for you."
 
 [node name="VerdictButtons" type="HBoxContainer" parent="Panel/Margin/VBox/VerdictSection" unique_id=2005578175]
@@ -127,10 +150,10 @@ theme_override_constants/separation = 19
 
 [node name="ConfirmButton" type="Button" parent="Panel/Margin/VBox" unique_id=1617752708]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(1000, 50)
+custom_minimum_size = Vector2(600, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 34
 disabled = true
 text = "Confirm Verdict"
 
@@ -143,10 +166,9 @@ alignment = 2
 
 [node name="CloseButton" type="Button" parent="Panel/Margin/Buttons" unique_id=1065927892]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(80, 30)
+custom_minimum_size = Vector2(120, 44)
 layout_mode = 2
 size_flags_vertical = 0
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_3ddhd")
 theme_override_styles/hover = SubResource("StyleBoxFlat_ldtip")
 text = "Close"

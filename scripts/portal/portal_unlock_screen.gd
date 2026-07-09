@@ -4,6 +4,7 @@ extends Control
 
 signal closed
 
+@onready var _panel_container: PanelContainer = $CanvasLayer/PanelContainer
 @onready var _title_label: Label = %TitleLabel
 @onready var _fact_label: Label = %FactLabel
 @onready var _entry_id_label: Label = %EntryIdLabel
@@ -16,6 +17,8 @@ func _ready() -> void:
 		_fallback_label.visible = false
 	if _continue_button != null:
 		_continue_button.pressed.connect(_on_continue)
+	if get_node_or_null("DustParticles") == null:
+		UiAnimations.add_dust_particles(self, 20)
 
 
 func present(response: PortalDiscoveryResponse) -> void:
@@ -34,6 +37,7 @@ func present(response: PortalDiscoveryResponse) -> void:
 		_entry_id_label.text = "Museum Entry: %s" % response.museum_entry_id
 	if _fallback_label != null:
 		_fallback_label.visible = response.used_fallback
+	UiAnimations.popup_open(_panel_container)
 
 
 func _on_continue() -> void:

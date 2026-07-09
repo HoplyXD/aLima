@@ -80,7 +80,7 @@ static func panel_style(
 static func wooden_panel_style(
 	wood: Color = DARK_WALNUT,
 	parchment: Color = PARCHMENT,
-	trim: Color = BRONZE,
+	_trim: Color = BRONZE,
 	radius: int = 10,
 	margin: int = 10
 ) -> StyleBoxFlat:
@@ -103,7 +103,7 @@ static func wooden_panel_style(
 ## Outer carved-wood frame only (no inset parchment). Useful for layering behind
 ## a parchment panel to create double-frame depth.
 static func wood_frame_style(
-	wood: Color = DARK_WALNUT, trim: Color = BRONZE, radius: int = 12
+	wood: Color = DARK_WALNUT, _trim: Color = BRONZE, radius: int = 12
 ) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.0, 0.0, 0.0, 0.0)
@@ -132,7 +132,10 @@ static func bronze_button_style(state: StringName = &"normal") -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.set_corner_radius_all(8)
 	sb.set_content_margin_all(8)
-	sb.set_content_margin_individual(16, 8, 16, 10)
+	sb.content_margin_left = 16
+	sb.content_margin_top = 8
+	sb.content_margin_right = 16
+	sb.content_margin_bottom = 10
 
 	match state:
 		&"hover":
@@ -177,9 +180,7 @@ static func parchment_tooltip_style() -> StyleBoxFlat:
 
 
 ## Manuscript card for quest entries, museum catalog notes, and pop-up bodies.
-static func manuscript_card_style(
-	fill: Color = PARCHMENT, border: Color = BRONZE
-) -> StyleBoxFlat:
+static func manuscript_card_style(fill: Color = PARCHMENT, border: Color = BRONZE) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = fill
 	sb.set_corner_radius_all(8)

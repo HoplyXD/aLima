@@ -33,6 +33,8 @@ var _base_cam_xform: Transform3D
 var _plane_z: float = 0.0  ## the page plane sits at the book's local z = 0
 var _owns_pause: bool = false
 
+@onready var _backdrop: ColorRect = $Backdrop
+@onready var _viewport_container: SubViewportContainer = $ViewportContainer
 @onready var _subviewport: SubViewport = $ViewportContainer/SubViewport
 @onready var _book: JournalBook = $ViewportContainer/SubViewport/Book
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/Camera3D
@@ -42,6 +44,8 @@ var _owns_pause: bool = false
 func _ready() -> void:
 	visible = false
 	_base_cam_xform = _camera.transform
+	if _backdrop.get_node_or_null("DustParticles") == null:
+		UiAnimations.add_dust_particles(_backdrop, 20)
 	# We ray-pick the book ourselves, so the SubViewport doesn't need physics picking.
 	_subviewport.physics_object_picking = false
 	_input_catcher.gui_input.connect(_on_catcher_input)
@@ -58,6 +62,8 @@ func open() -> void:
 		_owns_pause = true
 	_book.refresh_content()
 	visible = true
+	UiAnimations.popup_open(_viewport_container)
+	UiAnimations.fade_to(_backdrop, 1.0, 0.25)
 	set_process_input(true)
 
 
@@ -65,6 +71,8 @@ func open() -> void:
 func close() -> void:
 	if not visible:
 		return
+	UiAnimations.popup_close(_viewport_container)
+	UiAnimations.fade_to(_backdrop, 0.0, 0.2)
 	_reset_camera()
 	visible = false
 	set_process_input(false)

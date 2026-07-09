@@ -23,9 +23,7 @@ static func fade_to(
 
 
 ## Fade in and optionally scale-pop a panel for pop-up open animations.
-static func popup_open(
-	node: Control, duration: float = 0.3, pop: bool = true
-) -> Tween:
+static func popup_open(node: Control, duration: float = 0.3, pop: bool = true) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	node.modulate = Color(1.0, 1.0, 1.0, 0.0)
@@ -43,9 +41,7 @@ static func popup_open(
 
 
 ## Fade out and scale down a panel for pop-up close animations.
-static func popup_close(
-	node: Control, duration: float = 0.2, hide_on_finish: bool = true
-) -> Tween:
+static func popup_close(node: Control, duration: float = 0.2, hide_on_finish: bool = true) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween()
@@ -61,10 +57,7 @@ static func popup_close(
 
 ## Slide `node` in from `direction` ("left", "right", "top", "bottom").
 static func slide_in(
-	node: Control,
-	direction: StringName = &"bottom",
-	duration: float = 0.35,
-	distance: float = 64.0
+	node: Control, direction: StringName = &"bottom", duration: float = 0.35, distance: float = 64.0
 ) -> Tween:
 	if not is_instance_valid(node):
 		return null
@@ -117,15 +110,17 @@ static func error_flash(node: CanvasItem, duration: float = 0.35) -> Tween:
 
 
 ## Soft hover glow on a Control by tinting its modulate (use on a texture/icon node).
-static func hover_glow(
-	node: CanvasItem, enabled: bool, intensity: float = 1.15
-) -> Tween:
+static func hover_glow(node: CanvasItem, enabled: bool, intensity: float = 1.15) -> Tween:
 	if not is_instance_valid(node):
 		return null
 	var tween := node.create_tween()
 	tween.set_ease(EASE)
 	tween.set_trans(TRANS)
-	var target := Color(intensity, intensity, intensity, node.modulate.a) if enabled else Color(1.0, 1.0, 1.0, node.modulate.a)
+	var target := (
+		Color(intensity, intensity, intensity, node.modulate.a)
+		if enabled
+		else Color(1.0, 1.0, 1.0, node.modulate.a)
+	)
 	tween.tween_property(node, "modulate", target, 0.15)
 	return tween
 
@@ -188,8 +183,7 @@ static func add_dust_particles(parent: Control, count: int = 24) -> CPUParticles
 	particles.scale_amount_max = 1.5
 	particles.color = Color(0.9, 0.82, 0.64, 0.12)
 	particles.position = parent.size * 0.5
-	# Anchor so particles stay centered if the control resizes.
-	particles.set_anchors_preset(Control.PRESET_CENTER)
+	# Keep particles centered when the parent control resizes.
 	parent.resized.connect(func() -> void: particles.position = parent.size * 0.5)
 	parent.add_child(particles)
 	return particles

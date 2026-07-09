@@ -64,8 +64,9 @@ var _bodies: Dictionary = {}  ## uid -> RigidBody3D.
 var _pending_release: bool = false
 var _props: Array[RigidBody3D] = []
 
-## Pile items are built a few per frame behind a loading overlay so the (now much smaller) build cost
-## never freezes the frame. The generation guards against a close()/reopen() landing mid-build.
+## Pile items are built a few per frame behind a loading overlay so the
+## (now much smaller) build cost never freezes the frame. The generation guards
+## against a close()/reopen() landing mid-build.
 const SPAWN_BATCH: int = 2
 var _build_generation: int = 0
 var _loading_layer: CanvasLayer = null
@@ -100,7 +101,6 @@ var _recycle_ring: MeshInstance3D = null
 @onready var _fallback_confirm_button: Button = (
 	$HudLayer/FallbackPanel/Panel/Margin/VBox/ConfirmButton as Button
 )
-
 
 ## Day 0 nudge shown with the shared NPC dialogue box (Tito Yuyu speaking).
 var _tutorial_dialogue: DialogueBox
@@ -222,8 +222,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_show_validation("Decide every item (keep or recycle) before leaving.")
 
 
-## Shows the full-screen loading overlay immediately. Call this BEFORE generating the delivery so the
-## one-time catalog scan + generation freeze happens behind the loading screen, not on Alya's face.
+## Shows the full-screen loading overlay immediately. Call this BEFORE generating
+## the delivery so the one-time catalog scan + generation freeze happens behind
+## the loading screen, not on Alya's face.
 func begin_loading() -> void:
 	visible = true
 	_show_loading(true)
@@ -283,7 +284,14 @@ func _exit_tree() -> void:
 func _set_input_mode(mode: int) -> void:
 	_input_mode = mode
 	_viewport_container.visible = mode == InputMode.MODE_3D
-	_fallback_panel.visible = mode == InputMode.MODE_LIST
+	var show_fallback := mode == InputMode.MODE_LIST
+	if show_fallback and not _fallback_panel.visible:
+		UiAnimations.popup_open(_fallback_panel)
+		if _fallback_panel.get_node_or_null("DustParticles") == null:
+			UiAnimations.add_dust_particles(_fallback_panel, 16)
+	elif not show_fallback and _fallback_panel.visible:
+		UiAnimations.popup_close(_fallback_panel)
+	_fallback_panel.visible = show_fallback
 	_hud_fallback_button.text = (
 		"Switch to List View" if mode == InputMode.MODE_3D else "Switch to 3D View"
 	)
@@ -753,7 +761,10 @@ func _show_tutorial_notice(message: String) -> void:
 func _tutorial_kept_count() -> int:
 	var kept := 0
 	for inst in _state.instances:
-		if _state.decisions.get(inst.uid, TriageState.Decision.UNDECIDED) == TriageState.Decision.KEEP:
+		if (
+			_state.decisions.get(inst.uid, TriageState.Decision.UNDECIDED)
+			== TriageState.Decision.KEEP
+		):
 			kept += 1
 	return kept
 

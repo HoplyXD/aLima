@@ -112,10 +112,8 @@ func open() -> void:
 func close() -> void:
 	_open = false
 	UiAnimations.popup_close(_root, 0.18)
-	await get_tree().create_timer(0.18).timeout
-	if not _open:
-		visible = false
-		get_tree().paused = false
+	visible = false
+	get_tree().paused = false
 
 
 func is_open() -> bool:

@@ -48,7 +48,7 @@ theme_override_constants/separation = 6
 
 [node name="Header" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.72, 0.36, 1)
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_font_sizes/font_size = 21
 text = "Quests"
 
