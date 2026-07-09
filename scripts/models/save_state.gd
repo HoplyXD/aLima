@@ -96,6 +96,11 @@ class PersistentState:
 	var spawn_history: Dictionary = {}  ## fragment_id -> Array of placement logs.
 	var neglect_history: Dictionary = {}  ## container_id -> int; recycled/ignored counts.
 	var safe_code_known: bool = false
+	## The loop the code was learned in — the yard Safe only opens on a LATER loop
+	## (v3, story.md §16). -1 = never learned.
+	var safe_code_loop: int = -1
+	## The Safe's one-time haul (₱1,000 + fragment_01) has been taken.
+	var safe_opened: bool = false
 	var drawer_unlocked: bool = false
 	var best_sale: Dictionary = {}  ## Best sale ever: {price, template_id, buyer_id, condition, day}.
 	## Completed return-to-owner outcomes (DISP-R3/DISP-R6, persistent story state).
@@ -136,6 +141,8 @@ class PersistentState:
 		p.spawn_history = data.get("spawn_history", {}) as Dictionary
 		p.neglect_history = data.get("neglect_history", {}) as Dictionary
 		p.safe_code_known = ModelUtils.as_bool(data.get("safe_code_known"))
+		p.safe_code_loop = ModelUtils.as_int(data.get("safe_code_loop"), -1)
+		p.safe_opened = ModelUtils.as_bool(data.get("safe_opened"))
 		p.drawer_unlocked = ModelUtils.as_bool(data.get("drawer_unlocked"))
 		p.best_sale = ModelUtils.as_dictionary(data.get("best_sale"))
 		p.returns = SaveState._as_array(data.get("returns", []))
@@ -170,6 +177,8 @@ class PersistentState:
 			"spawn_history": spawn_history.duplicate(),
 			"neglect_history": neglect_history.duplicate(),
 			"safe_code_known": safe_code_known,
+			"safe_code_loop": safe_code_loop,
+			"safe_opened": safe_opened,
 			"drawer_unlocked": drawer_unlocked,
 			"best_sale": best_sale.duplicate(true),
 			"returns": returns.duplicate(true),

@@ -84,14 +84,17 @@ func test_door_dialogue_pauses_and_resumes_clock_via_keyboard() -> void:
 	assert_signal_emitted(_hud, "dialogue_finished", "HUD re-emits dialogue_finished")
 	assert_false(_visitor.visible, "Visitor hides after dialogue")
 
-	# Phase 10: answering Auntie's door on a beat day leads into her scripted
-	# showcase, which keeps shop time paused until it is closed.
-	var showcase: ShowcaseScreen = _shop._showcase
-	assert_true(showcase.is_open(), "Auntie's showcase opens after her door dialogue")
-	assert_false(_shop.is_day_running(), "The showcase keeps time paused")
-	showcase.close()
+	# v3 (story.md §16): Auntie is a HAND-OFF route — answering her door grants
+	# the beat's photo to clean (the receipt line is consumed by the same advance
+	# loop); the scripted showcase no longer opens for her.
+	var carried := false
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary and raw.get("template_id") == "auntie_photo_faded":
+			carried = true
+	assert_true(carried, "Auntie's Day-1 photo is granted to clean")
+	assert_false(_shop._showcase.is_open(), "No showcase for hand-off routes (v3)")
 	await wait_physics_frames(1)
-	assert_true(_shop.is_day_running(), "Clock resumes after the showcase closes")
+	assert_true(_shop.is_day_running(), "Clock resumes once the hand-over wraps")
 
 
 func test_dialogue_advances_via_left_click() -> void:
@@ -106,14 +109,11 @@ func test_dialogue_advances_via_left_click() -> void:
 
 	assert_false(dialogue.visible, "Left click advances and closes the dialogue")
 
-	# Phase 10: Auntie's scripted showcase opens after her door dialogue and keeps
-	# the clock paused until it is closed.
-	var showcase: ShowcaseScreen = _shop._showcase
-	assert_true(showcase.is_open(), "Auntie's showcase opens after her door dialogue")
-	assert_false(_shop.is_day_running(), "The showcase keeps time paused")
-	showcase.close()
+	# v3: the hand-off receipt was consumed by the same click loop; no showcase
+	# opens for Auntie, and the clock resumes once the dialogue chain ends.
+	assert_false(_shop._showcase.is_open(), "No showcase for hand-off routes (v3)")
 	await wait_physics_frames(1)
-	assert_true(_shop.is_day_running(), "Clock resumes after the showcase closes")
+	assert_true(_shop.is_day_running(), "Clock resumes after the dialogue chain")
 
 
 func test_phone_opens_without_pausing() -> void:

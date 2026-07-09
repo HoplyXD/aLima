@@ -12,15 +12,12 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_6l6e7"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_dfwf6"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_37w2r"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="AuntiePhotoFaded" type="Node3D" unique_id=1853400994]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-artifact_template_id = null
-artifact_rarity = null
-base_value_min = null
-base_value_max = null
+artifact_rarity = 5
 is_quest_item = true
 randomize_conditions_min = 4
 randomize_conditions_max = 4
@@ -107,7 +104,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=1551891317]
 script = ExtResource("scannerdata_node")
 type = "family photograph"
 period = "mid-20th century"
@@ -115,7 +112,6 @@ materials = Array[String](["paper"])
 markings = Array[String](["silver mirroring", "water blotch", "faded emulsion"])
 condition_note = "Faded gelatin-silver print with surface grime and a water blotch; image still legible."
 cultural_relevance = "A personal family photograph. Its meaning is sentimental and tied to a specific household rather than to a documented public record."
-price_min = 0
 price_max = 80
 confidence = 2
 uncertainty_notes = "People, place, and date are unknown without the owner's account."

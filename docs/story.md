@@ -1069,7 +1069,7 @@ directly — a route *releases* it into a promoted ordinary **carrier** that the
 reward. Two compliant ways to honor both, to decide at reconciliation:
   * **(A) keep the clean→open gate:** the NPC hands a *dirty carrier object* (e.g. Sam's sewn bag,
     already implemented for `fragment_04`); the player still cleans + opens it to seat the
-    fragment. Satisfies §4-D and reads as "the NPC gave me the fragment."
+	fragment. Satisfies §4-D and reads as "the NPC gave me the fragment."
   * **(B) direct seat:** the NPC hands the seated fragment outright. Simpler, but drops §4-B/§4-D
     — needs an explicit invariant change + jam-eligibility check.
 Recommendation: **(A)** — it keeps the restoration gate that defines the game and needs no

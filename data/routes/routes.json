@@ -8,37 +8,76 @@
       "portrait": "res://assets/Characters/Auntie.png",
       "schedule": [
         {
-          "days": [1, 3, 5],
+          "days": [1, 3],
           "start_hour": 12,
-          "end_hour": 14
+          "end_hour": 16
+        },
+        {
+          "days": [5],
+          "start_hour": 9,
+          "end_hour": 16
         }
       ],
       "prerequisites": [],
       "mutual_exclusions": [],
-      "holds_fragment_id": "fragment_01",
+      "holds_fragment_id": "",
       "rewards": ["safe_code", "drawer_clue"],
       "has_ending": true,
+      "beat_completion": "handoff",
       "beats": [
         {
           "id": "auntie_beat_1",
           "day": 1,
           "object_template": "auntie_photo_faded",
-          "summary": "Auntie brings a faded family photo. Brush off the dust, lift the grime and water stain, and restore the faded image."
+          "summary": "Auntie leaves a faded photo — a little boy, all knees and sawdust. Clean it and hand it back to her at the yard gate. You'll know him when you see him."
         },
         {
           "id": "auntie_beat_2",
           "day": 3,
           "object_template": "auntie_frame_portrait",
-          "summary": "She returns with her framed portrait. Clean the glass, polish the tarnished corners, and consolidate the cracked molding."
+          "summary": "Her photo frame this time — the glass gone foggy with age. Clean it and bring it out to her at the gate."
         },
         {
           "id": "auntie_beat_3",
           "day": 5,
           "object_template": "auntie_halfphoto_torn",
-          "summary": "On the final day she shares a photograph torn in two. Clean both halves, remove the old tape, then rejoin them with archival tape to reveal the uncle. Completing it releases her fragment."
+          "summary": "The last photograph: two young faces on a wide porch. Clean it, and don't ask who the boy is — you'll know. Hand it back at the gate."
         }
       ],
       "dialogue": {
+        "handoff_auntie_beat_1": [
+          {
+            "name": "Nang Shine",
+            "text": "[i]She takes the photo in both hands, out in the yard light.[/i] There he is. My grandson — Lave. All knees and sawdust, ha. He works with wood now, like he promised that day."
+          },
+          {
+            "name": "Nang Shine",
+            "text": "Go see him tomorrow, anak. Tell him his Lola sent you. He doesn't open that door for just anyone."
+          }
+        ],
+        "handoff_auntie_beat_2": [
+          {
+            "name": "Nang Shine",
+            "text": "[i]She tilts the frame until the light stops hiding the faces.[/i] Clear as rain. Like my eyes never went, ha."
+          },
+          {
+            "name": "Nang Shine",
+            "text": "Friday, anak. Friday I'll bring you the last one. It's... it's the one I should have brought first."
+          }
+        ],
+        "handoff_auntie_beat_3": [
+          {
+            "name": "Nang Shine",
+            "text": "[i]She looks at the mended photograph for a long time before she speaks.[/i] ...That's us. Him and me, before your Lola ever minded the shop."
+          },
+          {
+            "name": "Nang Shine",
+            "text": "[i]She presses it gently back into your hands.[/i] Keep it. And look at the porch rail, anak — count the carvings. He always said numbers keep better than promises."
+          },
+          {
+            "text": "[b]Note saved:[/b] The rail in the photo is carved with numbers — Yuyu's kind of hiding place. The old safe in the yard has four dials."
+          }
+        ],
         "intro": [
           {
             "name": "Nang Shine",
@@ -102,15 +141,17 @@
       "schedule": [
         {
           "days": [2, 4, 5],
-          "start_hour": 13,
-          "end_hour": 14
+          "start_hour": 9,
+          "end_hour": 16
         }
       ],
-      "prerequisites": ["auntie"],
+      "prerequisites": [],
+      "prereq_beats": ["auntie_beat_1"],
       "mutual_exclusions": [],
       "holds_fragment_id": "fragment_02",
       "rewards": ["delicate_tool"],
       "has_ending": true,
+      "beat_completion": "handoff",
       "beats": [
         {
           "id": "artisan_beat_1",

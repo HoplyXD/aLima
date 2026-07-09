@@ -239,25 +239,6 @@ func set_inventory(
 		slot_index += 1
 
 
-## A little scrap heap (matches the round yard pickups, not a plain cube).
-func _make_scrap_heap(color: Color) -> Node3D:
-	var scrap_mesh := Node3D.new()
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	var offsets := [Vector3.ZERO, Vector3(0.28, -0.06, 0.1), Vector3(-0.22, -0.1, -0.12)]
-	var radii := [0.22, 0.16, 0.13]
-	for i in offsets.size():
-		var lump := MeshInstance3D.new()
-		var ball := SphereMesh.new()
-		ball.radius = radii[i]
-		ball.height = radii[i] * 1.6
-		lump.mesh = ball
-		lump.material_override = mat
-		lump.position = offsets[i]
-		scrap_mesh.add_child(lump)
-	return scrap_mesh
-
-
 func _set_slot(index: int, display_name: String, color: Color, preview: Node3D) -> void:
 	if index < 0 or index >= _cards.size():
 		return

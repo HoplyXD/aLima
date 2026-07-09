@@ -83,6 +83,12 @@ var _inspection_overlay: ItemInspectionOverlay
 ## and which fragment currently drives the EchoController hunt target.
 var _echo_hud: EchoHud
 var _hunt_target_id: String = ""
+## v3: gate hand-off NPCs (Shine/Lave — hand-placed sprites shown only while the
+## player carries their granted beat object) and the yard's four-dial Safe.
+var _gate_npcs: Dictionary = {}
+var _safe_interactable: Interactable3D
+## Physical blocker toggled with Ayla's presence (see _attach_npc_body).
+var _ayla_body_shape: CollisionShape3D
 
 const YUYU_PORTRAIT := preload("res://assets/Characters/Uncle.png")
 
@@ -116,6 +122,9 @@ func _ready() -> void:
 	_setup_handoff_screen()
 	_setup_dialogue_box()
 	_setup_ayla_interaction()
+	_setup_gate_npcs()
+	_setup_safe()
+	_ayla_body_shape = _attach_npc_body(_ayla_sprite)
 	_refresh_ayla_presence()
 	AylaService.sort_ready.connect(_on_ayla_sort_ready_yard)
 	_setup_scrap_items_root()
@@ -161,6 +170,7 @@ func _process(delta: float) -> void:
 	_update_sun()
 	_update_tutorial_targets()
 	_update_hunt_echo()
+	_update_gate_npcs()
 
 
 func _maybe_swap_map() -> void:
@@ -343,6 +353,221 @@ func _setup_scrap_items_root() -> void:
 	add_child(_scrap_items_root)
 
 
+# --- Gate hand-offs: Nang Shine & Nong Lave (v3, story.md §16) -------------------
+#
+# The hand-placed NPC sprites (Anchors/ShineAnchor/Shine, Anchors/LaveAnchor/Lave —
+# move them in the editor) appear only while the player is carrying that route's
+# granted beat object (received at the shop door), and leave once it is handed
+# back. Dirty object -> a "clean it first" nudge; cleaned -> the handoff dialogue
+# completes the beat (the final beat completes the route and its rewards).
+
+## Per-route gate NPC wiring: route_id -> {sprite, interactable, body_shape, name}.
+const GATE_NPCS := {
+	"auntie":
+	{
+		"paths": ["Anchors/ShineAnchor/Shine", "Anchors/AuntieNpc"],
+		"display_name": "Nang Shine",
+	},
+	"artisan":
+	{
+		"paths": ["Anchors/LaveAnchor/Lave", "Anchors/ArtisanNpc"],
+		"display_name": "Nong Lave",
+	},
+}
+
+
+func _setup_gate_npcs() -> void:
+	for route_id in GATE_NPCS.keys():
+		var config: Dictionary = GATE_NPCS[route_id]
+		var sprite: Sprite3D = null
+		for path in config["paths"]:
+			sprite = get_node_or_null(NodePath(str(path))) as Sprite3D
+			if sprite != null:
+				break
+		if sprite == null:
+			continue
+		sprite.visible = false
+
+		var area := Area3D.new()
+		area.name = "GateHandoff"
+		area.collision_layer = 1
+		area.collision_mask = 1
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(1.2, 2.2, 1.2)
+		shape.shape = box
+		area.add_child(shape)
+		area.set_script(INTERACTABLE_SCRIPT)
+		var interactable := area as Interactable3D
+		var display_name := str(config["display_name"])
+		interactable.prompt_text = "Talk to %s" % display_name
+		interactable.proximity_prompt_text = "Press E to talk to %s" % display_name
+		interactable.use_proximity = true
+		interactable.activated.connect(_on_gate_handoff_activated.bind(route_id))
+		if _hud != null:
+			interactable.prompt_changed.connect(_hud.set_prompt)
+		sprite.add_child(area)
+		interactable.set_enabled(false)
+
+		_gate_npcs[route_id] = {
+			"sprite": sprite,
+			"interactable": interactable,
+			"body_shape": _attach_npc_body(sprite),
+			"display_name": display_name,
+		}
+
+
+## Physical blocker so the player can't walk through an NPC sprite. Returns the
+## shape so presence toggling can disable it while the NPC is away.
+func _attach_npc_body(sprite: Node3D) -> CollisionShape3D:
+	if sprite == null:
+		return null
+	var body := StaticBody3D.new()
+	body.name = "NpcBody"
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(0.7, 1.9, 0.7)
+	shape.shape = box
+	# Sprites float at chest height; the body drops to ground level below them.
+	shape.position = Vector3(0, -sprite.position.y + 0.95, 0)
+	body.add_child(shape)
+	sprite.add_child(body)
+	return shape
+
+
+## The route's due beat whose granted object the player is CARRYING (any state).
+## {} when nothing was granted yet or it has already been handed back.
+func _gate_carried_beat(route_id: String) -> Dictionary:
+	if TutorialService.is_tutorial_active():
+		return {}
+	var beat := RouteService.due_beat(route_id, DayClock.get_day())
+	if beat.is_empty():
+		return {}
+	if _find_quest_item_in_inventory(str(beat.get("object_template", ""))) == null:
+		return {}
+	return beat
+
+
+func _update_gate_npcs() -> void:
+	for route_id in _gate_npcs.keys():
+		var npc: Dictionary = _gate_npcs[route_id]
+		var present := not _gate_carried_beat(route_id).is_empty()
+		var sprite: Sprite3D = npc["sprite"]
+		if sprite != null:
+			sprite.visible = present
+		var body_shape: CollisionShape3D = npc["body_shape"]
+		if body_shape != null:
+			body_shape.disabled = not present
+		# Overlays own the enabled flag while open (_set_yard_interactables_enabled).
+		var interactable: Interactable3D = npc["interactable"]
+		if interactable != null and not _overlay_open:
+			interactable.set_enabled(present)
+
+
+func _on_gate_handoff_activated(route_id: String) -> void:
+	var beat := _gate_carried_beat(route_id)
+	if beat.is_empty():
+		return
+	var display_name := str(_gate_npcs.get(route_id, {}).get("display_name", ""))
+	var inst := _find_quest_item_in_inventory(str(beat.get("object_template", "")))
+	if inst != null and inst.state == ModelEnums.ObjState.DIRTY:
+		_dialogue_box.start(
+			_route_lines(
+				route_id,
+				"handoff_dirty",
+				"%s: Not like this, anak — clean it at the bench first, ha?" % display_name
+			)
+		)
+		_pending_dialogue_action = ""
+		_enter_overlay()
+		return
+	var beat_id := str(beat.get("id"))
+	_dialogue_box.start(
+		_route_lines(
+			route_id,
+			"handoff_%s" % beat_id,
+			"%s: Salamat, anak. Just what I hoped it still was." % display_name
+		)
+	)
+	_pending_dialogue_action = "gate_handoff:%s:%s" % [route_id, beat_id]
+	_enter_overlay()
+
+
+## Records the handed-over beat; a route's final beat completes the route and
+## grants its rewards (Auntie: the Safe code — the Safe opens on a later loop).
+func _complete_gate_handoff(route_id: String, beat_id: String) -> void:
+	var route := DataRepository.singleton().get_route(route_id)
+	if route == null:
+		return
+	for beat in route.beats:
+		if beat is Dictionary and str(beat.get("id")) == beat_id:
+			_remove_quest_item_from_inventory(str(beat.get("object_template", "")))
+			break
+	if not RouteService.complete_beat(route_id, beat_id):
+		return
+	if RouteService.beats_completed_count(route_id) == route.beats.size():
+		RouteService.mark_completed(route_id)
+	var save_result := SaveService.save_game()
+	if not save_result.ok:
+		push_error("Scrapyard: gate handoff save failed: %s" % save_result.get("error", ""))
+
+
+# --- The yard Safe (v3, story.md §16) -------------------------------------------
+#
+# The four-dial safe is a hand-placed scene node (Anchors/Safe — move it in the
+# editor; nothing is code-built). Without the code it is a monologue; the code
+# (Auntie's final photo) only works on a LATER loop than it was learned; opening
+# it yields ₱1,000 and fragment_01 as a direct discovery (Found -> Portal -> seat).
+
+
+func _setup_safe() -> void:
+	_safe_interactable = get_node_or_null("Anchors/Safe") as Interactable3D
+	if _safe_interactable == null:
+		return
+	_safe_interactable.activated.connect(_on_safe_activated)
+	if _hud != null:
+		_safe_interactable.prompt_changed.connect(_hud.set_prompt)
+
+
+func _on_safe_activated() -> void:
+	var p := GameState.save_state.persistent
+	var lines: Array = []
+	if p.safe_opened:
+		lines = ["Empty now. Just dust, and the smell of old paper."]
+	elif not p.safe_code_known:
+		lines = [
+			"Heavy, old, and locked. Four dials.",
+			(
+				"Yuyu never wrote anything down... except when he did. "
+				+ "Somebody must still remember the number."
+			),
+		]
+	elif GameState.loop_index <= p.safe_code_loop:
+		lines = [
+			"The numbers from the photo... [i]The first dial turns, then sticks.[/i]",
+			(
+				"Not yet. Like the lock knows this week isn't done with me. "
+				+ "Maybe when it all comes around again."
+			),
+		]
+	else:
+		GameState.save_state.loop.money += 1000
+		p.safe_opened = true
+		var save_result := SaveService.save_game()
+		if not save_result.ok:
+			push_error("Scrapyard: safe save failed: %s" % save_result.get("error", ""))
+		lines = [
+			(
+				"The rail numbers. [i]Click. Click. Click. Click — "
+				+ "the door swings like it was waiting.[/i]"
+			),
+			"₱1,000 in old bills... and something small, wrapped in cloth. Heavier than it should be.",
+		]
+		_pending_dialogue_action = "safe_fragment"
+	_dialogue_box.start(lines)
+	_enter_overlay()
+
+
 func _open_handoff() -> void:
 	var quest_progress := QuestService.get_progress("alya_quest_line")
 
@@ -447,8 +672,13 @@ func _grant_quest_item_to_inventory(template_id: String, quest_giver: String) ->
 ## Loads an authored Ayla dialogue block from the scavenger route, falling back to
 ## a single-line string if the route or key is missing.
 func _ayla_lines(dialogue_key: String, fallback: String) -> Array:
-	var route := DataRepository.singleton().get_route("scavenger")
-	if route != null:
+	return _route_lines("scavenger", dialogue_key, fallback)
+
+
+## Loads an authored dialogue block from any route, with a single-line fallback.
+func _route_lines(route_id: String, dialogue_key: String, fallback: String) -> Array:
+	var route := DataRepository.singleton().get_route(route_id)
+	if route != null and route.dialogue.has(dialogue_key):
 		var lines: Array = route.dialogue_for(dialogue_key)
 		if not lines.is_empty():
 			return lines
@@ -797,6 +1027,8 @@ func _refresh_ayla_presence() -> void:
 			present = false
 	if _ayla_sprite != null:
 		_ayla_sprite.visible = present
+	if _ayla_body_shape != null:
+		_ayla_body_shape.disabled = not present
 	if _ayla_interactable != null:
 		_ayla_interactable.set_enabled(present)
 		if not present and _hud != null:
@@ -875,6 +1107,24 @@ func _open_inspection_overlay(data: Dictionary) -> void:
 
 
 func _on_dialogue_finished() -> void:
+	# v3 gate hand-off / Safe branches (parameterized actions, so not in the match).
+	if _pending_dialogue_action.begins_with("gate_handoff:"):
+		_complete_gate_handoff(
+			_pending_dialogue_action.get_slice(":", 1), _pending_dialogue_action.get_slice(":", 2)
+		)
+		_pending_dialogue_action = ""
+		_exit_overlay()
+		_refresh_hud_hotbar()
+		return
+	if _pending_dialogue_action == "safe_fragment":
+		_pending_dialogue_action = ""
+		# Keep the overlay up: the Found -> Portal -> seat flow takes over and
+		# _on_portal_flow_finished releases it when the player closes the card.
+		PortalFlowController.flow_finished.connect(_on_portal_flow_finished, CONNECT_ONE_SHOT)
+		FragmentService.release_fragment("fragment_01", "safe")
+		HuntService.mark_found("fragment_01")
+		EventBus.fragment_discovered.emit("fragment_01", "")
+		return
 	match _pending_dialogue_action:
 		"q1_start":
 			# v3: she hands the lunch box over on the spot — no yard hunt.
@@ -932,6 +1182,13 @@ func _set_yard_interactables_enabled(enabled: bool) -> void:
 		_door_return.set_enabled(enabled)
 	if _ayla_interactable != null:
 		_ayla_interactable.set_enabled(enabled)
+	for route_id in _gate_npcs.keys():
+		var interactable: Interactable3D = _gate_npcs[route_id]["interactable"]
+		if interactable != null:
+			# Re-enabling defers to the presence rule (_update_gate_npcs).
+			interactable.set_enabled(enabled and not _gate_carried_beat(route_id).is_empty())
+	if _safe_interactable != null:
+		_safe_interactable.set_enabled(enabled)
 	if _storage_interactable != null:
 		_storage_interactable.set_enabled(enabled)
 	if _scrap_items_root != null:

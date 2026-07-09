@@ -117,11 +117,12 @@ func beats_completed_count(route_id: String) -> int:
 	return count
 
 
-## The beat authored for this route on a given day, ready to be played now: it is
-## not yet complete and every earlier beat is complete. Returns {} when there is no
-## such beat (none authored for the day, already done, or blocked by a missed
-## earlier beat). The shop calls this after a route's door dialogue to decide
-## whether to open the scripted showcase.
+## The beat ready to be played now: the FIRST incomplete beat whose authored day
+## has arrived (day <= today) — so a beat missed on its own day catches up on the
+## route's next visit (v3: Auntie's Day-1 photo can still be handed over on Day 3,
+## pushing the rest of her chain later). Ordinal gating holds by construction (the
+## first incomplete beat's priors are all complete). Returns {} when nothing is
+## due (all done, or the next beat's day hasn't arrived yet).
 func due_beat(route_id: String, day: int) -> Dictionary:
 	var route := _repo().get_route(route_id)
 	if route == null:
@@ -130,14 +131,11 @@ func due_beat(route_id: String, day: int) -> Dictionary:
 		var beat: Variant = route.beats[i]
 		if not beat is Dictionary:
 			continue
-		if ModelUtils.as_int(beat.get("day"), -1) != day:
+		if is_beat_complete(str(beat.get("id"))):
 			continue
-		var beat_id := str(beat.get("id"))
-		if is_beat_complete(beat_id):
-			return {}
-		if not _prior_beats_complete(route, i):
-			return {}
-		return beat
+		if ModelUtils.as_int(beat.get("day"), -1) <= day:
+			return beat
+		return {}
 	return {}
 
 
@@ -246,23 +244,12 @@ func resolve_visitor(day: int, hour: int) -> CharacterRoute:
 	return null
 
 
-## Day-5 / beat gate (team decision, 2026-06-18): a route that authored a beat for
-## this day only appears once every earlier beat is complete. The beat for the day
-## may still be unstarted (it becomes the showcase), but a missed earlier beat hides
-## the character. Routes without an authored beat for the day (e.g. the Mysterious
-## Buyer, who has none) are never gated here.
-func _beat_gate_allows_visit(route: CharacterRoute, day: int) -> bool:
-	var index := -1
-	for i in route.beats.size():
-		var beat: Variant = route.beats[i]
-		if beat is Dictionary and ModelUtils.as_int(beat.get("day"), -1) == day:
-			index = i
-			break
-	if index < 0:
-		return true
-	if is_beat_complete(str(route.beats[index].get("id"))):
-		return true
-	return _prior_beats_complete(route, index)
+## Day-5 / beat gate. v3 (2026-07-09) replaces the old "missed earlier beat hides
+## the character" rule with CATCH-UP scheduling: the visitor always shows in their
+## window and due_beat() presents the first overdue incomplete beat instead, so a
+## missed Day-1 quest resumes on the next visit day rather than dead-ending.
+func _beat_gate_allows_visit(_route: CharacterRoute, _day: int) -> bool:
+	return true
 
 
 ## Whether a route may currently answer the door. Only route-id prerequisites and
@@ -374,6 +361,9 @@ func _grant_rewards(rewards: Array) -> void:
 		var id := str(reward)
 		if id == "safe_code":
 			persistent.safe_code_known = true
+			# v3: the yard Safe only opens on a LATER loop than the one the code
+			# was learned in ("numbers keep better than promises").
+			persistent.safe_code_loop = GameState.loop_index
 		elif id.ends_with("_lead"):
 			if not persistent.leads.has(id):
 				persistent.leads.append(id)
@@ -387,10 +377,15 @@ func _grant_rewards(rewards: Array) -> void:
 
 ## Only route-id prerequisites gate a visit. Lead/flag prerequisites (e.g.
 ## "archeologist_lead", "all_fragments_seated") govern completion, not appearance.
+## v3 adds beat-level prereqs: e.g. the artisan visits once Auntie's FIRST quest
+## (auntie_beat_1) is complete, without waiting for her whole route.
 func _visit_prereqs_satisfied(route: CharacterRoute) -> bool:
 	var repo := _repo()
 	for prereq in route.prerequisites:
 		if repo.character_routes.has(prereq) and not is_completed(prereq):
+			return false
+	for beat_id in route.prereq_beats:
+		if not is_beat_complete(beat_id):
 			return false
 	return true
 

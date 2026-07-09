@@ -8,11 +8,18 @@ var id: String = ""
 var display_name: String = ""
 var schedule: Array = []  ## VisitWindow dictionaries; kept raw here.
 var prerequisites: Array[String] = []  ## Route ids / flags required.
+## Beat ids that must be complete before this route visits at all (v3: the
+## artisan appears only after Auntie's FIRST quest, not her whole route).
+var prereq_beats: Array[String] = []
 var mutual_exclusions: Array[String] = []  ## Route ids that cannot co-occur.
 var holds_fragment_id: String = ""  ## Empty for Yuyu/finale.
 var rewards: Array[String] = []  ## Reward ids (tools, codes, leads).
 var has_ending: bool = false
 var beats: Array = []  ## Authored quest beats; raw dicts (id, day, object_template, summary).
+## How a due beat plays out at the door: "showcase" (the authored 2D sequence)
+## or "handoff" (v3: the visitor hands the beat object over as a real dirty
+## artifact; the player cleans it and returns it at the yard gate).
+var beat_completion: String = "showcase"
 var portrait: String = ""  ## res:// texture path for the visitor sprite.
 var dialogue: Dictionary = {}  ## Key (e.g. day string or "default") -> Array of line dicts/strings.
 
@@ -29,6 +36,7 @@ static func from_dictionary(data: Dictionary) -> CharacterRoute:
 		for window in data["schedule"]:
 			r.schedule.append(window)
 	r.prerequisites = ModelUtils.as_string_array(data.get("prerequisites"))
+	r.prereq_beats = ModelUtils.as_string_array(data.get("prereq_beats"))
 	r.mutual_exclusions = ModelUtils.as_string_array(data.get("mutual_exclusions"))
 	r.holds_fragment_id = ModelUtils.as_string(data.get("holds_fragment_id"))
 	r.rewards = ModelUtils.as_string_array(data.get("rewards"))
@@ -36,6 +44,7 @@ static func from_dictionary(data: Dictionary) -> CharacterRoute:
 	if data.get("beats") is Array:
 		for beat in data["beats"]:
 			r.beats.append(beat)
+	r.beat_completion = ModelUtils.as_string(data.get("beat_completion"), "showcase")
 	r.portrait = ModelUtils.as_string(data.get("portrait"))
 	r.dialogue = ModelUtils.as_dictionary(data.get("dialogue"))
 	return r
@@ -47,11 +56,13 @@ func to_dictionary() -> Dictionary:
 		"display_name": display_name,
 		"schedule": schedule.duplicate(),
 		"prerequisites": prerequisites.duplicate(),
+		"prereq_beats": prereq_beats.duplicate(),
 		"mutual_exclusions": mutual_exclusions.duplicate(),
 		"holds_fragment_id": holds_fragment_id,
 		"rewards": rewards.duplicate(),
 		"has_ending": has_ending,
 		"beats": beats.duplicate(),
+		"beat_completion": beat_completion,
 		"portrait": portrait,
 		"dialogue": dialogue.duplicate(true),
 	}

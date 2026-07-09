@@ -88,6 +88,9 @@ const DAY0_POINTER_PRIORITY := 15  ## Above the bench (10), below the phone (20)
 
 var _day0_drag_shown: bool = false
 var _day0_dialogue: DialogueBox = null
+## The owned-tools Damp Cloth chip, re-captured on every tools-tab rebuild so the
+## lesson arrow can aim at it.
+var _day0_damp_chip: Control = null
 
 
 ## True while the guided first equip is still due.
@@ -99,29 +102,30 @@ func _day0_lesson_active() -> bool:
 	)
 
 
-## Aims the arrow at the Tools tab until the player is on it (already there:
-## straight to Yuyu's drag instruction).
+## Aims the arrow at the Tools tab until the player is on it; once there, at the
+## Damp Cloth chip itself (with Yuyu's drag instruction).
 func _refresh_day0_lesson() -> void:
 	if not visible or not _day0_lesson_active():
 		TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
 		return
 	if _tabs.current_tab == _tools_tab_index():
-		TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
 		_maybe_show_day0_drag_dialogue()
+		if _day0_damp_chip != null and is_instance_valid(_day0_damp_chip):
+			TutorialService.set_pointer_claim(
+				DAY0_POINTER_SOURCE, DAY0_POINTER_PRIORITY, _day0_damp_chip
+			)
+		else:
+			TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
 		return
 	TutorialService.set_pointer_claim(
 		DAY0_POINTER_SOURCE, DAY0_POINTER_PRIORITY, _tools_tab_screen_pos
 	)
 
 
-func _on_day0_tab_changed(tab: int) -> void:
+func _on_day0_tab_changed(_tab: int) -> void:
 	if not _day0_lesson_active():
 		return
-	if tab == _tools_tab_index():
-		TutorialService.clear_pointer_claim(DAY0_POINTER_SOURCE)
-		_maybe_show_day0_drag_dialogue()
-	else:
-		_refresh_day0_lesson()
+	_refresh_day0_lesson()
 
 
 func _tools_tab_index() -> int:
@@ -263,6 +267,9 @@ func refresh() -> void:
 	_build_artifacts_tab()
 	_build_tools_tab()
 	_build_key_items_tab()
+	# Rebuilding replaces the chips the Day 0 lesson arrow may aim at.
+	if visible:
+		_refresh_day0_lesson()
 	var loaded: int = _tools.equipped_count()
 	var target := _tools.get_restore_target()
 	var target_name := _instance_display_name(target) if not target.is_empty() else "nothing"
@@ -499,6 +506,7 @@ func dispose_artifact(uid: String, disposition: int) -> void:
 
 
 func _build_tools_tab() -> void:
+	_day0_damp_chip = null
 	var panes := _make_master_detail(_tab("Tools"))
 	var detail_host: VBoxContainer = panes["detail"]
 	var right: VBoxContainer = panes["content"]
@@ -564,7 +572,11 @@ func _make_owned_area() -> Control:
 		if GameState.save_state.loop.workbench_tools.has(inst.uid):
 			continue  # shown in the equip area instead.
 		shown += 1
-		grid.add_child(_make_tool_chip(inst, false))
+		var chip := _make_tool_chip(inst, false)
+		grid.add_child(chip)
+		# Day 0 bench-tools lesson: the arrow aims at the Damp Cloth chip.
+		if inst.tool_id == "damp_cloth":
+			_day0_damp_chip = chip
 	if shown == 0:
 		var msg := (
 			"No tools owned yet. Buy some from the phone Marketplace."

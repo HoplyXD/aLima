@@ -1,20 +1,17 @@
 [gd_scene format=3 uid="uid://cvks8u2h2k441"]
 
 [ext_resource type="Script" uid="uid://8ls4wexgkob7" path="res://scripts/restoration/restoration_object_3d.gd" id="1_obj"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="AuntieHalfphotoTorn" type="Node3D" unique_id=735344398]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-artifact_template_id = null
-artifact_rarity = null
-base_value_min = null
-base_value_max = null
+artifact_rarity = 5
 is_quest_item = true
 quest_number = 3
 randomize_conditions_max = 2
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=1887085658]
 script = ExtResource("scannerdata_node")
 type = "torn photograph"
 period = "mid-20th century"
@@ -22,7 +19,6 @@ materials = Array[String](["paper"])
 markings = Array[String](["tear down the center", "tape residue", "surface dust"])
 condition_note = "A photograph torn in two and previously taped; residue remains along the join."
 cultural_relevance = "A personal photograph whose torn state is part of its story. Significance is sentimental and specific to the owner's family."
-price_min = 0
 price_max = 150
 confidence = 2
 uncertainty_notes = "The missing half and the people pictured are unknown without the owner's account."

@@ -212,23 +212,28 @@ func _enter_backdrop_mode() -> void:
 func _day1_intro_start() -> void:
 	Day1Service.step_changed.connect(_on_day1_step_changed)
 	Day1Service.day1_intro_finished.connect(_on_day1_intro_finished)
-	# If resuming, re-announce the current step; otherwise start at the first step.
+	# If resuming (re-entering the shop mid-step), only re-apply the HUD hint —
+	# replaying the step's dialogue on every shop entry got old fast. A fresh
+	# save advances into the first step normally (which does play its dialogue).
 	var step_id := Day1Service.current_step_id()
 	if step_id.is_empty():
 		Day1Service.advance()
 	else:
-		Day1Service.step_changed.emit(step_id)
+		_apply_day1_hint(Day1Service.get_step(step_id))
 
 
 func _on_day1_step_changed(step_id: String) -> void:
 	var step := Day1Service.get_step(step_id)
 	if step.is_empty():
 		return
-	# Present the step's dialogue lines.
+	# Present the step's dialogue lines (once, when the step is first reached).
 	var dialogue: Array = SaveState._as_array(step.get("dialogue"))
 	if dialogue.size() > 0:
 		_show_dialogue_lines(dialogue)
-	# Update the HUD hint.
+	_apply_day1_hint(step)
+
+
+func _apply_day1_hint(step: Dictionary) -> void:
 	var hint := ModelUtils.as_dictionary(step.get("hint"))
 	if not hint.is_empty():
 		var speaker := ModelUtils.as_string(hint.get("speaker"))
@@ -258,10 +263,13 @@ func _show_dialogue_lines(lines: Array) -> void:
 	var box: DialogueBox = DIALOGUE_BOX_SCENE.instantiate()
 	add_child(box)
 	var formatted_lines: Array = []
+	var alya_speaks := false
 	for line in lines:
 		if line is Dictionary:
 			var speaker := ModelUtils.as_string(line.get("speaker"))
 			var text := ModelUtils.as_string(line.get("text"))
+			if speaker == "alya":
+				alya_speaks = true
 			if speaker == "inner":
 				# Inner monologue hides the speaker name label.
 				formatted_lines.append({"name": "", "text": text})
@@ -269,8 +277,17 @@ func _show_dialogue_lines(lines: Array) -> void:
 				formatted_lines.append({"name": speaker, "text": text})
 		else:
 			formatted_lines.append(str(line))
+	# Alya's lines show her at the door — a voice with nobody in the room reads
+	# like a haunting, and this shop has enough of those already.
+	if alya_speaks:
+		_visitor.texture = ALYA_PORTRAIT
+		_visitor.visible = true
+	var on_finished := func() -> void:
+		if alya_speaks:
+			_visitor.visible = false
+		box.queue_free()
 	box.start(formatted_lines)
-	box.finished.connect(func() -> void: box.queue_free())
+	box.finished.connect(on_finished)
 
 
 func _process(delta: float) -> void:
@@ -1153,14 +1170,34 @@ func _on_dialogue_finished() -> void:
 
 
 ## Opens the route's scripted showcase when a beat is authored and ready for the
-## current day (RouteService.due_beat handles the ordinal gating). The showcase, not
-## the dialogue, records the beat and triggers any fragment release.
+## current day (RouteService.due_beat handles the ordinal gating). Handoff routes
+## (v3: Auntie) instead hand the beat's object over as a real dirty artifact —
+## cleaned at the bench and returned to the visitor at the yard gate, where the
+## beat is recorded. For showcase routes the showcase records the beat.
 func _maybe_open_showcase(route_id: String) -> void:
 	var beat := RouteService.due_beat(route_id, DayClock.get_day())
 	if beat.is_empty():
 		return
 	var route := DataRepository.singleton().get_route(route_id)
 	if route == null:
+		return
+	if route.beat_completion == "handoff":
+		var template_id := str(beat.get("object_template", ""))
+		var uid := QuestService.grant_quest_object(template_id)
+		if uid.is_empty():
+			return
+		var template := DataRepository.singleton().get_template(template_id)
+		var item_name := template.display_name if template != null else template_id
+		_open_dialogue(
+			[
+				(
+					"[b]Received:[/b] %s. Clean it at the bench, then hand it back to %s"
+					% [item_name, route.display_name]
+				)
+				+ " — they're waiting outside, by the yard gate."
+			],
+			false
+		)
 		return
 	_hud.set_actions_visible(false)
 	_set_interactables_enabled(false)
