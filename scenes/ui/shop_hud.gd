@@ -131,7 +131,11 @@ func _fill_card_strip(
 		var card: ArtifactCard = ARTIFACT_CARD_SCENE.instantiate()
 		strip.add_child(card)
 		card.configure(
-			uid, str(entry.get("display_name", uid)), entry.get("color", Color.WHITE), previews_on
+			uid,
+			str(entry.get("display_name", uid)),
+			entry.get("color", Color.WHITE),
+			previews_on,
+			not is_unrestored
 		)
 		if is_unrestored:
 			card.selected.connect(func(id: String) -> void: unrestored_card_selected.emit(id))

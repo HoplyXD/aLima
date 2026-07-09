@@ -41,7 +41,6 @@
 [ext_resource type="PackedScene" uid="uid://7wc33npp34v8" path="res://assets/3d Assets/FireLog/trn_Log.fbx" id="29_cxprb"]
 [ext_resource type="Texture2D" uid="uid://dx5tdmtsbisw8" path="res://assets/Characters/Archeologist.png" id="31_h8djy"]
 [ext_resource type="Texture2D" uid="uid://b0k7i2hvrm1wp" path="res://assets/UI assets/game/gui/quick_menu.png" id="35_img5t"]
-[ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="36_h0wdh"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="37_74aeg"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8dvp"]
@@ -373,6 +372,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -3.5
+offset_bottom = 3.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 177
@@ -389,7 +390,7 @@ layout_mode = 2
 
 [node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Unrestored" unique_id=1479397120]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_fonts/font = ExtResource("37_74aeg")
 theme_override_font_sizes/font_size = 40
 text = "Unrestored"
 
@@ -414,7 +415,7 @@ layout_mode = 2
 
 [node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Restored" unique_id=1824528476]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_fonts/font = ExtResource("37_74aeg")
 theme_override_font_sizes/font_size = 40
 text = "Restored (sell via phone)"
 
@@ -439,7 +440,7 @@ layout_mode = 2
 
 [node name="Title" type="Label" parent="HUD/TopPanel/Margin/Bar/Quest" unique_id=1652076586]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_fonts/font = ExtResource("37_74aeg")
 theme_override_font_sizes/font_size = 40
 text = "Quest"
 
@@ -461,7 +462,7 @@ theme_override_constants/separation = 12
 [node name="DayLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1239597475]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_fonts/font = ExtResource("37_74aeg")
 theme_override_font_sizes/font_size = 35
 text = "Day 1 of 5"
 horizontal_alignment = 2
@@ -469,7 +470,7 @@ horizontal_alignment = 2
 [node name="ClockLabel" type="Label" parent="HUD/TopPanel/Margin/Bar/Clock" unique_id=1405431381]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_fonts/font = ExtResource("36_h0wdh")
+theme_override_fonts/font = ExtResource("37_74aeg")
 theme_override_font_sizes/font_size = 48
 text = "7:00 AM"
 horizontal_alignment = 2
@@ -575,9 +576,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -320.0
-offset_top = 110.0
+offset_top = 140.0
 offset_right = 320.0
-offset_bottom = 132.0
+offset_bottom = 162.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.74, 1)
 theme_override_font_sizes/font_size = 13

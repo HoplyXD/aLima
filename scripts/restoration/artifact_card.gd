@@ -18,6 +18,7 @@ const PREVIEW_SCALE: float = 0.46  ## Shrinks the bench-sized artifact to fit th
 @onready var _mesh_holder: Node3D = %MeshHolder
 @onready var _swatch: ColorRect = %Swatch
 @onready var _name_label: Label = %NameLabel
+@onready var _state_label: Label = %StateLabel
 
 var _uid: String = ""
 var _preview_object: Node3D
@@ -29,14 +30,23 @@ func _ready() -> void:
 
 
 ## Fills the card. `previews_on` chooses the 3D preview vs the cheap text-only swatch.
+## `restored` picks the visual state: a calm, honored brass-framed card (restored) vs a
+## dusty, worn, in-progress card (unrestored) — the two must read apart at a glance.
 ## When previews are on the caller follows up with attach_preview() to embed the real
 ## artifact object (model + condition decals).
-func configure(uid: String, display_name: String, rarity_color: Color, previews_on: bool) -> void:
+func configure(
+	uid: String,
+	display_name: String,
+	rarity_color: Color,
+	previews_on: bool,
+	restored: bool = false
+) -> void:
 	_uid = uid
 	if _name_label != null:
 		_name_label.text = display_name
 		_name_label.add_theme_color_override("font_color", rarity_color)
 	tooltip_text = display_name
+	_apply_state_style(restored)
 	if _preview_container != null:
 		_preview_container.visible = previews_on
 	if _swatch != null:
@@ -45,6 +55,19 @@ func configure(uid: String, display_name: String, rarity_color: Color, previews_
 			_swatch.color = rarity_color
 	if not previews_on:
 		set_process(false)
+
+
+## Swaps the frame + caption between the two card states (see configure()).
+func _apply_state_style(restored: bool) -> void:
+	if restored:
+		add_theme_stylebox_override("panel", UiPalette.card_style_restored())
+	else:
+		add_theme_stylebox_override("panel", UiPalette.card_style_unrestored())
+	if _state_label != null:
+		_state_label.text = "❖ Restored" if restored else "Needs work"
+		_state_label.add_theme_color_override(
+			"font_color", UiPalette.BRASS if restored else UiPalette.BONE_DIM
+		)
 
 
 ## Embeds the real artifact object (built by the view, with its condition decals) into

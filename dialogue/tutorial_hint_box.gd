@@ -55,10 +55,11 @@ func _draw() -> void:
 			tip + Vector2(half, -ARROW_SIZE),
 		]
 	)
-	draw_colored_polygon(points, Color(1.0, 0.85, 0.3, 0.95))
+	# Brass arrow with a deep-ink outline, matching the shared UI palette.
+	draw_colored_polygon(points, Color(0.90, 0.72, 0.36, 0.95))
 	draw_polyline(
 		PackedVector2Array([points[0], points[1], points[2], points[0]]),
-		Color(0.25, 0.18, 0.05, 0.9),
+		Color(0.12, 0.10, 0.07, 0.9),
 		2.0
 	)
 
