@@ -21,28 +21,22 @@ const OXIDIZED := Color(0.38, 0.50, 0.40)  ## Oxidized-green success/positive ac
 const SMOKE := Color(0.42, 0.39, 0.35)  ## Muted grey for worn borders / disabled.
 const WINE := Color(0.50, 0.19, 0.22)  ## Deep wine for warnings / failed states.
 
-# --- Rarity glow legend (CLAUDE.md §4-E), muted to fit the palette ------------
-const RARITY_WHITE := Color(0.86, 0.83, 0.76)
-const RARITY_GREEN := Color(0.52, 0.72, 0.50)
-const RARITY_BLUE := Color(0.48, 0.64, 0.82)
-const RARITY_PURPLE := Color(0.70, 0.54, 0.80)
-const RARITY_GOLD := Color(0.86, 0.70, 0.34)
+# --- Rarity glow legend (CLAUDE.md §4-E) --------------------------------------
+## The glow legend is FIXED and owned by GlowMapper — these mirror its hex values so
+## rarity UI reads identically to the in-world glow. Do not diverge them; if the legend
+## ever changes it changes in GlowMapper, and rarity_color() below stays the live source.
+const RARITY_WHITE := Color("#cfd2d6")
+const RARITY_GREEN := Color("#5bc46a")
+const RARITY_BLUE := Color("#4c8cff")
+const RARITY_PURPLE := Color("#b066ff")
+const RARITY_GOLD := Color("#e6b422")
 
 
-## Canonical rarity colour, keyed by ModelEnums.Rarity. Replaces the copies that were
-## duplicated across storage_screen.gd / shop_hud / artifact_card.
+## Canonical rarity colour, keyed by ModelEnums.Rarity. Delegates to GlowMapper so the
+## fixed glow legend has ONE source; replaces the divergent copies that were duplicated
+## across storage_screen.gd / shop_hud / artifact_card.
 static func rarity_color(rarity: int) -> Color:
-	match rarity:
-		ModelEnums.Rarity.GREEN:
-			return RARITY_GREEN
-		ModelEnums.Rarity.BLUE:
-			return RARITY_BLUE
-		ModelEnums.Rarity.PURPLE:
-			return RARITY_PURPLE
-		ModelEnums.Rarity.GOLD:
-			return RARITY_GOLD
-		_:
-			return RARITY_WHITE
+	return GlowMapper.get_color(GlowMapper.rarity_to_glow_state(rarity))
 
 
 # --- StyleBox factories -------------------------------------------------------

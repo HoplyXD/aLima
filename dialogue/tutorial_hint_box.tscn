@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://dialogue/tutorial_hint_box.gd" id="1_hintbox"]
-[ext_resource type="Theme" uid="uid://b1alimauitheme0" path="res://Themes/alima_ui.tres" id="2_theme"]
+[ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="2_theme"]
 
 [sub_resource type="StyleBoxFlat" id="Style_hint_panel"]
 bg_color = Color(0.2, 0.17, 0.12, 0.94)

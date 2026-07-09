@@ -314,7 +314,7 @@ func _render_marketplace_offline() -> void:
 	hint.text = "The Marketplace will come back once power returns."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color(0.6, 0.62, 0.68))
+	hint.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	_app_content.add_child(hint)
 
 
@@ -331,7 +331,7 @@ func _render_market_home() -> void:
 		var none := Label.new()
 		none.text = "Restore a piece first, then list it here to haggle."
 		none.add_theme_font_size_override("font_size", 12)
-		none.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
+		none.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 		_app_content.add_child(none)
 	else:
 		for inst in sellable:
@@ -350,7 +350,7 @@ func _render_flashlight() -> void:
 	status.add_theme_font_size_override("font_size", 18)
 	status.add_theme_color_override(
 		"font_color",
-		Color(0.95, 0.9, 0.6) if GameState.save_state.loop.flashlight_on else Color(0.65, 0.65, 0.7)
+		UiPalette.BRASS_BRIGHT if GameState.save_state.loop.flashlight_on else UiPalette.BONE_DIM
 	)
 	_app_content.add_child(status)
 
@@ -358,7 +358,7 @@ func _render_flashlight() -> void:
 	hint.text = "Toggle the light to remove the brownout gloom penalty while restoring."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color(0.6, 0.62, 0.68))
+	hint.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	_app_content.add_child(hint)
 
 	var toggle := Button.new()
@@ -397,7 +397,7 @@ func _make_sell_row(inst: ObjectInstance) -> Control:
 	)
 	detail.text = "%s · %d%%" % [value_text, int(round(inst.condition))]
 	detail.add_theme_font_size_override("font_size", 12)
-	detail.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
+	detail.add_theme_color_override("font_color", UiPalette.BONE)
 	row.add_child(detail)
 	var list_button := Button.new()
 	list_button.text = "List"
@@ -483,19 +483,19 @@ func _make_buyer_row(persona: BuyerPersona) -> Control:
 	var occupation := Label.new()
 	occupation.text = persona.occupation if not persona.occupation.is_empty() else persona.motive
 	occupation.add_theme_font_size_override("font_size", 11)
-	occupation.add_theme_color_override("font_color", Color(0.7, 0.7, 0.78))
+	occupation.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	box.add_child(occupation)
 	if not persona.motive.is_empty():
 		var desc := Label.new()
 		desc.text = persona.motive
 		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		desc.add_theme_font_size_override("font_size", 10)
-		desc.add_theme_color_override("font_color", Color(0.55, 0.57, 0.63))
+		desc.add_theme_color_override("font_color", UiPalette.SMOKE)
 		box.add_child(desc)
 	var offer := Label.new()
 	offer.text = "Offer: ₱%d" % MarketplaceService.preview_offer(_sell_uid, persona.id)
 	offer.add_theme_font_size_override("font_size", 12)
-	offer.add_theme_color_override("font_color", Color(0.85, 0.78, 0.5))
+	offer.add_theme_color_override("font_color", UiPalette.BRASS)
 	box.add_child(offer)
 	row.add_child(box)
 	var talk := Button.new()
@@ -546,14 +546,14 @@ func _render_haggle() -> void:
 		var occ := Label.new()
 		occ.text = persona.occupation
 		occ.add_theme_font_size_override("font_size", 12)
-		occ.add_theme_color_override("font_color", Color(0.72, 0.74, 0.82))
+		occ.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 		_app_content.add_child(occ)
 	if persona != null and not persona.motive.is_empty():
 		var desc := Label.new()
 		desc.text = persona.motive
 		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		desc.add_theme_font_size_override("font_size", 11)
-		desc.add_theme_color_override("font_color", Color(0.6, 0.62, 0.68))
+		desc.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 		_app_content.add_child(desc)
 
 	# Shows whether banter is using the live AI or the offline fallback.
@@ -566,7 +566,7 @@ func _render_haggle() -> void:
 	_said_label.text = '"%s"' % _negotiation.history.back()["text"]
 	_said_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_said_label.add_theme_font_size_override("font_size", 14)
-	_said_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.7))
+	_said_label.add_theme_color_override("font_color", UiPalette.BONE)
 	_app_content.add_child(_said_label)
 
 	if _negotiation.is_closed():
@@ -776,14 +776,14 @@ func _refresh_ai_label() -> void:
 			_ai_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.5))
 		else:
 			_ai_label.text = "AI banter: offline bot"
-			_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
+			_ai_label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	elif client != null and client.is_live():
 		var m := str(client.model_name())
 		_ai_label.text = "AI banter: live" + ((" (%s)" % m) if not m.is_empty() else "")
 		_ai_label.add_theme_color_override("font_color", Color(0.45, 0.75, 0.9))
 	else:
 		_ai_label.text = "AI banter: offline bot"
-		_ai_label.add_theme_color_override("font_color", Color(0.62, 0.62, 0.66))
+		_ai_label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 
 
 func _ghost_offended() -> void:
@@ -843,7 +843,7 @@ func _make_section_label(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", 13)
-	label.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8))
+	label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	return label
 
 
@@ -879,7 +879,7 @@ func _make_buy_row(def: ToolDefinition) -> Control:
 	var uses := "∞" if def.durability <= 0 else "%d" % def.durability
 	detail.text = "₱%d · %s · ~%dh" % [def.cost, uses, def.ship_hours]
 	detail.add_theme_font_size_override("font_size", 12)
-	detail.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
+	detail.add_theme_color_override("font_color", UiPalette.BONE)
 	row.add_child(detail)
 	var buy_button := Button.new()
 	buy_button.text = "Buy"
