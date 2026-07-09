@@ -78,6 +78,11 @@ func _setup_visual() -> void:
 
 
 func _pick_heap_mesh() -> Mesh:
+	return ScrapItem.pick_heap_mesh()
+
+
+## A random junk-heap mesh from the shared kit cache, or null when unavailable.
+static func pick_heap_mesh() -> Mesh:
 	if _heap_meshes.is_empty():
 		var packed := load(SCRAP_KIT_PATH) as PackedScene
 		if packed == null:
@@ -88,6 +93,29 @@ func _pick_heap_mesh() -> Mesh:
 	if _heap_meshes.is_empty():
 		return null
 	return _heap_meshes[randi() % _heap_meshes.size()]
+
+
+## Display-only copy of the yard pickup's look (heap mesh + rarity glow outline)
+## for UI previews — the carry hotbar shows the same scrap the player grabbed.
+static func build_display_node(rarity_name: String) -> Node3D:
+	var root := Node3D.new()
+	var mesh := MeshInstance3D.new()
+	var heap := pick_heap_mesh()
+	if heap != null:
+		mesh.mesh = heap
+	else:
+		var ball := SphereMesh.new()
+		ball.radius = 0.2
+		ball.height = 0.4
+		mesh.mesh = ball
+	root.add_child(mesh)
+	var outline := MeshInstance3D.new()
+	outline.mesh = mesh.mesh
+	outline.material_override = make_outline_material(
+		RARITY_COLORS.get(rarity_name, RARITY_COLORS["white"])
+	)
+	mesh.add_child(outline)
+	return root
 
 
 static func _collect_meshes(node: Node, out: Array[Mesh]) -> void:
@@ -105,7 +133,13 @@ static func _collect_meshes(node: Node, out: Array[Mesh]) -> void:
 func _apply_rarity_visual() -> void:
 	if _outline == null:
 		return
-	var color: Color = RARITY_COLORS.get(rarity, RARITY_COLORS["white"])
+	_outline.material_override = make_outline_material(
+		RARITY_COLORS.get(rarity, RARITY_COLORS["white"])
+	)
+
+
+## The rarity-coloured inverted-hull outline material (shared with UI previews).
+static func make_outline_material(color: Color) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = color
@@ -115,4 +149,4 @@ func _apply_rarity_visual() -> void:
 	mat.grow = true
 	mat.grow_amount = OUTLINE_GROW
 	mat.cull_mode = BaseMaterial3D.CULL_FRONT
-	_outline.material_override = mat
+	return mat

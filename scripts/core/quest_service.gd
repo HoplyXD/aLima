@@ -113,6 +113,34 @@ func fail_quest(quest_id: String) -> void:
 	EventBus.emit_signal("quest_failed", quest_id)
 
 
+## Creates a dirty, quest-flagged instance of `template_id` directly in the loop
+## inventory — an NPC handing something over to clean (v3: Alya's lunch box,
+## Auntie's photos). Returns the new uid, or "" when the template is unknown or
+## one is already being carried.
+func grant_quest_object(template_id: String) -> String:
+	var template := DataRepository.singleton().get_template(template_id)
+	if template == null:
+		push_warning("QuestService.grant_quest_object: unknown template '%s'" % template_id)
+		return ""
+	for raw in GameState.save_state.loop.inventory:
+		if raw is Dictionary and raw.get("template_id") == template_id:
+			return ""
+	var instance := ObjectInstance.new()
+	instance.template_id = template_id
+	instance.uid = (
+		"quest_%s_%d_%d_%d"
+		% [template_id, GameState.loop_index, Time.get_unix_time_from_system(), randi()]
+	)
+	instance.condition = 0.0
+	instance.state = ModelEnums.ObjState.DIRTY
+	instance.is_quest_item = true
+	instance.storage_cost = template.storage_cost
+	instance.value = int(template.base_value_range.x)
+	instance.true_value = int(template.base_value_range.x)
+	GameState.save_state.loop.inventory.append(instance.to_dictionary())
+	return instance.uid
+
+
 ## Registers a quest-essential item instance that may only be sold to `allowed_buyer`.
 ## Selling it to any other buyer fails the quest (canon: mis-selling the salakot).
 func track_quest_item(uid: String, quest_id: String, allowed_buyer: String) -> void:

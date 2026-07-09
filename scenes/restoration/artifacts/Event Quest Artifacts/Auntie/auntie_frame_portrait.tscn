@@ -12,15 +12,12 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_fr6ox"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_oolf3"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_cvxs6"]
-[ext_resource type="Script" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="AuntieFramePortrait" type="Node3D" unique_id=1341802665]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_obj")
-artifact_template_id = null
-artifact_rarity = null
-base_value_min = null
-base_value_max = null
+artifact_rarity = 5
 is_quest_item = true
 quest_number = 2
 randomize_conditions_min = 4
@@ -108,7 +105,7 @@ uv2_tiling = 2.0
 own_uv_tiling = 20.0
 own_uv_aspect = 0.09
 
-[node name="ScannerData" type="Node" parent="."]
+[node name="ScannerData" type="Node" parent="." unique_id=1602689253]
 script = ExtResource("scannerdata_node")
 type = "framed portrait"
 period = "mid-20th century"
@@ -116,7 +113,6 @@ materials = Array[String](["wood", "glass"])
 markings = Array[String](["molding tarnish", "glass dust", "cracked corner"])
 condition_note = "A portrait behind glass in a wooden frame; the molding is tarnished and one corner is cracked."
 cultural_relevance = "A framed family portrait of personal rather than public significance. Value rests on the sitter's identity and the family's story."
-price_min = 0
 price_max = 120
 confidence = 2
 uncertainty_notes = "Sitter and photographer are unknown without the owner's account."

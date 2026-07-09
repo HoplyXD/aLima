@@ -98,6 +98,11 @@ func _build_quest_tracker() -> void:
 	var tracker: QuestTracker = QUEST_TRACKER_SCENE.instantiate()
 	tracker.name = "QuestTracker"
 	add_child(tracker)
+	# The SHOP's top bar (Unrestored/Restored panel) is much taller than the yard
+	# HUD's, so drop the tracker below it here only — the yard and the restoration
+	# bench keep the scene's authored offset.
+	tracker.offset_top = 210.0
+	tracker.offset_bottom = 210.0
 
 
 const ARTIFACT_CARD_SCENE := preload("res://scenes/restoration/artifact_card.tscn")

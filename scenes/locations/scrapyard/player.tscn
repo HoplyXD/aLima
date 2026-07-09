@@ -28,4 +28,4 @@ mesh = SubResource("CapsuleMesh_player")
 surface_material_override/0 = SubResource("StandardMaterial3D_player")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=483012691]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6005874, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4894772, 0)
