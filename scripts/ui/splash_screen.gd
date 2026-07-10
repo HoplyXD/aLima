@@ -6,7 +6,7 @@ extends Control
 ## The black ColorRect stays opaque the whole time; only the `Content` group
 ## (logo + letters) fades, so there is never a flash of the engine clear colour.
 
-@export var next_scene: PackedScene = preload("res://scenes/ui/title_screen.tscn")
+@export var next_scene: PackedScene = preload("res://scenes/ui/title_intro.tscn")
 
 @export_group("Timing")
 @export var fade_in_time: float = 1.0

@@ -23,9 +23,11 @@ signal scrap_prompt_changed(text: String)
 @onready var _camera: Camera3D = $Camera3D
 
 const SCRAP_INTERACT_RANGE := 4.0
-## Minimum camera-forward dot toward a scrap to be grabbable (~0.0 = within ~90°
-## cone in front). Forgiving so the player just has to face the scrap, not pixel-aim.
-const SCRAP_FACING_MIN := 0.45
+## Minimum horizontal-forward dot toward a scrap to be grabbable (0.0 ~= within ~90°
+## in front; negative would allow behind). Kept low so the player only has to face
+## the scrap roughly. Measured on the yaw plane so looking straight down at a scrap
+## at your feet still counts as facing it.
+const SCRAP_FACING_MIN := 0.0
 const SCRAP_PROMPT := "Press E to grab scrap"
 
 var _target_yaw: float = 0.0
@@ -160,10 +162,19 @@ func _update_scrap_target() -> void:
 			continue
 		# Aim at the heap's body (origin sits at its base), not the ground point.
 		var target := item.global_position + Vector3(0.0, 0.25, 0.0)
-		var dist := global_position.distance_to(target)
+		# Measure range and facing on the horizontal (yaw) plane. Using the full 3D
+		# vector collapsed the facing dot toward ~0 when the scrap was right at the
+		# player's feet (looking straight down), which hid the "Press E" prompt exactly
+		# when the player was closest. Flattening keeps the prompt up at any distance.
+		var flat_to_target := target - cam_origin
+		flat_to_target.y = 0.0
+		var dist := flat_to_target.length()
 		if dist > SCRAP_INTERACT_RANGE:
 			continue
-		var facing := forward.dot((target - cam_origin).normalized())
+		var fwd_flat := Vector3(forward.x, 0.0, forward.z)
+		var facing := 1.0
+		if dist > 0.001 and fwd_flat.length() > 0.001:
+			facing = fwd_flat.normalized().dot(flat_to_target / dist)
 		if facing < SCRAP_FACING_MIN:
 			continue
 		# Prefer items that are both well-centred in view and close.

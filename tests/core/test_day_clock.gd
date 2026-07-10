@@ -140,3 +140,17 @@ func test_release_unknown_owner_is_harmless() -> void:
 	_clock.release_pause("ghost")  # unknown owner must not drop owner 'a'
 	assert_true(_clock.is_paused())
 	assert_eq(_clock.pause_owner_count(), 1)
+
+
+# --- Weekday labels (HUD/title presentation) ----------------------------------
+
+func test_weekday_name_maps_loop_days() -> void:
+	assert_eq(_clock.weekday_name(0), "Sunday")    # tutorial (Day 0)
+	assert_eq(_clock.weekday_name(1), "Monday")    # working week Day 1
+	assert_eq(_clock.weekday_name(5), "Friday")    # working week Day 5
+	assert_eq(_clock.weekday_name(6), "Saturday")  # finale end card (Day 6)
+
+
+func test_weekday_name_wraps_and_tolerates_negatives() -> void:
+	assert_eq(_clock.weekday_name(7), "Sunday")   # wraps modulo 7
+	assert_eq(_clock.weekday_name(-1), "Saturday")  # posmod keeps negatives in-range

@@ -41,6 +41,10 @@ var _journal_button: Button
 var _slot_data: Array[Dictionary] = []
 var _cards: Array[Preview3DCard] = []
 
+## Who currently owns the bottom prompt ("scrap"/"ayla"/"door"/...). Used so a
+## background interactable can't clear the cue the player is actually focused on.
+var _prompt_owner: String = ""
+
 
 func _ready() -> void:
 	set_day(1, 5)
@@ -52,6 +56,7 @@ func _ready() -> void:
 	_build_quest_tracker()
 	_build_hotbar()
 	set_inventory(0, [])
+	_promote_prompt_label()
 
 
 ## Decorative panels behind the day/clock readout and bottom prompt.
@@ -72,10 +77,10 @@ func _build_panels() -> void:
 	prompt_panel.anchor_top = 1.0
 	prompt_panel.anchor_right = 0.5
 	prompt_panel.anchor_bottom = 1.0
-	prompt_panel.offset_left = -340.0
-	prompt_panel.offset_top = -280.0
-	prompt_panel.offset_right = 340.0
-	prompt_panel.offset_bottom = -236.0
+	prompt_panel.offset_left = -360.0
+	prompt_panel.offset_top = -300.0
+	prompt_panel.offset_right = 360.0
+	prompt_panel.offset_bottom = -240.0
 	prompt_panel.add_theme_stylebox_override("panel", UiPalette.manuscript_card_style())
 	add_child(prompt_panel)
 	# Send panels to the back so labels draw on top.
@@ -83,7 +88,19 @@ func _build_panels() -> void:
 	move_child(prompt_panel, 1)
 	_day_label.add_theme_color_override("font_color", UiPalette.BONE)
 	_clock_label.add_theme_color_override("font_color", UiPalette.SOFT_GOLD)
+	_prompt_label.offset_left = -360.0
+	_prompt_label.offset_right = 360.0
+	_prompt_label.offset_top = -300.0
+	_prompt_label.offset_bottom = -240.0
 	_prompt_label.add_theme_color_override("font_color", UiPalette.BONE)
+	# Readable over any yard background: larger font with a dark ink outline and a
+	# soft drop shadow, so the "Press E" cue never washes out against bright 3D.
+	_prompt_label.add_theme_font_size_override("font_size", 26)
+	_prompt_label.add_theme_color_override("font_outline_color", UiPalette.INK)
+	_prompt_label.add_theme_constant_override("outline_size", 6)
+	_prompt_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))
+	_prompt_label.add_theme_constant_override("shadow_offset_x", 2)
+	_prompt_label.add_theme_constant_override("shadow_offset_y", 2)
 
 
 ## Top-left quick actions: phone (marketplace) and journal, usable outdoors.
@@ -141,9 +158,30 @@ func _build_quest_tracker() -> void:
 
 
 ## Shows a prompt at the bottom-center of the screen. Pass an empty string to hide.
-func set_prompt(text: String) -> void:
+## Shows/clears the bottom interaction prompt. `owner` tags who is driving the
+## cue ("scrap"/"ayla"/"door"/...). A non-empty prompt always wins and takes
+## ownership (the player's focus moved). An EMPTY prompt only clears if it comes
+## from the current owner (or owner == "" for system callers) — this stops a
+## background interactable's body_exited/set_enabled from wiping the prompt the
+## player is actually looking at, which was the shared-label clobber.
+func set_prompt(text: String, owner: String = "") -> void:
+	if text.is_empty():
+		if owner != "" and _prompt_owner != "" and owner != _prompt_owner:
+			return
+		_prompt_label.text = ""
+		_prompt_label.visible = false
+		_prompt_owner = ""
+		return
 	_prompt_label.text = text
-	_prompt_label.visible = not text.is_empty()
+	_prompt_label.visible = true
+	_prompt_owner = owner
+
+
+## Draws the interaction prompt above every other HUD control (panels, hotbar and
+## any later-added overlay) so a "Press E" cue can never be hidden behind siblings.
+func _promote_prompt_label() -> void:
+	_prompt_label.z_index = 10
+	move_child(_prompt_label, get_child_count() - 1)
 
 
 func set_day(day: int, total_days: int) -> void:

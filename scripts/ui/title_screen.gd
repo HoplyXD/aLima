@@ -323,7 +323,24 @@ func _show_slot_menu(for_new_game: bool) -> void:
 	_slot_menu_plaque.visible = true
 	UiAnimations.popup_open(_slot_menu, 0.3)
 	_refresh_slot_buttons(for_new_game)
+	# Fit after this frame so the VBox's combined minimum size reflects the freshly
+	# set slot texts before we measure it.
+	Callable(self, &"_fit_slot_plaque").call_deferred()
 	_slot_back_button.grab_focus()
+
+
+## Padding (px) around the slot list inside its plaque.
+const SLOT_PLAQUE_PAD := Vector2(40.0, 40.0)
+
+
+## Sizes/positions the slot plaque to hug the slot VBox's current content, so the
+## plaque stretches/shrinks with whatever the slots render (title + 3 slots + back).
+func _fit_slot_plaque() -> void:
+	if not is_instance_valid(_slot_menu) or not is_instance_valid(_slot_menu_plaque):
+		return
+	var content: Vector2 = _slot_menu.get_combined_minimum_size()
+	_slot_menu_plaque.position = _slot_menu.position - SLOT_PLAQUE_PAD
+	_slot_menu_plaque.size = content + SLOT_PLAQUE_PAD * 2.0
 
 
 func _start_new_game(slot: int, seed: int) -> void:

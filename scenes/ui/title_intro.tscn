@@ -1,0 +1,81 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/title_intro.gd" id="1_intro"]
+
+[node name="TitleIntro" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_intro")
+
+[node name="Stage" type="Node2D" parent="."]
+
+[node name="Overlays" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="PostRect" type="ColorRect" parent="Overlays"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="TitleLayer" type="Control" parent="Overlays"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TitleGlow" type="TextureRect" parent="Overlays/TitleLayer"]
+layout_mode = 0
+offset_left = 510.0
+offset_top = 200.0
+offset_right = 1410.0
+offset_bottom = 660.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="Overlays/TitleLayer"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 300.0
+offset_right = 1920.0
+offset_bottom = 600.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="Overlays/TitleLayer"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 770.0
+offset_right = 1920.0
+offset_bottom = 860.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FadeRect" type="ColorRect" parent="Overlays"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+
+[node name="Wind" type="AudioStreamPlayer" parent="."]

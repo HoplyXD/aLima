@@ -29,6 +29,13 @@ const DAY_END_HOUR: int = 20  ## Shop closes at the authoritative 20:00 boundary
 const TOTAL_DAYS: int = 5  ## Five-day loop.
 const MINUTES_PER_HOUR: int = 60  ## In-game minutes shown in one clock hour.
 
+## Weekday labels for the shop loop. Day 0 (tutorial) is Sunday, the five working
+## days run Monday..Friday (Day 1..5), and the finale end card lands on Saturday
+## (Day 6). Indexed by `day mod 7`, so any loop day maps to a stable name.
+const WEEKDAY_NAMES: Array[String] = [
+	"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+]
+
 ## Stable pause-owner IDs for the full-screen systems that freeze shop time
 ## (CLOCK-R5). Each owner acquires/releases exactly one pause.
 const PAUSE_DIALOGUE: String = "dialogue"
@@ -177,6 +184,14 @@ func get_minute() -> int:
 ## animations like the sun arc, where integer-minute steps would look jittery.
 func get_fractional_hour() -> float:
 	return float(_hour) + (_hour_elapsed / maxf(seconds_per_hour, 0.0001))
+
+
+## Human-readable weekday for a loop day. Day 0 -> Sunday (tutorial), Day 1..5 ->
+## Monday..Friday (the working week), Day 6 -> Saturday (finale). Wraps modulo 7
+## and tolerates negatives, so it is safe to call with any day index. Pure lookup:
+## it does not depend on this clock's current `_day`.
+func weekday_name(day: int) -> String:
+	return WEEKDAY_NAMES[posmod(day, 7)]
 
 
 func is_paused() -> bool:

@@ -67,6 +67,13 @@ func set_enabled(value: bool) -> void:
 		_set_hover(false)
 		_set_player_inside(false)
 		prompt_changed.emit("")
+	elif _player_inside:
+		# Re-show the prompt when re-enabled while the player never left the area
+		# (e.g. an overlay opened/closed over the yard); without this the label stays
+		# blank until the player steps out and back into the trigger.
+		var text := proximity_prompt_text if not proximity_prompt_text.is_empty() else prompt_text
+		prompt_changed.emit(text)
+		_apply_hover_visual(true)
 
 
 ## Triggers the interactable's behavior. Public so the fallback path/tests can
