@@ -152,7 +152,7 @@ func set_day(day: int, total_days: int) -> void:
 
 ## Day 0 (tutorial) presentation: it is Sunday, and time does not exist yet.
 func set_day_zero() -> void:
-	_day_label.text = "Sunday · Day 0"
+	_day_label.text = "Sunday"
 	_clock_label.text = ""
 
 
@@ -218,7 +218,10 @@ func set_inventory(
 			as Color
 		)
 		var display_name := "Scrap x%d" % (units.size() - s) if is_overflow_slot else "Scrap"
-		var scrap_mesh := _make_scrap_heap(color)
+		# The same junk-heap mesh + rarity glow outline the yard pickup shows.
+		var scrap_mesh := ScrapItem.build_display_node(
+			"white" if rarity_name.is_empty() else rarity_name
+		)
 		_set_slot(slot_index, display_name, color, scrap_mesh)
 		_slot_data[slot_index] = {
 			"preview": scrap_mesh,

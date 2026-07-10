@@ -55,9 +55,9 @@ const PAUSE_EVENING: String = "evening"
 const PAUSE_TUTORIAL: String = "tutorial"  ## Day 0 runs clockless (TUT).
 const PAUSE_FINALE: String = "finale"  ## The Perfect Loop finale holds time still.
 
-## Real seconds per in-game hour. GDD cadence is 1 real minute = 1 in-game hour.
-## Lower this (e.g. 0.1) to watch/verify the clock move faster (debug speed).
-var seconds_per_hour: float = 300.0
+## Real seconds per in-game hour. v3 cadence: 3 real seconds = 1 in-game minute
+## (180 s/hour). Lower this (e.g. 0.1) to watch/verify the clock faster (debug).
+var seconds_per_hour: float = 180.0
 
 ## Whether the auto-driver (the active scene's _process) should advance the clock
 ## via tick(). Tests leave this false and drive tick() directly so the simulation

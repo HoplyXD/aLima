@@ -207,7 +207,7 @@ func _refresh_slot_buttons(for_new_game: bool) -> void:
 					% [DayClock.weekday_name(day), display_hour, minute, meridian]
 				)
 			else:
-				when = "Sunday · Day 0"
+				when = "Sunday"
 			button.text = (
 				"Slot %d — %s · %s · ₱%d · Seed %d"
 				% [i + 1, slot_name, when, int(summary.get("money", 0)), seed]

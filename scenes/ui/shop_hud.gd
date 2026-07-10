@@ -166,7 +166,7 @@ func set_day(day: int, total_days: int) -> void:
 
 ## Day 0 (tutorial) presentation: it is Sunday, and time does not exist yet.
 func set_day_zero() -> void:
-	_day_label.text = "Sunday · Day 0"
+	_day_label.text = "Sunday"
 	_clock_label.text = ""
 
 

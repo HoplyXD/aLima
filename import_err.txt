@@ -1,0 +1,2 @@
+WARNING: Screen-space ambient occlusion (SSAO) is only available when using the Forward+ or Compatibility renderers.
+   at: environment_set_ssao (servers/rendering/storage/environment_storage.cpp:700)
