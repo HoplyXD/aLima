@@ -1,0 +1,212 @@
+WARNING: Screen-space ambient occlusion (SSAO) is only available when using the Forward+ or Compatibility renderers.
+   at: environment_set_ssao (servers/rendering/storage/environment_storage.cpp:700)
+   GDScript backtrace (most recent call first):
+       [0] load_script_using_custom_warnings (res://addons/gut/warnings_manager.gd:173)
+       [1] _parse_script (res://addons/gut/test_collector.gd:76)
+       [2] add_script (res://addons/gut/test_collector.gd:127)
+       [3] add_script (res://addons/gut/gut.gd:1053)
+       [4] add_directory (res://addons/gut/gut.gd:1076)
+       [5] _apply_options (res://addons/gut/gut_config.gd:136)
+       [6] apply_options (res://addons/gut/gut_config.gd:207)
+       [7] run_tests (res://addons/gut/gui/GutRunner.gd:192)
+       [8] _run_tests (res://addons/gut/cli/gut_cli.gd:238)
+       [9] main (res://addons/gut/cli/gut_cli.gd:284)
+       [10] _init (res://addons/gut/gut_cmdln.gd:38)
+WARNING: DayClock.release_pause: unknown owner 'ghost' ignored
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] release_pause (res://scripts/core/day_clock.gd:180)
+       [1] test_release_unknown_owner_is_harmless (res://tests/core/test_day_clock.gd:137)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: DayClock.release_pause: unknown owner 'ghost' ignored
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] release_pause (res://scripts/core/day_clock.gd:180)
+       [1] test_release_unknown_owner_is_harmless (res://tests/core/test_day_clock.gd:140)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: FragmentService: unknown fragment 'fragment_does_not_exist'
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] release_fragment (res://scripts/core/fragment_service.gd:49)
+       [1] test_unknown_fragment_release_is_safe (res://tests/core/test_fragment_service.gd:77)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: RouteService: beat 'auntie_beat_2' is gated by an earlier incomplete beat
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] complete_beat (res://scripts/core/route_service.gd:158)
+       [1] test_beat_two_requires_beat_one (res://tests/core/test_route_beats.gd:38)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: RouteService: beat 'auntie_beat_3' is gated by an earlier incomplete beat
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] complete_beat (res://scripts/core/route_service.gd:158)
+       [1] test_beat_three_requires_beat_two (res://tests/core/test_route_beats.gd:52)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SaveService.select_slot: invalid slot 99; ignoring
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] select_slot (res://scripts/core/save_service.gd:46)
+       [1] test_select_slot_out_of_range_is_ignored (res://tests/core/test_save_service.gd:328)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SpaceManager.go_to: already in yard
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] go_to (res://scripts/core/space_manager.gd:61)
+       [1] _attempt_continue (res://scripts/ui/title_screen.gd:354)
+       [2] test_start_new_game_stamps_pending_player_name (res://tests/core/test_title_screen.gd:75)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SpaceManager.go_to: already in yard
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] go_to (res://scripts/core/space_manager.gd:61)
+       [1] _attempt_continue (res://scripts/ui/title_screen.gd:354)
+       [2] test_continue_loads_seed_from_slot (res://tests/core/test_title_screen.gd:115)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SpaceManager.go_to: already in yard
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] go_to (res://scripts/core/space_manager.gd:61)
+       [1] _start_new_game (res://scripts/ui/title_screen.gd:343)
+       [2] test_new_game_seed_produces_deterministic_day1_delivery (res://tests/core/test_title_screen.gd:157)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SpaceManager.go_to: already in yard
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] go_to (res://scripts/core/space_manager.gd:61)
+       [1] _start_new_game (res://scripts/ui/title_screen.gd:343)
+       [2] test_new_game_seed_produces_deterministic_day1_delivery (res://tests/core/test_title_screen.gd:167)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SpaceManager.go_to: already in yard
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] go_to (res://scripts/core/space_manager.gd:61)
+       [1] _attempt_continue (res://scripts/ui/title_screen.gd:354)
+       [2] test_continue_restores_seed_for_same_rolls (res://tests/core/test_title_screen.gd:187)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/dummy/storage/material_storage.cpp:264)
+   GDScript backtrace (most recent call first):
+       [0] free_all (res://addons/gut/autofree.gd:70)
+       [1] _run_test (res://addons/gut/gut.gd:635)
+       [2] test_reorder_artifact_rewrites_inventory_order (res://tests/economy/test_storage_screen.gd:218)
+       [3] _open_screen (res://tests/economy/test_storage_screen.gd:53)
+       [4] _end_wait (res://addons/gut/awaiter.gd:126)
+       [5] _on_tree_physics_frame (res://addons/gut/awaiter.gd:78)
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/dummy/storage/material_storage.cpp:264)
+   GDScript backtrace (most recent call first):
+       [0] free_all (res://addons/gut/autofree.gd:70)
+       [1] _run_test (res://addons/gut/gut.gd:635)
+       [2] test_reorder_artifact_rewrites_inventory_order (res://tests/economy/test_storage_screen.gd:218)
+       [3] _open_screen (res://tests/economy/test_storage_screen.gd:53)
+       [4] _end_wait (res://addons/gut/awaiter.gd:126)
+       [5] _on_tree_physics_frame (res://addons/gut/awaiter.gd:78)
+WARNING: SeatingService: save failed (could not open temp save file (error 7)); rolling back seat state
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _on_portal_completed (res://scripts/journal/seating_service.gd:54)
+       [1] test_save_failure_rolls_back_seat (res://tests/portal/test_seating_service.gd:102)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SeatingService: save failed (could not open temp save file (error 7)); rolling back seat state
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _on_portal_completed (res://scripts/journal/seating_service.gd:54)
+       [1] test_save_failure_rolls_back_seat (res://tests/portal/test_seating_service.gd:102)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SpaceManager.go_to_yard: already in the yard
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] go_to_yard (res://scripts/core/space_manager.gd:98)
+       [1] test_duplicate_yard_transition_is_guarded (res://tests/scrapyard/test_space_manager.gd:55)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: SpaceManager.go_to_shop: already in the shop
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] go_to_shop (res://scripts/core/space_manager.gd:90)
+       [1] test_duplicate_shop_transition_from_game_is_guarded (res://tests/scrapyard/test_space_manager.gd:64)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: DayClock.release_pause: unknown owner 'dialogue' ignored
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] release_pause (res://scripts/core/day_clock.gd:180)
+       [1] _on_dialogue_finished (res://scripts/shop/shop_controller.gd:1086)
+       [2] <anonymous lambda> (res://scenes/ui/shop_hud.gd:64)
+       [3] _close (res://dialogue/dialogue_box.gd:156)
+WARNING: DayClock.release_pause: unknown owner 'dialogue' ignored
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] release_pause (res://scripts/core/day_clock.gd:180)
+       [1] _on_dialogue_finished (res://scripts/shop/shop_controller.gd:1086)
+       [2] <anonymous lambda> (res://scenes/ui/shop_hud.gd:64)
+       [3] _close (res://dialogue/dialogue_box.gd:156)
+WARNING: SpaceManager.go_to: already in mall
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] go_to (res://scripts/core/space_manager.gd:61)
+       [1] test_go_to_mall_loads_the_mall_scene (res://tests/tutorial/test_travel_system.gd:78)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: TutorialService.advance_to: unknown step 'nonsense_step' ignored
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] advance_to (res://scripts/tutorial/tutorial_service.gd:222)
+       [1] test_advance_to_rejects_unknown_step (res://tests/tutorial/test_tutorial_gating.gd:94)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+ERROR: Pages in use exist at exit in PagedAllocator: N20RasterizerSceneDummy21GeometryInstanceDummyE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: 131 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2535)
+ERROR: 22 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)

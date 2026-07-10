@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "comment": "v3 (story.md §16): Mr. Maverick SELLS one overpriced artifact per day, 18:00-20:00. Buying all five days unlocks the Day-5 fragment offer. Rarity names use the fixed glow legend (§4-E).",
+  "daily_offers": [
+    { "day": 1, "price_min": 300, "price_max": 700, "rarities": ["white", "green"] },
+    { "day": 2, "price_min": 300, "price_max": 700, "rarities": ["white", "green", "blue"] },
+    { "day": 3, "price_min": 900, "price_max": 1100, "rarities": ["green", "blue"] },
+    { "day": 4, "price_min": 1400, "price_max": 1600, "rarities": ["blue", "purple"] },
+    { "day": 5, "price_min": 1400, "price_max": 1600, "rarities": ["purple"] }
+  ],
+  "fragment_price": 5000,
+  "fragment_id": "fragment_05"
+}

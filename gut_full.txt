@@ -1,0 +1,1464 @@
+Initialize godot-rust (API v4.5.stable.official, runtime v4.7.stable.steam, safeguards balanced)
+Godot Engine v4.7.stable.steam.5b4e0cb0f - https://godotengine.org
+
+---  GUT  ---
+[1m[INFO]:  [0musing [C:/Users/User/AppData/Roaming/Godot/app_userdata/aLima] for temporary output.
+Godot version:  4.7.0
+GUT version:  9.6.0
+[4m
+
+res://tests/content/manifest/test_content_manifest.gd
+[0m* test_model_round_trip_preserves_fields
+* test_model_flags_placeholder_content_id
+* test_accepted_fixture_passes
+* test_broken_fixture_fails_with_named_errors
+* test_lowered_requirement_below_gdd_floor_fails
+* test_omitted_required_category_fails
+* test_pending_artifact_packet_fails
+* test_missing_provenance_records_fail
+* test_live_manifest_is_blocked_by_pending
+[1m9/9 passed.
+[0m[4m
+
+res://tests/core/test_data_repository.gd
+[0m* test_slice_fixtures_load_and_validate
+* test_pendant_template_is_ordinary_no_carrier_flag
+* test_runtime_instances_do_not_mutate_authored_templates
+* test_all_validation_errors_reported_together
+* test_invalid_repository_state_is_not_published
+[1m5/5 passed.
+[0m[4m
+
+res://tests/core/test_day_clock.gd
+[0m* test_starts_day_at_seven_am
+* test_minute_progression_at_default_rate
+* test_debug_speed_advances_one_hour_per_tenth_second
+* test_full_day_emits_each_hour_once_and_closes_at_twenty
+* test_large_delta_does_not_skip_or_duplicate_transitions
+* test_start_day_resumes_next_day_at_seven
+* test_two_owners_release_independently
+* test_pause_changed_fires_only_on_edges
+* test_paused_clock_does_not_advance
+* test_duplicate_acquire_from_same_owner_is_idempotent
+* test_release_unknown_owner_is_harmless
+[1m11/11 passed.
+[0m[4m
+
+res://tests/core/test_event_bus.gd
+[0m* test_clock_signals_compile_and_fire
+* test_delivery_and_restoration_signals_compile_and_fire
+* test_discovery_signals_compile_and_fire
+[1m3/3 passed.
+[0m[4m
+
+res://tests/core/test_event_director.gd
+[0m* test_marketplace_unavailable_during_brownout
+* test_brownout_multiplier_is_reduced_when_flashlight_off
+* test_brownout_multiplier_is_cancelled_when_flashlight_on
+* test_leak_multiplier_still_applies_when_flashlight_on
+* test_brownout_and_leak_stack_to_the_strongest_penalty
+* test_light_source_active_reads_flashlight_state
+[1m6/6 passed.
+[0m[4m
+
+res://tests/core/test_fragment_service.gd
+[0m* test_fragment_01_starts_locked_from_authored_data
+* test_release_transitions_locked_to_released
+[FragmentService] released fragment_01 (test)
+* test_release_mirrors_state_onto_repo_for_spawn_director
+* test_release_persists_across_reload
+* test_release_is_idempotent
+* test_seated_fragment_is_not_re_released
+* test_unknown_fragment_release_is_safe
+* test_sync_repo_from_persistent_reflects_runtime_state
+[1m8/8 passed.
+[0m[4m
+
+res://tests/core/test_game_state.gd
+[0m* test_initializes_with_player_id
+* test_persistent_and_loop_state_are_separate
+* test_reset_loop_state_keeps_persistent
+* test_new_run_increments_loop_index_and_sets_seed
+* test_debug_seed_override_is_used
+* test_flashlight_resets_with_loop_state
+* test_restore_run_context_sets_seed_and_index
+[1m7/7 passed.
+[0m[4m
+
+res://tests/core/test_loop_controller.gd
+[0m* test_days_one_through_five_advance_then_reset
+* test_normal_day_transition_mirrors_into_loop_state
+* test_loop_reset_emitted_exactly_once
+* test_starting_tool_is_a_visible_owned_instance
+* test_persistent_state_survives_reset
+* test_every_loop_scoped_field_resets
+* test_loop_inventory_never_leaks_into_persistent
+* test_repeated_close_signals_do_not_reset_twice
+[1m8/8 passed.
+[0m[4m
+
+res://tests/core/test_route_beats.gd
+[0m* test_beat_two_requires_beat_one
+* test_beat_three_requires_beat_two
+* test_completing_a_beat_emits_and_is_idempotent
+* test_auntie_final_beat_releases_nothing
+* test_only_final_beat_releases_the_fragment
+[FragmentService] released fragment_02 (route 'artisan' completed)
+* test_released_fragment_becomes_spawn_director_eligible
+[FragmentService] released fragment_02 (route 'artisan' completed)
+* test_due_beat_catches_up_missed_days
+* test_auntie_only_in_her_window
+* test_day3_visit_catches_up_missed_beat_one
+* test_day5_window_opens_early
+* test_unanswered_window_close_consumes_the_visit
+* test_missed_visit_is_announced_only_once
+* test_answered_visit_is_not_consumed_as_missed
+* test_no_consumption_when_no_window_closes
+* test_debug_force_visit_overrides_window_and_gating
+[1m15/15 passed.
+[0m[4m
+
+res://tests/core/test_route_service.gd
+[0m* test_met_flag_drives_intro_then_return
+* test_met_and_completed_survive_loop_reset
+* test_shared_slot_allows_scavenger_and_artisan
+* test_no_visitor_outside_any_window
+* test_seating_a_fragment_completes_its_route_and_grants_rewards
+* test_completing_scavenger_grants_archeologist_lead
+[1m6/6 passed.
+[0m[4m
+
+res://tests/core/test_run_context.gd
+[0m* test_same_seed_produces_same_sequence
+* test_different_seeds_produce_different_sequences
+* test_different_stream_names_produce_different_sequences
+* test_no_global_random_state_dependency
+[1m4/4 passed.
+[0m[4m
+
+res://tests/core/test_save_service.gd
+[0m* test_save_and_load_round_trip
+* test_run_seed_and_loop_index_round_trip
+* test_v1_migration_injects_run_seed_and_loop_index
+* test_v2_migration_marks_tutorial_completed
+* test_tutorial_fields_round_trip
+* test_flashlight_on_round_trips_through_save
+* test_rejects_malformed_save_file
+* test_invalid_temp_does_not_replace_valid_save
+* test_load_recovers_from_missing_optional_fields
+* test_load_rejects_out_of_range_day
+* test_load_rejects_unknown_fragment_state_enum
+* test_load_rejects_non_numeric_scalar
+* test_load_rejects_non_numeric_run_seed
+* test_partition_separation_keeps_loop_out_of_persistent
+* test_migration_rejects_unsupported_future_schema
+* test_schema_validation_rejects_unsupported_version
+* test_slot_selection_uses_distinct_files
+* test_slot_summary_reads_metadata_without_full_load
+* test_slot_exists_and_delete_slot
+* test_select_slot_out_of_range_is_ignored
+[1m20/20 passed.
+[0m[4m
+
+res://tests/core/test_settings_service.gd
+[0m* test_set_resolution_persists
+* test_resolution_index_tracks_the_choice
+* test_set_fullscreen_persists
+* test_set_previews_persists
+* test_default_ai_mode_is_online
+* test_set_ai_mode_persists_and_rejects_unknown
+[1m6/6 passed.
+[0m[4m
+
+res://tests/core/test_sun_controller.gd
+[0m* test_attach_requires_a_light
+* test_noon_is_higher_and_brighter_than_dawn
+* test_sunset_is_warmer_than_noon
+* test_day0_steps_map_sunrise_noon_sunset
+* test_clock_hours_map_across_the_shop_day
+[1m5/5 passed.
+[0m[4m
+
+res://tests/core/test_title_screen.gd
+[0m* test_parse_seed_accepts_valid_numbers
+* test_parse_seed_rejects_invalid_input
+* test_start_new_game_sets_seed_and_saves_to_slot
+* test_parse_player_name_trims_and_rejects_blank
+* test_start_new_game_stamps_pending_player_name
+* test_start_requires_non_blank_name
+* test_blank_seed_rolls_a_random_one
+* test_new_game_opens_in_the_tutorial_entry_space
+* test_continue_loads_seed_from_slot
+* test_attempt_continue_surfaces_load_failure
+* test_slot_buttons_disable_empty_slots_for_continue
+* test_slot_buttons_enable_empty_slots_for_new_game
+* test_new_game_seed_produces_deterministic_day1_delivery
+* test_continue_restores_seed_for_same_rolls
+[1m14/14 passed.
+[0m[4m
+
+res://tests/delivery/test_ayla_service.gd
+[0m* test_scrap_pool_serializes_and_resets
+* test_pending_sort_serializes_and_resets
+* test_submit_scrap_deducts_from_pool
+* test_submit_scrap_refuses_overdraft
+* test_submit_scrap_refuses_second_sort_same_day
+* test_sort_timer_knocks_after_one_hour_not_before
+* test_sort_timer_knocks_after_reloading_past_ready
+* test_bias_shifts_higher_tier_weights_up
+* test_bias_never_forces_a_tier_to_probability_one
+* test_seeded_distribution_is_biased_by_scrap
+* test_same_seed_and_scrap_produces_same_batch
+* test_no_free_auto_delivery_path
+* test_scrap_sort_batch_size_is_small
+[1m13/13 passed.
+[0m[4m
+
+res://tests/delivery/test_delivery_generator.gd
+[0m* test_batch_size_within_configured_bounds
+* test_delivered_instances_carry_random_conditions
+* test_fixed_seed_produces_repeatable_delivery
+* test_different_seeds_produce_different_deliveries
+* test_weight_distribution_respects_rarity_weights
+* test_unique_instance_ids_across_batches
+* test_unique_instance_ids_across_repeated_morning_deliveries
+* test_due_carrier_injected_on_assigned_day
+* test_carrier_retains_ordinary_template_identity
+* test_invalid_anchor_falls_back_to_compatible_anchor
+* test_full_anchor_falls_back_to_compatible_anchor
+* test_common_rust_tarnish_artifacts_excluded_from_pool
+[1m12/12 passed.
+[0m[4m
+
+res://tests/delivery/test_glow_mapper.gd
+[0m* test_exact_six_glow_states
+* test_rarity_maps_to_matching_glow
+* test_carrier_shows_ordinary_glow_before_authorization
+* test_carrier_shows_flicker_after_authorization
+* test_non_carrier_never_flickers
+* test_glow_colors_differ_and_flicker_is_distinct
+[1m6/6 passed.
+[0m[4m
+
+res://tests/delivery/test_spawn_director.gd
+[0m* test_plans_only_released_fragments
+* test_carrier_template_is_openable
+* test_container_is_compatible_with_carrier
+* test_day_is_within_loop
+* test_fixed_seed_produces_same_placements
+* test_different_seeds_produce_variation
+* test_records_spawn_history
+* test_respects_container_capacity
+[1m8/8 passed.
+[0m[4m
+
+res://tests/delivery/test_triage.gd
+[0m* test_cannot_complete_with_undecided_items
+* test_cannot_complete_when_over_capacity
+* test_can_complete_when_within_capacity
+* test_kept_instances_enter_loop_inventory
+* test_recycled_instances_are_inaccessible
+* test_recycled_carrier_remains_eligible_next_loop
+* test_neglect_history_survives_loop_reset
+* test_seated_fragments_are_never_mutated
+* test_apply_triage_is_atomic_and_idempotent
+[1m9/9 passed.
+[0m[4m
+
+res://tests/delivery/test_triage_drop_zones.gd
+[0m* test_keep_zone_maps_to_keep
+* test_recycle_zone_maps_to_recycle
+* test_unknown_zone_leaves_undecided
+* test_zone_constants_match_expected_names
+[1m4/4 passed.
+[0m[4m
+
+res://tests/discovery/echoes/test_echo_controller.gd
+[0m* test_no_active_target_means_silence
+* test_locked_fragment_remains_silent
+* test_seated_fragment_remains_silent
+* test_decoy_produces_silence_and_no_heartbeat
+* test_forced_maximum_proximity_cannot_authorize_decoy_heartbeat
+* test_carrier_authorizes_heartbeat_and_hides_flicker_below_reveal
+* test_flicker_hidden_below_threshold
+* test_flicker_appears_at_threshold
+* test_discovery_stops_echo
+* test_loop_reset_clears_target
+* test_recycled_carrier_clears_target
+* test_opened_carrier_stops_echo
+* test_muted_mode_still_exposes_meter_and_captions
+* test_ordinary_and_promoted_instances_identical_below_threshold
+[1m14/14 passed.
+[0m[4m
+
+res://tests/discovery/echoes/test_echo_mixer.gd
+[0m* test_far_silence
+* test_hum_boundary
+* test_melody_boundary
+* test_voice_boundary
+* test_heartbeat_boundary
+* test_heartbeat_unauthorized_is_zero
+* test_gains_remain_clamped
+* test_null_echo_set_is_silent
+* test_active_bands_follow_gain
+* test_db_conversion_is_monotonic_and_clamped
+[1m10/10 passed.
+[0m[4m
+
+res://tests/discovery/echoes/test_echo_set_validation.gd
+[0m* test_valid_echo_set_passes
+* test_missing_id_fails
+* test_missing_voice_caption_fails
+* test_far_radius_must_exceed_near_radius
+* test_negative_smoothing_time_fails
+* test_out_of_range_threshold_fails
+* test_band_start_must_be_less_than_end
+* test_peak_must_be_inside_band
+* test_overlapping_bands_without_contiguity_fails
+* test_gap_between_bands_fails
+* test_max_gain_above_zero_db_fails
+* test_fixture_echo_set_loads_and_validates
+[1m12/12 passed.
+[0m[4m
+
+res://tests/discovery/echoes/test_glow_flicker.gd
+[0m* test_only_active_carrier_receives_flicker_authorization
+* test_carrier_glow_is_ordinary_below_reveal
+* test_carrier_glow_becomes_flickering_at_reveal
+* test_decoy_remains_ordinary_glow_at_max_proximity
+* test_target_loss_restores_ordinary_glow
+[1m5/5 passed.
+[0m[4m
+
+res://tests/discovery/echoes/test_proximity_service.gd
+[0m* test_far_radius_maps_to_zero
+* test_near_radius_maps_to_one
+* test_values_outside_radii_clamp
+* test_midpoint_maps_to_half
+* test_smoothing_prevents_abrupt_jitter
+* test_clear_target_resets_proximity
+* test_invalid_source_marks_target_invalid
+[1m7/7 passed.
+[0m[4m
+
+res://tests/discovery/hunt/test_finale_service.gd
+[0m* test_finale_waits_for_portal_flow_then_opens
+* test_finale_does_not_trigger_below_five_seats
+* test_finale_fires_exactly_once
+[1m3/3 passed.
+[0m[4m
+
+res://tests/discovery/hunt/test_fragment_hunt.gd
+[0m* test_hiding_spots_load_and_validate
+* test_spot_availability_and_day_windows
+* test_plan_never_lands_in_locked_location
+* test_mid_loop_release_respects_day_window
+* test_occupied_spots_are_excluded
+* test_never_twice_until_exhausted_then_soft_reset
+* test_history_records_spot_entries
+* test_plan_hunt_spots_plans_all_released_without_collisions
+* test_plan_hunt_spots_skips_seated_and_locked
+* test_hunt_service_plans_on_release_signal
+[FragmentService] released fragment_02 (hunt-test)
+* test_hunt_service_spots_for_location_and_mark_found
+* test_echo_hunt_mode_valid_and_heartbeat_at_spot
+* test_echo_hunt_mode_silent_for_locked_fragment
+* test_echo_hunt_clears_on_discovery_and_seat
+[1m14/14 passed.
+[0m[4m
+
+res://tests/discovery/spawn_director/test_spawn_director_phase5_filters.gd
+[0m* test_fixed_seed_produces_same_result
+* test_deterministic_candidate_ordering
+* test_different_seeds_produce_valid_variation
+* test_only_released_fragments_are_eligible
+* test_seated_fragments_are_excluded
+* test_unavailable_required_tool_excludes_candidate
+* test_granting_tool_clears_the_tool_gate
+* test_incompatible_containers_are_rejected
+* test_containers_over_capacity_are_rejected
+* test_day_is_within_loop
+* test_locked_locations_are_rejected_without_code
+* test_safe_code_makes_safe_eligible
+* test_safe_code_affects_only_safe_container_eligibility
+* test_fragment_is_inside_promoted_carrier_not_loose
+* test_promotion_preserves_template_and_rarity
+* test_promotion_sets_carrier_fragment_content_once
+[1m16/16 passed.
+[0m[4m
+
+res://tests/discovery/spawn_director/test_spawn_director_phase5_history.gd
+[0m* test_three_sequential_runs_do_not_repeat_pair
+* test_older_pairs_remain_excluded_before_exhaustion
+* test_exhaustion_triggers_soft_reset
+* test_soft_reset_forbids_most_recent_pair
+* test_soft_reset_never_bypasses_hard_filters
+* test_persistent_history_survives_loop_reset_and_save_load
+* test_seeded_audit_logs_are_reproducible
+* test_no_candidate_failure_leaves_state_unchanged
+* test_three_run_demo_retains_history
+[1m9/9 passed.
+[0m[4m
+
+res://tests/economy/test_buyer_personas.gd
+[0m* test_repository_loads_with_buyers
+* test_suspicious_buyer_ties_to_the_buyer_route
+* test_each_persona_has_a_budget_and_banter
+[1m3/3 passed.
+[0m[4m
+
+res://tests/economy/test_buyer_shop.gd
+[0m* test_offer_stays_inside_the_day_band_and_is_deterministic
+* test_day4_band_is_pricier_and_rarer
+* test_buy_today_deducts_grants_and_marks
+* test_buy_needs_money
+* test_fragment_needs_all_five_days_and_day5
+* test_buy_fragment_pays_and_grants_the_ledger
+* test_fragment_needs_money_too
+[1m7/7 passed.
+[0m[4m
+
+res://tests/economy/test_disposition_router.gd
+[0m* test_dirty_item_is_not_eligible
+* test_unjudged_item_is_not_eligible
+* test_journal_rarity_offers_journal_not_preserve
+* test_gold_offers_preserve_not_journal
+* test_invalid_disposition_is_rejected_with_a_reason
+* test_journal_disposition_archives_and_removes
+* test_preserve_disposition_creates_a_museum_record
+* test_sell_through_router_credits_and_logs
+* test_cannot_dispose_the_same_instance_twice
+* test_listing_is_created_and_resolved_on_sale
+[1m10/10 passed.
+[0m[4m
+
+res://tests/economy/test_evening_state.gd
+[0m* test_day_close_enters_evening_and_holds_advancement
+* test_commit_plan_advances_the_day
+* test_commit_is_idempotent
+* test_non_interactive_close_advances_inline
+* test_day5_commit_resets_loop_but_preserves_persistent
+* test_repair_restores_durability_for_a_cost
+* test_replace_swaps_a_broken_tool_for_a_fresh_one
+[1m7/7 passed.
+[0m[4m
+
+res://tests/economy/test_marketplace.gd
+[0m* test_catalog_lists_only_buyable_tools
+* test_buying_deducts_money_and_schedules_a_shipment
+* test_shipment_arrives_only_after_ship_hours
+* test_insufficient_money_is_rejected
+* test_non_buyable_tool_is_rejected
+* test_buying_multiple_yields_multiple_instances
+* test_get_sellable_lists_every_owned_artifact
+* test_assessed_value_uses_the_instance_value
+* test_interested_buyers_gate_on_budget_and_condition
+* test_dirty_unscanned_item_only_draws_the_lowballer
+* test_start_negotiation_works_for_a_dirty_item
+* test_complete_sale_credits_removes_and_records_best
+* test_cannot_sell_the_same_item_twice
+* test_best_sale_keeps_the_highest_price
+[1m14/14 passed.
+[0m[4m
+
+res://tests/economy/test_marketplace_banter.gd
+[0m* test_moderation_flags_offensive_but_not_innocent_substrings
+* test_offensive_chat_offends_and_closes_the_deal
+* test_civil_chat_warms_without_offending
+* test_failed_banter_day_ghosts_a_normal_buyer
+* test_offensive_loop_ghosts_a_normal_buyer
+* test_maverick_arrives_at_once_others_arrive_over_time
+* test_maverick_only_ever_artifact_ghosts
+* test_wallet_starts_from_persona_and_maverick_is_unlimited
+* test_daily_allowance_tops_up_the_wallet
+* test_selling_draws_down_the_wallet_but_not_mavericks
+* test_artifact_ghosted_maverick_leaves_that_items_buyer_list
+[1m11/11 passed.
+[0m[4m
+
+res://tests/economy/test_negotiation.gd
+[0m* test_open_offers_below_the_ceiling_with_a_line
+* test_accept_returns_standing_offer_and_closes
+* test_asking_below_the_offer_takes_the_cheaper_deal
+* test_reachable_ask_closes_the_deal
+* test_propose_reachable_price_is_agreed_without_closing
+* test_propose_greedy_price_counters_with_a_lower_number
+* test_set_offer_uses_the_buyers_own_number
+* test_set_offer_agreed_moves_to_the_sellers_price
+* test_cash_cap_limits_the_ceiling
+* test_offer_never_exceeds_a_cash_capped_ceiling
+* test_ceiling_cap_factor_keeps_a_lowballer_below_value
+* test_set_buyer_offer_binds_a_volunteered_number_clamped_to_ceiling
+* test_all_business_buyer_ignores_flattery_but_responds_to_substance
+* test_all_business_buyer_charm_move_does_nothing_history_move_helps
+* test_repeated_greedy_asks_make_the_buyer_walk
+* test_better_condition_raises_the_ceiling
+* test_preferred_category_raises_the_ceiling
+* test_budget_clamps_the_ceiling
+* test_favorable_banter_raises_the_ceiling
+* test_offputting_banter_lowers_the_ceiling
+* test_a_banter_move_is_usable_once
+* test_honest_banter_recovers_a_misrepresentation_penalty
+* test_banter_records_the_exchange
+[1m23/23 passed.
+[0m[4m
+
+res://tests/economy/test_phone.gd
+[0m* test_opens_on_home_without_pausing
+* test_open_and_back_to_home
+* test_buying_in_tools_shop_app_deducts_and_ships
+* test_close_leaves_clock_running
+* test_unscanned_item_lists_but_value_is_unknown_until_scanned
+* test_marketplace_sell_flow_accepts_an_offer
+* test_marketplace_walk_keeps_the_item
+* test_typed_price_updates_the_offer_but_only_accept_sells
+* test_civil_chat_without_a_price_keeps_haggling
+* test_offensive_chat_ends_the_deal
+* test_marketplace_app_blocked_during_brownout
+* test_flashlight_app_available_during_brownout
+* test_flashlight_toggles_loop_state
+* test_haggle_persists_when_shopping_around_and_returning
+* test_buyer_offer_is_capped_by_their_wallet
+* test_backend_banter_reply_used_when_live
+* test_offline_banter_fallback_when_backend_not_live
+* test_offline_mode_skips_a_live_backend
+* test_backend_offended_flag_propagates
+* test_backend_never_sets_price_number_stays_deterministic
+[1m20/20 passed.
+[0m[4m
+
+res://tests/economy/test_return_to_owner.gd
+[0m* test_return_only_offered_for_an_identified_owner
+* test_return_grants_reward_and_records_return
+* test_return_cannot_change_any_fragment_state
+* test_return_is_idempotent
+[1m4/4 passed.
+[0m[4m
+
+res://tests/economy/test_storage_screen.gd
+[0m* test_open_requests_storage_pause
+* test_close_releases_storage_pause
+* test_select_artifact_sets_restore_target
+* test_toggle_tool_loads_and_unloads_bench
+* test_auto_equip_never_loads_more_than_eight
+* test_open_renders_all_three_tabs_without_error
+* test_sell_restored_artifact_credits_money_and_removes_it
+* test_sell_ignores_unrestored_artifact
+* test_request_restore_sets_target_and_emits_signal
+* test_drag_equip_then_unequip_via_drop_handlers
+* test_tool_detail_lists_the_conditions_it_treats
+* test_artifact_shelf_shows_empty_boxes_in_8_columns
+* test_reorder_artifact_rewrites_inventory_order
+* test_reorder_keeps_quest_items_in_place
+* test_reorder_to_same_slot_is_a_no_op
+[1m15/15 passed.
+[0m[4m
+
+res://tests/economy/test_tool_durability.gd
+[0m* test_using_a_tool_consumes_one_durability
+* test_authored_clean_wears_per_condition_not_per_stroke
+* test_tool_breaks_at_zero_stays_in_storage_but_leaves_bench
+* test_idset_tools_never_wear
+* test_ownership_follows_usable_instances
+[1m5/5 passed.
+[0m[4m
+
+res://tests/economy/test_tool_loadout.gd
+[0m* test_add_to_workbench_enforces_max_eight
+* test_set_workbench_keeps_at_most_eight_owned
+* test_cannot_load_unowned_tool
+* test_loadout_returns_usable_loaded_instances
+* test_equip_to_empty_slot_pins_to_that_slot
+* test_equip_to_occupied_slot_replaces_only_that_tool
+* test_replacing_on_a_full_bench_keeps_it_full
+* test_equip_to_slot_swaps_two_equipped_tools
+* test_equip_to_slot_rejects_unowned_tool
+* test_remove_and_restore_target
+* test_debug_clean_all_is_grantable_in_debug
+[1m11/11 passed.
+[0m[4m
+
+res://tests/events/test_event_definition.gd
+[0m* test_repository_loads_all_required_events
+* test_event_definition_round_trip
+* test_validation_catches_invalid_category_and_weight
+[1m3/3 passed.
+[0m[4m
+
+res://tests/events/test_event_director.gd
+[0m* test_force_event_is_debug_gated
+* test_force_event_activates_and_emits_signal
+* test_event_state_resets_on_loop_reset
+* test_per_loop_cap_blocks_duplicate_disruptive
+* test_production_roll_is_deterministic_by_seed
+* test_modify_delivery_config_for_rush_delivery
+* test_brownout_blocks_marketplace_and_electric_tools
+* test_rainy_day_leak_adds_extra_conditions
+* test_tool_breakdown_does_not_break_required_fragment_tool
+[1m9/9 passed.
+[0m[4m
+
+res://tests/events/test_event_outcomes.gd
+[0m* test_rush_delivery_generates_larger_batch
+* test_mystery_box_adds_extra_instance
+* test_community_request_resolves_on_restoration
+* test_suspicious_antique_resolves_on_scanner_verdict
+* test_rare_buyer_alert_boosts_wallet
+* test_rainy_day_leak_slows_restoration
+* test_tool_breakdown_emits_tool_broke
+* test_delivery_generated_signal_emitted
+[1m8/8 passed.
+[0m[4m
+
+res://tests/journal/test_journal_case.gd
+[0m* test_case_page_renders_five_slots
+* test_empty_case_shows_no_seated_labels
+* test_fragment_id_maps_to_case_slot_index
+* test_fragment_seated_event_fills_exactly_one_matching_slot
+* test_duplicate_fragment_seated_does_not_duplicate_records
+* test_seated_slot_state_persists_after_save_load
+* test_seated_slot_state_persists_after_loop_reset
+* test_gold_and_master_records_appear_as_museum_entries
+* test_purple_and_below_records_appear_as_journal_entries
+[1m9/9 passed.
+[0m[4m
+
+res://tests/journal/test_journal_service.gd
+[0m* test_is_journal_rarity_boundary
+* test_gold_rarity_does_not_create_journal_entry
+* test_carrier_instance_does_not_create_journal_entry
+* test_restoration_creates_single_entry
+* test_repeated_restoration_keeps_best_condition_and_no_duplicate
+* test_scan_updates_annotations_without_touching_uncle_notes
+* test_scan_stores_player_verdict_separately
+* test_scan_creates_entry_when_none_exists
+* test_entry_persists_through_save_and_reload
+* test_entry_survives_loop_reset
+[1m10/10 passed.
+[0m[4m
+
+res://tests/journal/test_journal_shop_flow.gd
+[0m* test_shop_journal_button_opens_book_viewport_and_pauses_clock
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+[1m1/1 passed.
+[0m[4m
+
+res://tests/journal/test_journal_viewport.gd
+[0m* test_open_requests_journal_pause
+* test_close_releases_journal_pause
+* test_pause_composes_with_other_owners
+[1m3/3 passed.
+[0m[4m
+
+res://tests/journal/test_surface_condition_catalog.gd
+[0m* test_repository_loads_with_journal_data
+* test_every_condition_has_a_real_cleaning_tool
+* test_every_condition_has_a_known_category
+* test_quest_decal_types_are_documented
+* test_conditions_sorted_is_stable_and_complete
+* test_condition_color_parses_to_color
+[1m6/6 passed.
+[0m[4m
+
+res://tests/models/test_models.gd
+[0m* test_scrap_object_template_round_trip
+* test_object_instance_round_trip
+* test_object_instance_spawned_decals_round_trip
+* test_object_instance_overlay_keep_and_true_value_round_trip
+* test_carrier_instance_requires_fragment
+* test_fragment_validation
+* test_fragment_invalid_slot
+* test_master_artifact_requires_exactly_five_fragments
+* test_master_artifact_requires_unique_fragments
+* test_echo_set_accepts_empty_audio_paths
+* test_journal_entry_and_museum_entry_round_trip
+* test_tool_and_technique_validation
+* test_save_state_split
+* test_character_route_dialogue_round_trip
+* test_character_route_rejects_non_array_dialogue
+[1m15/15 passed.
+[0m[4m
+
+res://tests/portal/test_portal_client.gd
+[0m* test_backend_url_defaults_to_project_setting
+* test_backend_url_can_be_overridden
+* test_success_response_emits_success_status
+* test_fallback_response_emits_fallback_status
+* test_backend_validation_error_emits_validation_status
+* test_timeout_emits_timeout_status
+* test_network_error_emits_network_status
+[1m7/7 passed.
+[0m[4m
+
+res://tests/portal/test_portal_flow_controller.gd
+[0m* test_fragment_discovered_opens_flow_and_requests_discovery
+* test_success_emits_portal_completed_signal
+* test_fallback_emits_portal_completed_with_fallback_flag
+* test_failure_does_not_emit_portal_completed
+* test_backend_unavailable_leaves_recoverable_state
+* test_save_reload_before_and_after_portal_completion
+[1m6/6 passed.
+[0m[4m
+
+res://tests/portal/test_seating_service.gd
+[0m* test_portal_completed_seats_fragment_and_creates_museum_entry
+* test_duplicate_portal_completed_is_ignored
+* test_seated_fragment_is_ignored
+* test_save_failure_rolls_back_seat
+[1m4/4 passed.
+[0m[4m
+
+res://tests/restoration/test_artifact_catalog.gd
+[0m* test_scan_discovers_real_artifacts
+* test_placeholder_templates_have_no_scene
+* test_legacy_filename_alias_maps_to_template_id
+* test_rarity_and_value_overrides_are_valid
+* test_non_quest_artifact_is_spawnable
+* test_quest_items_are_excluded_from_the_spawn_pool
+* test_quest_pool_for_an_unassigned_step_is_empty
+[1m7/7 passed.
+[0m[4m
+
+res://tests/restoration/test_artifact_overlay.gd
+[0m* test_overlay_is_discovered_and_built
+* test_random_coverage_lands_in_range
+* test_two_instances_get_different_patterns
+* test_tool_cleans_only_its_matching_condition
+* test_condition_id_derives_from_texture_name
+* test_overlay_counts_reflect_cleaning
+* test_clean_percent_and_force_clean
+* test_crack_never_spawns
+* test_cleaning_overlay_fades_it_by_3d_position
+* test_two_overlays_same_mesh_keep_distinct_uv_mode
+* test_use_own_uvs_preserves_mesh_uvs
+[1m11/11 passed.
+[0m[4m
+
+res://tests/restoration/test_authored_condition_decal.gd
+[0m* test_condition_slug_derives_type_from_albedo_filename
+* test_artifact_registers_its_authored_rust_decal
+[Restoration] open(): 0 restorable instance(s): []
+[Restoration] load_instance(obj_1): template=tarnished_pendant state=dirty condition=0 tools=3
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3162572330935>(restoration_object_3d.gd)] + 3[0m
+* test_wrong_tool_does_not_clean_but_still_puffs
+[Restoration] open(): 0 restorable instance(s): []
+[Restoration] load_instance(obj_1): template=tarnished_pendant state=dirty condition=0 tools=3
+[Restoration] select_tool(soft_brush) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3193291414443>(restoration_object_3d.gd)] + 3[0m
+* test_one_correct_stroke_reduces_dirt_without_finishing
+[Restoration] open(): 0 restorable instance(s): []
+[Restoration] load_instance(obj_1): template=tarnished_pendant state=dirty condition=0 tools=3
+[Restoration] select_tool(rust_brush) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3224413150826>(restoration_object_3d.gd)] + 3[0m
+* test_cleaning_the_last_authored_condition_counts_as_clean
+[Restoration] open(): 0 restorable instance(s): []
+[Restoration] load_instance(obj_1): template=tarnished_pendant state=dirty condition=0 tools=3
+[Restoration] select_tool(rust_brush) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3255601993559>(restoration_object_3d.gd)] + 3[0m
+* test_randomize_conditions_max_limits_active_conditions
+* test_root_scale_enlarges_the_surface_hit_test
+* test_repeated_correct_strokes_clean_and_sparkle
+[Restoration] open(): 0 restorable instance(s): []
+[Restoration] load_instance(obj_1): template=tarnished_pendant state=dirty condition=0 tools=3
+[Restoration] select_tool(rust_brush) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3296521625021>(restoration_object_3d.gd)] + 3[0m
+[33m4 orphans[0m
+[1m8/8 passed.
+[0m[4m
+
+res://tests/restoration/test_bench_overlays.gd
+[0m* test_bench_storage_button_opens_storage
+[Restoration] open(): 0 restorable instance(s): []
+* test_bench_phone_button_opens_phone
+[Restoration] open(): 0 restorable instance(s): []
+[1m2/2 passed.
+[0m[4m
+
+res://tests/restoration/test_cleaning_power.gd
+[0m* test_catalog_tool_has_default_power_against_its_condition
+* test_wrong_tool_has_no_power
+* test_unknown_inputs_have_no_power
+* test_conditions_for_lists_the_tools_conditions_with_power
+[1m4/4 passed.
+[0m[4m
+
+res://tests/restoration/test_condition_stages.gd
+[0m* test_new_conditions_load_and_validate
+* test_reveal_chain_links_are_authored
+* test_soap_cleans_mud_but_not_damp_cloth
+* test_surface_condition_round_trips_reveals
+* test_condition_cannot_reveal_itself
+* test_cleaning_mud_reveals_grime_then_cleans
+* test_single_stage_condition_still_cleans_normally
+* test_phone_catalog_excludes_mall_tools
+* test_mall_catalog_lists_only_mall_tools
+* test_online_buy_rejects_mall_tools
+* test_buy_in_person_grants_immediately
+* test_overlay_condition_id_follows_transform
+[1m12/12 passed.
+[0m[4m
+
+res://tests/restoration/test_decal_restoration.gd
+[0m* test_quest_templates_load_with_decals
+* test_new_tools_and_join_tool_exist
+* test_auntie_route_has_three_beats
+* test_quest_items_excluded_from_delivery_pool
+* test_correct_tool_removes_decal_and_raises_condition
+* test_wrong_tool_damages_and_leaves_decal
+* test_cleaning_all_decals_reaches_clean_and_emits
+* test_already_clean_decal_is_idempotent
+* test_join_rejected_until_clean
+* test_join_requires_correct_tool
+* test_join_succeeds_when_clean_with_archival_tape
+[1m11/11 passed.
+[0m[4m
+
+res://tests/restoration/test_dust_overlay.gd
+[0m* test_dust_overlay_builds_and_starts_dirty
+* test_erasing_removes_dust
+* test_seed_changes_dust_shape
+[1m3/3 passed.
+[0m[4m
+
+res://tests/restoration/test_photo_restoration_view.gd
+[0m* test_loading_a_photo_enters_photo_mode
+[Restoration] open(): 1 restorable instance(s): ["photo_1"]
+[Restoration] load_instance(photo_1): template=auntie_photo_faded state=dirty condition=0 tools=6
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3475383524049>(restoration_object_3d.gd)] + 3[0m
+* test_clicking_a_blemish_with_matching_tool_removes_it
+[Restoration] open(): 1 restorable instance(s): ["photo_1"]
+[Restoration] load_instance(photo_1): template=auntie_photo_faded state=dirty condition=0 tools=6
+[Restoration] load_instance(photo_1): template=auntie_photo_faded state=dirty condition=0 tools=6
+[Restoration] select_tool(soft_brush) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3507461556318>(restoration_object_3d.gd)] + 3[0m
+* test_wrong_tool_does_not_remove_blemish
+[Restoration] open(): 1 restorable instance(s): ["photo_1"]
+[Restoration] load_instance(photo_1): template=auntie_photo_faded state=dirty condition=0 tools=6
+[Restoration] load_instance(photo_1): template=auntie_photo_faded state=dirty condition=0 tools=6
+[Restoration] select_tool(solvent) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3554253215460>(restoration_object_3d.gd)] + 3[0m
+* test_cleaning_all_blemishes_reaches_clean
+[Restoration] open(): 1 restorable instance(s): ["photo_1"]
+[Restoration] load_instance(photo_1): template=auntie_photo_faded state=dirty condition=0 tools=6
+[Restoration] load_instance(photo_1): template=auntie_photo_faded state=dirty condition=0 tools=6
+[Restoration] select_tool(soft_brush) -> mode CLEAN
+[Restoration] select_tool(damp_cloth) -> mode CLEAN
+[Restoration] select_tool(stain_lifter) -> mode CLEAN
+[Restoration] select_tool(photo_kit) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3600977763504>(restoration_object_3d.gd)] + 3[0m
+* test_join_after_cleaning_torn_halves
+[Restoration] open(): 1 restorable instance(s): ["half_1"]
+[Restoration] load_instance(half_1): template=auntie_halfphoto_torn state=dirty condition=0 tools=6
+[Restoration] load_instance(half_1): template=auntie_halfphoto_torn state=dirty condition=0 tools=6
+[Restoration] select_tool(soft_brush) -> mode CLEAN
+[Restoration] select_tool(solvent) -> mode CLEAN
+[Restoration] select_tool(solvent) -> mode CLEAN
+[Restoration] select_tool(archival_tape) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3649396807611>(restoration_object_3d.gd)] + 3[0m
+[33m4 orphans[0m
+[1m5/5 passed.
+[0m[4m
+
+res://tests/restoration/test_restoration_service.gd
+[0m* test_true_value_clamped_to_template_range_on_load
+* test_gold_locket_value_rises_with_condition
+* test_authored_scene_artifact_is_restorable_without_data_decals
+* test_instance_with_spawned_conditions_cleans_to_clean
+* test_bench_follows_loadout_once_instances_exist
+* test_dirty_openables_reject_open_including_carrier
+* test_compatible_tool_deterministically_reaches_clean
+* test_condition_remains_within_zero_to_one_hundred
+* test_correct_tool_modifies_value_within_authored_bounds
+* test_wrong_tool_records_persistent_instance_damage
+* test_wrong_tool_feedback_is_distinguishable
+* test_damage_survives_serialization_round_trips
+* test_restoration_changes_only_the_selected_instance
+* test_clean_pendant_can_open
+* test_clasp_interaction_is_distinct_from_cleaning_completion
+* test_opening_is_single_use_and_idempotent
+* test_only_carrier_produces_fragment_and_retains_template_identity
+* test_empty_temporal_echo_and_fragment_resolve_correctly
+* test_recycled_or_unavailable_instances_cannot_enter_restoration
+* test_restoration_pause_does_not_resume_clock_held_by_another_owner
+* test_invalid_tool_reference_fails_repository_validation
+* test_invalid_technique_reference_fails_repository_validation
+* test_debug_clean_all_definition_is_debug_only
+* test_debug_clean_all_instantly_cleans_openable
+* test_debug_clean_all_removes_all_spawned_decals
+[1m25/25 passed.
+[0m[4m
+
+res://tests/restoration/test_restoration_tool_props_view.gd
+[0m* test_build_tool_model_uses_authored_scene_or_falls_back
+* test_tool_tray_builds_props_for_owned_tools
+[Restoration] open(): 1 restorable instance(s): ["pendant_props"]
+[Restoration] load_instance(pendant_props): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3723099119555>(restoration_object_3d.gd)] + 3[0m
+* test_picking_a_tool_prop_selects_that_tool
+[Restoration] open(): 1 restorable instance(s): ["pendant_pickprop"]
+[Restoration] load_instance(pendant_pickprop): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3742040595176>(restoration_object_3d.gd)] + 3[0m
+* test_picked_tool_prop_drives_cleaning_through_the_service
+[Restoration] open(): 1 restorable instance(s): ["pendant_propclean"]
+[Restoration] load_instance(pendant_propclean): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=0->30 reached_clean=false coverage=0.02
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3761317615906>(restoration_object_3d.gd)] + 3[0m
+* test_fallback_tool_button_still_selects_a_tool
+[Restoration] open(): 1 restorable instance(s): ["pendant_fallback"]
+[Restoration] load_instance(pendant_fallback): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3780695301729>(restoration_object_3d.gd)] + 3[0m
+* test_cycle_tool_advances_through_owned_tools
+[Restoration] open(): 1 restorable instance(s): ["pendant_cycle"]
+[Restoration] load_instance(pendant_cycle): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] select_tool(rust_brush) -> mode CLEAN
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3799955545042>(restoration_object_3d.gd)] + 3[0m
+[33m4 orphans[0m
+[1m6/6 passed.
+[0m[4m
+
+res://tests/restoration/test_restoration_tool_tray.gd
+[0m* test_builds_one_prop_per_tool
+* test_rebuild_clears_previous_props
+* test_empty_build_clears_all_props
+* test_ray_pick_hits_the_aimed_prop
+* test_ray_pick_miss_returns_empty
+* test_set_selected_distinguishes_the_chosen_prop
+* test_deselect_returns_props_to_rest
+[1m7/7 passed.
+[0m[4m
+
+res://tests/restoration/test_restoration_view.gd
+[0m* test_zoom_moves_the_artifact_within_clamped_range_and_resets
+[Restoration] open(): 1 restorable instance(s): ["zoom_a"]
+[Restoration] load_instance(zoom_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(zoom_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3837989494774>(restoration_object_3d.gd)] + 3[0m
+* test_pan_enabled_at_all_zoom_levels
+[Restoration] open(): 1 restorable instance(s): ["pan_all"]
+[Restoration] load_instance(pan_all): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(pan_all): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3862719111041>(restoration_object_3d.gd)] + 3[0m
+* test_pan_limit_is_fixed_across_zoom
+[Restoration] open(): 1 restorable instance(s): ["pan_fixed"]
+[Restoration] load_instance(pan_fixed): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(pan_fixed): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3887465502609>(restoration_object_3d.gd)] + 3[0m
+* test_pan_does_not_shrink_when_zooming_out
+[Restoration] open(): 1 restorable instance(s): ["pan_zoom_out"]
+[Restoration] load_instance(pan_zoom_out): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(pan_zoom_out): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3912211898313>(restoration_object_3d.gd)] + 3[0m
+* test_value_label_updates_after_cleaning_stroke
+[Restoration] open(): 1 restorable instance(s): ["value_label"]
+[Restoration] load_instance(value_label): template=dusty_locket state=dirty condition=0 tools=2
+[Restoration] load_instance(value_label): template=dusty_locket state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=0->30 reached_clean=false coverage=0.02
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3936924736857>(restoration_object_3d.gd)] + 3[0m
+* test_switching_artifacts_preserves_exact_cleaned_spots
+[Restoration] open(): 2 restorable instance(s): ["p_a", "p_b"]
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=0->30 reached_clean=false coverage=0.02
+[Restoration] load_instance(p_b): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=30 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#3962509991823>(restoration_object_3d.gd)] + 3[0m
+* test_cleaned_spots_persist_through_save_and_reload
+[Restoration] open(): 1 restorable instance(s): ["p_a"]
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=0->30 reached_clean=false coverage=0.02
+[Restoration] open(): 1 restorable instance(s): ["p_a"]
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=30 tools=2
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=30 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4025810427270>(restoration_object_3d.gd)] + 3[0m
+* test_workbench_opens_focused_3d_restoration_scene
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+[Restoration] open(): 0 restorable instance(s): []
+* test_open_and_close_do_not_pause_the_clock
+[Restoration] open(): 0 restorable instance(s): []
+* test_close_and_exit_do_not_double_release_pause
+[Restoration] open(): 0 restorable instance(s): []
+* test_open_loads_selected_inventory_instance
+[Restoration] open(): 1 restorable instance(s): ["pendant_load"]
+[Restoration] load_instance(pendant_load): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4127899785658>(restoration_object_3d.gd)] + 3[0m
+* test_rotation_changes_pivot_without_mutating_state
+[Restoration] open(): 1 restorable instance(s): ["pendant_rot"]
+[Restoration] load_instance(pendant_rot): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4146740599384>(restoration_object_3d.gd)] + 3[0m
+* test_reset_view_restores_authored_orientation
+[Restoration] open(): 1 restorable instance(s): ["pendant_reset"]
+[Restoration] load_instance(pendant_reset): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4165665298453>(restoration_object_3d.gd)] + 3[0m
+* test_cleaning_empty_space_does_nothing
+[Restoration] open(): 1 restorable instance(s): ["pendant_miss"]
+[Restoration] load_instance(pendant_miss): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4184472558114>(restoration_object_3d.gd)] + 3[0m
+* test_surface_hit_produces_deliberate_cleaning_action
+[Restoration] open(): 1 restorable instance(s): ["pendant_hit"]
+[Restoration] load_instance(pendant_hit): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=0->30 reached_clean=false coverage=0.02
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4203799911333>(restoration_object_3d.gd)] + 3[0m
+* test_correct_tool_strokes_reach_clean
+[Restoration] open(): 1 restorable instance(s): ["pendant_clean"]
+[Restoration] load_instance(pendant_clean): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=0->30 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=30->60 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=60->90 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=90->100 reached_clean=true coverage=1.00
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4223177595725>(restoration_object_3d.gd)] + 3[0m
+* test_wrong_tool_strokes_preserve_damage_consequences
+[Restoration] open(): 1 restorable instance(s): ["pendant_wrong"]
+[Restoration] load_instance(pendant_wrong): template=tarnished_pendant state=dirty condition=60 tools=2
+[Restoration] select_tool(rust_brush) -> mode CLEAN
+[Restoration] commit_stroke: tool=rust_brush compatible=false condition=60->45 reached_clean=false coverage=0.60
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4243243147272>(restoration_object_3d.gd)] + 3[0m
+* test_visual_coverage_cannot_bypass_condition_gate
+[Restoration] open(): 1 restorable instance(s): ["pendant_bypass"]
+[Restoration] load_instance(pendant_bypass): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4262654386429>(restoration_object_3d.gd)] + 3[0m
+* test_cleaning_does_not_auto_open_clasp
+[Restoration] open(): 1 restorable instance(s): ["pendant_noauto"]
+[Restoration] load_instance(pendant_noauto): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=0->30 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=30->60 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=60->90 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=90->100 reached_clean=true coverage=1.00
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4281948182908>(restoration_object_3d.gd)] + 3[0m
+* test_dirty_clasp_interaction_is_rejected
+[Restoration] open(): 1 restorable instance(s): ["pendant_dirtyclasp"]
+[Restoration] load_instance(pendant_dirtyclasp): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4302013733980>(restoration_object_3d.gd)] + 3[0m
+* test_clean_pendant_clasp_opens_once
+[Restoration] open(): 1 restorable instance(s): ["pendant_open"]
+[Restoration] load_instance(pendant_open): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=0->30 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=30->60 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=60->90 reached_clean=false coverage=0.02
+[Restoration] commit_stroke: tool=soft_cloth compatible=true condition=90->100 reached_clean=true coverage=1.00
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4320921657487>(restoration_object_3d.gd)] + 3[0m
+* test_ordinary_and_carrier_share_presentation_path_and_hide_identity
+[Restoration] open(): 2 restorable instance(s): ["ord_pendant", "car_pendant"]
+[Restoration] load_instance(ord_pendant): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(ord_pendant): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(car_pendant): template=tarnished_pendant state=dirty condition=0 tools=2
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4342195166152>(restoration_object_3d.gd)] + 3[0m
+* test_switching_to_rotate_puts_the_held_tool_down
+[Restoration] open(): 1 restorable instance(s): ["p_a"]
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(soft_cloth) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4373904105288>(restoration_object_3d.gd)] + 3[0m
+* test_unequipping_in_storage_drops_the_tool_from_the_bench
+[Restoration] open(): 1 restorable instance(s): ["p_a"]
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] load_instance(p_a): template=tarnished_pendant state=dirty condition=0 tools=2
+[Restoration] select_tool(rust_brush) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4399137038076>(restoration_object_3d.gd)] + 3[0m
+* test_debug_clean_all_tool_cleans_active_artifact
+[Restoration] open(): 1 restorable instance(s): ["debug_view_pendant"]
+[Restoration] load_instance(debug_view_pendant): template=tarnished_pendant state=dirty condition=0 tools=3
+[Restoration] load_instance(debug_view_pendant): template=tarnished_pendant state=dirty condition=0 tools=3
+[Restoration] select_tool(debug_clean_all) -> mode CLEAN
+[33m    4 Orphans[0m
+[33m        * [ObjectPivot:<Node3D#4419705903391>(restoration_object_3d.gd)] + 3[0m
+[33m4 orphans[0m
+[1m25/25 passed.
+[0m[4m
+
+res://tests/restoration/test_value_model.gd
+[0m* test_value_rises_with_condition_for_non_decal_openable
+* test_value_rises_per_tool_stroke_for_gold_locket
+[1m2/2 passed.
+[0m[4m
+
+res://tests/scanner/test_artifact_scanner_data.gd
+[0m* test_unauthored_node_yields_no_scanner_data
+* test_authored_node_produces_a_valid_scanner_response
+[1m2/2 passed.
+[0m[4m
+
+res://tests/scanner/test_scanner_cache_validation.gd
+[0m* test_every_slice_template_has_cache_response
+* test_cached_response_parses_into_shared_response_model
+* test_promoted_carrier_receives_ordinary_template_response
+* test_cache_and_http_transport_return_same_response_type
+* test_duplicate_cache_ids_fail_validation
+* test_unknown_template_reference_fails_validation
+* test_malformed_required_fields_fail_validation
+* test_invalid_price_range_fails_validation
+* test_invalid_source_reference_fails_validation
+* test_missing_cache_produces_controlled_error
+* test_malformed_cache_does_not_crash_or_invent_response
+[1m11/11 passed.
+[0m[4m
+
+res://tests/scanner/test_scanner_screen.gd
+[0m* test_screen_acquires_scanner_pause_on_open
+* test_screen_releases_only_its_pause_on_close
+* test_back_action_closes_scanner
+* test_no_verdict_selected_initially
+* test_all_four_verdict_buttons_can_be_selected
+* test_confirm_stores_verdict_and_disables_confirm
+* test_loading_success_and_error_states_render_safely
+[1m7/7 passed.
+[0m[4m
+
+res://tests/scanner/test_scanner_service.gd
+[0m* test_request_has_required_prd_fields
+* test_request_excludes_hidden_truth_fields
+* test_request_weight_uses_template_midpoint
+* test_dirty_object_cannot_be_scanned
+* test_clean_object_can_be_scanned
+* test_non_decal_openable_at_96_percent_is_scannable
+* test_dirty_non_decal_openable_below_threshold_is_blocked
+* test_scanner_message_hides_threshold
+* test_scanner_price_derived_from_template_range
+* test_scanner_conditions_derived_from_spawned_decals
+* test_scanner_output_does_not_set_authenticity
+* test_all_four_verdicts_can_be_committed
+* test_player_can_contradict_scanner_implication
+* test_confirmation_is_idempotent
+* test_verdict_and_scan_record_survive_save_load
+* test_scanned_record_survives_loop_reset
+[1m16/16 passed.
+[0m[4m
+
+res://tests/scrapyard/test_ayla_dialogue_branch.gd
+[0m* test_empty_scrap_opens_dialogue_not_handoff
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_non_empty_scrap_opens_handoff_not_dialogue
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_dialogue_uses_authored_yard_empty_lines
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_sort_active_opens_dialogue_not_handoff
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_sort_active_dialogue_uses_authored_yard_sorting_lines
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_sort_ready_opens_dialogue_not_handoff
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_sort_ready_dialogue_uses_authored_yard_sort_ready_lines
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+[1m7/7 passed.
+[0m[4m
+
+res://tests/scrapyard/test_door_wiring.gd
+[0m* test_door_prop_steps_outside_when_no_visitor
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+[1m1/1 passed.
+[0m[4m
+
+res://tests/scrapyard/test_scrap_pickup.gd
+[0m* test_activating_scrap_increments_pool_and_emits_collected
+* test_activating_scrap_despawns_item
+* test_each_tier_increments_its_own_slot
+[1m3/3 passed.
+[0m[4m
+
+res://tests/scrapyard/test_scrapyard_hud_hotbar.gd
+[0m* test_each_scrap_piece_takes_its_own_slot
+* test_scrap_overflow_collapses_into_stacked_last_slot
+* test_restored_artifacts_keep_their_slots_over_scrap
+* test_scrap_without_breakdown_still_fills_slots
+* test_no_scrap_starts_artifacts_at_slot_zero
+* test_slot_click_reports_inspection_data
+* test_quest_and_quick_buttons_exist
+[1m7/7 passed.
+[0m[4m
+
+res://tests/scrapyard/test_scrapyard_scene.gd
+[0m* test_yard_root_has_scrapyard_script
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_map_root_exists_for_glb_swap
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_anchors_exist
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_player_instance_present
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_return_door_interactable_exists
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_hud_exists
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_player_is_in_player_group
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+* test_interact_action_registered
+Scrapyard: merged 15168 faces into one map collision body (skipped 3 small meshes)
+[1m8/8 passed.
+[0m[4m
+
+res://tests/scrapyard/test_space_manager.gd
+[0m* test_initial_state_is_shop_on_title
+* test_go_to_yard_loads_yard_scene
+* test_go_to_shop_from_yard_loads_shop_scene
+* test_duplicate_yard_transition_is_guarded
+* test_duplicate_shop_transition_from_game_is_guarded
+* test_return_to_title_loads_title_and_resets_clock
+* test_clock_keeps_running_across_transition
+[1m7/7 passed.
+[0m[4m
+
+res://tests/shop/test_interactable_3d.gd
+[0m* test_activate_emits_activated
+* test_left_click_input_event_activates
+* test_disabled_blocks_activation
+* test_hover_toggles_state_signal_and_highlight
+* test_disabled_prop_does_not_hover
+* test_disabling_while_hovered_clears_hover
+[1m6/6 passed.
+[0m[4m
+
+res://tests/test_shop_clock.gd
+[0m* test_starts_at_seven_am
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_display_reflects_clock_minutes
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_minute_progresses_through_single_minute_ticks
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_day_label_reflects_clock_day
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_format_uses_am_pm
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_dialogue_pauses_and_resumes_via_pause_ownership
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+[1m6/6 passed.
+[0m[4m
+
+res://tests/test_shop_smoke.gd
+[0m* test_hud_is_visible
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_no_stray_test_button
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_five_action_buttons_exist
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_hud_time_formatting
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_hud_day_formatting
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_door_dialogue_pauses_and_resumes_clock_via_keyboard
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+[33m    26 Orphans[0m
+[33m        * [AuntiePhotoFaded:<Node3D#4993721571642>(restoration_object_3d.gd)] + 21[0m
+* test_dialogue_advances_via_left_click
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+[33m    26 Orphans[0m
+[33m        * [AuntiePhotoFaded:<Node3D#5025715722323>(restoration_object_3d.gd)] + 21[0m
+* test_phone_opens_without_pausing
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_storage_button_opens_storage_and_pauses
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_five_diegetic_interactables_exist
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_workbench_prop_opens_restoration
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+[Restoration] open(): 0 restorable instance(s): []
+* test_delivery_box_prop_opens_storage
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_door_prop_opens_dialogue_like_its_button
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_hovering_a_prop_shows_its_prompt
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+* test_overlays_disable_shop_props
+[Shop] ready — HUD visible, buttons connected. Click them in the running game.
+[33m52 orphans[0m
+[1m15/15 passed.
+[0m[4m
+
+res://tests/tutorial/test_dialogue_vars.gd
+[0m* test_replaces_player_token_with_saved_name
+* test_falls_back_when_name_unset
+* test_text_without_tokens_is_untouched
+* test_multiple_tokens_all_replaced
+[1m4/4 passed.
+[0m[4m
+
+res://tests/tutorial/test_meet_handoff.gd
+[0m* test_tutorial_sale_defers_payment_to_the_meet
+* test_normal_sale_still_pays_immediately
+* test_pending_meets_survive_a_save_round_trip
+* test_loop_reset_clears_pending_meets
+[1m4/4 passed.
+[0m[4m
+
+res://tests/tutorial/test_pause_menu_skip.gd
+[0m* test_button_visible_only_during_day0
+* test_button_press_asks_for_confirmation_first
+* test_confirmed_skip_matches_played_graduation
+[1m3/3 passed.
+[0m[4m
+
+res://tests/tutorial/test_travel_system.gd
+[0m* test_destinations_load_from_data
+* test_available_excludes_the_current_space
+* test_pending_meet_marks_the_destination
+* test_tutorial_step_marks_the_target_space
+* test_go_to_mall_loads_the_mall_scene
+* test_finale_only_runs_on_the_journal_step
+* test_finale_blackout_graduates_to_day1
+[33m    --- Awaiting 3.0 seconds  ---
+[0m[1m7/7 passed.
+[0m[4m
+
+res://tests/tutorial/test_tutorial_artifact.gd
+[0m* test_tutorial_delivery_conditions_are_whitelisted
+* test_normal_delivery_has_no_whitelist
+* test_allowed_conditions_round_trip_on_the_instance
+* test_restoration_step_injects_artifact_when_inventory_is_bare
+* test_restoration_step_keeps_existing_dirty_artifact
+[1m5/5 passed.
+[0m[4m
+
+res://tests/tutorial/test_tutorial_gating.gd
+[0m* test_initialize_defaults_to_no_tutorial
+* test_fresh_save_enters_day0_with_frozen_clock
+* test_begin_session_is_idempotent_during_day0
+* test_completed_save_starts_the_normal_day_loop
+* test_advance_to_persists_step_across_reload
+* test_advance_to_rejects_unknown_step
+* test_step_order_follows_authored_script
+* test_complete_tutorial_graduates_to_day1_same_loop
+* test_complete_tutorial_is_idempotent
+* test_skip_uses_the_same_graduation_path
+* test_day5_loop_reset_still_works_after_graduation
+[1m11/11 passed.
+[0m[4m
+
+res://tests/tutorial/test_tutorial_hint_box.gd
+[0m* test_hidden_until_first_hint
+* test_speaker_resolves_from_data
+* test_inner_speaker_uses_player_name
+* test_unknown_speaker_falls_back_to_id
+* test_text_substitutes_player_token
+* test_pointer_targets_control_top_center
+* test_hide_clears_pointer
+[1m7/7 passed.
+[0m[4m
+
+res://tests/tutorial/test_tutorial_steps.gd
+[0m* test_scrap_handoff_completes_the_greeting_step
+* test_wrong_signal_does_not_advance
+* test_wrong_space_does_not_advance
+* test_signals_are_ignored_outside_the_tutorial
+* test_forage_and_triage_chain_grants_starter_tools
+* test_step_grants_are_idempotent_on_resume
+* test_full_signal_chain_reaches_the_finale
+* test_tutorial_sort_is_instant
+* test_normal_sort_still_takes_an_hour
+[1m9/9 passed.
+[0m[4m
+
+res://tests/ui/test_demo_menu.gd
+[0m* test_apply_seed_sets_debug_override
+* test_release_route_fragment_uses_spawn_director
+[FragmentService] released fragment_01 (demo override)
+* test_placement_demo_returns_three_variations
+* test_clear_save_requires_two_presses
+* test_open_and_close_manage_pause
+[1m5/5 passed.
+[0m[4m
+
+res://tests/ui/test_quest_tracker.gd
+[0m* test_quest_entry_scene_instances_as_node
+* test_quest_tracker_scene_instances_and_hides_when_no_active
+* test_current_objective_empty_for_unknown_quest
+* test_current_objective_falls_back_to_description_when_no_beat_matches
+[1m4/4 passed.
+[0m[4m
+
+res://tests/ui/test_showcase_screen.gd
+[0m* test_open_pauses_shop_time
+* test_first_beat_records_but_does_not_release
+* test_final_beat_releases_fragment_through_route_not_handoff
+[FragmentService] released fragment_02 (route 'artisan' completed)
+[1m3/3 passed.
+[0m[4m
+
+res://tests/ui/test_theme_resource_paths.gd
+[0m* test_theme_referencing_scenes_load
+* test_shared_theme_resource_loads
+* test_artifact_card_states_are_distinct
+[1m3/3 passed.
+[0m
+
+
+
+[33m==============================================[0m
+[33m= 52 Orphans[0m
+[33m==============================================[0m
+test_shop_smoke.gd
+    - test_door_dialogue_pauses_and_resumes_clock_via_keyboard
+[33m        * [AuntiePhotoFaded:<Node3D#4993721571642>(restoration_object_3d.gd)] + 21[0m
+    - test_dialogue_advances_via_left_click
+[33m        * [AuntiePhotoFaded:<Node3D#5025715722323>(restoration_object_3d.gd)] + 21[0m
+
+
+[33m==============================================
+[0m[33m= Run Summary
+[0m[33m==============================================
+[0m
+Totals
+------
+Scripts              93
+Tests               769
+Passing Tests       769
+Asserts            2674
+Orphans              52
+Time              48.331s
+
+
+[32m---- All tests passed! ----
+[0m
+ERROR: 21 RID allocations of type 'N13RendererDummy15MaterialStorage13DummyMaterialE' were leaked at exit.
+ERROR: 5 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit.
+ERROR: 21 RID allocations of type 'N13RendererDummy9DummyMeshE' were leaked at exit.
+ERROR: 13 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.
+ERROR: 26 RID allocations of type 'N17RendererSceneCull8InstanceE' were leaked at exit.

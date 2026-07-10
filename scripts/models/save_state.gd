@@ -238,6 +238,9 @@ class LoopState:
 	var pending_sort: Dictionary = {}
 	## Pieces of scrap still scattered in the yard today. -1 means "not spawned yet".
 	var yard_scrap_remaining: int = -1
+	## Days whose buyer-shop offer was bought this loop (v3: buy all five to
+	## unlock Maverick's Day-5 fragment sale). Loop-scoped by design.
+	var buyer_shop_days_bought: Array = []
 	## Pieces of scrap still scattered in the dump site today. -1 means "not spawned yet".
 	var dump_site_scrap_remaining: int = -1
 	## Phase 18 mini-event state. All reset on loop_reset; persistent knowledge untouched.
@@ -287,6 +290,7 @@ class LoopState:
 		l.scrap_pool = ModelUtils.as_dictionary(data.get("scrap_pool"))
 		l.pending_sort = ModelUtils.as_dictionary(data.get("pending_sort"))
 		l.yard_scrap_remaining = ModelUtils.as_int(data.get("yard_scrap_remaining"), -1)
+		l.buyer_shop_days_bought = SaveState._as_array(data.get("buyer_shop_days_bought", []))
 		l.dump_site_scrap_remaining = ModelUtils.as_int(data.get("dump_site_scrap_remaining"), -1)
 		l.event_active = SaveState._as_array(data.get("event_active", []))
 		l.event_history = ModelUtils.as_string_array(data.get("event_history"))
@@ -323,6 +327,7 @@ class LoopState:
 			"scrap_pool": scrap_pool.duplicate(),
 			"pending_sort": pending_sort.duplicate(true),
 			"yard_scrap_remaining": yard_scrap_remaining,
+			"buyer_shop_days_bought": buyer_shop_days_bought.duplicate(),
 			"dump_site_scrap_remaining": dump_site_scrap_remaining,
 			"event_active": event_active.duplicate(),
 			"event_history": event_history.duplicate(),

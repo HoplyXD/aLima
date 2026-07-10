@@ -566,13 +566,8 @@
       "schedule": [
         {
           "days": [1, 2, 3, 4, 5],
-          "start_hour": 17,
-          "end_hour": 18
-        },
-        {
-          "days": [5],
-          "start_hour": 7,
-          "end_hour": 9
+          "start_hour": 18,
+          "end_hour": 20
         }
       ],
       "prerequisites": [],
@@ -584,52 +579,25 @@
         "intro": [
           {
             "name": "Mr. Maverick",
-            "text": "[i]Dressed a half-step nicer than the shop deserves. His eyes sweep the shelves once — fast, practiced.[/i] Maayo nga hapon. Thought I'd stop by, see if anything interesting came through."
+            "text": "[i]Dressed a half-step nicer than the shop deserves. His eyes sweep the shelves once — fast, practiced.[/i] Good evening. I'm not here to buy tonight, kid. I'm here to sell."
           },
           {
             "name": "You",
-            "text": "Nothing special this week, sorry. Mostly sold straight through the regular buyers."
+            "text": "A buyer who sells?"
           },
           {
             "name": "Mr. Maverick",
-            "text": "[i]A small, unreadable smile. He sets a blank business card on the counter without quite handing it over.[/i] Sige lang. Some people take a few weeks before they understand which pieces are worth my prices."
+            "text": "[i]A small, unreadable smile. He sets a wrapped parcel on the counter without quite letting go of it.[/i] Exactly one thing a day. Always overpriced. The trick is that some days it's worth it."
           },
           {
             "name": "Mr. Maverick",
-            "text": "Though — between us — there are objects out there with a small mark. A spiral, pressed into the base, easy to miss. Kon you ever see one, I'd pay it more attention than the glow suggests."
-          },
-          {
-            "name": "You",
-            "text": "Why? What does the mark mean?"
-          },
-          {
-            "name": "Mr. Maverick",
-            "text": "Lain-lain ang storya. Maybe another time. [i]He's gone before the bell finishes ringing — just a card with a phone number and nothing else.[/i]"
+            "text": "And for a customer who pays attention ALL five days... [i]he taps the counter once[/i] ...I keep a different shelf. Friday shelf."
           }
         ],
         "return": [
           {
             "name": "Mr. Maverick",
-            "text": "[i]No business-card performance this time. He's already inside, gentler than before.[/i] Maayo nga aga. You sold me that spiral-marked piece without asking my price first. Nobody's done that in a long time, lagi."
-          },
-          {
-            "name": "You",
-            "text": "You said you'd pay attention to the mark. Trusting you once wouldn't hurt."
-          },
-          {
-            "name": "Mr. Maverick",
-            "text": "[i]He sets a battered ledger on the counter — pages of handwriting that isn't his.[/i] Your Yuyu kept me on a short list of people he trusted to deal honestly. I've kept that list longer than I should have."
-          },
-          {
-            "name": "Mr. Maverick",
-            "text": "He asked me to look into something the week before he disappeared. Indi ko gusto i-drop ina nga investigation nga half-done — pero wala ko sang partner. Until now, maybe."
-          },
-          {
-            "text": "[i]From an inner pocket, wrapped in cloth, he produces a fragment — its spiral mark matching the trinket you sold him.[/i]"
-          },
-          {
-            "name": "Mr. Maverick",
-            "text": "This is yours now. Seat it properly. I had to be sure you weren't just another collector chasing the glow."
+            "text": "[i]He's already inside, gentler than before.[/i] Good evening. Same rule as always — one thing tonight, overpriced, possibly worth it. Let's see if you're still paying attention."
           }
         ]
       }
