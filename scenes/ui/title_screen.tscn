@@ -15,8 +15,6 @@ ambient_light_energy = 1.2
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b3ncd"]
 bg_color = Color(0, 0, 0, 0.63529414)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_aqpy5"]
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_title_plaque"]
 content_margin_left = 30.0
 content_margin_top = 24.0
@@ -35,6 +33,8 @@ corner_radius_bottom_left = 14
 shadow_color = Color(0, 0, 0, 0.55)
 shadow_size = 16
 shadow_offset = Vector2(0, 6)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_aqpy5"]
 
 [node name="Title Screen" type="Control" unique_id=280269585]
 layout_mode = 3
@@ -154,7 +154,7 @@ layout_mode = 0
 offset_left = 30.0
 offset_top = 520.0
 offset_right = 736.0
-offset_bottom = 980.0
+offset_bottom = 1035.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_title_plaque")
 
 [node name="SlotMenu" type="VBoxContainer" parent="." unique_id=1082419698]
@@ -192,16 +192,14 @@ layout_mode = 2
 text = "Back"
 
 [node name="NameMenuPlaque" type="Panel" parent="." unique_id=1351648757]
-visible = false
 layout_mode = 0
 offset_left = 30.0
 offset_top = 520.0
 offset_right = 736.0
-offset_bottom = 980.0
+offset_bottom = 1049.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_title_plaque")
 
 [node name="NameMenu" type="VBoxContainer" parent="." unique_id=1082419700]
-visible = false
 layout_mode = 0
 offset_left = 50.0
 offset_top = 540.0
@@ -249,12 +247,10 @@ layout_mode = 2
 text = "Randomize"
 
 [node name="Start" type="Button" parent="NameMenu" unique_id=1266561066]
-custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 text = "Start"
 
 [node name="Back" type="Button" parent="NameMenu" unique_id=1266561069]
-custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 text = "Back"
 
