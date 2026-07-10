@@ -149,7 +149,7 @@
       "prereq_beats": ["auntie_beat_1"],
       "mutual_exclusions": [],
       "holds_fragment_id": "fragment_02",
-      "rewards": ["delicate_tool", "artisan_durability_technique"],
+      "rewards": ["delicate_tool"],
       "has_ending": true,
       "beat_completion": "handoff",
       "beats": [
