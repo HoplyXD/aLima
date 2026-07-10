@@ -1,17 +1,25 @@
 extends Control
-## Cinematic title intro: a slow, monochrome, high-contrast character montage that
-## fades in from black, reveals the cast one at a time (each with a distinct,
-## composed "camera" framing and a sweeping rim light), then lands on a bronze
-## medieval title with a pulsing "Press Any Key". Any input skips to the menu.
+## Cinematic title intro: half-body portraits of the cast breathe and sway over a
+## warm procedural junkshop backdrop, graded from cool monochrome to muted bronze,
+## with a side-by-side group shot and a mix of fade / wipe / blur transitions,
+## landing on a bronze medieval title with a pulsing "Press Any Key". Any input
+## skips to the menu.
 ##
-## The whole sequence is data-driven: tune timing, framing, crops, light direction
-## and transitions per character from the `shots` array in the inspector, or edit
-## `_default_shots()` below. No art is redesigned — portraits are only desaturated,
-## shaded, cropped and re-framed.
+## The whole sequence is data-driven: tune timing, framing, crops, light direction,
+## idle motion, backdrop mood and transitions from the `shots` array in the
+## inspector, or edit `_default_sequence()` below. No art is redesigned — portraits
+## are only cropped, desaturated, shaded, tinted and gently animated.
 
 const PORTRAIT_SHADER: Shader = preload("res://shader/title_intro_portrait.gdshader")
 const POST_SHADER: Shader = preload("res://shader/title_intro_post.gdshader")
+const WIPE_SHADER: Shader = preload("res://shader/title_intro_wipe.gdshader")
+const BG_SHADER: Shader = preload("res://shader/title_intro_bg.gdshader")
 const TITLE_FONT: Font = preload("res://assets/fonts/CloisterBlack.ttf")
+
+## Fallback transitions (fade / wipe / blur) for sequence entries that don't set
+## their own `"transition"` key. Every built-in entry sets one explicitly.
+const DEFAULT_CUTS: Array[String] = ["fade", "ink", "blur", "shadow", "zoom"]
+const DEFAULT_BG_MOOD := Color(1.0, 0.96, 0.88)
 
 @export var next_scene: PackedScene = preload("res://scenes/ui/title_screen.tscn")
 
@@ -41,9 +49,11 @@ const TITLE_FONT: Font = preload("res://assets/fonts/CloisterBlack.ttf")
 ## When non-empty this overrides the built-in composed sequence.
 @export var shots: Array[Dictionary] = []
 
+@onready var _background: ColorRect = $Background
 @onready var _stage: Node2D = $Stage
 @onready var _overlays: CanvasLayer = $Overlays
 @onready var _post: ColorRect = $Overlays/PostRect
+@onready var _wipe: ColorRect = $Overlays/WipeRect
 @onready var _fade: ColorRect = $Overlays/FadeRect
 @onready var _title_layer: Control = $Overlays/TitleLayer
 @onready var _title_glow: TextureRect = $Overlays/TitleLayer/TitleGlow
@@ -58,6 +68,8 @@ var _done := false
 
 func _ready() -> void:
 	_apply_post()
+	_apply_wipe()
+	_apply_background()
 	_apply_title_style()
 	_fade.color = Color(0.0, 0.0, 0.0, 1.0)
 	_title_layer.visible = false
@@ -69,7 +81,8 @@ func _ready() -> void:
 	_overlays.move_child(dust, 0) # above the stage, behind vignette/fade/title
 	_start_music()
 	if shots.is_empty():
-		shots = _default_shots()
+		shots = _default_sequence()
+	_set_bg_mood(shots[0].get("bg_mood", DEFAULT_BG_MOOD), 0.0)
 	_play_sequence()
 
 
@@ -82,15 +95,23 @@ func _play_sequence() -> void:
 	for i in shots.size():
 		if _done:
 			return
-		await _show_shot(shots[i], i)
+		var entry: Dictionary = shots[i]
+		_set_bg_mood(entry.get("bg_mood", DEFAULT_BG_MOOD), transition_time + 1.0)
+		if entry.get("lineup", false):
+			await _show_lineup(entry)
+		else:
+			await _show_shot(entry, i)
 		if _done:
 			return
-		await _fade_to(1.0, transition_time)
+		if i < shots.size() - 1:
+			var cut := String(entry.get("transition", DEFAULT_CUTS[i % DEFAULT_CUTS.size()]))
+			await _do_wipe(cut, transition_time)
 	_clear_stage()
+	await _fade_to(1.0, transition_time)
 	await _reveal_title()
 
 
-func _show_shot(d: Dictionary, index: int) -> void:
+func _show_shot(d: Dictionary, _index: int) -> void:
 	var sprite := _make_portrait(d)
 	_stage.add_child(sprite)
 	var sweep := _make_sweep(d)
@@ -105,17 +126,13 @@ func _show_shot(d: Dictionary, index: int) -> void:
 	var end_off: Vector2 = d.get("offset_end", Vector2.ZERO)
 	var base_scale: float = d["scale"]
 	var push: float = d.get("push", 0.03)
-	var total: float = reveal + hold
+	var end_pos: Vector2 = base_pos + end_off
+	var end_scale: float = base_scale * (1.0 + push)
 
 	sprite.position = base_pos + start_off
 	sprite.scale = Vector2(base_scale, base_scale)
 	sprite.modulate.a = 0.0
 	sprite.material.set_shader_parameter("lit", 0.05)
-
-	# Shots after the first emerge from the black gap left by the previous fade.
-	if index > 0:
-		var open := create_tween()
-		open.tween_property(_fade, "color:a", 0.0, minf(reveal, 0.6)).set_trans(Tween.TRANS_SINE)
 
 	var band_w: float = 520.0
 	var from_x: float = -band_w
@@ -125,22 +142,84 @@ func _show_shot(d: Dictionary, index: int) -> void:
 		to_x = -band_w
 	sweep.position = Vector2(from_x, 0.0)
 
+	# Entrance: fade the plate up, push in, and sweep the rim light once.
 	var t := create_tween().set_parallel(true)
 	t.tween_property(sprite, "modulate:a", 1.0, reveal).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	t.tween_method(_set_lit.bind(sprite), 0.05, lit_peak, reveal).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	t.tween_property(sprite, "position", base_pos + end_off, total).set_trans(Tween.TRANS_SINE)
-	t.tween_property(sprite, "scale", Vector2(base_scale * (1.0 + push), base_scale * (1.0 + push)), total).set_trans(Tween.TRANS_SINE)
+	t.tween_property(sprite, "position", end_pos, reveal).set_trans(Tween.TRANS_SINE)
+	t.tween_property(sprite, "scale", Vector2(end_scale, end_scale), reveal).set_trans(Tween.TRANS_SINE)
 	t.tween_property(sweep, "position:x", to_x, reveal * 1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	t.tween_property(sweep, "modulate:a", 0.0, reveal * 0.6).set_ease(Tween.EASE_IN)
 
-	await get_tree().create_timer(total).timeout
-	sprite.queue_free()
-	sweep.queue_free()
+	await get_tree().create_timer(reveal).timeout
+	if _done:
+		return
+	# Hold: keep the still alive with a looping idle (breath + sway), bound to the
+	# sprite so it dies automatically when the wipe clears the stage.
+	_start_idle(sprite, end_scale, end_pos, d.get("breathe", 1.0), d.get("sway", 1.0))
+	await get_tree().create_timer(hold).timeout
+	# The sprite + sweep stay in place; the wipe covers them and _clear_stage()
+	# frees them at the fully-covered midpoint so each cut flows over the image.
+
+
+## Side-by-side group shot: lays out N half-body portraits left-to-right on the
+## shared backdrop, staggers their reveal, then lets them idle together for the
+## hold. The whole group then leaves through one shared transition.
+func _show_lineup(entry: Dictionary) -> void:
+	var members: Array = entry.get("members", [])
+	var n: int = members.size()
+	if n == 0:
+		return
+	var reveal: float = entry.get("reveal", 1.6)
+	var hold: float = entry.get("hold", 3.2)
+	var stagger: float = entry.get("stagger", 0.22)
+	var xs := _lineup_xs(n)
+	for j in n:
+		_reveal_lineup_member(members[j], xs[j], reveal, j * stagger)
+	# Cover the slowest member (last one) finishing its entrance, then the hold.
+	await get_tree().create_timer(reveal + (n - 1) * stagger + hold).timeout
+
+
+func _reveal_lineup_member(m: Dictionary, x: float, reveal: float, delay: float) -> void:
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
+	if _done:
+		return
+	var sprite := _make_portrait(m)
+	_stage.add_child(sprite)
+	var base_pos := Vector2(x, m.get("cy", 560.0))
+	var base_scale: float = m.get("scale", 0.5)
+	var end_scale: float = base_scale * (1.0 + m.get("push", 0.02))
+	sprite.position = base_pos + Vector2(0.0, 24.0) # gentle rise-in
+	sprite.scale = Vector2(base_scale, base_scale)
+	sprite.modulate.a = 0.0
+	sprite.material.set_shader_parameter("lit", 0.05)
+	var t := create_tween().set_parallel(true)
+	t.tween_property(sprite, "modulate:a", 1.0, reveal).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(sprite, "position", base_pos, reveal).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(sprite, "scale", Vector2(end_scale, end_scale), reveal).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_method(_set_lit.bind(sprite), 0.05, m.get("lit_peak", 0.9), reveal).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await get_tree().create_timer(reveal).timeout
+	if _done:
+		return
+	_start_idle(sprite, end_scale, base_pos, m.get("breathe", 1.0), m.get("sway", 1.0))
+
+
+## Evenly spaced x anchors for a lineup of `n` portraits across the 1920 width.
+func _lineup_xs(n: int) -> Array[float]:
+	var xs: Array[float] = []
+	var step: float = 1920.0 / float(n + 1)
+	for i in n:
+		xs.append(step * float(i + 1))
+	return xs
 
 
 func _clear_stage() -> void:
 	for child in _stage.get_children():
 		child.queue_free()
+	for child in _overlays.get_children():
+		if child.name == "IntroSweep":
+			child.queue_free()
 
 
 func _reveal_title() -> void:
@@ -183,6 +262,10 @@ func _make_portrait(d: Dictionary) -> Sprite2D:
 	sm.set_shader_parameter("light_dir", d.get("light_dir", 0))
 	sm.set_shader_parameter("shadow_strength", d.get("shadow_strength", 0.55))
 	sm.set_shader_parameter("shadow_softness", d.get("shadow_softness", 0.55))
+	sm.set_shader_parameter("tint", d.get("tint", Color(1.0, 1.0, 1.0)))
+	sm.set_shader_parameter("tint_strength", d.get("tint_strength", 0.0))
+	sm.set_shader_parameter("light_color", d.get("light_color", Color(1.0, 1.0, 1.0)))
+	sm.set_shader_parameter("light_strength", d.get("light_strength", 0.0))
 	sprite.material = sm
 	return sprite
 
@@ -190,6 +273,7 @@ func _make_portrait(d: Dictionary) -> Sprite2D:
 func _make_sweep(d: Dictionary) -> TextureRect:
 	var band_w: float = 520.0
 	var rect := TextureRect.new()
+	rect.name = "IntroSweep"
 	rect.texture = _sweep_texture(int(band_w))
 	rect.stretch_mode = TextureRect.STRETCH_SCALE
 	rect.size = Vector2(band_w, 1080.0)
@@ -207,6 +291,25 @@ func _set_lit(v: float, sprite: Sprite2D) -> void:
 		sprite.material.set_shader_parameter("lit", v)
 
 
+## Fake-life idle for a still drawing: a slow breathing scale pulse, a gentle
+## horizontal sway and a sub-degree rotation, all looping and bound to the sprite
+## (so they stop the instant the sprite is freed). `breathe`/`sway` scale the
+## motion per shot so e.g. Auntie stays near-still while others move a touch more.
+func _start_idle(sprite: Sprite2D, base_scale: float, base_pos: Vector2, breathe: float, sway: float) -> void:
+	var amp: float = 0.012 * breathe
+	var breath := create_tween().set_loops().bind_node(sprite)
+	breath.tween_property(sprite, "scale", Vector2(base_scale * (1.0 + amp), base_scale * (1.0 + amp)), 1.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	breath.tween_property(sprite, "scale", Vector2(base_scale * (1.0 - amp * 0.4), base_scale * (1.0 - amp * 0.4)), 1.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var sx: float = 4.0 * sway
+	var sway_t := create_tween().set_loops().bind_node(sprite)
+	sway_t.tween_property(sprite, "position:x", base_pos.x + sx, 2.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	sway_t.tween_property(sprite, "position:x", base_pos.x - sx, 2.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var rot: float = deg_to_rad(0.25) * sway
+	var rot_t := create_tween().set_loops().bind_node(sprite)
+	rot_t.tween_property(sprite, "rotation", rot, 2.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	rot_t.tween_property(sprite, "rotation", -rot, 2.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
 # --- Look & title --------------------------------------------------------------
 
 
@@ -217,6 +320,41 @@ func _apply_post() -> void:
 	sm.set_shader_parameter("grain_amount", grain_amount)
 	_post.material = sm
 	_post.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+func _apply_wipe() -> void:
+	var sm := ShaderMaterial.new()
+	sm.shader = WIPE_SHADER
+	sm.set_shader_parameter("progress", 0.0)
+	sm.set_shader_parameter("wipe_color", Color(0.0, 0.0, 0.0, 1.0))
+	sm.set_shader_parameter("soft", 0.12)
+	sm.set_shader_parameter("seed", 0.0)
+	_wipe.material = sm
+	_wipe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_wipe.visible = false
+
+
+func _apply_background() -> void:
+	var sm := ShaderMaterial.new()
+	sm.shader = BG_SHADER
+	sm.set_shader_parameter("mood", DEFAULT_BG_MOOD)
+	sm.set_shader_parameter("intensity", 0.9)
+	sm.set_shader_parameter("dust_amount", 0.5)
+	_background.material = sm
+	_background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+## Cross-fade the backdrop mood tint toward `c` over `dur` (0 = snap).
+func _set_bg_mood(c: Color, dur: float) -> void:
+	if not is_instance_valid(_background) or _background.material == null:
+		return
+	var mat := _background.material as ShaderMaterial
+	if dur <= 0.0:
+		mat.set_shader_parameter("mood", c)
+		return
+	var from: Color = mat.get_shader_parameter("mood")
+	var t := create_tween()
+	t.tween_method(func(v: Color) -> void: mat.set_shader_parameter("mood", v), from, c, dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _apply_title_style() -> void:
@@ -260,6 +398,61 @@ func _fade_to(a: float, dur: float) -> void:
 	var t := create_tween()
 	t.tween_property(_fade, "color:a", a, dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await t.finished
+
+
+## Stylized between-shot transition. Sweeps the chosen wipe to full cover (black),
+## swaps the stage at the covered midpoint, then sweeps back out. Every cut passes
+## through black so no two shots ever need to be composited.
+func _do_wipe(cut: String, dur: float) -> void:
+	var p := _wipe_params(cut)
+	var mat := _wipe.material as ShaderMaterial
+	mat.set_shader_parameter("wipe_type", p["type"])
+	mat.set_shader_parameter("angle", p["angle"])
+	mat.set_shader_parameter("wipe_color", p["color"])
+	mat.set_shader_parameter("seed", randf() * 100.0)
+	_set_wipe_progress(0.0)
+	_wipe.visible = true
+	var half := dur * 0.5
+	var t1 := create_tween()
+	t1.tween_method(_set_wipe_progress, 0.0, 0.5, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await t1.finished
+	if _done:
+		return
+	_clear_stage()
+	var t2 := create_tween()
+	t2.tween_method(_set_wipe_progress, 0.5, 1.0, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await t2.finished
+	_set_wipe_progress(0.0)
+	_wipe.visible = false
+
+
+func _set_wipe_progress(v: float) -> void:
+	if is_instance_valid(_wipe) and _wipe.material != null:
+		(_wipe.material as ShaderMaterial).set_shader_parameter("progress", v)
+
+
+func _wipe_params(cut: String) -> Dictionary:
+	match cut:
+		"fade":
+			return {"type": 0, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
+		"blur":
+			return {"type": 8, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
+		"light_sweep":
+			return {"type": 1, "angle": 0.0, "color": Color(1.0, 0.92, 0.78, 1.0)}
+		"ink":
+			return {"type": 2, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
+		"smoke":
+			return {"type": 3, "angle": -0.25, "color": Color(0.05, 0.05, 0.06, 1.0)}
+		"shadow":
+			return {"type": 4, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
+		"whip":
+			return {"type": 5, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
+		"zoom":
+			return {"type": 6, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
+		"particle":
+			return {"type": 7, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
+		_:
+			return {"type": 0, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -376,92 +569,127 @@ func _start_music() -> void:
 
 
 # --- Composed sequence ---------------------------------------------------------
-# Source portraits are 2500x4000, full body on transparent BG. Each entry crops a
-# tight "camera" region, picks a light direction, and sets its own slow motion so
-# every reveal feels distinct. Source-safe: only crop + grade + shade, no redraw.
+# Source portraits are 2500x4000, full body on transparent BG. Each solo entry
+# crops a half-body region (head -> ~waist), picks a light direction, a backdrop
+# mood and a gentle idle. A `"lineup"` entry places several half-body portraits
+# side-by-side for a group shot. Source-safe: only crop + grade + shade + tint +
+# a tiny idle loop, no redraw.
 
 
-func _default_shots() -> Array[Dictionary]:
-	return [
-		{
-			"name": "Mysterious Buyer",
-			"texture": preload("res://assets/Characters/Mysterious Buyer.png"),
-			# Hooded head + gold tie, face withheld in the hood's black void.
-			"region": Rect2(600, 520, 1300, 1500),
-			"scale": 0.62,
-			"center": Vector2(960, 480),
-			"push": 0.02,
-			"light_dir": 2, # top light only catches tie + jaw
-			"shadow_strength": 0.84,
-			"hold": 2.7,
-			"reveal": 1.7,
-		},
-		{
-			"name": "Scavenger",
-			"texture": preload("res://assets/Characters/Scavenger.png"),
-			# Child: big eyes + nose band-aid, soft even front light, gentle.
-			"region": Rect2(720, 800, 1000, 1080),
-			"scale": 0.66,
-			"center": Vector2(960, 500),
-			"push": 0.03,
-			"light_dir": 0,
-			"shadow_strength": 0.22,
-			"hold": 2.6,
-			"reveal": 1.3,
-		},
-		{
-			"name": "Auntie",
-			"texture": preload("res://assets/Characters/Auntie.png"),
-			# Pure ink line-art, warm smile. Near-still: stillness reads as warmth.
-			"region": Rect2(780, 540, 820, 900),
-			"scale": 0.84,
-			"center": Vector2(960, 500),
-			"push": 0.0,
-			"light_dir": 0,
-			"shadow_strength": 0.12,
-			"hold": 2.6,
-			"reveal": 1.4,
-		},
-		{
-			"name": "Artisan",
-			"texture": preload("res://assets/Characters/Artisan.png"),
-			# Side light: pan from the raised hammer (right) to the eyes (left).
-			"region": Rect2(680, 540, 1680, 1180),
-			"scale": 0.74,
-			"center": Vector2(960, 500),
-			"offset_start": Vector2(80, 0),
-			"offset_end": Vector2(-30, 0),
-			"push": 0.02,
-			"light_dir": 1, # lit from the left, hammer side falls to shadow
-			"shadow_strength": 0.6,
-			"hold": 2.8,
-			"reveal": 1.5,
-		},
-		{
-			"name": "Uncle",
-			"texture": preload("res://assets/Characters/Uncle.png"),
-			# Grizzled veteran: top light rakes the white hair + scar, low-angle feel.
-			"region": Rect2(720, 40, 1080, 1500),
-			"scale": 0.63,
-			"center": Vector2(960, 470),
-			"push": 0.04,
-			"light_dir": 2,
-			"shadow_strength": 0.5,
-			"hold": 2.8,
-			"reveal": 1.5,
-		},
-		{
-			"name": "Archeologist",
-			"texture": preload("res://assets/Characters/Archeologist.png"),
-			# Hero beat: rim from the right reveals one eye under the brim, then the gaze.
-			"region": Rect2(720, 600, 1100, 760),
-			"scale": 1.0,
-			"center": Vector2(960, 500),
-			"push": 0.05,
-			"light_dir": 0,
-			"shadow_strength": 0.68,
-			"sweep_from_right": true,
-			"hold": 3.4,
-			"reveal": 1.8,
-		},
-	]
+func _default_sequence() -> Array[Dictionary]:
+	# Half-body crops (head -> ~waist) of the 2500x4000 full-body portraits. Stills
+	# only get crop + grade + shade + tint + a tiny idle loop; no redraw. Regions are
+	# generous estimates -- nudge one entry's region/center/scale to reframe it.
+	var buyer := {
+		"name": "Mysterious Buyer",
+		"texture": preload("res://assets/Characters/Mysterious Buyer.png"),
+		"region": Rect2(500, 300, 1500, 1900),
+		"scale": 0.50,
+		"center": Vector2(960, 540),
+		"push": 0.02,
+		"light_dir": 2, # top light only catches the tie + jaw
+		"shadow_strength": 0.84,
+		"hold": 2.6,
+		"reveal": 1.7,
+		"transition": "fade",
+		"breathe": 0.6, "sway": 0.5,
+		"bg_mood": Color(0.78, 0.84, 0.95),
+		"tint": Color(0.78, 0.82, 0.90),
+		"tint_strength": 0.05,
+		"light_color": Color(0.70, 0.80, 1.00),
+		"light_strength": 0.12,
+	}
+	var scavenger := {
+		"name": "Scavenger",
+		"texture": preload("res://assets/Characters/Scavenger.png"),
+		"region": Rect2(500, 500, 1500, 1700),
+		"scale": 0.40,
+		"cy": 560.0,
+		"push": 0.02,
+		"light_dir": 0,
+		"shadow_strength": 0.22,
+		"breathe": 1.0, "sway": 1.0,
+		"tint": Color(0.96, 0.88, 0.72),
+		"tint_strength": 0.18,
+		"light_color": Color(1.00, 0.92, 0.74),
+		"light_strength": 0.20,
+	}
+	var auntie := {
+		"name": "Auntie",
+		"texture": preload("res://assets/Characters/Auntie.png"),
+		"region": Rect2(550, 350, 1400, 1750),
+		"scale": 0.42,
+		"cy": 560.0,
+		"push": 0.0,
+		"light_dir": 0,
+		"shadow_strength": 0.12,
+		"breathe": 0.3, "sway": 0.4, # near-still: stillness reads as warmth
+		"tint": Color(0.92, 0.84, 0.70),
+		"tint_strength": 0.28,
+		"light_color": Color(1.00, 0.90, 0.72),
+		"light_strength": 0.24,
+	}
+	var artisan := {
+		"name": "Artisan",
+		"texture": preload("res://assets/Characters/Artisan.png"),
+		"region": Rect2(400, 350, 1700, 1850),
+		"scale": 0.40,
+		"cy": 560.0,
+		"push": 0.02,
+		"light_dir": 1,
+		"shadow_strength": 0.6,
+		"breathe": 1.1, "sway": 1.1,
+		"tint": Color(0.92, 0.74, 0.42),
+		"tint_strength": 0.38,
+		"light_color": Color(1.00, 0.78, 0.40),
+		"light_strength": 0.32,
+	}
+	var uncle := {
+		"name": "Uncle",
+		"texture": preload("res://assets/Characters/Uncle.png"),
+		"region": Rect2(500, 100, 1500, 2100),
+		"scale": 0.50,
+		"center": Vector2(960, 540),
+		"push": 0.03,
+		"light_dir": 2,
+		"shadow_strength": 0.5,
+		"hold": 2.8,
+		"reveal": 1.5,
+		"transition": "blur",
+		"breathe": 0.7, "sway": 0.6,
+		"bg_mood": Color(0.74, 0.82, 0.95),
+		"tint": Color(0.70, 0.78, 0.86),
+		"tint_strength": 0.42,
+		"light_color": Color(0.78, 0.86, 1.00),
+		"light_strength": 0.36,
+	}
+	var archeologist := {
+		"name": "Archeologist",
+		"texture": preload("res://assets/Characters/Archeologist.png"),
+		"region": Rect2(500, 300, 1500, 1600),
+		"scale": 0.62,
+		"center": Vector2(960, 520),
+		"push": 0.05,
+		"light_dir": 0,
+		"shadow_strength": 0.68,
+		"sweep_from_right": true,
+		"hold": 3.4,
+		"reveal": 1.8,
+		"breathe": 0.8, "sway": 0.7,
+		"bg_mood": Color(1.05, 0.82, 0.50),
+		"tint": Color(0.90, 0.66, 0.40),
+		"tint_strength": 0.52,
+		"light_color": Color(1.00, 0.72, 0.40),
+		"light_strength": 0.46,
+	}
+	# The warm found-family trio share one screen side-by-side.
+	var family := {
+		"lineup": true,
+		"members": [scavenger, auntie, artisan],
+		"reveal": 1.6,
+		"hold": 3.2,
+		"stagger": 0.22,
+		"transition": "ink",
+		"bg_mood": Color(1.05, 0.92, 0.72),
+	}
+	return [buyer, family, uncle, archeologist]

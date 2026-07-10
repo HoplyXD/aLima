@@ -13,6 +13,13 @@ uniform float shadow_strength : hint_range(0.0, 1.0) = 0.55;
 uniform float shadow_softness : hint_range(0.05, 1.0) = 0.55;
 uniform float lit : hint_range(0.0, 1.5) = 1.0;
 uniform vec4 tint : source_color = vec4(1.0);
+// 0 = pure black-and-white (current look), 1 = fully tinted grey. Ramped across
+// the montage to ease from B&W into muted medieval color.
+uniform float tint_strength : hint_range(0.0, 1.0) = 0.0;
+// Lit-side color (rim / candle / moon / top light). Only the lit side (high
+// `shade`) is tinted, so the shadow side stays deep.
+uniform vec4 light_color : source_color = vec4(1.0);
+uniform float light_strength : hint_range(0.0, 1.0) = 0.0;
 
 void fragment() {
 	vec4 c = texture(TEXTURE, UV);
@@ -32,5 +39,13 @@ void fragment() {
 
 	l *= shade_mul * lit;
 
-	COLOR = vec4(vec3(l) * tint.rgb, c.a * tint.a);
+	vec3 grey = vec3(l);
+	// B&W -> muted color ramp.
+	vec3 col = mix(grey, grey * tint.rgb, tint_strength);
+	// Lit-side rim/candle/moon tint, scaled by local luminance so it glazes the
+	// lit planes without flattening the shadow side.
+	float rim = clamp(shade * light_strength, 0.0, 1.0);
+	col = mix(col, light_color.rgb * (l + 0.15), rim);
+
+	COLOR = vec4(col, c.a * tint.a);
 }
