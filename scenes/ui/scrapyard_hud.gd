@@ -263,6 +263,29 @@ func _clear_slot(index: int) -> void:
 	card.add_theme_stylebox_override("panel", style)
 
 
+## Display-only heap preview for a carry-slot scrap card: a random junk-heap mesh
+## from ScrapItem's shared kit with a rarity-coloured glow outline. The tint lives
+## on the inverted-hull shell (matching the yard pickups), so the same heap mesh
+## serves every tier. Falls back to a plain sphere when the kit is not imported.
+func _make_scrap_heap(color: Color) -> Node3D:
+	var root := Node3D.new()
+	var mesh := MeshInstance3D.new()
+	var heap := ScrapItem.pick_heap_mesh()
+	if heap != null:
+		mesh.mesh = heap
+	else:
+		var ball := SphereMesh.new()
+		ball.radius = 0.2
+		ball.height = 0.4
+		mesh.mesh = ball
+	root.add_child(mesh)
+	var outline := MeshInstance3D.new()
+	outline.mesh = mesh.mesh
+	outline.material_override = ScrapItem.make_outline_material(color)
+	mesh.add_child(outline)
+	return root
+
+
 func _build_hotbar() -> void:
 	for child in _hotbar.get_children():
 		child.queue_free()
