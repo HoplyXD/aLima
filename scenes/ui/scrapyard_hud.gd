@@ -73,9 +73,9 @@ func _build_panels() -> void:
 	prompt_panel.anchor_right = 0.5
 	prompt_panel.anchor_bottom = 1.0
 	prompt_panel.offset_left = -340.0
-	prompt_panel.offset_top = -170.0
+	prompt_panel.offset_top = -280.0
 	prompt_panel.offset_right = 340.0
-	prompt_panel.offset_bottom = -126.0
+	prompt_panel.offset_bottom = -236.0
 	prompt_panel.add_theme_stylebox_override("panel", UiPalette.manuscript_card_style())
 	add_child(prompt_panel)
 	# Send panels to the back so labels draw on top.
