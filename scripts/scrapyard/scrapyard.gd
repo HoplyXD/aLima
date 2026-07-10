@@ -214,8 +214,7 @@ func _create_tutorial_glue() -> TutorialGlue:
 		. setup(
 			"YARD",
 			{
-				# Her sprite, not the ground marker, so the arrow floats over her head.
-				"ayla": _ayla_sprite,
+				"ayla": _ayla_anchor,
 				"door": _door_return,
 				"scrap": _ayla_anchor,  # re-targeted per frame to the nearest scrap
 				"tricycle": get_node_or_null("Anchors/Tricycle"),
@@ -265,10 +264,10 @@ func _update_tutorial_targets() -> void:
 			holding = true
 			break
 	if holding:
-		_tutorial_glue.update_anchor("scrap", _ayla_sprite)
+		_tutorial_glue.update_anchor("scrap", _ayla_anchor)
 		return
 	var nearest := _nearest_scrap_item()
-	_tutorial_glue.update_anchor("scrap", nearest if nearest != null else _ayla_sprite)
+	_tutorial_glue.update_anchor("scrap", nearest if nearest != null else _ayla_anchor)
 
 
 func _nearest_scrap_item() -> Node3D:
@@ -492,23 +491,6 @@ func _on_gate_handoff_activated(route_id: String) -> void:
 	)
 	_pending_dialogue_action = "gate_handoff:%s:%s" % [route_id, beat_id]
 	_enter_overlay()
-
-
-var _tool_pick_screen: ToolPickScreen
-
-
-## The artisan's pick-one-of-three tool reward (v3, story.md §16).
-func _open_tool_pick() -> void:
-	if _tool_pick_screen == null:
-		_tool_pick_screen = ToolPickScreen.new()
-		add_child(_tool_pick_screen)
-		_tool_pick_screen.closed.connect(_on_tool_pick_closed)
-	_tool_pick_screen.open()
-
-
-func _on_tool_pick_closed(_picked_tool_id: String) -> void:
-	_exit_overlay()
-	_refresh_hud_hotbar()
 
 
 ## Records the handed-over beat; a route's final beat completes the route and
@@ -817,7 +799,6 @@ func _too_close_to_placed(pos: Vector3, placed: Array[Vector3]) -> bool:
 func _update_hud() -> void:
 	if _hud == null:
 		return
-	_hud.set_money(GameState.save_state.loop.money)
 	# Day 0 (tutorial) is clockless: show the day tag only (TUT).
 	if TutorialService.is_tutorial_active():
 		_hud.set_day_zero()
@@ -1128,15 +1109,11 @@ func _open_inspection_overlay(data: Dictionary) -> void:
 func _on_dialogue_finished() -> void:
 	# v3 gate hand-off / Safe branches (parameterized actions, so not in the match).
 	if _pending_dialogue_action.begins_with("gate_handoff:"):
-		var handoff_route := _pending_dialogue_action.get_slice(":", 1)
-		_complete_gate_handoff(handoff_route, _pending_dialogue_action.get_slice(":", 2))
+		_complete_gate_handoff(
+			_pending_dialogue_action.get_slice(":", 1), _pending_dialogue_action.get_slice(":", 2)
+		)
 		_pending_dialogue_action = ""
-		# The artisan pays in tools: pick ONE of three to keep (v3). The pick
-		# screen holds the overlay until a choice is made.
-		if handoff_route == "artisan":
-			_open_tool_pick()
-		else:
-			_exit_overlay()
+		_exit_overlay()
 		_refresh_hud_hotbar()
 		return
 	if _pending_dialogue_action == "safe_fragment":

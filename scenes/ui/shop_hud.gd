@@ -161,28 +161,13 @@ func set_prompt(text: String) -> void:
 
 
 func set_day(day: int, total_days: int) -> void:
-	_day_label.text = "%s · Day %d of %d" % [DayClock.weekday_name(day), day, total_days]
+	_day_label.text = "Day %d of %d" % [day, total_days]
 
 
-## Day 0 (tutorial) presentation: it is Sunday, and time does not exist yet.
+## Day 0 (tutorial) presentation: time does not exist yet, so no clock readout.
 func set_day_zero() -> void:
-	_day_label.text = "Sunday · Day 0"
+	_day_label.text = "Day 0"
 	_clock_label.text = ""
-
-
-var _money_label: Label
-
-
-## Money readout under the day/clock corner. Built lazily as a styled copy of the
-## clock label so it follows whatever layout the scene authors.
-func set_money(amount: int) -> void:
-	if _money_label == null:
-		_money_label = _clock_label.duplicate() as Label
-		_money_label.name = "MoneyLabel"
-		_money_label.offset_top += 34.0
-		_money_label.offset_bottom += 34.0
-		_clock_label.add_sibling(_money_label)
-	_money_label.text = "₱%d" % amount
 
 
 ## hour: 24-hour value (the shop runs 7..20). minute: 0..59.

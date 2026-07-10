@@ -81,8 +81,4 @@ func _on_destination_pressed(destination_id: String) -> void:
 	var space := _travel.space_for(destination_id)
 	close()
 	if space >= 0:
-		# Riding the tricycle always costs one in-game hour (v3) — except on the
-		# clockless Day 0, where time does not exist yet.
-		if not TutorialService.is_tutorial_active():
-			DayClock.advance_hours(1)
 		SpaceManager.go_to(space as SpaceManager.Space)

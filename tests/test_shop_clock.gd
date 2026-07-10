@@ -61,7 +61,7 @@ func test_day_label_reflects_clock_day() -> void:
 	DayClock.start_day(3)
 	_shop._update_clock_display()
 	var day_label: Label = _shop.get_node("%DayLabel")
-	assert_eq(day_label.text, "Wednesday · Day 3 of 5")
+	assert_eq(day_label.text, "Day 3 of 5")
 
 
 func test_format_uses_am_pm() -> void:

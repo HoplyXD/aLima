@@ -188,30 +188,10 @@ func _refresh_slot_buttons(for_new_game: bool) -> void:
 			button.text = "Slot %d — Empty" % (i + 1)
 			button.disabled = not for_new_game
 		else:
-			# v3 slot card: number, name, weekday + time, money, seed.
-			var slot_name := str(summary.get("player_name", ""))
-			if slot_name.is_empty():
-				slot_name = "—"
 			var day: int = summary.get("current_day", 1)
+			var loop: int = summary.get("loop_index", 0)
 			var seed: int = summary.get("run_seed", 0)
-			var when: String
-			if summary.get("tutorial_completed", false):
-				var hour: int = summary.get("current_hour", 7)
-				var minute: int = summary.get("current_minute", 0)
-				var meridian := "AM" if hour < 12 else "PM"
-				var display_hour := hour % 12
-				if display_hour == 0:
-					display_hour = 12
-				when = (
-					"%s %d:%02d %s"
-					% [DayClock.weekday_name(day), display_hour, minute, meridian]
-				)
-			else:
-				when = "Sunday · Day 0"
-			button.text = (
-				"Slot %d — %s · %s · ₱%d · Seed %d"
-				% [i + 1, slot_name, when, int(summary.get("money", 0)), seed]
-			)
+			button.text = "Slot %d — Day %d / Loop %d (Seed %d)" % [i + 1, day, loop, seed]
 			button.disabled = false
 
 

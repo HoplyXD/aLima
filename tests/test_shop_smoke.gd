@@ -62,7 +62,7 @@ func test_hud_time_formatting() -> void:
 func test_hud_day_formatting() -> void:
 	var day_label: Label = _shop.get_node("%DayLabel")
 	_hud.set_day(1, 5)
-	assert_eq(day_label.text, "Monday · Day 1 of 5")
+	assert_eq(day_label.text, "Day 1 of 5")
 
 
 func test_door_dialogue_pauses_and_resumes_clock_via_keyboard() -> void:
