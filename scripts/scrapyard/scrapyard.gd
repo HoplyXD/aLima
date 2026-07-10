@@ -695,6 +695,10 @@ func _spawn_scrap_items() -> void:
 	var bonus_key := str(DayClock.get_day())
 	desired_count += int(scrap_cfg.per_day_scatter_bonus.get(bonus_key, 0))
 	desired_count += rng.randi_range(0, 1)
+	# Day 0 (TUT) teaches "grab A piece, then hand it to Ayla" — scatter exactly one
+	# so foraging it clears the yard and the hint moves cleanly on to Ayla.
+	if TutorialService.is_tutorial_active():
+		desired_count = 1
 
 	var loop := GameState.save_state.loop
 	if loop.yard_scrap_remaining < 0:

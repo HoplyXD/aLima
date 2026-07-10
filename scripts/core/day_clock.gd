@@ -116,6 +116,24 @@ func set_minute(minute: int) -> void:
 	_hour_elapsed = (float(m) / float(MINUTES_PER_HOUR)) * seconds_per_hour
 
 
+## Jumps the clock forward by whole in-game hours (e.g. a tricycle ride charges
+## travel time), independent of real-time ticking and of the pause state. Emits
+## hour_changed for each hour crossed and latches day_closed exactly once if the
+## jump reaches 20:00. No-op while already closed or for a non-positive count.
+func advance_hours(count: int) -> void:
+	if _closed or count <= 0:
+		return
+	_hour_elapsed = 0.0
+	for _i in count:
+		_hour += 1
+		if _hour >= DAY_END_HOUR:
+			_hour = DAY_END_HOUR
+			_closed = true
+			day_closed.emit(_day)
+			return
+		hour_changed.emit(_day, _hour)
+
+
 ## Advances the simulation by `delta` real seconds. No-op while paused or closed.
 ## Emits hour_changed exactly once per in-game hour; on reaching 20:00 it latches
 ## closed and emits day_closed exactly once, discarding any leftover delta so a

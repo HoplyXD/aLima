@@ -84,6 +84,71 @@ glow_intensity = 0.8
 glow_strength = 1.2
 glow_bloom = 0.35
 
+[sub_resource type="CylinderMesh" id="DD_drum"]
+top_radius = 0.6
+bottom_radius = 0.6
+height = 1.4
+
+[sub_resource type="StandardMaterial3D" id="DD_rust"]
+albedo_color = Color(0.5, 0.22, 0.11, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="DD_blue"]
+albedo_color = Color(0.2, 0.32, 0.5, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="DD_pallet"]
+size = Vector3(2.0, 0.25, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="DD_wood"]
+albedo_color = Color(0.48, 0.34, 0.2, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="DD_cart_bed"]
+size = Vector3(2.6, 0.3, 1.6)
+
+[sub_resource type="BoxMesh" id="DD_cart_side"]
+size = Vector3(2.6, 0.7, 0.1)
+
+[sub_resource type="CylinderMesh" id="DD_wheel"]
+top_radius = 0.55
+bottom_radius = 0.55
+height = 0.2
+
+[sub_resource type="StandardMaterial3D" id="DD_dark"]
+albedo_color = Color(0.12, 0.11, 0.12, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="DD_tarp"]
+size = Vector3(3.4, 0.08, 3.0)
+
+[sub_resource type="StandardMaterial3D" id="DD_tarp_mat"]
+albedo_color = Color(0.24, 0.36, 0.3, 1)
+roughness = 0.96
+
+[sub_resource type="CylinderMesh" id="DD_pole"]
+top_radius = 0.14
+bottom_radius = 0.2
+height = 6.5
+
+[sub_resource type="StandardMaterial3D" id="DD_metal"]
+albedo_color = Color(0.28, 0.28, 0.3, 1)
+metallic = 0.5
+roughness = 0.45
+
+[sub_resource type="BoxMesh" id="DD_lamp_arm"]
+size = Vector3(1.6, 0.14, 0.14)
+
+[sub_resource type="SphereMesh" id="DD_lamp"]
+radius = 0.35
+height = 0.6
+
+[sub_resource type="StandardMaterial3D" id="DD_lamp_mat"]
+albedo_color = Color(1, 0.92, 0.7, 1)
+emission_enabled = true
+emission = Color(1, 0.85, 0.5, 1)
+emission_energy_multiplier = 2.8
+
 [node name="DumpSite" type="Node3D" unique_id=1502014252]
 script = ExtResource("1_dumpsite")
 
@@ -490,5 +555,122 @@ surface_material_override/0 = SubResource("Mat_tree_foliage")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 6.2, -54)
 mesh = SubResource("Mesh_tree_top_small")
 surface_material_override/0 = SubResource("Mat_tree_foliage")
+
+[node name="Decor" type="Node3D" parent="."]
+
+[node name="Drums" type="Node3D" parent="Decor"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 11, 0, 24)
+
+[node name="Drum1" type="MeshInstance3D" parent="Decor/Drums"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("DD_drum")
+surface_material_override/0 = SubResource("DD_rust")
+
+[node name="Drum2" type="MeshInstance3D" parent="Decor/Drums"]
+transform = Transform3D(0.921061, 0, -0.389418, 0, 1, 0, 0.389418, 0, 0.921061, 1.3, 0.7, 0.2)
+mesh = SubResource("DD_drum")
+surface_material_override/0 = SubResource("DD_blue")
+
+[node name="Drum3" type="MeshInstance3D" parent="Decor/Drums"]
+transform = Transform3D(0.696707, 0, -0.717356, 0, 1, 0, 0.717356, 0, 0.696707, 0.7, 0.7, 1.3)
+mesh = SubResource("DD_drum")
+surface_material_override/0 = SubResource("DD_rust")
+
+[node name="Drum4" type="MeshInstance3D" parent="Decor/Drums"]
+transform = Transform3D(0.362358, 0, -0.932039, 0, 1, 0, 0.932039, 0, 0.362358, -0.6, 0.7, 0.6)
+mesh = SubResource("DD_drum")
+surface_material_override/0 = SubResource("DD_blue")
+
+[node name="Pallets" type="Node3D" parent="Decor"]
+transform = Transform3D(0.980067, 0, -0.198669, 0, 1, 0, 0.198669, 0, 0.980067, -12, 0, 25)
+
+[node name="P1" type="MeshInstance3D" parent="Decor/Pallets"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.13, 0)
+mesh = SubResource("DD_pallet")
+surface_material_override/0 = SubResource("DD_wood")
+
+[node name="P2" type="MeshInstance3D" parent="Decor/Pallets"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0.15, 0.4, 0.1)
+mesh = SubResource("DD_pallet")
+surface_material_override/0 = SubResource("DD_wood")
+
+[node name="P3" type="MeshInstance3D" parent="Decor/Pallets"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -0.1, 0.67, -0.05)
+mesh = SubResource("DD_pallet")
+surface_material_override/0 = SubResource("DD_wood")
+
+[node name="Cart" type="Node3D" parent="Decor"]
+transform = Transform3D(-0.737394, 0, -0.675463, 0, 1, 0, 0.675463, 0, -0.737394, -7, 0, 27)
+
+[node name="Bed" type="MeshInstance3D" parent="Decor/Cart"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("DD_cart_bed")
+surface_material_override/0 = SubResource("DD_wood")
+
+[node name="SideL" type="MeshInstance3D" parent="Decor/Cart"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 1.2, -0.75)
+mesh = SubResource("DD_cart_side")
+surface_material_override/0 = SubResource("DD_wood")
+
+[node name="SideR" type="MeshInstance3D" parent="Decor/Cart"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.75)
+mesh = SubResource("DD_cart_side")
+surface_material_override/0 = SubResource("DD_wood")
+
+[node name="WheelL" type="MeshInstance3D" parent="Decor/Cart"]
+transform = Transform3D(6.12323e-17, 0, -1, 0, 1, 0, 1, 0, 6.12323e-17, -0.9, 0.55, -0.9)
+mesh = SubResource("DD_wheel")
+surface_material_override/0 = SubResource("DD_dark")
+
+[node name="WheelR" type="MeshInstance3D" parent="Decor/Cart"]
+transform = Transform3D(6.12323e-17, 0, -1, 0, 1, 0, 1, 0, 6.12323e-17, -0.9, 0.55, 0.9)
+mesh = SubResource("DD_wheel")
+surface_material_override/0 = SubResource("DD_dark")
+
+[node name="Tarp1" type="MeshInstance3D" parent="Decor"]
+transform = Transform3D(0.877583, 0, -0.479426, 0, 1, 0, 0.479426, 0, 0.877583, 14, 0.06, 29)
+mesh = SubResource("DD_tarp")
+surface_material_override/0 = SubResource("DD_tarp_mat")
+
+[node name="Tarp2" type="MeshInstance3D" parent="Decor"]
+transform = Transform3D(0.921061, 0, 0.389418, 0, 1, 0, -0.389418, 0, 0.921061, -16, 0.06, 20)
+mesh = SubResource("DD_tarp")
+surface_material_override/0 = SubResource("DD_tarp_mat")
+
+[node name="LightPole1" type="Node3D" parent="Decor"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -30, 0, 30)
+
+[node name="Post" type="MeshInstance3D" parent="Decor/LightPole1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 3.25, 0)
+mesh = SubResource("DD_pole")
+surface_material_override/0 = SubResource("DD_metal")
+
+[node name="Arm" type="MeshInstance3D" parent="Decor/LightPole1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0.8, 6.2, 0)
+mesh = SubResource("DD_lamp_arm")
+surface_material_override/0 = SubResource("DD_metal")
+
+[node name="Lamp" type="MeshInstance3D" parent="Decor/LightPole1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.5, 6.1, 0)
+mesh = SubResource("DD_lamp")
+surface_material_override/0 = SubResource("DD_lamp_mat")
+
+[node name="LightPole2" type="Node3D" parent="Decor"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 30, 0, 30)
+
+[node name="Post" type="MeshInstance3D" parent="Decor/LightPole2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 3.25, 0)
+mesh = SubResource("DD_pole")
+surface_material_override/0 = SubResource("DD_metal")
+
+[node name="Arm" type="MeshInstance3D" parent="Decor/LightPole2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -0.8, 6.2, 0)
+mesh = SubResource("DD_lamp_arm")
+surface_material_override/0 = SubResource("DD_metal")
+
+[node name="Lamp" type="MeshInstance3D" parent="Decor/LightPole2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.5, 6.1, 0)
+mesh = SubResource("DD_lamp")
+surface_material_override/0 = SubResource("DD_lamp_mat")
 
 [node name="ScrapyardHud" parent="." unique_id=1005495780 instance=ExtResource("3_hud")]

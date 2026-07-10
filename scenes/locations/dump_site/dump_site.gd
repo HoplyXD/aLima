@@ -67,8 +67,8 @@ func _update_forbidden_zone() -> void:
 		_forbidden_zone_locked = true
 
 	# Show the broken fence, hide the intact fence (or vice versa)
-	_intact_fence = get_node_or_null("MapRoot/DumpSiteMap/ForbiddenZone/IntactFence")
-	_broken_fence = get_node_or_null("MapRoot/DumpSiteMap/ForbiddenZone/BrokenFence")
+	_intact_fence = get_node_or_null("MapRoot/DumpSiteMap/BackFence/IntactFence")
+	_broken_fence = get_node_or_null("MapRoot/DumpSiteMap/BackFence/BrokenFence")
 
 	if _intact_fence != null:
 		_intact_fence.visible = _forbidden_zone_locked

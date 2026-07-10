@@ -4,6 +4,9 @@
 
 [node name="ScrapyardMap" unique_id=1595046604 instance=ExtResource("1_map")]
 
+[node name="Shop_Door" parent="." index="26" unique_id=1523137140]
+transform = Transform3D(1.2279776, 0, 0, 0, 1.0991093, 0, 0, 0, 1, 0, 0, 0)
+
 [node name="ScrapHeap_B" parent="." index="42" unique_id=1483360851]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.444028, 0, 12.981697)
 

@@ -81,4 +81,7 @@ func _on_destination_pressed(destination_id: String) -> void:
 	var space := _travel.space_for(destination_id)
 	close()
 	if space >= 0:
+		# A tricycle ride burns one in-game hour (skipped during the clockless Day 0).
+		if not TutorialService.is_tutorial_active():
+			DayClock.advance_hours(1)
 		SpaceManager.go_to(space as SpaceManager.Space)

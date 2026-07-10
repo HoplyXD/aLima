@@ -1,11 +1,11 @@
 class_name BuyerShopService
 ## Mr. Maverick's evening shop (v3, story.md §16): he SELLS one overpriced
-## artifact per day (18:00-20:00, data in data/routes/buyer_shop.json), and once
+## artifact per day (18:00-20:00, data in data/economy/buyer_shop.json), and once
 ## the player has bought all five daily offers, his Day-5 visit also sells the
 ## fifth fragment for a flat price. Plain instantiable class (like TravelService):
 ## no scene refs, reads live state on demand, deterministic offers per run seed.
 
-const CONFIG_PATH := "res://data/routes/buyer_shop.json"
+const CONFIG_PATH := "res://data/economy/buyer_shop.json"
 
 var _daily_offers: Array = []
 var _fragment_price: int = 5000

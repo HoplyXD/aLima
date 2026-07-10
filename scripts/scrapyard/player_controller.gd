@@ -198,7 +198,12 @@ func _set_scrap_target(item: ScrapItem) -> void:
 
 func _activate_scrap_target() -> void:
 	if _scrap_target != null and is_instance_valid(_scrap_target):
-		_scrap_target.activate()
+		var target := _scrap_target
+		# Drop the target (and hide its "Press E" prompt) BEFORE it frees itself, so
+		# the prompt never lingers on a collected pile. The next _update_scrap_target
+		# re-detects any scrap still nearby and re-shows the prompt only then.
+		_set_scrap_target(null)
+		target.activate()
 		get_viewport().set_input_as_handled()
 
 

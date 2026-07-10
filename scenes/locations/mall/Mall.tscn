@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=60 format=3]
 
 [ext_resource type="Script" path="res://scripts/mall/mall_controller.gd" id="1_mall"]
 [ext_resource type="PackedScene" path="res://scenes/travel/tricycle.tscn" id="2_tricycle"]
@@ -72,6 +72,104 @@ albedo_color = Color(0.3, 0.55, 0.3, 1)
 
 [sub_resource type="BoxMesh" id="Mesh_mall_bench"]
 size = Vector3(2.4, 0.5, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="Mat_dark"]
+albedo_color = Color(0.12, 0.1, 0.1, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="Mesh_door"]
+size = Vector3(5, 4.2, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_window"]
+size = Vector3(2.4, 1.5, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_wing"]
+size = Vector3(9, 6, 12)
+
+[sub_resource type="BoxShape3D" id="Shape_wing"]
+size = Vector3(9, 6, 12)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wing"]
+albedo_color = Color(0.8, 0.74, 0.64, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_stall_top"]
+size = Vector3(3.2, 0.2, 2.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_stall_red"]
+albedo_color = Color(0.82, 0.3, 0.26, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_stall_teal"]
+albedo_color = Color(0.24, 0.55, 0.55, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_stall_counter"]
+size = Vector3(3.0, 1.0, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wood"]
+albedo_color = Color(0.5, 0.34, 0.2, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_stall_leg"]
+top_radius = 0.08
+bottom_radius = 0.08
+height = 2.2
+
+[sub_resource type="CylinderMesh" id="Mesh_lamp_post"]
+top_radius = 0.12
+bottom_radius = 0.16
+height = 4.5
+
+[sub_resource type="SphereMesh" id="Mesh_lamp_head"]
+radius = 0.35
+height = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Mat_lamp"]
+albedo_color = Color(1, 0.95, 0.75, 1)
+emission_enabled = true
+emission = Color(1, 0.9, 0.6, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_metal"]
+albedo_color = Color(0.25, 0.25, 0.28, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="CylinderMesh" id="Mesh_fountain_base"]
+top_radius = 3.0
+bottom_radius = 3.2
+height = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_stone"]
+albedo_color = Color(0.62, 0.6, 0.56, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_water"]
+top_radius = 2.6
+bottom_radius = 2.6
+height = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_water"]
+transparency = 1
+albedo_color = Color(0.4, 0.62, 0.78, 0.8)
+metallic = 0.5
+roughness = 0.05
+
+[sub_resource type="BoxShape3D" id="Shape_fountain"]
+size = Vector3(6.2, 0.9, 6.2)
+
+[sub_resource type="CylinderMesh" id="Mesh_tree_trunk"]
+top_radius = 0.2
+bottom_radius = 0.28
+height = 2.6
+
+[sub_resource type="SphereMesh" id="Mesh_tree_top"]
+radius = 1.6
+height = 2.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_leaf"]
+albedo_color = Color(0.28, 0.5, 0.28, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_bollard"]
+top_radius = 0.16
+bottom_radius = 0.16
+height = 0.8
 
 [node name="Mall" type="Node3D"]
 script = ExtResource("1_mall")
@@ -173,6 +271,375 @@ surface_material_override/0 = SubResource("Mat_mall_accent")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.25, 1)
 mesh = SubResource("Mesh_mall_bench")
 surface_material_override/0 = SubResource("Mat_mall_accent")
+
+[node name="Facade" type="Node3D" parent="."]
+
+[node name="Entrance" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.1, -11.65)
+mesh = SubResource("Mesh_door")
+surface_material_override/0 = SubResource("Mat_dark")
+
+[node name="Window1" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -11, 6.4, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="Window2" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -7.5, 6.4, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="Window3" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 7.5, 6.4, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="Window4" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 11, 6.4, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="WindowLow1" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -11, 3.6, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="WindowLow2" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -7.5, 3.6, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="WindowLow3" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -4, 3.6, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="WindowLow4" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 4, 3.6, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="WindowLow5" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 7.5, 3.6, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="WindowLow6" type="MeshInstance3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 11, 3.6, -11.9)
+mesh = SubResource("Mesh_window")
+surface_material_override/0 = SubResource("Mat_mall_glass")
+
+[node name="WingLeft" type="StaticBody3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -18.5, 3, -15)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="Facade/WingLeft"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_wing")
+surface_material_override/0 = SubResource("Mat_wing")
+
+[node name="Shape" type="CollisionShape3D" parent="Facade/WingLeft"]
+shape = SubResource("Shape_wing")
+
+[node name="AwningLeft" type="MeshInstance3D" parent="Facade/WingLeft"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.2, 6.4)
+mesh = SubResource("Mesh_mall_canopy")
+surface_material_override/0 = SubResource("Mat_stall_red")
+
+[node name="WingRight" type="StaticBody3D" parent="Facade"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 18.5, 3, -15)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="Facade/WingRight"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_wing")
+surface_material_override/0 = SubResource("Mat_wing")
+
+[node name="Shape" type="CollisionShape3D" parent="Facade/WingRight"]
+shape = SubResource("Shape_wing")
+
+[node name="AwningRight" type="MeshInstance3D" parent="Facade/WingRight"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.2, 6.4)
+mesh = SubResource("Mesh_mall_canopy")
+surface_material_override/0 = SubResource("Mat_stall_teal")
+
+[node name="Stalls" type="Node3D" parent="."]
+
+[node name="Stall1" type="Node3D" parent="Stalls"]
+transform = Transform3D(0.877583, 0, -0.479426, 0, 1, 0, 0.479426, 0, 0.877583, -13, 0, 3)
+
+[node name="Counter" type="MeshInstance3D" parent="Stalls/Stall1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("Mesh_stall_counter")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Roof" type="MeshInstance3D" parent="Stalls/Stall1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+mesh = SubResource("Mesh_stall_top")
+surface_material_override/0 = SubResource("Mat_stall_red")
+
+[node name="Leg1" type="MeshInstance3D" parent="Stalls/Stall1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.4, 1.1, -1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg2" type="MeshInstance3D" parent="Stalls/Stall1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.4, 1.1, -1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg3" type="MeshInstance3D" parent="Stalls/Stall1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.4, 1.1, 1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg4" type="MeshInstance3D" parent="Stalls/Stall1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.4, 1.1, 1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Stall2" type="Node3D" parent="Stalls"]
+transform = Transform3D(0.877583, 0, -0.479426, 0, 1, 0, 0.479426, 0, 0.877583, -13, 0, -3)
+
+[node name="Counter" type="MeshInstance3D" parent="Stalls/Stall2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("Mesh_stall_counter")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Roof" type="MeshInstance3D" parent="Stalls/Stall2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+mesh = SubResource("Mesh_stall_top")
+surface_material_override/0 = SubResource("Mat_stall_teal")
+
+[node name="Leg1" type="MeshInstance3D" parent="Stalls/Stall2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.4, 1.1, -1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg2" type="MeshInstance3D" parent="Stalls/Stall2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.4, 1.1, -1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg3" type="MeshInstance3D" parent="Stalls/Stall2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.4, 1.1, 1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg4" type="MeshInstance3D" parent="Stalls/Stall2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.4, 1.1, 1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Stall3" type="Node3D" parent="Stalls"]
+transform = Transform3D(0.877583, 0, 0.479426, 0, 1, 0, -0.479426, 0, 0.877583, 13, 0, 2)
+
+[node name="Counter" type="MeshInstance3D" parent="Stalls/Stall3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("Mesh_stall_counter")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Roof" type="MeshInstance3D" parent="Stalls/Stall3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+mesh = SubResource("Mesh_stall_top")
+surface_material_override/0 = SubResource("Mat_stall_teal")
+
+[node name="Leg1" type="MeshInstance3D" parent="Stalls/Stall3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.4, 1.1, -1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg2" type="MeshInstance3D" parent="Stalls/Stall3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.4, 1.1, -1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg3" type="MeshInstance3D" parent="Stalls/Stall3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.4, 1.1, 1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg4" type="MeshInstance3D" parent="Stalls/Stall3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.4, 1.1, 1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Stall4" type="Node3D" parent="Stalls"]
+transform = Transform3D(0.877583, 0, 0.479426, 0, 1, 0, -0.479426, 0, 0.877583, 13, 0, -4)
+
+[node name="Counter" type="MeshInstance3D" parent="Stalls/Stall4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("Mesh_stall_counter")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Roof" type="MeshInstance3D" parent="Stalls/Stall4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+mesh = SubResource("Mesh_stall_top")
+surface_material_override/0 = SubResource("Mat_stall_red")
+
+[node name="Leg1" type="MeshInstance3D" parent="Stalls/Stall4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.4, 1.1, -1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg2" type="MeshInstance3D" parent="Stalls/Stall4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.4, 1.1, -1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg3" type="MeshInstance3D" parent="Stalls/Stall4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -1.4, 1.1, 1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Leg4" type="MeshInstance3D" parent="Stalls/Stall4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.4, 1.1, 1.1)
+mesh = SubResource("Mesh_stall_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Streetscape" type="Node3D" parent="."]
+
+[node name="Lamp1" type="Node3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -9, 0, 8)
+
+[node name="Post" type="MeshInstance3D" parent="Streetscape/Lamp1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
+mesh = SubResource("Mesh_lamp_post")
+surface_material_override/0 = SubResource("Mat_metal")
+
+[node name="Head" type="MeshInstance3D" parent="Streetscape/Lamp1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
+mesh = SubResource("Mesh_lamp_head")
+surface_material_override/0 = SubResource("Mat_lamp")
+
+[node name="Lamp2" type="Node3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 9, 0, 8)
+
+[node name="Post" type="MeshInstance3D" parent="Streetscape/Lamp2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
+mesh = SubResource("Mesh_lamp_post")
+surface_material_override/0 = SubResource("Mat_metal")
+
+[node name="Head" type="MeshInstance3D" parent="Streetscape/Lamp2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
+mesh = SubResource("Mesh_lamp_head")
+surface_material_override/0 = SubResource("Mat_lamp")
+
+[node name="Lamp3" type="Node3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -9, 0, -4)
+
+[node name="Post" type="MeshInstance3D" parent="Streetscape/Lamp3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
+mesh = SubResource("Mesh_lamp_post")
+surface_material_override/0 = SubResource("Mat_metal")
+
+[node name="Head" type="MeshInstance3D" parent="Streetscape/Lamp3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
+mesh = SubResource("Mesh_lamp_head")
+surface_material_override/0 = SubResource("Mat_lamp")
+
+[node name="Lamp4" type="Node3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 9, 0, -4)
+
+[node name="Post" type="MeshInstance3D" parent="Streetscape/Lamp4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
+mesh = SubResource("Mesh_lamp_post")
+surface_material_override/0 = SubResource("Mat_metal")
+
+[node name="Head" type="MeshInstance3D" parent="Streetscape/Lamp4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
+mesh = SubResource("Mesh_lamp_head")
+surface_material_override/0 = SubResource("Mat_lamp")
+
+[node name="Bollard1" type="MeshInstance3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -6, 0.4, 12)
+mesh = SubResource("Mesh_bollard")
+surface_material_override/0 = SubResource("Mat_metal")
+
+[node name="Bollard2" type="MeshInstance3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2, 0.4, 12)
+mesh = SubResource("Mesh_bollard")
+surface_material_override/0 = SubResource("Mat_metal")
+
+[node name="Bollard3" type="MeshInstance3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 2, 0.4, 12)
+mesh = SubResource("Mesh_bollard")
+surface_material_override/0 = SubResource("Mat_metal")
+
+[node name="Bollard4" type="MeshInstance3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 6, 0.4, 12)
+mesh = SubResource("Mesh_bollard")
+surface_material_override/0 = SubResource("Mat_metal")
+
+[node name="Tree1" type="Node3D" parent="Streetscape"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -15, 0, 9)
+
+[node name="Trunk" type="MeshInstance3D" parent="Streetscape/Tree1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Top" type="MeshInstance3D" parent="Streetscape/Tree1"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+mesh = SubResource("Mesh_tree_top")
+surface_material_override/0 = SubResource("Mat_leaf")
+
+[node name="Tree2" type="Node3D" parent="Streetscape"]
+transform = Transform3D(0.453596, 0, -0.891207, 0, 1, 0, 0.891207, 0, 0.453596, 15, 0, 9)
+
+[node name="Trunk" type="MeshInstance3D" parent="Streetscape/Tree2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Top" type="MeshInstance3D" parent="Streetscape/Tree2"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+mesh = SubResource("Mesh_tree_top")
+surface_material_override/0 = SubResource("Mat_leaf")
+
+[node name="Tree3" type="Node3D" parent="Streetscape"]
+transform = Transform3D(-0.588501, 0, -0.808496, 0, 1, 0, 0.808496, 0, -0.588501, -15, 0, -8)
+
+[node name="Trunk" type="MeshInstance3D" parent="Streetscape/Tree3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Top" type="MeshInstance3D" parent="Streetscape/Tree3"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+mesh = SubResource("Mesh_tree_top")
+surface_material_override/0 = SubResource("Mat_leaf")
+
+[node name="Tree4" type="Node3D" parent="Streetscape"]
+transform = Transform3D(-0.98748, 0, 0.157746, 0, 1, 0, -0.157746, 0, -0.98748, 15, 0, -8)
+
+[node name="Trunk" type="MeshInstance3D" parent="Streetscape/Tree4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+mesh = SubResource("Mesh_tree_trunk")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Top" type="MeshInstance3D" parent="Streetscape/Tree4"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+mesh = SubResource("Mesh_tree_top")
+surface_material_override/0 = SubResource("Mat_leaf")
+
+[node name="Fountain" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
+collision_layer = 1
+
+[node name="Base" type="MeshInstance3D" parent="Fountain"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+mesh = SubResource("Mesh_fountain_base")
+surface_material_override/0 = SubResource("Mat_stone")
+
+[node name="Water" type="MeshInstance3D" parent="Fountain"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("Mesh_water")
+surface_material_override/0 = SubResource("Mat_water")
+
+[node name="Shape" type="CollisionShape3D" parent="Fountain"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+shape = SubResource("Shape_fountain")
 
 [node name="Anchors" type="Node3D" parent="."]
 

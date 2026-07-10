@@ -6,6 +6,15 @@ extends CanvasLayer
 
 const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 
+## Front-end scenes that own their own navigation. The global Space/Esc pause
+## toggle is suppressed here so pressing Space on the main menu never overlays the
+## pause panel — the player opens Options by clicking its button instead.
+const FRONTEND_SCENES: Array[String] = [
+	"res://scenes/ui/title_screen.tscn",
+	"res://scenes/ui/title_intro.tscn",
+	"res://scenes/ui/splash_screen.tscn",
+]
+
 @onready var _resume_button: Button = %ResumeButton
 @onready var _skip_tutorial_button: Button = %SkipTutorialButton
 @onready var _skip_tutorial_confirm: ConfirmationDialog = %SkipTutorialConfirm
@@ -85,12 +94,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	# (and is otherwise consumed by whatever overlay is up). Headless test runs never pause.
 	if DisplayServer.get_name() == "headless":
 		return
+	# On the main-menu / intro front end, Space/Esc must not summon the pause panel.
+	if not _open and _on_frontend_scene():
+		return
 	if event.is_action_pressed("pause"):
 		toggle()
 		get_viewport().set_input_as_handled()
 	elif _open and event.is_action_pressed("back"):
 		close()
 		get_viewport().set_input_as_handled()
+
+
+## True while the active scene is a front-end menu that owns its own input.
+func _on_frontend_scene() -> bool:
+	var scene := get_tree().current_scene
+	return scene != null and scene.scene_file_path in FRONTEND_SCENES
 
 
 func toggle() -> void:
