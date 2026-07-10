@@ -187,7 +187,7 @@ func _spawn_player() -> void:
 	_player = PLAYER_SCENE.instantiate()
 	add_child(_player)
 	if _hud != null:
-		_player.scrap_prompt_changed.connect(_hud.set_prompt)
+		_player.scrap_prompt_changed.connect(_hud.set_prompt.bind("scrap"))
 	# Only a genuine shop exit drops the player at the door. Every other arrival —
 	# the Day 0 opening (title → yard; previous_space still holds its SHOP default)
 	# and any tricycle return from another location — uses the gate spawn.
@@ -299,7 +299,7 @@ func _on_return_door_activated() -> void:
 		var step_id := TutorialService.current_step_id()
 		if step_id == "intro_greeting":
 			if _hud != null:
-				_hud.set_prompt("Find scrap and hand it to Ayla first.")
+				_hud.set_prompt("Find scrap and hand it to Ayla first.", "door")
 			return
 	SpaceManager.go_to_shop()
 
@@ -307,7 +307,7 @@ func _on_return_door_activated() -> void:
 func _connect_hud() -> void:
 	if _hud == null or _door_return == null:
 		return
-	_door_return.prompt_changed.connect(_hud.set_prompt)
+	_door_return.prompt_changed.connect(_hud.set_prompt.bind("door"))
 
 
 func _setup_handoff_screen() -> void:
@@ -330,9 +330,11 @@ func _setup_ayla_interaction() -> void:
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(1.2, 2.2, 1.2)
+	# A touch wider/deeper than the sprite so "near Ayla" registers without the
+	# player having to stand inside a 1.2 m footprint.
+	box.size = Vector3(1.8, 2.4, 1.8)
 	shape.shape = box
-	shape.position = Vector3(0, 1.1, 0)
+	shape.position = Vector3(0, 1.2, 0)
 	area.add_child(shape)
 
 	area.set_script(INTERACTABLE_SCRIPT)
@@ -342,7 +344,7 @@ func _setup_ayla_interaction() -> void:
 	_ayla_interactable.use_proximity = true
 	_ayla_interactable.activated.connect(_open_handoff)
 	if _hud != null:
-		_ayla_interactable.prompt_changed.connect(_hud.set_prompt)
+		_ayla_interactable.prompt_changed.connect(_hud.set_prompt.bind("ayla"))
 
 	_ayla_anchor.add_child(area)
 
@@ -405,7 +407,7 @@ func _setup_gate_npcs() -> void:
 		interactable.use_proximity = true
 		interactable.activated.connect(_on_gate_handoff_activated.bind(route_id))
 		if _hud != null:
-			interactable.prompt_changed.connect(_hud.set_prompt)
+			interactable.prompt_changed.connect(_hud.set_prompt.bind("gate"))
 		sprite.add_child(area)
 		interactable.set_enabled(false)
 
@@ -526,7 +528,7 @@ func _setup_safe() -> void:
 		return
 	_safe_interactable.activated.connect(_on_safe_activated)
 	if _hud != null:
-		_safe_interactable.prompt_changed.connect(_hud.set_prompt)
+		_safe_interactable.prompt_changed.connect(_hud.set_prompt.bind("safe"))
 
 
 func _on_safe_activated() -> void:
@@ -1032,7 +1034,7 @@ func _refresh_ayla_presence() -> void:
 	if _ayla_interactable != null:
 		_ayla_interactable.set_enabled(present)
 		if not present and _hud != null:
-			_hud.set_prompt("")
+			_hud.set_prompt("", "ayla")
 
 
 func _on_yard_day_changed(_day: int) -> void:
@@ -1054,7 +1056,7 @@ func _setup_outdoor_storage() -> void:
 		return
 	_storage_interactable.activated.connect(_open_storage_overlay)
 	if _hud != null:
-		_storage_interactable.prompt_changed.connect(_hud.set_prompt)
+		_storage_interactable.prompt_changed.connect(_hud.set_prompt.bind("storage"))
 
 
 func _open_storage_overlay() -> void:
