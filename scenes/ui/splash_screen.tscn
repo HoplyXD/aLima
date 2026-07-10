@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://c6myrdruekvr8"]
+
+[ext_resource type="Texture2D" uid="uid://fgaaqo7xckrk" path="res://assets/UI assets/logo.png" id="2_wh6tg"]
+[ext_resource type="Script" uid="uid://ghadyxj5dtxv" path="res://scripts/ui/splash_screen.gd" id="3_splash"]
+
+[node name="SplashScreen" type="Control" unique_id=260798873]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_splash")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=742351354]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Content" type="Control" parent="." unique_id=208363405]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="Content" unique_id=2062347205]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Content/CenterContainer" unique_id=1216139157]
+layout_mode = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="Content/CenterContainer/VBoxContainer" unique_id=1054544165]
+layout_mode = 2
+texture = ExtResource("2_wh6tg")
+stretch_mode = 1
+
+[node name="Letters" type="HBoxContainer" parent="Content/CenterContainer/VBoxContainer" unique_id=965661352]
+layout_mode = 2
+alignment = 1

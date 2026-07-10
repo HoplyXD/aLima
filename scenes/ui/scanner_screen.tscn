@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bp3613uu3rgti" path="res://scripts/scanner/scanner_screen.gd" id="1_scanner"]
 [ext_resource type="Theme" uid="uid://jr6503orak54" path="res://Themes/scanner.tres" id="2_vlm2r"]
+[ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="3_ql5bc"]
 [ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="3_vlm2r"]
 [ext_resource type="Texture2D" uid="uid://fea2iartni8r" path="res://assets/UI assets/game/gui/separator.png" id="4_mmpfc"]
 
@@ -54,7 +55,7 @@ offset_right = -160.0
 offset_bottom = -80.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("2_vlm2r")
+theme = ExtResource("3_ql5bc")
 
 [node name="Margin" type="MarginContainer" parent="Panel" unique_id=829506294]
 layout_mode = 1
@@ -115,7 +116,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 20
 
 [node name="VScrollBar" type="VScrollBar" parent="Panel/Margin/VBox/Scroll" unique_id=1918673303]
 layout_mode = 2
