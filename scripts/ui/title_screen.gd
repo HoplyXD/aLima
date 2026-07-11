@@ -81,6 +81,26 @@ func _ready() -> void:
 
 	UiAnimations.add_dust_particles(self, 32)
 	UiAnimations.popup_open(_main_menu, 0.45)
+	_play_intro_fade()
+
+
+## Fades the whole screen up from black so arriving from the intro (which faded to
+## black before the scene change) reads as one continuous fade into the menu.
+## Skipped in headless test runs so nothing covers the UI during assertions.
+func _play_intro_fade() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var fade := ColorRect.new()
+	fade.name = "IntroFade"
+	fade.color = Color.BLACK
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(fade)
+	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var t := create_tween()
+	t.tween_property(fade, "color:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE).set_ease(
+		Tween.EASE_OUT
+	)
+	t.tween_callback(fade.queue_free)
 
 
 func _process(delta: float) -> void:

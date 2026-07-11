@@ -84,7 +84,7 @@ offset_left = -96.0
 mouse_filter = 2
 
 [node name="Body" type="PanelContainer" parent="Dim/Center" unique_id=1691144934]
-custom_minimum_size = Vector2(380, 815)
+custom_minimum_size = Vector2(430, 920)
 layout_mode = 2
 theme = ExtResource("ui_theme")
 theme_override_styles/panel = SubResource("body")
@@ -113,14 +113,14 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.72, 0.68, 0.58, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 15
 
 [node name="CloseButton" type="Button" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/HeaderBar" unique_id=482670583]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(44, 36)
+custom_minimum_size = Vector2(48, 40)
 focus_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24
 text = "✕"
 tooltip_text = "Close phone"
 
@@ -135,7 +135,7 @@ theme_override_constants/separation = 12
 
 [node name="HomeTitle" type="Label" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/Home" unique_id=1828751966]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 23
 text = "Apps"
 
 [node name="AppGridScroll" type="ScrollContainer" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/Home" unique_id=1003723614]
@@ -161,7 +161,7 @@ theme_override_constants/separation = 10
 [node name="AppTitle" type="Label" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/AppView" unique_id=178880186]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 26
 text = "Marketplace"
 
 [node name="AppScroll" type="ScrollContainer" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox/AppView" unique_id=1893132702]
@@ -185,13 +185,13 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="HomeButton" type="Button" parent="Dim/Center/Body/Screen/ScreenMargin/MainVBox" unique_id=544340017]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(160, 48)
+custom_minimum_size = Vector2(180, 52)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "⌂ Home"
