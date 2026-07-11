@@ -241,6 +241,9 @@ func _apply_day1_hint(step: Dictionary) -> void:
 
 func _on_day1_intro_finished() -> void:
 	_hud.clear_hint()
+	# Give the player a standing quest so they know the first thing to do once the
+	# guided intro ends: forage scrap in the yard and hand it to Ayla.
+	QuestService.start_quest("day1_forage")
 	# Start the normal day clock.
 	DayClock.start_day(1)
 	DayClock.running = true
@@ -266,8 +269,9 @@ func _show_dialogue_lines(lines: Array) -> void:
 			if speaker == "alya":
 				alya_speaks = true
 			if speaker == "inner":
-				# Inner monologue hides the speaker name label.
-				formatted_lines.append({"name": "", "text": text})
+				# The player's inner monologue is labelled with their chosen name.
+				var pname := ModelUtils.as_string(GameState.save_state.persistent.player_name)
+				formatted_lines.append({"name": pname if not pname.is_empty() else "You", "text": text})
 			else:
 				formatted_lines.append({"name": speaker, "text": text})
 		else:

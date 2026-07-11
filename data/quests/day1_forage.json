@@ -1,0 +1,18 @@
+{
+  "id": "day1_forage",
+  "display_name": "First Haul",
+  "description": "Step outside to the yard, grab a piece of scrap, and hand it to Ayla so she can sort a delivery.",
+  "prerequisite_quests": [],
+  "prerequisite_locations": [],
+  "prerequisite_day": 1,
+  "is_repeatable": false,
+  "beats": [
+    {
+      "id": "forage",
+      "day": 1,
+      "summary": "Forage scrap in the yard and hand it to Ayla.",
+      "object_template": ""
+    }
+  ],
+  "rewards": []
+}

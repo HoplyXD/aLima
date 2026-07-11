@@ -22,6 +22,13 @@ func _ready() -> void:
 	_load_quests()
 	if not EventBus.sale_completed.is_connected(_on_sale_completed):
 		EventBus.sale_completed.connect(_on_sale_completed)
+	# The Day-1 "First Haul" quest completes the moment scrap is handed to Ayla.
+	if not EventBus.scrap_submitted.is_connected(_on_scrap_submitted):
+		EventBus.scrap_submitted.connect(_on_scrap_submitted)
+
+
+func _on_scrap_submitted(_selection: Dictionary) -> void:
+	complete_quest("day1_forage")
 
 
 func _load_quests() -> void:
