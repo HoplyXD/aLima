@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dk260ihakjiyh" path="res://scenes/ui/triage_controller.gd" id="1_triage"]
 [ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="2_qrd20"]
-[ext_resource type="FontFile" uid="uid://7gx30v1rvopa" path="res://assets/fonts/The Antique.otf" id="3_fdyf2"]
+[ext_resource type="FontFile" uid="uid://cfrjsqw62v3vy" path="res://assets/fonts/Augusta.ttf" id="3_fdyf2"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="4_1vmhu"]
 [ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="ui_theme"]
 
