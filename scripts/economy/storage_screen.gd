@@ -363,7 +363,8 @@ func _make_artifact_slot(
 		)
 		ignore_mouse_recursive(card)
 	else:
-		slot.text = slot.preview_label
+		# Previews off: framed rarity swatch + name instead of bare button text.
+		slot.add_child(_make_swatch_card(slot.preview_color, slot.preview_label))
 	return slot
 
 
@@ -372,18 +373,26 @@ func _make_artifact_slot(
 func _add_artifact_card(
 	grid: GridContainer, inst: ObjectInstance, template: ScrapObjectTemplate, is_target: bool
 ) -> void:
-	var card: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
-	grid.add_child(card)  # in the tree first, so the preview builds in the card's world
-	var scene: PackedScene = ArtifactScenes.scene_for(template.id, ARTIFACT_OBJECT_SCENE)
-	var obj: RestorationObject3D = scene.instantiate()
 	var name_text := template.display_name + ("  ◆" if is_target else "")
-	card.set_preview(obj, name_text, _rarity_color(template.base_rarity), PREVIEW_SCALE)
-	# Bench seed formula so the preview's condition mix matches the workbench.
-	_restoration.present_object(
-		obj, inst, template, inst.uid.hash() ^ (GameState.loop_index * 104729)
-	)
+	var color := _rarity_color(template.base_rarity)
 	var uid := inst.uid
-	card.clicked.connect(func() -> void: _show_artifact(uid))
+	if SettingsService.previews_enabled():
+		var card: Preview3DCard = PREVIEW_CARD_SCENE.instantiate()
+		grid.add_child(card)  # in the tree first, so the preview builds in the card's world
+		var scene: PackedScene = ArtifactScenes.scene_for(template.id, ARTIFACT_OBJECT_SCENE)
+		var obj: RestorationObject3D = scene.instantiate()
+		card.set_preview(obj, name_text, color, PREVIEW_SCALE)
+		# Bench seed formula so the preview's condition mix matches the workbench.
+		_restoration.present_object(
+			obj, inst, template, inst.uid.hash() ^ (GameState.loop_index * 104729)
+		)
+		card.clicked.connect(func() -> void: _show_artifact(uid))
+	else:
+		var card := Button.new()
+		card.custom_minimum_size = SLOT_MIN
+		card.add_child(_make_swatch_card(color, name_text))
+		card.pressed.connect(func() -> void: _show_artifact(uid))
+		grid.add_child(card)
 
 
 ## Moves artifact `uid` to `to_display_index` within the deliverable ordering and
@@ -596,7 +605,7 @@ func _make_tool_chip(inst: ToolInstance, equipped: bool) -> ToolChip:
 	chip.clip_text = true
 	var wear := "∞" if inst.is_infinite() else "%d/%d" % [inst.durability, inst.max_durability]
 	var nm := def.display_name if def != null else inst.tool_id
-	chip.text = "%s\n%s" % [nm, wear]  # fallback shown when previews are off
+	chip.text = ""  # the preview card (or swatch, previews off) shows the name
 	if not inst.is_usable():
 		chip.add_theme_color_override("font_color", Color(0.7, 0.4, 0.4))
 	# A rotating 3D preview of the tool fills the chip (built in ToolChip._ready, once
@@ -604,6 +613,8 @@ func _make_tool_chip(inst: ToolInstance, equipped: bool) -> ToolChip:
 	chip.preview_tool_id = inst.tool_id
 	chip.preview_label = "%s\n%s" % [nm, wear]
 	chip.preview_color = Color(0.7, 0.4, 0.4) if not inst.is_usable() else Color(0.92, 0.9, 0.84)
+	if not SettingsService.previews_enabled():
+		chip.add_child(_make_swatch_card(chip.preview_color, chip.preview_label))
 	chip.on_drag_out = _on_chip_dragged_out
 	var uid := inst.uid
 	chip.pressed.connect(func() -> void: _show_tool(uid))
@@ -739,7 +750,9 @@ func _build_key_items_tab() -> void:
 		grid.add_child(_make_fragment_box(fragments[fragment_id]))
 
 	if grid.get_child_count() == 0:
-		grid.add_child(_make_note("No key items in hand yet."))
+		# Belongs to the page column, not the grid — inside the grid it would be
+		# squeezed into the first cell (the same bug the tools tab once had).
+		(panes["content"] as VBoxContainer).add_child(_make_note("No key items in hand yet."))
 
 	# Key Items reuses the artifact detail for quest objects (selection is shared).
 	_render_artifact_detail(detail_host, _selected_artifact_uid)
@@ -865,6 +878,40 @@ func _make_note(text: String) -> Label:
 	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	return label
+
+
+## 2D stand-in for the rotating 3D preview when previews are off: a parchment-dark
+## swatch framed in the item's color (rarity for artifacts, state for tools) with
+## the name under it, so a card is never bare text or a blank square.
+func _make_swatch_card(color: Color, label_text: String) -> Control:
+	var box := VBoxContainer.new()
+	box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	box.offset_left = 8.0
+	box.offset_top = 8.0
+	box.offset_right = -8.0
+	box.offset_bottom = -8.0
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_theme_constant_override("separation", 6)
+	var swatch := Panel.new()
+	swatch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	swatch.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = color.darkened(0.5)
+	style.border_color = color
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	swatch.add_theme_stylebox_override("panel", style)
+	box.add_child(swatch)
+	var name_label := Label.new()
+	name_label.text = label_text
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.add_theme_font_size_override("font_size", 13)
+	name_label.add_theme_color_override("font_color", UiPalette.BONE)
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(name_label)
+	return box
 
 
 func _style_zone(node: Control, color: Color) -> void:

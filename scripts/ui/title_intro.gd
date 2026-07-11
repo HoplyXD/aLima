@@ -1,9 +1,10 @@
 extends Control
-## Cinematic title intro: half-body portraits of the cast breathe and sway over a
+## Cinematic title intro: full-body portraits of the cast breathe and sway over a
 ## warm procedural junkshop backdrop, graded from cool monochrome to muted bronze,
-## with a side-by-side group shot and a mix of fade / wipe / blur transitions,
-## landing on a bronze medieval title with a pulsing "Press Any Key". Any input
-## skips to the menu.
+## with a side-by-side group shot and a mix of fade / wipe / blur transitions.
+## When the montage ends — or any key skips it — the picture fades to black and
+## hands off to the title screen, which fades back up from black on its side, so
+## the hand-off reads as one continuous fade into the menu.
 ##
 ## The whole sequence is data-driven: tune timing, framing, crops, light direction,
 ## idle motion, backdrop mood and transitions from the `shots` array in the
@@ -26,26 +27,15 @@ const DEFAULT_BG_MOOD := Color(1.0, 0.96, 0.88)
 @export_group("Timing")
 @export var fade_in_time: float = 1.6
 @export var transition_time: float = 0.55
-@export var wind_beat: float = 0.9
-@export var title_reveal_time: float = 1.6
-
-@export_group("Title")
-@export var title_text: String = "aLima"
-@export var subtitle_text: String = "Press Any Key"
-@export var title_font_size: int = 220
-@export var subtitle_font_size: int = 38
-@export var bronze: Color = Color(0.74, 0.55, 0.27)
-@export var bronze_bright: Color = Color(0.95, 0.78, 0.42)
 
 @export_group("Audio")
-@export var music: AudioStream
 @export var ambience: AudioStream = preload("res://assets/audio/echoes/hum.wav")
-@export var wind_sfx: AudioStream
-@export var music_volume_db: float = -10.0
 
 @export_group("Look")
 @export var vignette_strength: float = 0.6
 @export var grain_amount: float = 0.03
+## Bronze used for the character name captions.
+@export var bronze_bright: Color = Color(0.95, 0.78, 0.42)
 ## When non-empty this overrides the built-in composed sequence.
 @export var shots: Array[Dictionary] = []
 
@@ -55,30 +45,16 @@ const DEFAULT_BG_MOOD := Color(1.0, 0.96, 0.88)
 @onready var _post: ColorRect = $Overlays/PostRect
 @onready var _wipe: ColorRect = $Overlays/WipeRect
 @onready var _fade: ColorRect = $Overlays/FadeRect
-@onready var _title_layer: Control = $Overlays/TitleLayer
-@onready var _title_glow: TextureRect = $Overlays/TitleLayer/TitleGlow
-@onready var _title_label: Label = $Overlays/TitleLayer/TitleLabel
-@onready var _subtitle_label: Label = $Overlays/TitleLayer/SubtitleLabel
-@onready var _music: AudioStreamPlayer = $Music
-@onready var _wind: AudioStreamPlayer = $Wind
 
 var _phase := "montage"
 var _done := false
-## True once the title card has begun rising, so a montage finish and a skip can
-## never both trigger it.
-var _title_started := false
 
 
 func _ready() -> void:
 	_apply_post()
 	_apply_wipe()
 	_apply_background()
-	_apply_title_style()
 	_fade.color = Color(0.0, 0.0, 0.0, 1.0)
-	_title_layer.visible = false
-	_title_label.modulate.a = 0.0
-	_subtitle_label.modulate.a = 0.0
-	_title_glow.modulate.a = 0.0
 	var dust := _make_dust()
 	_overlays.add_child(dust)
 	_overlays.move_child(dust, 0)  # above the stage, behind vignette/fade/title
@@ -109,12 +85,11 @@ func _play_sequence() -> void:
 		if i < shots.size() - 1:
 			var cut := String(entry.get("transition", DEFAULT_CUTS[i % DEFAULT_CUTS.size()]))
 			await _do_wipe(cut, transition_time)
-	# Reached the end naturally (nobody skipped): fade the stage out and raise the title.
+	# Reached the end naturally (nobody skipped): fade out and hand off to the menu.
 	if _phase != "montage":
 		return
 	_clear_stage()
-	await _fade_to(1.0, transition_time)
-	await _reveal_title()
+	_leave_to_menu(transition_time)
 
 
 func _show_shot(d: Dictionary, _index: int) -> void:
@@ -268,42 +243,6 @@ func _clear_stage() -> void:
 	for child in _overlays.get_children():
 		if child.name == "IntroSweep":
 			child.queue_free()
-
-
-## Raises the bronze "aLima / Press Any Key" card. `fast` (a mouse/key skip out of
-## the montage) drops the wind beat and halves the reveal so the card lands at once.
-## Idempotent: a natural finish and a skip can never double-run it.
-func _reveal_title(fast: bool = false) -> void:
-	if _done or _title_started:
-		return
-	_title_started = true
-	_phase = "title"
-	_title_layer.visible = true
-	if wind_sfx != null:
-		_wind.stream = wind_sfx
-		_wind.play()
-	if not fast:
-		await get_tree().create_timer(wind_beat).timeout
-	if _done:
-		return
-	# Lift the darkness and bring the bronze title up out of it.
-	var rt: float = title_reveal_time * (0.45 if fast else 1.0)
-	var t := create_tween().set_parallel(true)
-	t.tween_property(_fade, "color:a", 0.0, rt).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	t.tween_property(_title_label, "modulate:a", 1.0, rt).set_trans(Tween.TRANS_SINE).set_ease(
-		Tween.EASE_OUT
-	)
-	(
-		t
-		. tween_property(_title_glow, "modulate:a", 0.75, rt * 1.1)
-		. set_trans(Tween.TRANS_SINE)
-		. set_ease(Tween.EASE_OUT)
-	)
-	await get_tree().create_timer(rt).timeout
-	if _done:
-		return
-	_start_subtitle_pulse()
-	_start_glow_breathe()
 
 
 # --- Shot building -------------------------------------------------------------
@@ -477,52 +416,6 @@ func _set_bg_mood(c: Color, dur: float) -> void:
 	)
 
 
-func _apply_title_style() -> void:
-	_title_label.text = title_text
-	_title_label.add_theme_font_override("font", TITLE_FONT)
-	_title_label.add_theme_font_size_override("font_size", title_font_size)
-	_title_label.add_theme_color_override("font_color", bronze)
-	_title_label.add_theme_constant_override("shadow_offset_x", 0)
-	_title_label.add_theme_constant_override("shadow_offset_y", 0)
-	_title_label.add_theme_constant_override("shadow_outline_size", 26)
-	_title_label.add_theme_color_override(
-		"font_shadow_color", Color(bronze_bright.r, bronze_bright.g, bronze_bright.b, 0.55)
-	)
-
-	_subtitle_label.text = subtitle_text
-	_subtitle_label.add_theme_font_override("font", TITLE_FONT)
-	_subtitle_label.add_theme_font_size_override("font_size", subtitle_font_size)
-	_subtitle_label.add_theme_color_override(
-		"font_color", Color(bronze.r, bronze.g, bronze.b, 0.85)
-	)
-
-	_title_glow.texture = _radial_texture(900, 460)
-	var mat := CanvasItemMaterial.new()
-	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	_title_glow.material = mat
-	_title_glow.modulate = Color(bronze_bright.r, bronze_bright.g, bronze_bright.b, 0.0)
-
-
-func _start_subtitle_pulse() -> void:
-	var t := create_tween().set_loops()
-	t.tween_property(_subtitle_label, "modulate:a", 1.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(
-		Tween.EASE_IN_OUT
-	)
-	t.tween_property(_subtitle_label, "modulate:a", 0.35, 0.9).set_trans(Tween.TRANS_SINE).set_ease(
-		Tween.EASE_IN_OUT
-	)
-
-
-func _start_glow_breathe() -> void:
-	var t := create_tween().set_loops()
-	t.tween_property(_title_glow, "modulate:a", 0.55, 2.4).set_trans(Tween.TRANS_SINE).set_ease(
-		Tween.EASE_IN_OUT
-	)
-	t.tween_property(_title_glow, "modulate:a", 0.75, 2.4).set_trans(Tween.TRANS_SINE).set_ease(
-		Tween.EASE_IN_OUT
-	)
-
-
 # --- Transitions & flow --------------------------------------------------------
 
 
@@ -593,17 +486,13 @@ func _wipe_params(cut: String) -> Dictionary:
 			return {"type": 0, "angle": 0.0, "color": Color(0.0, 0.0, 0.0, 1.0)}
 
 
-## Mouse click, key, or gamepad button all act as "continue". During the montage
-## the first press skips straight to the "aLima / Press Any Key" title card; on that
-## card the next press leaves for the main menu.
+## Mouse click, key, or gamepad button all act as "continue": any press during the
+## montage skips it and fades straight into the title screen.
 func _unhandled_input(event: InputEvent) -> void:
 	if _done or not _pressed(event):
 		return
 	get_viewport().set_input_as_handled()
-	if _phase == "title":
-		_leave_to_menu()
-	else:
-		_skip()
+	_skip()
 
 
 func _pressed(event: InputEvent) -> bool:
@@ -616,23 +505,26 @@ func _pressed(event: InputEvent) -> bool:
 	return false
 
 
-## Skips the remaining montage and lands on the title card (does NOT leave the scene).
+## Skips the remaining montage and fades straight into the title screen.
 func _skip() -> void:
 	if _phase != "montage":
 		return
 	_clear_stage()
-	_reveal_title(true)
+	_leave_to_menu()
 
 
-## Leaves the title card for the main menu, fading picture and music out together.
-func _leave_to_menu() -> void:
+## Fades the intro picture to black, then hands off to the title screen — which
+## fades back up from black on its side, so the hand-off reads as one continuous
+## fade into the menu rather than a hard scene cut.
+func _leave_to_menu(fade_dur: float = 0.35) -> void:
 	if _done:
 		return
 	_done = true
-	var t := create_tween().set_parallel(true)
-	t.tween_property(_fade, "color:a", 1.0, 0.35)
-	if _music.playing:
-		t.tween_property(_music, "volume_db", -40.0, 0.35)
+	_phase = "leaving"
+	var t := create_tween()
+	t.tween_property(_fade, "color:a", 1.0, fade_dur).set_trans(Tween.TRANS_SINE).set_ease(
+		Tween.EASE_IN_OUT
+	)
 	await t.finished
 	_change_scene()
 
@@ -655,20 +547,6 @@ func _sweep_texture(w: int) -> GradientTexture2D:
 	var grad := Gradient.new()
 	grad.colors = PackedColorArray([Color(1, 1, 1, 0), Color(1, 0.95, 0.86, 1), Color(1, 1, 1, 0)])
 	grad.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
-	gt.gradient = grad
-	return gt
-
-
-func _radial_texture(w: int, h: int) -> GradientTexture2D:
-	var gt := GradientTexture2D.new()
-	gt.width = w
-	gt.height = h
-	gt.fill = GradientTexture2D.FILL_RADIAL
-	gt.fill_from = Vector2(0.5, 0.5)
-	gt.fill_to = Vector2(1.0, 0.5)
-	var grad := Gradient.new()
-	grad.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0)])
-	grad.offsets = PackedFloat32Array([0.0, 1.0])
 	gt.gradient = grad
 	return gt
 
@@ -711,9 +589,9 @@ func _start_music() -> void:
 
 
 # --- Composed sequence ---------------------------------------------------------
-# Source portraits are 2500x4000, full body on transparent BG. Each solo entry
-# crops a half-body region (head -> ~waist), picks a light direction, a backdrop
-# mood and a gentle idle. A `"lineup"` entry places several half-body portraits
+# Source portraits are 2500x4000, full body on transparent BG. Every entry shows
+# the full body (region = the whole image) with a light direction, a backdrop
+# mood and a gentle idle. A `"lineup"` entry places several full-body portraits
 # side-by-side for a group shot. Source-safe: only crop + grade + shade + tint +
 # a tiny idle loop, no redraw.
 

@@ -357,7 +357,6 @@ disabled = true
 text = "Confirm Triage"
 
 [node name="FallbackPanel" type="Panel" parent="HudLayer" unique_id=711396514]
-visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -431,8 +430,24 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="ConfirmButton" type="Button" parent="HudLayer/FallbackPanel/Panel/Margin/VBox" unique_id=1542603262]
-custom_minimum_size = Vector2(1000, 50)
+[node name="Actions" type="HBoxContainer" parent="HudLayer/FallbackPanel/Panel/Margin/VBox" unique_id=2030221951]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="SwitchButton" type="Button" parent="HudLayer/FallbackPanel/Panel/Margin/VBox/Actions" unique_id=175707141]
+custom_minimum_size = Vector2(500, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.8, 0.42, 1)
+theme_override_fonts/font = ExtResource("4_1vmhu")
+theme_override_font_sizes/font_size = 41
+theme_override_styles/hover = SubResource("StyleBoxTexture_iv7uq")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_bcddo")
+text = "Switch to 3D View"
+
+[node name="ConfirmButton" type="Button" parent="HudLayer/FallbackPanel/Panel/Margin/VBox/Actions" unique_id=1542603262]
+custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)

@@ -48,7 +48,11 @@ const MAX_SEED: int = 2147483646
 @onready var _start_button: Button = $NameMenu/Start
 
 @onready var _status_label: Label = $StatusLabel
-@onready var _overwrite_dialog: AcceptDialog = $OverwriteConfirm
+@onready var _overwrite_layer: Control = $OverwriteLayer
+@onready var _overwrite_plaque: PanelContainer = $OverwriteLayer/OverwritePlaque
+@onready var _overwrite_message: Label = $OverwriteLayer/OverwritePlaque/Margin/VBox/Message
+@onready var _overwrite_button: Button = $OverwriteLayer/OverwritePlaque/Margin/VBox/Buttons/Overwrite
+@onready var _overwrite_cancel: Button = $OverwriteLayer/OverwritePlaque/Margin/VBox/Buttons/Cancel
 
 @onready var _backdrop_cam: Camera3D = get_node_or_null(BACKDROP_CAM_PATH) as Camera3D
 
@@ -81,6 +85,26 @@ func _ready() -> void:
 
 	UiAnimations.add_dust_particles(self, 32)
 	UiAnimations.popup_open(_main_menu, 0.45)
+	_play_intro_fade()
+
+
+## Fades the whole screen up from black so arriving from the intro (which faded to
+## black before the scene change) reads as one continuous fade into the menu.
+## Skipped in headless test runs so nothing covers the UI during assertions.
+func _play_intro_fade() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var fade := ColorRect.new()
+	fade.name = "IntroFade"
+	fade.color = Color.BLACK
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(fade)
+	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var t := create_tween()
+	t.tween_property(fade, "color:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE).set_ease(
+		Tween.EASE_OUT
+	)
+	t.tween_callback(fade.queue_free)
 
 
 func _process(delta: float) -> void:
@@ -225,10 +249,11 @@ func _on_slot_pressed(slot: int) -> void:
 		# We need to know whether we're in New Game or Continue flow.
 		# The slot menu is shown for one or the other; use a stored flag.
 		if _in_new_game_flow:
-			_overwrite_dialog.dialog_text = (
+			_overwrite_message.text = (
 				"Slot %d already has a saved run. Overwrite it? This cannot be undone." % (slot + 1)
 			)
-			_overwrite_dialog.popup_centered()
+			_overwrite_layer.visible = true
+			UiAnimations.popup_open(_overwrite_plaque)
 		else:
 			_attempt_continue(slot)
 	else:
@@ -300,16 +325,18 @@ func _parse_seed(text: String) -> int:
 
 
 func _connect_overwrite_dialog() -> void:
-	_overwrite_dialog.confirmed.connect(_on_overwrite_confirmed)
-	_overwrite_dialog.canceled.connect(_on_overwrite_canceled)
+	_overwrite_button.pressed.connect(_on_overwrite_confirmed)
+	_overwrite_cancel.pressed.connect(_on_overwrite_canceled)
 
 
 func _on_overwrite_confirmed() -> void:
+	_overwrite_layer.visible = false
 	SaveService.delete_slot(_selected_slot)
 	_show_name_menu()
 
 
 func _on_overwrite_canceled() -> void:
+	_overwrite_layer.visible = false
 	_selected_slot = -1
 
 

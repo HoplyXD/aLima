@@ -20,6 +20,9 @@ const TUTORIAL_POINTER_PRIORITY := 20
 
 var _owns_pause: bool = false
 var _current_app: String = ""
+# Guards against a second close() arriving while the close tween is still playing
+# (visible stays true until the tween finishes), so `closed` only emits once.
+var _is_closing: bool = false
 
 var _market_app_button: Button = null
 var _tutorial_list_button: Button = null
@@ -57,6 +60,8 @@ func set_banter_client(c: Object) -> void:
 @onready var _app_title: Label = %AppTitle
 @onready var _app_content: VBoxContainer = %AppContent
 @onready var _feedback_label: Label = %FeedbackLabel
+@onready var _close_button: Button = %CloseButton
+@onready var _status_label: Label = %StatusLabel
 
 
 func _ready() -> void:
@@ -65,6 +70,9 @@ func _ready() -> void:
 	# and consumes its own clicks).
 	_dim.gui_input.connect(_on_dim_input)
 	_home_button.pressed.connect(show_home)
+	_close_button.pressed.connect(close)
+	if not DayClock.hour_changed.is_connected(_update_status):
+		DayClock.hour_changed.connect(_update_status)
 	_build_app_grid()
 
 
@@ -89,15 +97,24 @@ func open() -> void:
 	if _dim.get_node_or_null("DustParticles") == null:
 		UiAnimations.add_dust_particles(_dim, 16)
 	show_home()
+	_update_status()
 	_home_button.grab_focus()
 
 
 func close() -> void:
+	if _is_closing:
+		return
 	if visible:
-		UiAnimations.popup_close(_body)
+		_is_closing = true
+		var tween := UiAnimations.popup_close(_body)
 		UiAnimations.fade_to(_dim, 0.0, 0.15)
+		# Let the close tween actually play in-game. Headless runs (GUT) hide instantly
+		# so their one-frame post-close timing and `visible == false` checks still hold.
+		if DisplayServer.get_name() != "headless" and is_inside_tree():
+			await tween.finished
 		visible = false
 		_release_pause_if_owned()
+		_is_closing = false
 	TutorialService.clear_pointer_claim(TUTORIAL_POINTER_SOURCE)
 	closed.emit()
 
@@ -206,6 +223,7 @@ func show_home() -> void:
 	_home.visible = true
 	_app_view.visible = false
 	_home_button.visible = false
+	_fade_in(_home)
 
 
 ## Opens an app by id. Marketplace is online and may be blocked during a brownout;
@@ -231,6 +249,7 @@ func open_app(app_id: String) -> void:
 			_render_flashlight()
 		_:
 			_app_title.text = "Unknown app"
+	_fade_in(_app_view)
 
 
 func get_current_app() -> String:
@@ -239,6 +258,25 @@ func get_current_app() -> String:
 
 func owns_pause() -> bool:
 	return _owns_pause
+
+
+## Fades a freshly shown page in from transparent. No-op in headless test runs so
+## synchronous state reads and one-frame timing stay exact.
+func _fade_in(node: CanvasItem) -> void:
+	if DisplayServer.get_name() == "headless" or not is_instance_valid(node):
+		return
+	node.modulate.a = 0.0
+	UiAnimations.fade_to(node, 1.0, 0.2)
+
+
+## Refreshes the header status strip with the current weekday, day and time. The
+## optional args absorb the DayClock.hour_changed(day, hour) payload; values are read
+## fresh from DayClock so direct calls (e.g. from open()) stay correct too.
+func _update_status(_day: int = 0, _hour: int = 0) -> void:
+	var day := DayClock.get_day()
+	_status_label.text = "%s · Day %d · %02d:%02d" % [
+		DayClock.weekday_name(day), day, DayClock.get_hour(), DayClock.get_minute()
+	]
 
 
 # --- Home screen -------------------------------------------------------------
@@ -256,15 +294,50 @@ func _build_app_grid() -> void:
 
 func _make_app_icon(label: String, app_id: String, disabled: bool) -> Button:
 	var button := Button.new()
-	button.text = label
 	# Sized so three across fit inside the phone body's fixed width, otherwise the home
 	# screen would be wider than the app views and the phone appears to resize on tap.
-	button.custom_minimum_size = Vector2(100, 100)
+	button.custom_minimum_size = Vector2(112, 130)
 	button.disabled = disabled
 	button.focus_mode = Control.FOCUS_ALL
+	# Tile contents are child Labels (brass icon monogram + wrapped name) set to ignore
+	# the mouse, so the Button itself still receives hover/press for visuals and audio.
+	var box := VBoxContainer.new()
+	box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	box.offset_top = 6.0
+	box.offset_bottom = -6.0
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 4)
+	var icon := Label.new()
+	icon.text = _app_monogram(app_id)
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.add_theme_font_size_override("font_size", 50)
+	icon.add_theme_color_override("font_color", UiPalette.SOFT_GOLD)
+	box.add_child(icon)
+	var name_label := Label.new()
+	name_label.text = label
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_label.add_theme_font_size_override("font_size", 22)
+	box.add_child(name_label)
+	button.add_child(box)
 	if not disabled:
 		button.pressed.connect(func() -> void: open_app(app_id))
 	return button
+
+
+func _app_monogram(app_id: String) -> String:
+	match app_id:
+		"tools_shop":
+			return "T"
+		"marketplace":
+			return "M"
+		"flashlight":
+			return "F"
+		_:
+			return "•"
 
 
 # --- Local PH Tools Shop app (buy tools) -------------------------------------
@@ -276,7 +349,7 @@ func _render_tools_shop() -> void:
 
 	var money := Label.new()
 	money.text = "Money: ₱%d" % GameState.save_state.loop.money
-	money.add_theme_font_size_override("font_size", 18)
+	money.add_theme_font_size_override("font_size", 28)
 	_app_content.add_child(money)
 
 	_app_content.add_child(_make_section_label("Restoration tools"))
@@ -286,7 +359,7 @@ func _render_tools_shop() -> void:
 	var pending: int = GameState.save_state.loop.tool_shipments.size()
 	var ship := Label.new()
 	ship.text = "On the way: %d tool(s)" % pending if pending > 0 else "No incoming shipments."
-	ship.add_theme_font_size_override("font_size", 13)
+	ship.add_theme_font_size_override("font_size", 22)
 	ship.add_theme_color_override("font_color", Color(0.7, 0.85, 0.7))
 	_app_content.add_child(ship)
 
@@ -313,14 +386,14 @@ func _render_marketplace_offline() -> void:
 	var notice := Label.new()
 	notice.text = "No connection — the brownout knocked out the internet."
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	notice.add_theme_font_size_override("font_size", 14)
+	notice.add_theme_font_size_override("font_size", 23)
 	notice.add_theme_color_override("font_color", Color(0.9, 0.6, 0.5))
 	_app_content.add_child(notice)
 
 	var hint := Label.new()
 	hint.text = "The Marketplace will come back once power returns."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_font_size_override("font_size", 21)
 	hint.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	_app_content.add_child(hint)
 
@@ -329,7 +402,7 @@ func _render_market_home() -> void:
 	_tutorial_list_button = null
 	var money := Label.new()
 	money.text = "Money: ₱%d" % GameState.save_state.loop.money
-	money.add_theme_font_size_override("font_size", 18)
+	money.add_theme_font_size_override("font_size", 28)
 	_app_content.add_child(money)
 
 	_app_content.add_child(_make_section_label("Sell your work"))
@@ -337,7 +410,7 @@ func _render_market_home() -> void:
 	if sellable.is_empty():
 		var none := Label.new()
 		none.text = "Restore a piece first, then list it here to haggle."
-		none.add_theme_font_size_override("font_size", 12)
+		none.add_theme_font_size_override("font_size", 21)
 		none.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 		_app_content.add_child(none)
 	else:
@@ -354,7 +427,7 @@ func _render_flashlight() -> void:
 
 	var status := Label.new()
 	status.text = "Flashlight: %s" % ("ON" if GameState.save_state.loop.flashlight_on else "OFF")
-	status.add_theme_font_size_override("font_size", 18)
+	status.add_theme_font_size_override("font_size", 28)
 	status.add_theme_color_override(
 		"font_color",
 		UiPalette.BRASS_BRIGHT if GameState.save_state.loop.flashlight_on else UiPalette.BONE_DIM
@@ -364,7 +437,7 @@ func _render_flashlight() -> void:
 	var hint := Label.new()
 	hint.text = "Toggle the light to remove the brownout gloom penalty while restoring."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_font_size_override("font_size", 21)
 	hint.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	_app_content.add_child(hint)
 
@@ -393,7 +466,7 @@ func _make_sell_row(inst: ObjectInstance) -> Control:
 	var name_label := Label.new()
 	name_label.text = template.display_name if template != null else inst.template_id
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_label.add_theme_font_size_override("font_size", 15)
+	name_label.add_theme_font_size_override("font_size", 24)
 	row.add_child(name_label)
 	var detail := Label.new()
 	# Value is unknown until the piece is scanned — scanning is the proof of price.
@@ -403,7 +476,7 @@ func _make_sell_row(inst: ObjectInstance) -> Control:
 		else "₱???"
 	)
 	detail.text = "%s · %d%%" % [value_text, int(round(inst.condition))]
-	detail.add_theme_font_size_override("font_size", 12)
+	detail.add_theme_font_size_override("font_size", 21)
 	detail.add_theme_color_override("font_color", UiPalette.BONE)
 	row.add_child(detail)
 	var list_button := Button.new()
@@ -447,7 +520,7 @@ func _render_buyer_picker() -> void:
 		if MarketplaceService.is_scanned(_sell_uid)
 		else "Who'll buy it? (₱??? — scan it to prove its value)"
 	)
-	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_font_size_override("font_size", 26)
 	_app_content.add_child(title)
 	if template != null:
 		_app_content.add_child(_make_section_label(template.display_name))
@@ -485,23 +558,23 @@ func _make_buyer_row(persona: BuyerPersona) -> Control:
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var name_label := Label.new()
 	name_label.text = persona.display_name
-	name_label.add_theme_font_size_override("font_size", 15)
+	name_label.add_theme_font_size_override("font_size", 24)
 	box.add_child(name_label)
 	var occupation := Label.new()
 	occupation.text = persona.occupation if not persona.occupation.is_empty() else persona.motive
-	occupation.add_theme_font_size_override("font_size", 11)
+	occupation.add_theme_font_size_override("font_size", 20)
 	occupation.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	box.add_child(occupation)
 	if not persona.motive.is_empty():
 		var desc := Label.new()
 		desc.text = persona.motive
 		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		desc.add_theme_font_size_override("font_size", 10)
+		desc.add_theme_font_size_override("font_size", 19)
 		desc.add_theme_color_override("font_color", UiPalette.SMOKE)
 		box.add_child(desc)
 	var offer := Label.new()
 	offer.text = "Offer: ₱%d" % MarketplaceService.preview_offer(_sell_uid, persona.id)
-	offer.add_theme_font_size_override("font_size", 12)
+	offer.add_theme_font_size_override("font_size", 21)
 	offer.add_theme_color_override("font_color", UiPalette.BRASS)
 	box.add_child(offer)
 	row.add_child(box)
@@ -547,32 +620,32 @@ func _render_haggle() -> void:
 	var persona := DataRepository.singleton().get_buyer(_buyer_id)
 	var who := Label.new()
 	who.text = persona.display_name if persona != null else _buyer_id
-	who.add_theme_font_size_override("font_size", 16)
+	who.add_theme_font_size_override("font_size", 26)
 	_app_content.add_child(who)
 	if persona != null and not persona.occupation.is_empty():
 		var occ := Label.new()
 		occ.text = persona.occupation
-		occ.add_theme_font_size_override("font_size", 12)
+		occ.add_theme_font_size_override("font_size", 21)
 		occ.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 		_app_content.add_child(occ)
 	if persona != null and not persona.motive.is_empty():
 		var desc := Label.new()
 		desc.text = persona.motive
 		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		desc.add_theme_font_size_override("font_size", 11)
+		desc.add_theme_font_size_override("font_size", 20)
 		desc.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 		_app_content.add_child(desc)
 
 	# Shows whether banter is using the live AI or the offline fallback.
 	_ai_label = Label.new()
-	_ai_label.add_theme_font_size_override("font_size", 11)
+	_ai_label.add_theme_font_size_override("font_size", 20)
 	_refresh_ai_label()
 	_app_content.add_child(_ai_label)
 
 	_said_label = Label.new()
 	_said_label.text = '"%s"' % _negotiation.history.back()["text"]
 	_said_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_said_label.add_theme_font_size_override("font_size", 14)
+	_said_label.add_theme_font_size_override("font_size", 23)
 	_said_label.add_theme_color_override("font_color", UiPalette.BONE)
 	_app_content.add_child(_said_label)
 
@@ -584,13 +657,13 @@ func _render_haggle() -> void:
 			)
 		else:
 			outcome.text = "Sold for ₱%d!" % _negotiation.final_price
-		outcome.add_theme_font_size_override("font_size", 15)
+		outcome.add_theme_font_size_override("font_size", 24)
 		_app_content.add_child(outcome)
 		return
 
 	var offer := Label.new()
 	offer.text = "Current offer: ₱%d" % _negotiation.current_offer
-	offer.add_theme_font_size_override("font_size", 18)
+	offer.add_theme_font_size_override("font_size", 28)
 	_app_content.add_child(offer)
 
 	_app_content.add_child(_make_action("Accept ₱%d" % _negotiation.current_offer, accept_offer))
@@ -849,7 +922,7 @@ func _sold_template_id() -> String:
 func _make_section_label(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_font_size_override("font_size", 22)
 	label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	return label
 
@@ -857,6 +930,7 @@ func _make_section_label(text: String) -> Label:
 func _make_back_button(handler: Callable = Callable()) -> Button:
 	var back := Button.new()
 	back.text = "← Back"
+	back.custom_minimum_size = Vector2(130, 50)
 	back.focus_mode = Control.FOCUS_ALL
 	back.pressed.connect(handler if handler.is_valid() else _back_to_market_home)
 	return back
@@ -865,6 +939,7 @@ func _make_back_button(handler: Callable = Callable()) -> Button:
 func _make_action(text: String, handler: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
+	button.custom_minimum_size = Vector2(0, 50)
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(handler)
 	return button
@@ -880,12 +955,12 @@ func _make_buy_row(def: ToolDefinition) -> Control:
 	var name_label := Label.new()
 	name_label.text = def.display_name
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_label.add_theme_font_size_override("font_size", 15)
+	name_label.add_theme_font_size_override("font_size", 24)
 	row.add_child(name_label)
 	var detail := Label.new()
 	var uses := "∞" if def.durability <= 0 else "%d" % def.durability
 	detail.text = "₱%d · %s · ~%dh" % [def.cost, uses, def.ship_hours]
-	detail.add_theme_font_size_override("font_size", 12)
+	detail.add_theme_font_size_override("font_size", 21)
 	detail.add_theme_color_override("font_color", UiPalette.BONE)
 	row.add_child(detail)
 	var buy_button := Button.new()

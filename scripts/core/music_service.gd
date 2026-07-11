@@ -29,7 +29,8 @@ const TRACKS := {
 }
 ## Extensions Godot can import, tried in preference order.
 const TRACK_EXTS: Array[String] = [".ogg", ".mp3", ".wav"]
-const FALLBACK_TRACK := "res://assets/audio/bmg/Maharlikang Bahandi Music.mp3"
+## Reliable fallback (a WAV always imports; large MP3s can fail to import — valid=false).
+const FALLBACK_TRACK := "res://assets/audio/bmg/Maharlikang Bahandi Music.wav"
 
 const FADE_TIME: float = 1.2
 const FULL_DB: float = 0.0
@@ -133,11 +134,21 @@ func _resolve(track_id: String) -> AudioStream:
 	var base := String(TRACKS.get(track_id, ""))
 	if not base.is_empty():
 		for ext in TRACK_EXTS:
-			var path := base + ext
-			if ResourceLoader.exists(path):
-				return load(path)
-	if ResourceLoader.exists(FALLBACK_TRACK):
+			# load() returns null for a file whose import failed (e.g. an oversized
+			# MP3 with valid=false), so verify the stream before accepting it.
+			var stream := _try_load(base + ext)
+			if stream != null:
+				return stream
+	var fallback := _try_load(FALLBACK_TRACK)
+	if fallback != null:
 		push_warning("MusicService: no importable file for '%s'; using fallback." % track_id)
-		return load(FALLBACK_TRACK)
+		return fallback
 	push_warning("MusicService: no audio for '%s' (and no fallback)." % track_id)
 	return null
+
+
+## Loads `path` as an AudioStream, or null if it does not exist or failed to import.
+func _try_load(path: String) -> AudioStream:
+	if not ResourceLoader.exists(path):
+		return null
+	return load(path) as AudioStream

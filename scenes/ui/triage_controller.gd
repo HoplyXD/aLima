@@ -31,6 +31,9 @@ const RAY_LENGTH: float = 100.0
 const TABLE_Y: float = 0.0
 const DRAG_HEIGHT: float = 0.35
 const PILE_RADIUS: float = 0.7
+## Largest dimension a pile item's model is fitted to, so a 9cm cup and a tall
+## bottle read at the same hand-sized scale inside the 0.45-radius pick sphere.
+const PILE_ITEM_SIZE: float = 0.5
 const GRAB_LERP_SPEED: float = 18.0
 const RETURN_LERP_SPEED: float = 8.0
 const GLOW_EMISSION_ENERGY: float = 1.6
@@ -99,7 +102,10 @@ var _recycle_ring: MeshInstance3D = null
 	$HudLayer/FallbackPanel/Panel/Margin/VBox/Scroll/Items as VBoxContainer
 )
 @onready var _fallback_confirm_button: Button = (
-	$HudLayer/FallbackPanel/Panel/Margin/VBox/ConfirmButton as Button
+	$HudLayer/FallbackPanel/Panel/Margin/VBox/Actions/ConfirmButton as Button
+)
+@onready var _fallback_switch_button: Button = (
+	$HudLayer/FallbackPanel/Panel/Margin/VBox/Actions/SwitchButton as Button
 )
 
 ## Day 0 nudge shown with the shared NPC dialogue box (Tito Yuyu speaking).
@@ -111,6 +117,7 @@ func _ready() -> void:
 	_hud_confirm_button.pressed.connect(_on_confirm)
 	_fallback_confirm_button.pressed.connect(_on_confirm)
 	_hud_fallback_button.pressed.connect(_toggle_fallback_mode)
+	_fallback_switch_button.pressed.connect(_toggle_fallback_mode)
 	if _viewport != null and _viewport.world_3d == null:
 		_viewport.world_3d = World3D.new()
 	visible = false
@@ -243,6 +250,9 @@ func open(delivery: Array[ObjectInstance], storage_cap: int, is_free_daily: bool
 	DayClock.request_pause(DayClock.PAUSE_TRIAGE)
 	_clear_world()
 	_clear_rows()
+	# Previews off only picks the *default* mode here; the player can still switch
+	# to the 3D pile afterwards (before this, the setting vetoed every manual switch).
+	_force_fallback = not SettingsService.previews_enabled()
 	_update_input_mode_from_settings()
 	_build_rows()
 	# Build the 3D pile incrementally behind a loading overlay (paint it once before the heavy work).
@@ -283,7 +293,14 @@ func _exit_tree() -> void:
 
 func _set_input_mode(mode: int) -> void:
 	_input_mode = mode
-	_viewport_container.visible = mode == InputMode.MODE_3D
+	var is_3d := mode == InputMode.MODE_3D
+	_viewport_container.visible = is_3d
+	# The outside HUD belongs to the 3D view only — the list panel carries its own
+	# labels and buttons, so leaving these visible stacked duplicates under it.
+	_hud_storage_label.visible = is_3d
+	_hud_validation_label.visible = is_3d
+	_hud_confirm_button.visible = is_3d
+	_hud_fallback_button.visible = is_3d
 	var show_fallback := mode == InputMode.MODE_LIST
 	if show_fallback and not _fallback_panel.visible:
 		UiAnimations.popup_open(_fallback_panel)
@@ -298,7 +315,9 @@ func _set_input_mode(mode: int) -> void:
 
 
 func _update_input_mode_from_settings() -> void:
-	if _force_fallback or not SettingsService.previews_enabled():
+	# Honours only the manual preference — previews_enabled() sets the default at
+	# open() (see open), but must not veto a manual "Switch to 3D View".
+	if _force_fallback:
 		_set_input_mode(InputMode.MODE_LIST)
 	else:
 		_set_input_mode(InputMode.MODE_3D)
@@ -344,7 +363,9 @@ func _spawn_items_async(gen: int) -> void:
 		if _build_generation != gen or not is_instance_valid(_viewport):
 			return
 		var body := _create_item_body(inst, rng, index)
+		# In the tree BEFORE present_object() runs (it requires a live tree).
 		_viewport.add_child(body)
+		_present_pile_item(body, inst)
 		_bodies[inst.uid] = body
 		index += 1
 		if index % SPAWN_BATCH == 0:
@@ -410,21 +431,6 @@ func _create_item_body(inst: ObjectInstance, rng: RandomNumberGenerator, index: 
 	obj.name = "ArtifactModel"
 	pivot.add_child(obj)
 
-	if template != null:
-		# Same seed AND same condition whitelist as the bench, so what the player judges
-		# at triage is exactly what lands on the workbench (Day 0's dust/dirt-only rule
-		# included — see restoration_view._artifact_seed / _pick_artifact).
-		var bench_seed := inst.uid.hash() ^ (GameState.loop_index * 104729)
-		_restoration.present_object(obj, inst, template, bench_seed)
-		# Show the condition overlays here too, so the player can judge how dirty/hard-to-clean an
-		# artifact is while deciding Keep vs Recycle.
-		if obj.has_overlays():
-			obj.build_overlays(bench_seed, inst.allowed_conditions)
-		var color := GlowMapper.get_instance_glow_color(
-			template.base_rarity, inst.is_carrier, false
-		)
-		_apply_rarity_glow(pivot, color)
-
 	var shape := CollisionShape3D.new()
 	shape.shape = SphereShape3D.new()
 	shape.shape.radius = 0.45
@@ -440,6 +446,77 @@ func _create_item_body(inst: ObjectInstance, rng: RandomNumberGenerator, index: 
 	body.rotation = Vector3(0.0, rng.randf() * TAU, 0.0)
 
 	return body
+
+
+## Applies the bench-matching condition presentation to a pile item once its body
+## is in the tree — present_object() builds mesh/condition materials against a live
+## viewport. Called from _spawn_items_async right after the body is added, the same
+## order the bench uses; before this the cup rendered as a blank pale blob.
+func _present_pile_item(body: RigidBody3D, inst: ObjectInstance) -> void:
+	var template := DataRepository.singleton().get_template(inst.template_id)
+	if template == null:
+		return
+	var pivot := body.get_node_or_null("ModelPivot") as Node3D
+	if pivot == null:
+		return
+	var obj := pivot.get_node_or_null("ArtifactModel") as RestorationObject3D
+	if obj == null:
+		return
+	# Same seed AND same condition whitelist as the bench, so what the player judges
+	# at triage is exactly what lands on the workbench (Day 0's dust/dirt-only rule
+	# included — see restoration_view._artifact_seed / _pick_artifact).
+	var bench_seed := inst.uid.hash() ^ (GameState.loop_index * 104729)
+	_restoration.present_object(obj, inst, template, bench_seed)
+	# Show the condition overlays here too, so the player can judge how dirty /
+	# hard-to-clean an artifact is while deciding Keep vs Recycle.
+	if obj.has_overlays():
+		obj.build_overlays(bench_seed, inst.allowed_conditions)
+	# The authored model builds in its own _ready (next frame), so fit once it has
+	# geometry — same deferred pattern as Preview3DCard.set_preview.
+	call_deferred("_fit_pivot_to_pile", pivot, obj)
+	var color := GlowMapper.get_instance_glow_color(
+		template.base_rarity, inst.is_carrier, false
+	)
+	_apply_rarity_glow(body, color)
+
+
+## Scales and re-centres a pile item's model so its largest dimension reads at
+## PILE_ITEM_SIZE no matter the authored scale — the delivery cup is 9cm (an
+## invisible speck next to the 0.45-radius pick sphere) and some scenes carry baked
+## root offsets that sank the mesh. Measured from the pivot (in the tree) so baked
+## rotations/offsets are compensated for every artifact.
+func _fit_pivot_to_pile(pivot: Node3D, obj: Node3D) -> void:
+	if not is_instance_valid(pivot) or not is_instance_valid(obj):
+		return
+	var box := _visible_aabb(pivot)
+	var max_extent := maxf(box.size.x, maxf(box.size.y, box.size.z))
+	if max_extent <= 0.0001:
+		return
+	obj.position -= box.get_center()
+	pivot.scale = Vector3.ONE * (PILE_ITEM_SIZE / max_extent)
+
+
+## Merged AABB of the visible MeshInstance3D descendants, in `root`'s local space
+## (mirrors Preview3DCard._visible_aabb — invisible hit proxies and unbuilt overlay
+## projectors are skipped so they don't bloat the fit).
+func _visible_aabb(root: Node3D) -> AABB:
+	var acc := AABB()
+	var has := false
+	if absf(root.global_transform.basis.determinant()) < 0.0000001:
+		return acc
+	var inv := root.global_transform.affine_inverse()
+	var stack: Array = [root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is MeshInstance3D:
+			var mi := node as MeshInstance3D
+			if mi.visible and mi.mesh != null:
+				var local: AABB = (inv * mi.global_transform) * mi.mesh.get_aabb()
+				acc = local if not has else acc.merge(local)
+				has = true
+		for child in node.get_children():
+			stack.append(child)
+	return acc if has else AABB()
 
 
 func _spawn_props() -> void:
@@ -530,35 +607,16 @@ func _make_prop_material(color: Color) -> StandardMaterial3D:
 	return mat
 
 
+## Soft rarity halo around a pile item: a back-face transparent sphere in the glow
+## colour, sized to the fitted model. The model keeps its own (textured) materials —
+## an earlier version swapped every mesh's material for a front-culled grow shell,
+## which hid the textured surface and rendered the item as a solid coloured blob.
 func _apply_rarity_glow(root: Node3D, color: Color) -> void:
-	var outlined := false
-	for child in root.get_children(true):
-		if child is MeshInstance3D:
-			var mesh := child as MeshInstance3D
-			var mat: Material = null
-			if mesh.material_override != null:
-				mat = mesh.material_override
-			elif mesh.mesh != null and mesh.mesh.get_surface_count() > 0:
-				mat = mesh.mesh.surface_get_material(0)
-			if mat is StandardMaterial3D:
-				var outline := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-				outline.albedo_color = color
-				outline.emission_enabled = true
-				outline.emission = color
-				outline.emission_energy_multiplier = GLOW_EMISSION_ENERGY
-				outline.grow_enabled = true
-				outline.grow_amount = 0.035
-				outline.cull_mode = BaseMaterial3D.CULL_FRONT
-				mesh.material_override = outline
-				outlined = true
-	if outlined:
-		return
-	# Fallback: authored model has no StandardMaterial3D surface, so add a visible aura sphere.
 	var aura := MeshInstance3D.new()
 	aura.name = "RarityAura"
 	var sphere := SphereMesh.new()
-	sphere.radius = 0.55
-	sphere.height = 1.1
+	sphere.radius = 0.45
+	sphere.height = 0.9
 	aura.mesh = sphere
 	var aura_mat := StandardMaterial3D.new()
 	aura_mat.albedo_color = color
@@ -839,11 +897,18 @@ func _make_row(inst: ObjectInstance) -> Control:
 		row.add_child(preview)
 		card.set_meta("preview_card", preview)
 	else:
-		var icon := ColorRect.new()
+		# Previews off: a framed swatch in the rarity colour (dark fill + bright
+		# border) — a plain ColorRect read as a blank square on pale rarities.
+		var icon := Panel.new()
 		icon.custom_minimum_size = Vector2(72, 72)
-		icon.color = glow_color
 		icon.tooltip_text = glow_name
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var icon_style := StyleBoxFlat.new()
+		icon_style.bg_color = glow_color.darkened(0.5)
+		icon_style.border_color = glow_color
+		icon_style.set_border_width_all(3)
+		icon_style.set_corner_radius_all(8)
+		icon.add_theme_stylebox_override("panel", icon_style)
 		row.add_child(icon)
 
 	# Name + rarity + storage details.
