@@ -1,0 +1,22 @@
+{
+  "oton_death_mask": {
+    "fact_card": "A ritual gold funerary mask recovered from a disturbed burial in Oton, Iloilo. Its flattened facial plane and repoussé detailing suggest late pre-colonial workmanship; the mask may have accompanied an elite burial rite before it entered the antique trade.",
+    "timeline_entry": "Pre-colonial Period — crafted and interred in an Oton burial site; later disturbed and circulated among private collectors; now preserved for study.",
+    "regional_story": "Oton was a major port of call in the Panay Gulf trade network. Masks of this type are associated with high-status burials in the region, though surviving examples are rare.",
+    "artifact_meta": {
+      "name": "Oton Death Mask",
+      "period": "Pre-colonial / Late Metal Age",
+      "origin": "Oton, Iloilo, Western Visayas"
+    }
+  },
+  "master_artifact_demo": {
+    "fact_card": "A brass pocket timepiece assembled from five scattered fragments hidden in junk deliveries. The movement bears a colonial-period maker's mark; the case shows repairs consistent with decades of household use.",
+    "timeline_entry": "Colonial Era — imported or locally commissioned timepiece; broken and dispersed across the Visayas during the 20th century; fragments reunited through the shop's archive.",
+    "regional_story": "Personal timepieces entered Philippine households through colonial trade and later American-period commerce. This example's survival in pieces reflects how heirlooms pass through markets, drawers, and forgotten boxes.",
+    "artifact_meta": {
+      "name": "Heirloom Timepiece",
+      "period": "Colonial Era",
+      "origin": "Western Visayas (assembled in the shop)"
+    }
+  }
+}

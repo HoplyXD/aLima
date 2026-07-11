@@ -143,6 +143,42 @@
       "character_memory_refs": [],
       "source_ref": "pending_gold_source_05",
       "verification_status": "source-verification-pending"
+    },
+    {
+      "id": "oton_death_mask",
+      "record_type": "gold_discovery",
+      "subject_ref": "oton_death_mask",
+      "title": "Oton Death Mask",
+      "fact_card": "A ritual gold funerary mask recovered from a disturbed burial in Oton, Iloilo. Its flattened facial plane and repoussé detailing suggest late pre-colonial workmanship; the mask may have accompanied an elite burial rite before it entered the antique trade.",
+      "photo_ref": "",
+      "timeline_entry": "Pre-colonial Period — crafted and interred in an Oton burial site; later disturbed and circulated among private collectors; now preserved for study.",
+      "regional_story": "Oton was a major port of call in the Panay Gulf trade network. Masks of this type are associated with high-status burials in the region, though surviving examples are rare.",
+      "character_memory_refs": [],
+      "artifact_meta": {
+        "name": "Oton Death Mask",
+        "period": "Pre-colonial / Late Metal Age",
+        "origin": "Oton, Iloilo, Western Visayas"
+      },
+      "source_ref": "pending_oton_death_mask_source",
+      "verification_status": "source-verification-pending"
+    },
+    {
+      "id": "master_artifact_demo",
+      "record_type": "assembled_artifact",
+      "subject_ref": "master_artifact_demo",
+      "title": "Heirloom Timepiece",
+      "fact_card": "A brass pocket timepiece assembled from five scattered fragments hidden in junk deliveries. The movement bears a colonial-period maker's mark; the case shows repairs consistent with decades of household use.",
+      "photo_ref": "",
+      "timeline_entry": "Colonial Era — imported or locally commissioned timepiece; broken and dispersed across the Visayas during the 20th century; fragments reunited through the shop's archive.",
+      "regional_story": "Personal timepieces entered Philippine households through colonial trade and later American-period commerce. This example's survival in pieces reflects how heirlooms pass through markets, drawers, and forgotten boxes.",
+      "character_memory_refs": [],
+      "artifact_meta": {
+        "name": "Heirloom Timepiece",
+        "period": "Colonial Era",
+        "origin": "Western Visayas (assembled in the shop)"
+      },
+      "source_ref": "pending_master_artifact_source",
+      "verification_status": "artifact-lock-pending"
     }
   ]
 }

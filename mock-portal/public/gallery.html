@@ -93,7 +93,7 @@
   <header>
     <h1>🏛 aLima Digital Museum</h1>
     <div class="controls">
-      <form class="player-form" onsubmit="return loadGallery()">
+      <form class="player-form" onsubmit="event.preventDefault(); loadGallery();">
         <label for="playerId">Player ID</label>
         <input id="playerId" type="text" placeholder="player_001" />
         <button type="submit" id="loadBtn">Load</button>

@@ -47,7 +47,7 @@ describe('mock-portal POST /museum', () => {
     expect(res.body.ok).toBe(true);
     expect(res.body.museum_entry_id).toBe('entry_oton_death_mask_local-player');
     expect(res.body.record_type).toBe('museum_discovery');
-    expect(res.body.fact_card).toContain('SOURCE VERIFICATION PENDING');
+    expect(res.body.fact_card).toContain('Oton');
   });
 
   test('records a Master Artifact as assembled_artifact', async () => {

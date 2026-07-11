@@ -56,6 +56,12 @@ custom_minimum_size = Vector2(180, 50)
 layout_mode = 2
 text = "Refresh from Portal"
 
+[node name="OpenPortalButton" type="Button" parent="Dim/Center/Body/MarginContainer/VBoxContainer/HeaderRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 50)
+layout_mode = 2
+text = "Open Portal"
+
 [node name="StatusLabel" type="Label" parent="Dim/Center/Body/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2

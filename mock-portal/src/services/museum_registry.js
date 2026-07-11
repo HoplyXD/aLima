@@ -18,8 +18,9 @@ function loadMuseumRecords() {
 }
 
 function lookupFact(recordId) {
-  const records = loadMuseumRecords();
-  return records[recordId] || null;
+  const doc = loadMuseumRecords();
+  const list = Array.isArray(doc.records) ? doc.records : [];
+  return list.find((r) => r.id === recordId || r.subject_ref === recordId) || null;
 }
 
 function generateMuseumEntryId(recordId, playerId) {
