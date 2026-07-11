@@ -191,7 +191,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_table")
 
 [node name="KeepBin" type="StaticBody3D" parent="ViewportContainer/SubViewport/World" unique_id=977448723]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -0.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0.1450972)
 collision_layer = 0
 collision_mask = 0
 
@@ -227,7 +227,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("BoxShape3D_keep_zone")
 
 [node name="RecycleBin" type="StaticBody3D" parent="ViewportContainer/SubViewport/World" unique_id=695822690]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -0.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0.1450972)
 collision_layer = 0
 collision_mask = 0
 

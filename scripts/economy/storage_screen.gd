@@ -27,8 +27,11 @@ signal restore_requested(uid: String)
 signal sell_requested(uid: String)
 
 const DETAIL_WIDTH: float = 360.0
-const BOX_MIN: Vector2 = Vector2(164, 196)
-const SLOT_MIN: Vector2 = Vector2(164, 196)
+## Cards are as tall as they can be without changing the 8-across shelf width: the
+## left pane fits exactly eight 164-wide columns, so the extra room goes into height
+## (deeper 3D preview) and vertical scroll takes the overflow.
+const BOX_MIN: Vector2 = Vector2(164, 232)
+const SLOT_MIN: Vector2 = Vector2(164, 232)
 const DRAG_KIND: String = "storage_tool"
 const ARTIFACT_DRAG_KIND: String = "storage_artifact"
 ## The Artifacts tab always shows this grid of boxes, filled or not: 8 across, and at

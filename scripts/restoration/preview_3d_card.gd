@@ -10,8 +10,10 @@ signal clicked
 const SPIN_SPEED: float = 0.7  ## Radians/sec auto-spin so all sides/decals show.
 ## The on-screen size a previewed model is auto-scaled to: its largest visible dimension is
 ## mapped to this many world units so a tiny 0.1-scaled mask and a big bottle both read at a
-## consistent, clearly-visible size in the card. The `fill` arg tunes it.
-const FIT_SIZE: float = 1.15
+## consistent, clearly-visible size in the card. The `fill` arg tunes it. 1.35 fills ~80% of
+## the camera's vertical view — big enough to read the model, small enough to never clip
+## (a spinning model's widest sweep stays inside the frame).
+const FIT_SIZE: float = 1.35
 
 @onready var _holder: Node3D = %MeshHolder
 @onready var _name_label: Label = %NameLabel
