@@ -64,45 +64,51 @@ func _ready() -> void:
 	_dialogue.finished.connect(func() -> void: dialogue_finished.emit())
 	_build_storage_button()
 	_build_quest_tracker()
+	# The top-right corner shows day + time (and money below). The old "Quest: N"
+	# counter is redundant with the quest tracker, so keep it hidden.
+	if _quest_count != null:
+		_quest_count.visible = false
 
 
-## The Storage button is created in code (the rest of the HUD is authored in
-## Shop.tscn). It sits on the right, just below the Phone button.
+## The Storage button (a hidden accessibility fallback). Prefers the authored
+## %StorageButton node (Shop.tscn); legacy shop variants build it in code.
 func _build_storage_button() -> void:
-	_storage_button = Button.new()
-	_storage_button.name = "StorageButton"
-	_storage_button.text = "Storage"
-	_storage_button.anchor_left = 1.0
-	_storage_button.anchor_right = 1.0
-	_storage_button.anchor_top = 0.5
-	_storage_button.anchor_bottom = 0.5
-	_storage_button.offset_left = -188.0
-	_storage_button.offset_right = -28.0
-	_storage_button.offset_top = 60.0
-	_storage_button.offset_bottom = 160.0
-	_storage_button.grow_horizontal = 0
-	_storage_button.grow_vertical = 2
-	_storage_button.focus_mode = Control.FOCUS_ALL
-	_storage_button.add_theme_font_size_override("font_size", 18)
+	_storage_button = get_node_or_null("%StorageButton") as Button
+	if _storage_button == null:
+		_storage_button = Button.new()
+		_storage_button.name = "StorageButton"
+		_storage_button.text = "Storage"
+		_storage_button.anchor_left = 1.0
+		_storage_button.anchor_right = 1.0
+		_storage_button.anchor_top = 0.5
+		_storage_button.anchor_bottom = 0.5
+		_storage_button.offset_left = -188.0
+		_storage_button.offset_right = -28.0
+		_storage_button.offset_top = 60.0
+		_storage_button.offset_bottom = 160.0
+		_storage_button.grow_horizontal = 0
+		_storage_button.grow_vertical = 2
+		_storage_button.focus_mode = Control.FOCUS_ALL
+		_storage_button.add_theme_font_size_override("font_size", 18)
+		add_child(_storage_button)
 	_storage_button.pressed.connect(func() -> void: storage_pressed.emit())
 	_storage_button.visible = FALLBACK_BUTTONS_VISIBLE
-	add_child(_storage_button)
 
 
 const QUEST_TRACKER_SCENE := preload("res://scenes/ui/quest_tracker.tscn")
 
 
-## Node-based active-quest tracker (top-right). Lists active quests as QuestEntry
-## nodes; hides itself when there are none.
+## Node-based active-quest tracker. Uses the authored QuestTracker child (Shop.tscn)
+## if present — its position is left exactly as authored so it can be moved freely in
+## the editor. Legacy shop variants without one instance it in code at a default spot.
 func _build_quest_tracker() -> void:
-	var tracker: QuestTracker = QUEST_TRACKER_SCENE.instantiate()
-	tracker.name = "QuestTracker"
-	add_child(tracker)
-	# The SHOP's top bar (Unrestored/Restored panel) is much taller than the yard
-	# HUD's, so drop the tracker below it here only — the yard and the restoration
-	# bench keep the scene's authored offset.
-	tracker.offset_top = 210.0
-	tracker.offset_bottom = 210.0
+	var tracker: QuestTracker = get_node_or_null("QuestTracker") as QuestTracker
+	if tracker == null:
+		tracker = QUEST_TRACKER_SCENE.instantiate()
+		tracker.name = "QuestTracker"
+		add_child(tracker)
+		tracker.offset_top = 210.0
+		tracker.offset_bottom = 210.0
 
 
 const ARTIFACT_CARD_SCENE := preload("res://scenes/restoration/artifact_card.tscn")
@@ -173,9 +179,11 @@ func set_day_zero() -> void:
 var _money_label: Label
 
 
-## Money readout under the day/clock corner. Built lazily as a styled copy of the
-## clock label so it follows whatever layout the scene authors.
+## Money readout under the day/clock corner. Prefers the authored %MoneyLabel node
+## (Shop.tscn); legacy shop variants without it fall back to a styled clock clone.
 func set_money(amount: int) -> void:
+	if _money_label == null:
+		_money_label = get_node_or_null("%MoneyLabel") as Label
 	if _money_label == null:
 		_money_label = _clock_label.duplicate() as Label
 		_money_label.name = "MoneyLabel"

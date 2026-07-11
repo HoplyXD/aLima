@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://ccw18fb4d26lu" path="res://assets/3d Assets/Table.glb" id="11_table"]
 [ext_resource type="Script" uid="uid://dgl5g0t2b2dkq" path="res://scripts/restoration/tool_sidebar.gd" id="14_sidebar"]
 [ext_resource type="PackedScene" uid="uid://b7tlr0wc6n2ax" path="res://scenes/restoration/tool_row.tscn" id="15_toolrow"]
+[ext_resource type="PackedScene" path="res://scenes/ui/quest_tracker.tscn" id="16_qtrack"]
 
 [sub_resource type="Environment" id="Environment_rest"]
 background_mode = 1
@@ -131,6 +132,17 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("7_jodhg")
+
+[node name="QuestTracker" parent="HUD" instance=ExtResource("16_qtrack")]
+unique_name_in_owner = true
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_top = 210.0
+offset_right = -20.0
+offset_bottom = 210.0
+grow_horizontal = 0
 
 [node name="TopBar" type="Panel" parent="HUD" unique_id=139253393]
 layout_mode = 1

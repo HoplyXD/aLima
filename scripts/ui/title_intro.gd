@@ -123,7 +123,7 @@ func _show_shot(d: Dictionary, _index: int) -> void:
 	var sweep := _make_sweep(d)
 	_overlays.add_child(sweep)
 	_overlays.move_child(sweep, _post.get_index())  # keep vignette above the sweep
-	var name_label := _make_name_label(String(d.get("name", "")), Rect2(360.0, 900.0, 1200.0, 84.0))
+	var name_label := _make_name_label(String(d.get("name", "")), Rect2(360.0, 992.0, 1200.0, 72.0))
 	_stage.add_child(name_label)
 
 	var reveal: float = d.get("reveal", 1.4)
@@ -238,9 +238,9 @@ func _reveal_lineup_member(m: Dictionary, x: float, reveal: float, delay: float)
 		. set_trans(Tween.TRANS_SINE)
 		. set_ease(Tween.EASE_OUT)
 	)
-	var name_label := _make_name_label(
-		String(m.get("name", "")), Rect2(x - 240.0, base_pos.y + 300.0, 480.0, 64.0)
-	)
+	# Names sit on a shared baseline near the bottom edge so they never cover a
+	# portrait's body (the lineup members have different heights).
+	var name_label := _make_name_label(String(m.get("name", "")), Rect2(x - 240.0, 992.0, 480.0, 60.0))
 	_stage.add_child(name_label)
 	t.tween_property(name_label, "modulate:a", 1.0, reveal).set_trans(Tween.TRANS_SINE).set_ease(
 		Tween.EASE_OUT

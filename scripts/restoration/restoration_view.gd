@@ -264,6 +264,10 @@ func open() -> void:
 		_journal_button.visible = not tutorial_active
 	if _journal_prop != null:
 		_journal_prop.visible = not tutorial_active
+	# The phone button is a hidden accessibility fallback; the sell step surfaces it
+	# on demand (see _update_tutorial_pointer) since the 3D phone prop is a small target.
+	if _phone_button != null:
+		_phone_button.visible = false
 	if _instance_uids.is_empty():
 		_show_empty_state()
 	else:
@@ -361,6 +365,11 @@ func _update_tutorial_pointer() -> void:
 			TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, TutorialService.POINTER_HIDE
 		)
 		return
+	var selling := TutorialService.current_step_id() == "list_and_sell"
+	# Surface the labelled Phone button only for the sell step (the 3D phone prop is a
+	# small, easy-to-miss target); it stays a hidden fallback the rest of the time.
+	if _phone_button != null:
+		_phone_button.visible = selling
 	match TutorialService.current_step_id():
 		"restore_artifact":
 			_update_bench_tools_lesson()
@@ -369,8 +378,13 @@ func _update_tutorial_pointer() -> void:
 				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _scan_button
 			)
 		"list_and_sell":
+			# Point the arrow at the now-visible Phone button (a reliable click target),
+			# falling back to the 3D phone prop's screen position if it is missing.
+			var phone_target: Variant = _bench_phone_screen_pos
+			if _phone_button != null and _phone_button.visible:
+				phone_target = _phone_button
 			TutorialService.set_pointer_claim(
-				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _bench_phone_screen_pos
+				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, phone_target
 			)
 		"ride_to_mall":
 			TutorialService.set_pointer_claim(
@@ -2290,9 +2304,9 @@ func _try_bench_object_at_pointer(pos: Vector2) -> bool:
 ## Nearest bench object hit by the ray ("phone"/"journal"/"storage"), or "".
 func _bench_object_pick(origin: Vector3, direction: Vector3) -> String:
 	var candidates := [
-		{"id": "phone", "node": _phone_prop, "radius": 0.32},
-		{"id": "journal", "node": _journal_prop, "radius": 0.32},
-		{"id": "storage", "node": _storage_prop, "radius": 0.42},
+		{"id": "phone", "node": _phone_prop, "radius": 0.5},
+		{"id": "journal", "node": _journal_prop, "radius": 0.5},
+		{"id": "storage", "node": _storage_prop, "radius": 0.5},
 	]
 	var best := ""
 	var best_t := INF

@@ -697,10 +697,14 @@ func _spawn_scrap_items() -> void:
 	desired_count += rng.randi_range(0, 1)
 	# Day 0 (TUT) teaches "grab A piece, then hand it to Ayla" — scatter exactly one
 	# so foraging it clears the yard and the hint moves cleanly on to Ayla.
+	var loop := GameState.save_state.loop
 	if TutorialService.is_tutorial_active():
 		desired_count = 1
+		# A save made before this cap could carry a higher remaining count; clamp it so
+		# the tutorial never scatters more than one (the extra piece stayed after the grab).
+		if loop.yard_scrap_remaining > 1:
+			loop.yard_scrap_remaining = 1
 
-	var loop := GameState.save_state.loop
 	if loop.yard_scrap_remaining < 0:
 		loop.yard_scrap_remaining = desired_count
 
@@ -1170,6 +1174,10 @@ func _enter_overlay() -> void:
 	if DisplayServer.get_name() != "headless":
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_set_yard_interactables_enabled(false)
+	# A dialogue/overlay is up — hide the carry inventory so its slots never overlap
+	# the conversation box.
+	if _hud != null:
+		_hud.set_inventory_visible(false)
 
 
 func _exit_overlay() -> void:
@@ -1181,6 +1189,8 @@ func _exit_overlay() -> void:
 	if DisplayServer.get_name() != "headless":
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	_set_yard_interactables_enabled(true)
+	if _hud != null:
+		_hud.set_inventory_visible(true)
 
 
 func _set_yard_interactables_enabled(enabled: bool) -> void:

@@ -1,11 +1,35 @@
-[gd_scene format=3 uid="uid://cjm8k2o6gqmv1"]
+[gd_scene load_steps=4 format=3 uid="uid://cjm8k2o6gqmv1"]
 
 [ext_resource type="Script" uid="uid://bptc52vqr0q8s" path="res://scenes/ui/scrapyard_hud.gd" id="1_hud"]
 [ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="2_theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/quest_tracker.tscn" id="3_tracker"]
 
 [node name="ScrapyardHud" type="CanvasLayer"]
 script = ExtResource("1_hud")
 theme = ExtResource("2_theme")
+
+[node name="TopPanel" type="Panel" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 188.0
+grow_horizontal = 0
+
+[node name="PromptPanel" type="Panel" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -360.0
+offset_top = -300.0
+offset_right = 360.0
+offset_bottom = -240.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="DayLabel" type="Label" parent="."]
 anchors_preset = 1
@@ -35,22 +59,50 @@ theme_override_font_sizes/font_size = 28
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="PromptLabel" type="Label" parent="."]
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -320.0
-offset_top = -270.0
-offset_right = 320.0
-offset_bottom = -236.0
-grow_horizontal = 2
-grow_vertical = 0
+[node name="MoneyLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -180.0
+offset_top = 74.0
+offset_right = -24.0
+offset_bottom = 114.0
+grow_horizontal = 0
 theme_override_colors/font_color = Color(0.96, 0.88, 0.55, 1)
-theme_override_font_sizes/font_size = 20
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="QuestLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 210.0
+offset_right = -36.0
+offset_bottom = 242.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 2
+
+[node name="QuickActions" type="HBoxContainer" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 296.0
+offset_bottom = 76.0
+theme_override_constants/separation = 12
+
+[node name="PhoneButton" type="Button" parent="QuickActions"]
+custom_minimum_size = Vector2(130, 52)
+layout_mode = 2
+focus_mode = 2
+text = "Phone"
+
+[node name="JournalButton" type="Button" parent="QuickActions"]
+custom_minimum_size = Vector2(130, 52)
+layout_mode = 2
+focus_mode = 2
+text = "Journal"
 
 [node name="Hotbar" type="HBoxContainer" parent="."]
 anchors_preset = 7
@@ -65,3 +117,27 @@ offset_bottom = -36.0
 grow_horizontal = 2
 grow_vertical = 0
 alignment = 1
+
+[node name="QuestTracker" parent="." instance=ExtResource("3_tracker")]
+offset_left = -300.0
+offset_top = 236.0
+offset_right = -20.0
+offset_bottom = 236.0
+
+[node name="PromptLabel" type="Label" parent="."]
+z_index = 10
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -360.0
+offset_top = -300.0
+offset_right = 360.0
+offset_bottom = -240.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.96, 0.88, 0.55, 1)
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+vertical_alignment = 1

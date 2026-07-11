@@ -444,13 +444,13 @@ func _on_door_pressed() -> void:
 		var lines: Array = []
 		if _ayla_source == AylaSource.DAILY:
 			lines = [
-				"Alya: Morning! Dragged in today's haul for you.",
-				"Let's sort through what's worth keeping.",
+				{"name": "Ayla", "text": "Morning! Dragged in today's haul for you."},
+				{"name": "Ayla", "text": "Let's sort through what's worth keeping."},
 			]
 		else:
 			lines = [
-				"Alya: Here's what I sorted from your scrap.",
-				"Let's see what's worth keeping.",
+				{"name": "Ayla", "text": "Here's what I sorted from your scrap."},
+				{"name": "Ayla", "text": "Let's see what's worth keeping."},
 			]
 		_open_dialogue(lines, true)
 		return
