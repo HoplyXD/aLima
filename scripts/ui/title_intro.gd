@@ -240,7 +240,9 @@ func _reveal_lineup_member(m: Dictionary, x: float, reveal: float, delay: float)
 	)
 	# Names sit on a shared baseline near the bottom edge so they never cover a
 	# portrait's body (the lineup members have different heights).
-	var name_label := _make_name_label(String(m.get("name", "")), Rect2(x - 240.0, 992.0, 480.0, 60.0))
+	var name_label := _make_name_label(
+		String(m.get("name", "")), Rect2(x - 240.0, 992.0, 480.0, 60.0)
+	)
 	_stage.add_child(name_label)
 	t.tween_property(name_label, "modulate:a", 1.0, reveal).set_trans(Tween.TRANS_SINE).set_ease(
 		Tween.EASE_OUT
@@ -704,17 +706,9 @@ func _make_dust() -> GPUParticles2D:
 
 
 func _start_music() -> void:
-	var stream: AudioStream = music if music != null else ambience
-	if stream == null:
-		return
-	_music.stream = stream
-	_music.volume_db = music_volume_db
-	_music.play()
-	_music.finished.connect(
-		func() -> void:
-			if not _done:
-				_music.play()
-	)
+	# The intro and the main menu share bgm_3; MusicService keeps it playing across
+	# the scene change so the track never restarts on the title card.
+	MusicService.play_track("bgm_3")
 
 
 # --- Composed sequence ---------------------------------------------------------
@@ -726,14 +720,14 @@ func _start_music() -> void:
 
 
 func _default_sequence() -> Array[Dictionary]:
-	# Half-body crops (head -> ~waist) of the 2500x4000 full-body portraits. Stills
-	# only get crop + grade + shade + tint + a tiny idle loop; no redraw. Regions are
-	# generous estimates -- nudge one entry's region/center/scale to reframe it.
+	# Full-body framing of the 2500x4000 portraits (region = the whole image, scale
+	# fits the height on screen). Stills only get grade + shade + tint + a tiny idle
+	# loop; no redraw. Nudge an entry's scale/center to reframe it.
 	var buyer := {
 		"name": "Mr. Maverick",
 		"texture": preload("res://assets/Characters/Mysterious Buyer.png"),
-		"region": Rect2(500, 300, 1500, 1900),
-		"scale": 0.50,
+		"region": Rect2(0, 0, 2500, 4000),
+		"scale": 0.25,
 		"center": Vector2(960, 540),
 		"push": 0.02,
 		"light_dir": 2,  # top light only catches the tie + jaw
@@ -768,8 +762,8 @@ func _default_sequence() -> Array[Dictionary]:
 	var auntie := {
 		"name": "Auntie Shine",
 		"texture": preload("res://assets/Characters/Auntie.png"),
-		"region": Rect2(550, 350, 1400, 1750),
-		"scale": 0.42,
+		"region": Rect2(0, 0, 2500, 4000),
+		"scale": 0.22,
 		"cy": 560.0,
 		"push": 0.0,
 		"light_dir": 0,
@@ -784,8 +778,8 @@ func _default_sequence() -> Array[Dictionary]:
 	var artisan := {
 		"name": "Lave",
 		"texture": preload("res://assets/Characters/Artisan.png"),
-		"region": Rect2(400, 350, 1700, 1850),
-		"scale": 0.40,
+		"region": Rect2(0, 0, 2500, 4000),
+		"scale": 0.22,
 		"cy": 560.0,
 		"push": 0.02,
 		"light_dir": 1,
@@ -800,8 +794,8 @@ func _default_sequence() -> Array[Dictionary]:
 	var uncle := {
 		"name": "Tito Yuyu",
 		"texture": preload("res://assets/Characters/Uncle.png"),
-		"region": Rect2(500, 100, 1500, 2100),
-		"scale": 0.50,
+		"region": Rect2(0, 0, 2500, 4000),
+		"scale": 0.25,
 		"center": Vector2(960, 540),
 		"push": 0.03,
 		"light_dir": 2,
@@ -820,9 +814,9 @@ func _default_sequence() -> Array[Dictionary]:
 	var archeologist := {
 		"name": "Sam",
 		"texture": preload("res://assets/Characters/Archeologist.png"),
-		"region": Rect2(500, 300, 1500, 1600),
-		"scale": 0.62,
-		"center": Vector2(960, 520),
+		"region": Rect2(0, 0, 2500, 4000),
+		"scale": 0.25,
+		"center": Vector2(960, 540),
 		"push": 0.05,
 		"light_dir": 0,
 		"shadow_strength": 0.68,

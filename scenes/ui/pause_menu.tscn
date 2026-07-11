@@ -126,6 +126,60 @@ text = "Fullscreen"
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="SeparatorAudio" type="HSeparator" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_stretch_ratio = 2.2
+theme_override_constants/separation = 13
+
+[node name="AudioSection" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
+theme_override_constants/line_spacing = 73
+theme_override_font_sizes/font_size = 30
+text = "Audio"
+
+[node name="MasterVolumeRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MasterVolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "Audio"
+
+[node name="MasterVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MasterVolumeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="MusicVolumeRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MusicVolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "Music"
+
+[node name="MusicVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MusicVolumeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.01
+value = 1.0
+
 [node name="Separator2" type="HSeparator" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=1753977736]
 layout_mode = 2
 size_flags_stretch_ratio = 2.2

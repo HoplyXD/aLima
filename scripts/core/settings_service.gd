@@ -14,9 +14,11 @@ const AI_ONLINE := "online"
 const AI_OFFLINE := "offline"
 const DEFAULT_AI_MODE := AI_ONLINE
 
-## Audio bus routed through Master that all UI interaction sounds play on (see
-## default_bus_layout.tres). `ui_volume` trims this bus so hover/press stay subtle.
+## Audio buses (see default_bus_layout.tres). `ui_volume` trims the UI bus; the
+## master/music sliders trim overall audio and background music respectively.
 const UI_BUS_NAME := &"UI"
+const MASTER_BUS_NAME := &"Master"
+const MUSIC_BUS_NAME := &"Music"
 
 ## Selectable windowed resolutions.
 const RESOLUTIONS: Array[Vector2i] = [
@@ -35,6 +37,10 @@ var ai_mode: String = DEFAULT_AI_MODE
 ## User trim for UI interaction sounds (0..1). 1.0 leaves hover ≈ -16 dB / press ≈ -10 dB
 ## relative to Master; 0.0 effectively mutes UI audio.
 var ui_volume: float = 1.0
+## Overall audio trim on the Master bus (0..1). 1.0 = unity, 0.0 = silence.
+var master_volume: float = 1.0
+## Background-music trim on the Music bus (0..1). 1.0 = unity, 0.0 = silence.
+var music_volume: float = 1.0
 
 var _config_path: String = CONFIG_PATH
 
@@ -95,13 +101,34 @@ func set_ui_volume(value: float) -> void:
 	apply_audio()
 
 
-## Pushes `ui_volume` to the `UI` audio bus. No-op if the bus is absent (e.g. a
-## stripped test layout) so audio never crashes headless runs.
+## Sets the overall (Master) audio trim (clamped 0..1) and applies it.
+func set_master_volume(value: float) -> void:
+	master_volume = clampf(value, 0.0, 1.0)
+	_save()
+	apply_audio()
+
+
+## Sets the background-music (Music bus) trim (clamped 0..1) and applies it.
+func set_music_volume(value: float) -> void:
+	music_volume = clampf(value, 0.0, 1.0)
+	_save()
+	apply_audio()
+
+
+## Pushes each trim to its audio bus. Missing buses are skipped (e.g. a stripped
+## test layout) so audio never crashes headless runs. A 0 trim maps to -80 dB
+## (effectively silent) since linear_to_db(0) is -inf.
 func apply_audio() -> void:
-	var idx := AudioServer.get_bus_index(UI_BUS_NAME)
+	_apply_bus_volume(UI_BUS_NAME, ui_volume)
+	_apply_bus_volume(MASTER_BUS_NAME, master_volume)
+	_apply_bus_volume(MUSIC_BUS_NAME, music_volume)
+
+
+func _apply_bus_volume(bus_name: StringName, linear: float) -> void:
+	var idx := AudioServer.get_bus_index(bus_name)
 	if idx < 0:
 		return
-	AudioServer.set_bus_volume_db(idx, linear_to_db(ui_volume))
+	AudioServer.set_bus_volume_db(idx, -80.0 if linear <= 0.0 else linear_to_db(linear))
 
 
 # --- Online services ---------------------------------------------------------
@@ -146,8 +173,10 @@ func _load() -> void:
 	if ai_mode != AI_ONLINE and ai_mode != AI_OFFLINE:
 		ai_mode = DEFAULT_AI_MODE
 	ui_volume = clampf(float(cfg.get_value("audio", "ui_volume", ui_volume)), 0.0, 1.0)
+	master_volume = clampf(float(cfg.get_value("audio", "master_volume", master_volume)), 0.0, 1.0)
+	music_volume = clampf(float(cfg.get_value("audio", "music_volume", music_volume)), 0.0, 1.0)
 	# Legacy renderer config is ignored; the game always uses Compatibility.
-	
+
 
 func _save() -> void:
 	var cfg := ConfigFile.new()
@@ -157,6 +186,8 @@ func _save() -> void:
 	cfg.set_value("display", "artifact_previews", artifact_previews)
 	cfg.set_value("ai", "mode", ai_mode)
 	cfg.set_value("audio", "ui_volume", ui_volume)
+	cfg.set_value("audio", "master_volume", master_volume)
+	cfg.set_value("audio", "music_volume", music_volume)
 	cfg.save(_config_path)
 
 
