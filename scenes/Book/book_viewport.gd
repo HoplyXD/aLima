@@ -9,8 +9,8 @@ extends CanvasLayer
 ## Reading controls (camera dolly): the mouse wheel zooms the book camera toward the
 ## cursor so text is crisp; left-drag pans while zoomed; page turns happen only at
 ## the default zoom (so a zoomed reader can drag freely without flipping pages).
-## Closing — Esc, the Close button, or clicking off the book at default zoom — always
-## restores the camera to its default framing.
+## Closing — Esc, the top-right X Close button, or clicking off the book at default
+## zoom — always restores the camera to its default framing.
 
 signal closed
 ## Forwarded from the inner JournalBook so hosts (e.g. the Day 0 finale) can
@@ -39,6 +39,7 @@ var _owns_pause: bool = false
 @onready var _book: JournalBook = $ViewportContainer/SubViewport/Book
 @onready var _camera: Camera3D = $ViewportContainer/SubViewport/Camera3D
 @onready var _input_catcher: Control = $InputCatcher
+@onready var _close_button: Button = $CloseButton
 
 
 func _ready() -> void:
@@ -49,6 +50,7 @@ func _ready() -> void:
 	# We ray-pick the book ourselves, so the SubViewport doesn't need physics picking.
 	_subviewport.physics_object_picking = false
 	_input_catcher.gui_input.connect(_on_catcher_input)
+	_close_button.pressed.connect(close)
 	_book.opened.connect(func() -> void: book_opened.emit())
 	_book.page_changed.connect(func(n: int) -> void: page_changed.emit(n))
 	set_process_input(false)

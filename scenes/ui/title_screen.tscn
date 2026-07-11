@@ -148,47 +148,61 @@ custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 text = "Quit"
 
-[node name="SlotMenuPlaque" type="Panel" parent="." unique_id=1351648756]
+[node name="SlotMenuPlaque" type="PanelContainer" parent="." unique_id=1351648756]
 visible = false
 layout_mode = 0
 offset_left = 30.0
 offset_top = 520.0
-offset_right = 736.0
-offset_bottom = 1035.0
+offset_right = 760.0
+offset_bottom = 1060.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_title_plaque")
 
-[node name="SlotMenu" type="VBoxContainer" parent="." unique_id=1082419698]
-visible = false
-layout_mode = 0
-offset_left = 50.0
-offset_top = 540.0
-offset_right = 716.0
-offset_bottom = 960.0
+[node name="Margin" type="MarginContainer" parent="SlotMenuPlaque" unique_id=1351648760]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="SlotMenu" type="VBoxContainer" parent="SlotMenuPlaque/Margin" unique_id=1082419698]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 20
 
-[node name="Title" type="Label" parent="SlotMenu" unique_id=1777390967]
+[node name="Title" type="Label" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=1777390967]
 layout_mode = 2
 theme_override_font_sizes/font_size = 48
 text = "Choose a Slot"
 
-[node name="Slot0" type="Button" parent="SlotMenu" unique_id=769956770]
+[node name="Slot0" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=769956770]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+text_overrun_behavior = 3
 text = "Slot 1"
 
-[node name="Slot1" type="Button" parent="SlotMenu" unique_id=926703688]
+[node name="Slot1" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=926703688]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+text_overrun_behavior = 3
 text = "Slot 2"
 
-[node name="Slot2" type="Button" parent="SlotMenu" unique_id=2001389163]
+[node name="Slot2" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=2001389163]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+text_overrun_behavior = 3
 text = "Slot 3"
 
-[node name="Back" type="Button" parent="SlotMenu" unique_id=2001389164]
+[node name="Back" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=2001389164]
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Back"
 
 [node name="NameMenuPlaque" type="Panel" parent="." unique_id=1351648757]

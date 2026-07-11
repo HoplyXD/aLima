@@ -235,14 +235,19 @@ func _render_condition_page(second_half: bool) -> void:
 	_text.visible = false
 	_text.text = ""
 
+	var scroll := ScrollContainer.new()
+	scroll.anchors_preset = Control.PRESET_FULL_RECT
+	scroll.offset_left = 20.0
+	scroll.offset_top = 20.0
+	scroll.offset_right = -20.0
+	scroll.offset_bottom = -40.0
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_background.add_child(scroll)
+
 	var container := VBoxContainer.new()
-	container.anchors_preset = Control.PRESET_FULL_RECT
-	container.offset_left = 20.0
-	container.offset_top = 20.0
-	container.offset_right = -20.0
-	container.offset_bottom = -40.0
-	container.add_theme_constant_override("separation", 6)
-	_background.add_child(container)
+	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	container.add_theme_constant_override("separation", 8)
+	scroll.add_child(container)
 	_slot_container = container
 
 	var title := Label.new()
@@ -315,7 +320,7 @@ func _make_condition_note(condition: SurfaceCondition) -> Control:
 	var tool_name := tool.display_name if tool != null else condition.cleaning_tool
 	var tool_label := Label.new()
 	tool_label.text = "Treat with: %s" % tool_name
-	tool_label.add_theme_font_size_override("font_size", 12)
+	tool_label.add_theme_font_size_override("font_size", 13)
 	tool_label.add_theme_color_override("font_color", Color(0.3, 0.2, 0.15))
 	text.add_child(tool_label)
 
