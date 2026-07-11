@@ -35,6 +35,19 @@ const DECAL_STROKE_PIXEL_THRESHOLD: float = 40.0
 const DRAW_TOOL_ID: String = "debug_brush"
 const ERASE_TOOL_ID: String = "debug_eraser"
 const CLEAN_ALL_TOOL_ID: String = "debug_clean_all"
+
+## Cleaning scrub SFX (routed to the SFX bus). Chosen to match the active tool
+## (cloth/brush/scraper), each played at a randomised pitch so repeated scrubs never
+## sound identical. Throttled so a fast drag doesn't machine-gun the clips.
+const CLEAN_SFX := {
+	"cloth": preload("res://assets/audio/sfx/clean cloth.wav"),
+	"brush": preload("res://assets/audio/sfx/clean brush.wav"),
+	"scraper": preload("res://assets/audio/sfx/clean scraper.wav"),
+}
+const CLEAN_SFX_BUS := &"SFX"
+const CLEAN_SFX_MIN_INTERVAL_MS: int = 160
+const CLEAN_SFX_PITCH_MIN: float = 0.82
+const CLEAN_SFX_PITCH_MAX: float = 1.18
 ## Drag distance between drawn stamps while painting with a debug brush.
 const PAINT_BRUSH_THROTTLE: float = 22.0
 ## Brush radius in paint-layer texels (the disc the PNG fills). The whole radius is textured by the
@@ -93,6 +106,11 @@ var _mode: int = Mode.ROTATE
 var _left_down: bool = false
 var _right_down: bool = false
 var _stroke_active: bool = false
+
+var _clean_sfx_players: Array[AudioStreamPlayer] = []
+var _clean_sfx_cursor: int = 0
+var _clean_sfx_last_ms: int = 0
+var _clean_rng := RandomNumberGenerator.new()
 ## True while the current press-drag is a decal scrub (photos / conditions) rather than a
 ## surface dirt-mask stroke, so motion routes to per-decal cleaning instead of mask painting.
 var _decal_stroke: bool = false
@@ -235,7 +253,48 @@ func _ready() -> void:
 	# needs to refresh on open and on the rare hour/day tick).
 	DayClock.hour_changed.connect(func(_d: int, _h: int) -> void: _update_clock())
 	DayClock.day_changed.connect(func(_d: int) -> void: _update_clock())
+	_build_clean_sfx()
 	set_process(false)
+
+
+## Small reusable pool of SFX voices for the cleaning scrub sound.
+func _build_clean_sfx() -> void:
+	_clean_rng.randomize()
+	for i in 3:
+		var player := AudioStreamPlayer.new()
+		player.name = "CleanVoice%d" % i
+		player.bus = CLEAN_SFX_BUS
+		add_child(player)
+		_clean_sfx_players.append(player)
+
+
+## Plays a tool-matched cleaning scrub at a random pitch, throttled so a fast drag
+## produces a steady scrub rather than an overlapping burst. Silent when headless.
+func _play_clean_sfx() -> void:
+	if DisplayServer.get_name() == "headless" or _clean_sfx_players.is_empty():
+		return
+	var now := int(Time.get_ticks_msec())
+	if now - _clean_sfx_last_ms < CLEAN_SFX_MIN_INTERVAL_MS:
+		return
+	_clean_sfx_last_ms = now
+	var player := _clean_sfx_players[_clean_sfx_cursor]
+	_clean_sfx_cursor = (_clean_sfx_cursor + 1) % _clean_sfx_players.size()
+	player.stream = _clean_stream_for(_selected_tool_id)
+	player.pitch_scale = _clean_rng.randf_range(CLEAN_SFX_PITCH_MIN, CLEAN_SFX_PITCH_MAX)
+	player.play()
+
+
+## Picks the scrub clip that matches the active tool; falls back to a random one.
+func _clean_stream_for(tool_id: String) -> AudioStream:
+	var id := tool_id.to_lower()
+	if id.contains("cloth"):
+		return CLEAN_SFX["cloth"]
+	if id.contains("brush"):
+		return CLEAN_SFX["brush"]
+	if id.contains("scrap"):
+		return CLEAN_SFX["scraper"]
+	var keys := CLEAN_SFX.keys()
+	return CLEAN_SFX[keys[_clean_rng.randi_range(0, keys.size() - 1)]]
 
 
 ## Refreshes the top-right Day/time readout from the global clock.
@@ -1817,6 +1876,9 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 			_accumulate_decal_stroke(pos)
 		else:
 			_accumulate_stroke(pos)
+		# Debug paint tools (draw/erase grime) aren't "cleaning" — skip the scrub SFX.
+		if not _is_paint_tool(_selected_tool_id):
+			_play_clean_sfx()
 	elif _right_down or (_left_down and _mode == Mode.ROTATE):
 		_object.rotate_view(
 			-event.relative.x * MOUSE_ROTATE_SENSITIVITY,

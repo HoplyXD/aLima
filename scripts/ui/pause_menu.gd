@@ -26,6 +26,8 @@ const FRONTEND_SCENES: Array[String] = [
 @onready var _fullscreen_check: CheckButton = %FullscreenCheck
 @onready var _online_check: CheckButton = %OnlineCheck
 @onready var _previews_check: CheckButton = %PreviewsCheck
+@onready var _master_volume_slider: HSlider = %MasterVolumeSlider
+@onready var _music_volume_slider: HSlider = %MusicVolumeSlider
 @onready var _status_label: Label = %StatusLabel
 @onready var _seed_label: Label = %SeedLabel
 @onready var _slot_label: Label = %SlotLabel
@@ -87,6 +89,8 @@ func _connect_signals() -> void:
 	_fullscreen_check.toggled.connect(_on_fullscreen_toggled)
 	_online_check.toggled.connect(_on_online_toggled)
 	_previews_check.toggled.connect(_on_previews_toggled)
+	_master_volume_slider.value_changed.connect(_on_master_volume_changed)
+	_music_volume_slider.value_changed.connect(_on_music_volume_changed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -185,6 +189,8 @@ func _refresh() -> void:
 	_fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
 	_online_check.set_pressed_no_signal(SettingsService.ai_mode_is_online())
 	_previews_check.set_pressed_no_signal(SettingsService.artifact_previews)
+	_master_volume_slider.set_value_no_signal(SettingsService.master_volume)
+	_music_volume_slider.set_value_no_signal(SettingsService.music_volume)
 
 	_status_label.text = "Settings applied."
 
@@ -202,6 +208,14 @@ func _on_resolution_selected(index: int) -> void:
 
 func _on_fullscreen_toggled(pressed: bool) -> void:
 	SettingsService.set_fullscreen(pressed)
+
+
+func _on_master_volume_changed(value: float) -> void:
+	SettingsService.set_master_volume(value)
+
+
+func _on_music_volume_changed(value: float) -> void:
+	SettingsService.set_music_volume(value)
 
 
 ## Toggles the marketplace AI source: on → backend server, off → on-device Godot LLM.
