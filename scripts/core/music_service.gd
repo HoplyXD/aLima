@@ -6,25 +6,30 @@ extends Node
 ## `AudioStreamPlayer`s ping-pong so one fades in while the other fades out.
 ##
 ## Track policy (per design):
-##   - bgm_3  → the title intro + main menu.
-##   - bgm_1  → all gameplay spaces.
-##   - SILENCE → the Day-0 junkshop (tutorial) and the Day-1 intro dialogue; bgm_1
+##   - bgm_1  → the title intro / opening.
+##   - bgm_3  → the main menu.
+##   - bgm_2  → all gameplay spaces.
+##   - SILENCE → the Day-0 junkshop (tutorial) and the Day-1 intro dialogue; bgm_2
 ##     resumes once the Day-1 intro finishes.
 ##
-## The intro/menu call play_track("bgm_3") directly; gameplay music is driven
-## automatically from SpaceManager.space_changed (see _apply_gameplay_music).
+## The intro/menu call play_track() directly; gameplay music is driven automatically
+## from SpaceManager.space_changed (see _apply_gameplay_music).
 
 ## Music bus (see default_bus_layout.tres).
 const MUSIC_BUS := &"Music"
 
-## Track id -> resource path. Drop the real files at these paths; any that are
-## missing fall back to FALLBACK_TRACK so the game always has something to play.
+## Track id -> file base name (no extension). _resolve() tries each supported audio
+## extension in turn, so dropping the file in ANY of .ogg/.mp3/.wav just works.
+## NOTE: Godot cannot import .m4a/.aac — convert those to .ogg or .mp3 first.
+##   bgm  = intro/opening · bgm 2 = in-game · bgm 3 = main menu.
 const TRACKS := {
-	"bgm_1": "res://assets/audio/bmg/bgm 1.wav",
-	"bgm_2": "res://assets/audio/bmg/bgm 2.wav",
-	"bgm_3": "res://assets/audio/bmg/bgm 3.wav",
+	"bgm_1": "res://assets/audio/bmg/bgm",
+	"bgm_2": "res://assets/audio/bmg/bgm 2",
+	"bgm_3": "res://assets/audio/bmg/bgm 3",
 }
-const FALLBACK_TRACK := "res://assets/audio/bmg/Maharlikang Bahandi Music.wav"
+## Extensions Godot can import, tried in preference order.
+const TRACK_EXTS: Array[String] = [".ogg", ".mp3", ".wav"]
+const FALLBACK_TRACK := "res://assets/audio/bmg/Maharlikang Bahandi Music.mp3"
 
 const FADE_TIME: float = 1.2
 const FULL_DB: float = 0.0
@@ -95,7 +100,7 @@ func _on_space_changed(space: SpaceManager.Space) -> void:
 	_apply_gameplay_music(space)
 
 
-## bgm_1 everywhere, except the Day-0 junkshop (tutorial) and the Day-1 intro
+## bgm_2 everywhere, except the Day-0 junkshop (tutorial) and the Day-1 intro
 ## dialogue, which stay silent until the intro finishes.
 func _apply_gameplay_music(space: SpaceManager.Space = SpaceManager.current_space) -> void:
 	var quiet_shop := (
@@ -105,7 +110,7 @@ func _apply_gameplay_music(space: SpaceManager.Space = SpaceManager.current_spac
 	if quiet_shop:
 		stop()
 	else:
-		play_track("bgm_1")
+		play_track("bgm_2")
 
 
 # --- Internals ----------------------------------------------------------------
@@ -118,10 +123,14 @@ func _on_voice_finished(index: int) -> void:
 
 
 func _resolve(track_id: String) -> AudioStream:
-	var path := String(TRACKS.get(track_id, ""))
-	if not path.is_empty() and ResourceLoader.exists(path):
-		return load(path)
+	var base := String(TRACKS.get(track_id, ""))
+	if not base.is_empty():
+		for ext in TRACK_EXTS:
+			var path := base + ext
+			if ResourceLoader.exists(path):
+				return load(path)
 	if ResourceLoader.exists(FALLBACK_TRACK):
+		push_warning("MusicService: no importable file for '%s'; using fallback." % track_id)
 		return load(FALLBACK_TRACK)
 	push_warning("MusicService: no audio for '%s' (and no fallback)." % track_id)
 	return null
