@@ -12,14 +12,14 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_f6erv"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_wjxse"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_jtcju"]
-[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Moss.png" id="ovl_tex_moss"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
 [ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
+[ext_resource type="Texture2D" uid="uid://6dyfp3m8q6px" path="res://assets/artifact_conditions/Moss.png" id="ovl_tex_moss"]
+[ext_resource type="Texture2D" uid="uid://bnc5m82imin7b" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
+[ext_resource type="Texture2D" uid="uid://bceult7ja4piv" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
+[ext_resource type="Texture2D" uid="uid://dhw2gvncoctwa" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
+[ext_resource type="Texture2D" uid="uid://tktd55hjl4km" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
+[ext_resource type="Texture2D" uid="uid://d3iw7fid2k6t4" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="Vase" type="Node3D" unique_id=456840677]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, -0.11943139, 0)
@@ -131,32 +131,50 @@ price_min = 60
 price_max = 180
 uncertainty_notes = "Glaze and form are not distinctive enough to attribute a kiln or date precisely."
 
-[node name="OverlayMoss" type="Node3D" parent="."]
+[node name="OverlayMoss" type="Node3D" parent="." unique_id=558789805]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_moss")
 layer_order = 21
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayMud" type="Node3D" parent="."]
+[node name="OverlayMud" type="Node3D" parent="." unique_id=814555525]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mud")
 layer_order = 28
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayOldPaint" type="Node3D" parent="."]
+[node name="OverlayOldPaint" type="Node3D" parent="." unique_id=1456101393]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_old_paint")
 layer_order = 16
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlaySaltCrust" type="Node3D" parent="."]
+[node name="OverlaySaltCrust" type="Node3D" parent="." unique_id=1911869302]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_salt_crust")
 layer_order = 26
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlaySoot" type="Node3D" parent="."]
+[node name="OverlaySoot" type="Node3D" parent="." unique_id=686663190]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_soot")
 layer_order = 27
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayWax" type="Node3D" parent="."]
+[node name="OverlayWax" type="Node3D" parent="." unique_id=691329264]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_wax")
 layer_order = 25
+coverage_min = 0.0
+coverage_max = 0.0

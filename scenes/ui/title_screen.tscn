@@ -179,25 +179,28 @@ text = "Choose a Slot"
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
-clip_text = true
-text_overrun_behavior = 3
+theme_override_font_sizes/font_size = 22
 text = "Slot 1"
+text_overrun_behavior = 3
+clip_text = true
 
 [node name="Slot1" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=926703688]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
-clip_text = true
-text_overrun_behavior = 3
+theme_override_font_sizes/font_size = 22
 text = "Slot 2"
+text_overrun_behavior = 3
+clip_text = true
 
 [node name="Slot2" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=2001389163]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
-clip_text = true
-text_overrun_behavior = 3
+theme_override_font_sizes/font_size = 22
 text = "Slot 3"
+text_overrun_behavior = 3
+clip_text = true
 
 [node name="Back" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=2001389164]
 custom_minimum_size = Vector2(0, 70)

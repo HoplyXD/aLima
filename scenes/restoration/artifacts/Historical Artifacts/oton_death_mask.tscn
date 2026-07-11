@@ -52,7 +52,6 @@ uv2_tiling = 2.0
 
 [node name="TarnishOverlay" parent="." unique_id=175449661 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
@@ -60,10 +59,10 @@ layer_order = 20
 coverage_min = 90.0
 coverage_max = 100.0
 guaranteed_spawn = true
+auto_unwrap = true
 
 [node name="RustOverlay" parent="." unique_id=1400501519 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 2.980231e-09, 0, -2.980231e-09, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("8_rust")
 opacity = 1.0
@@ -75,7 +74,6 @@ auto_unwrap = true
 
 [node name="DustOverlay" parent="." unique_id=520816484 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
@@ -88,7 +86,6 @@ own_uv_tiling = 7.22
 
 [node name="WaterStainOverlay" parent="." unique_id=659790743 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("10_vfcm3")
 opacity = 1.0
@@ -100,7 +97,6 @@ auto_unwrap = true
 
 [node name="GrimeOverlay" parent="." unique_id=1049705893 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("11_wneg4")
 opacity = 1.0
@@ -108,6 +104,7 @@ condition_id = "dirt"
 layer_order = 28
 coverage_min = 90.0
 coverage_max = 100.0
+auto_unwrap = true
 triplanar_tiling = 6.415
 uv2_tiling = 2.95
 own_uv_tiling = 7.9

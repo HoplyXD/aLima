@@ -71,10 +71,17 @@ func play_track(track_id: String, fade: float = FADE_TIME) -> void:
 	var incoming := 1 - _active
 	var in_player := _players[incoming]
 	var out_player := _players[_active]
+	var crossfading := out_player.playing
 	in_player.stream = stream
-	in_player.volume_db = SILENT_DB
 	in_player.play()
 	_active = incoming
+	if not crossfading:
+		# Cold start (nothing to fade from): come in at full volume immediately so
+		# the track is always audible — no reliance on a fade-in tween.
+		in_player.volume_db = FULL_DB
+		return
+	# Crossfade between two currently-playing tracks.
+	in_player.volume_db = SILENT_DB
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(in_player, "volume_db", FULL_DB, fade)
 	tween.tween_property(out_player, "volume_db", SILENT_DB, fade)
