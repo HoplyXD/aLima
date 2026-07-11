@@ -818,8 +818,8 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	var extras: Array[ObjectInstance] = []
 	if not tutorial_active:
 		extras = EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
-	# Showcase: handing Alya a gold piece guarantees an Oton Death Mask in the batch.
-	if submitted_gold > 0 and GameState.save_state.persistent.debug_force_gold_scrap:
+	# Handing Alya a gold piece guarantees an Oton Death Mask in the sorted batch.
+	if submitted_gold > 0:
 		extras.append(_make_oton_mask_instance())
 
 	var generator := DeliveryGenerator.new(repo, GameState)

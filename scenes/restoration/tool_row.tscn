@@ -3,23 +3,20 @@
 [ext_resource type="Script" uid="uid://bi2xt7l3l5c6i" path="res://scripts/restoration/tool_row.gd" id="1_row"]
 
 [sub_resource type="StyleBoxFlat" id="row_normal"]
-content_margin_left = 6.0
-content_margin_top = 6.0
-content_margin_right = 6.0
-content_margin_bottom = 6.0
-bg_color = Color(0.15, 0.12, 0.09, 0.9)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.42, 0.34, 0.22, 0.9)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-shadow_color = Color(0, 0, 0, 0.3)
-shadow_size = 4
-shadow_offset = Vector2(0, 2)
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.16, 0.13, 0.1, 0.82)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.26, 0.2, 0.7)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="row_selected"]
 bg_color = Color(0.32, 0.24, 0.12, 0.5)
@@ -28,14 +25,14 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.85, 0.62, 0.28, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="ToolRow" type="PanelContainer" unique_id=1026548109]
-custom_minimum_size = Vector2(208, 132)
-custom_maximum_size = Vector2(-1, -1)
+custom_minimum_size = Vector2(200, 80)
+custom_maximum_size = Vector2(-1, 85)
 offset_right = 74.0
 offset_bottom = 115.0
 theme_override_styles/panel = SubResource("row_normal")
@@ -50,24 +47,24 @@ theme_override_styles/panel = SubResource("row_selected")
 
 [node name="Pad" type="MarginContainer" parent="." unique_id=1872242652]
 layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
 
 [node name="Col" type="VBoxContainer" parent="Pad" unique_id=419169350]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 0
 
 [node name="Header" type="HBoxContainer" parent="Pad/Col" unique_id=103918209]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 4
 
 [node name="NumberLabel" type="Label" parent="Pad/Col/Header" unique_id=408004414]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.86, 0.6, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 12
 text = "1"
 
 [node name="NameLabel" type="Label" parent="Pad/Col/Header" unique_id=794193770]
@@ -75,17 +72,25 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.92, 0.9, 0.84, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 12
 text = "Tool"
 clip_text = true
 
+[node name="DurabilityBar" type="ProgressBar" parent="Pad/Col/Header" unique_id=857272308]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 7)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+show_percentage = false
+
 [node name="Mid" type="HBoxContainer" parent="Pad/Col" unique_id=425480716]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 6
 
 [node name="ModelHolder" type="Control" parent="Pad/Col/Mid" unique_id=1696689269]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(84, 84)
+custom_minimum_size = Vector2(55, 55)
 layout_mode = 2
 
 [node name="Conditions" type="HFlowContainer" parent="Pad/Col/Mid" unique_id=1380217190]
@@ -95,23 +100,3 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/h_separation = 4
 theme_override_constants/v_separation = 2
-
-[node name="Dur" type="HBoxContainer" parent="Pad/Col"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="DurabilityBar" type="ProgressBar" parent="Pad/Col/Dur" unique_id=857272308]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 10)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 1
-show_percentage = false
-
-[node name="DurabilityLabel" type="Label" parent="Pad/Col/Dur"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 1
-theme_override_colors/font_color = Color(0.78, 0.74, 0.64, 1)
-theme_override_font_sizes/font_size = 13
-text = "Durability ∞"

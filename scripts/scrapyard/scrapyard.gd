@@ -731,13 +731,29 @@ func _spawn_scrap_items() -> void:
 	# the gold-find cue easy to demo), leaving the rest to the normal weighted roll.
 	var force_gold := GameState.save_state.persistent.debug_force_gold_scrap
 
+	# Special seed: guaranteed gold scrap on Day 1. Position varies per save file
+	# by mixing player_name into the position RNG stream.
+	var guarantee_gold_scrap := (
+		GameState.run_seed == 1123200619
+		and DayClock.get_day() == 1
+		and not TutorialService.is_tutorial_active()
+	)
+
 	var space := get_world_3d().direct_space_state
 	var placed: Array[Vector3] = []
 	for i in count:
 		var rarity := _pick_rarity(rng, rarity_names, weights)
-		if i == 0 and force_gold:
+		if i == 0 and (force_gold or guarantee_gold_scrap):
 			rarity = ModelEnums.rarity_name(ModelEnums.Rarity.GOLD)
-		var pos := _find_scrap_spawn_position(rng, bounds, space, placed)
+		var pos: Vector3
+		if guarantee_gold_scrap and i == 0:
+			# Save-file-specific stream so the same seed in a different save still
+			# produces a different location.
+			var save_signature := "%s_%s" % [GameState.save_state.persistent.player_name, GameState.player_id]
+			var pos_rng := GameState.make_rng("gold_scrap_position_%s" % save_signature)
+			pos = _find_scrap_spawn_position(pos_rng, bounds, space, placed)
+		else:
+			pos = _find_scrap_spawn_position(rng, bounds, space, placed)
 		placed.append(pos)
 		var item: ScrapItem = SCRAP_ITEM_SCENE.instantiate()
 		item.set_rarity(rarity)
