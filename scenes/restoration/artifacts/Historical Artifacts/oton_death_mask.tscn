@@ -12,13 +12,13 @@
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="10_vfcm3"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="11_wneg4"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="12_eb6n0"]
-[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
 [ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
+[ext_resource type="Texture2D" uid="uid://4cssrlk4nsjy" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
+[ext_resource type="Texture2D" uid="uid://bnc5m82imin7b" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
+[ext_resource type="Texture2D" uid="uid://dhw2gvncoctwa" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
+[ext_resource type="Texture2D" uid="uid://tktd55hjl4km" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
+[ext_resource type="Texture2D" uid="uid://d3iw7fid2k6t4" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [sub_resource type="StandardMaterial3D" id="mask_gold"]
 albedo_color = Color(0.85, 0.7, 0.3, 1)
@@ -40,6 +40,7 @@ model_scale = 0.1
 
 [node name="CrackingOverlay" parent="." unique_id=125864302 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("5_m1vn6")
 opacity = 1.0
@@ -51,6 +52,7 @@ uv2_tiling = 2.0
 
 [node name="TarnishOverlay" parent="." unique_id=175449661 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("3_tarnish")
 opacity = 1.0
@@ -61,6 +63,7 @@ guaranteed_spawn = true
 
 [node name="RustOverlay" parent="." unique_id=1400501519 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 2.980231e-09, 0, -2.980231e-09, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("8_rust")
 opacity = 1.0
@@ -72,6 +75,7 @@ auto_unwrap = true
 
 [node name="DustOverlay" parent="." unique_id=520816484 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("4_dust")
 opacity = 0.5
@@ -84,6 +88,7 @@ own_uv_tiling = 7.22
 
 [node name="WaterStainOverlay" parent="." unique_id=659790743 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("10_vfcm3")
 opacity = 1.0
@@ -95,6 +100,7 @@ auto_unwrap = true
 
 [node name="GrimeOverlay" parent="." unique_id=1049705893 instance=ExtResource("4_g88vq")]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+visible = false
 overlay_mesh = ExtResource("5_wneg4")
 condition_texture = ExtResource("11_wneg4")
 opacity = 1.0
@@ -134,27 +140,42 @@ price_max = 1500
 confidence = 2
 uncertainty_notes = "Attribution and dating are tentative; a genuine piece of this kind would require expert authentication and is excluded from any folklore-as-fact claim."
 
-[node name="OverlayGrease" type="Node3D" parent="."]
+[node name="OverlayGrease" type="Node3D" parent="." unique_id=1188046300]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_grease")
 layer_order = 24
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayMud" type="Node3D" parent="."]
+[node name="OverlayMud" type="Node3D" parent="." unique_id=2084990900]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mud")
 layer_order = 28
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlaySaltCrust" type="Node3D" parent="."]
+[node name="OverlaySaltCrust" type="Node3D" parent="." unique_id=1212126321]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_salt_crust")
 layer_order = 26
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlaySoot" type="Node3D" parent="."]
+[node name="OverlaySoot" type="Node3D" parent="." unique_id=143204995]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_soot")
 layer_order = 27
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayWax" type="Node3D" parent="."]
+[node name="OverlayWax" type="Node3D" parent="." unique_id=1752110201]
+visible = false
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_wax")
 layer_order = 25
+coverage_min = 0.0
+coverage_max = 0.0
