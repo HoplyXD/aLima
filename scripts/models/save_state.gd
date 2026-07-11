@@ -121,6 +121,9 @@ class PersistentState:
 	## The Perfect Loop: set once when the fifth fragment seats and the Yuyu
 	## finale has played. Guards the finale from re-triggering (END-R3/R5).
 	var perfect_loop_completed: bool = false
+	## Debug/showcase: force at least one gold-tier piece into every yard scatter (used
+	## by the artifact-showcase save to guarantee a gold find + its Cultural Echo).
+	var debug_force_gold_scrap: bool = false
 
 	static func from_dictionary(data: Dictionary) -> PersistentState:
 		var p := PersistentState.new()
@@ -156,6 +159,7 @@ class PersistentState:
 		p.day1_intro_completed = ModelUtils.as_bool(data.get("day1_intro_completed"))
 		p.day1_step = ModelUtils.as_string(data.get("day1_step"), "")
 		p.perfect_loop_completed = ModelUtils.as_bool(data.get("perfect_loop_completed"))
+		p.debug_force_gold_scrap = ModelUtils.as_bool(data.get("debug_force_gold_scrap"))
 		return p
 
 	func to_dictionary() -> Dictionary:
@@ -190,6 +194,7 @@ class PersistentState:
 			"day1_intro_completed": day1_intro_completed,
 			"day1_step": day1_step,
 			"perfect_loop_completed": perfect_loop_completed,
+			"debug_force_gold_scrap": debug_force_gold_scrap,
 		}
 
 	func validate(result: ValidationResult, file_path: String) -> void:

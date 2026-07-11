@@ -1215,20 +1215,25 @@ func _set_photo_mode(enabled: bool) -> void:
 	_photo_mode = enabled
 	# A custom model_scene keeps the placeholder medallion/bail hidden (the sphere is only
 	# the invisible hit-test proxy); otherwise the placeholder shows outside photo mode.
-	var show_placeholder := not enabled and _model_instance == null
+	var has_model := _model_instance != null
+	var show_placeholder := not enabled and not has_model
 	if _medallion != null:
 		_medallion.visible = show_placeholder
 	if _bail != null:
 		_bail.visible = show_placeholder
+	# A real model mesh (e.g. the Auntie photos' Picture.obj) IS the photo surface, so
+	# keep it visible and project decals onto it — the flat white quad is only a
+	# fallback for photo templates that have no model of their own.
 	if _model_instance != null:
-		_model_instance.visible = not enabled
+		_model_instance.visible = true
 	if _clasp != null and enabled:
 		_clasp.visible = false
 		_clasp_interactive = false
-	if enabled and _photo == null:
+	var need_quad := enabled and not has_model
+	if need_quad and _photo == null:
 		_build_photo()
 	if _photo != null:
-		_photo.visible = enabled
+		_photo.visible = need_quad
 	if not enabled:
 		_clear_blemishes()
 

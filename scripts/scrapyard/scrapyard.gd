@@ -727,10 +727,16 @@ func _spawn_scrap_items() -> void:
 	var size_x := float(bounds.get("size_x", 40.0))
 	var size_z := float(bounds.get("size_z", 34.0))
 
+	# Debug/showcase: guarantee the first piece is gold (its Cultural Echo hum makes
+	# the gold-find cue easy to demo), leaving the rest to the normal weighted roll.
+	var force_gold := GameState.save_state.persistent.debug_force_gold_scrap
+
 	var space := get_world_3d().direct_space_state
 	var placed: Array[Vector3] = []
 	for i in count:
 		var rarity := _pick_rarity(rng, rarity_names, weights)
+		if i == 0 and force_gold:
+			rarity = ModelEnums.rarity_name(ModelEnums.Rarity.GOLD)
 		var pos := _find_scrap_spawn_position(rng, bounds, space, placed)
 		placed.append(pos)
 		var item: ScrapItem = SCRAP_ITEM_SCENE.instantiate()

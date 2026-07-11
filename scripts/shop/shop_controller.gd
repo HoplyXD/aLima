@@ -783,6 +783,13 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 		var director := SpawnDirector.new(repo, GameState)
 		director.plan_loop_placements()
 
+	# Capture what was handed to Alya BEFORE the sort is consumed (below), so the
+	# showcase gold -> Oton Death Mask rule can read it.
+	var submitted_gold := 0
+	if not is_free_daily:
+		var submitted := AylaService.get_pending_submitted()
+		submitted_gold = int(submitted.get(ModelEnums.rarity_name(ModelEnums.Rarity.GOLD), 0))
+
 	# Consume the earned scrap sort unless this is the separate daily free drop.
 	if not is_free_daily:
 		AylaService.consume_sort()
@@ -811,12 +818,37 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	var extras: Array[ObjectInstance] = []
 	if not tutorial_active:
 		extras = EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
+	# Showcase: handing Alya a gold piece guarantees an Oton Death Mask in the batch.
+	if submitted_gold > 0 and GameState.save_state.persistent.debug_force_gold_scrap:
+		extras.append(_make_oton_mask_instance())
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(
 		GameState.save_state.loop.current_day, biased_cfg, extras
 	)
 	_triage_screen.open(delivery, biased_cfg.storage_cap, is_free_daily)
+
+
+## A fresh DIRTY Oton Death Mask instance (its scene carries authored conditions, so
+## no spawned decals are needed). Injected as a delivery extra by the showcase rule.
+func _make_oton_mask_instance() -> ObjectInstance:
+	var template := DataRepository.singleton().get_template("oton_death_mask")
+	var inst := ObjectInstance.new()
+	inst.template_id = "oton_death_mask"
+	inst.uid = (
+		"showcase_mask_%d_%d" % [GameState.loop_index, GameState.save_state.loop.current_day]
+	)
+	inst.condition = 0.0
+	inst.state = ModelEnums.ObjState.DIRTY
+	if template != null:
+		inst.storage_cost = template.storage_cost
+		inst.value = int(template.base_value_range.x)
+		inst.true_value = int(template.base_value_range.y)
+	else:
+		inst.storage_cost = 1
+		inst.value = 200
+		inst.true_value = 400
+	return inst
 
 
 func _on_morning_delivery_pressed() -> void:

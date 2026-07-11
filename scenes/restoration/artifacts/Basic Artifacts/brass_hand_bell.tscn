@@ -13,14 +13,14 @@
 [ext_resource type="Texture2D" uid="uid://cni0vxqyoif6s" path="res://assets/artifact_conditions/Rust.png" id="8_rust"]
 [ext_resource type="Texture2D" uid="uid://buhpiyrxqhra0" path="res://assets/artifact_conditions/Grime.png" id="9_qs3xv"]
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_awa71"]
-[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
 [ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
+[ext_resource type="Texture2D" uid="uid://4cssrlk4nsjy" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
+[ext_resource type="Texture2D" uid="uid://bnc5m82imin7b" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
+[ext_resource type="Texture2D" uid="uid://bceult7ja4piv" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
+[ext_resource type="Texture2D" uid="uid://dhw2gvncoctwa" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
+[ext_resource type="Texture2D" uid="uid://tktd55hjl4km" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
+[ext_resource type="Texture2D" uid="uid://d3iw7fid2k6t4" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yxfh3"]
 albedo_color = Color(0.78, 0.6, 0.28, 1)
@@ -130,32 +130,50 @@ price_min = 20
 price_max = 70
 uncertainty_notes = "No foundry mark; date estimated from casting and wear."
 
-[node name="OverlayGrease" type="Node3D" parent="."]
+[node name="OverlayGrease" type="Node3D" parent="." unique_id=2046284503]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_grease")
 layer_order = 24
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
 
-[node name="OverlayMud" type="Node3D" parent="."]
+[node name="OverlayMud" type="Node3D" parent="." unique_id=1922333124]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mud")
 layer_order = 28
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
 
-[node name="OverlayOldPaint" type="Node3D" parent="."]
+[node name="OverlayOldPaint" type="Node3D" parent="." unique_id=1249635584]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_old_paint")
 layer_order = 16
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
 
-[node name="OverlaySaltCrust" type="Node3D" parent="."]
+[node name="OverlaySaltCrust" type="Node3D" parent="." unique_id=1745696970]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_salt_crust")
 layer_order = 26
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
 
-[node name="OverlaySoot" type="Node3D" parent="."]
+[node name="OverlaySoot" type="Node3D" parent="." unique_id=385581021]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_soot")
 layer_order = 27
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true
 
-[node name="OverlayWax" type="Node3D" parent="."]
+[node name="OverlayWax" type="Node3D" parent="." unique_id=730374829]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_wax")
 layer_order = 25
+coverage_min = 0.0
+coverage_max = 0.0
+auto_unwrap = true

@@ -56,8 +56,12 @@ func _load_fragment_definitions() -> void:
 
 ## Starts a new run with an optional explicit seed. If seed is negative, the
 ## run seed is derived from a time-based source (still deterministic once set).
-func new_run(seed: int = -1) -> void:
-	loop_index += 1
+## `advance_loop` increments the loop counter (a loop transition); pass false for a
+## brand-new game so the first playthrough stays on loop 0 ("Loop 1"), since
+## initialize() already set loop_index to 0.
+func new_run(seed: int = -1, advance_loop: bool = true) -> void:
+	if advance_loop:
+		loop_index += 1
 	if seed >= 0:
 		run_seed = seed
 	elif debug_seed_override >= 0:
