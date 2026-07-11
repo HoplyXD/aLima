@@ -14,6 +14,10 @@ const AI_ONLINE := "online"
 const AI_OFFLINE := "offline"
 const DEFAULT_AI_MODE := AI_ONLINE
 
+## Audio bus routed through Master that all UI interaction sounds play on (see
+## default_bus_layout.tres). `ui_volume` trims this bus so hover/press stay subtle.
+const UI_BUS_NAME := &"UI"
+
 ## Selectable windowed resolutions.
 const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1280, 720),
@@ -28,6 +32,9 @@ var fullscreen: bool = false
 var artifact_previews: bool = true
 ## Which AI powers marketplace banter (see AI_ONLINE/AI_OFFLINE above).
 var ai_mode: String = DEFAULT_AI_MODE
+## User trim for UI interaction sounds (0..1). 1.0 leaves hover ≈ -16 dB / press ≈ -10 dB
+## relative to Master; 0.0 effectively mutes UI audio.
+var ui_volume: float = 1.0
 
 var _config_path: String = CONFIG_PATH
 
@@ -35,6 +42,7 @@ var _config_path: String = CONFIG_PATH
 func _ready() -> void:
 	_load()
 	apply_display()
+	apply_audio()
 
 
 ## Test seam: redirect the config file.
@@ -75,6 +83,25 @@ func apply_display() -> void:
 func resolution_index() -> int:
 	var idx := RESOLUTIONS.find(resolution)
 	return idx if idx >= 0 else RESOLUTIONS.size() - 1
+
+
+# --- Audio -------------------------------------------------------------------
+
+
+## Sets the UI interaction-sound trim (clamped 0..1) and applies it to the `UI` bus.
+func set_ui_volume(value: float) -> void:
+	ui_volume = clampf(value, 0.0, 1.0)
+	_save()
+	apply_audio()
+
+
+## Pushes `ui_volume` to the `UI` audio bus. No-op if the bus is absent (e.g. a
+## stripped test layout) so audio never crashes headless runs.
+func apply_audio() -> void:
+	var idx := AudioServer.get_bus_index(UI_BUS_NAME)
+	if idx < 0:
+		return
+	AudioServer.set_bus_volume_db(idx, linear_to_db(ui_volume))
 
 
 # --- Online services ---------------------------------------------------------
@@ -118,6 +145,7 @@ func _load() -> void:
 	ai_mode = str(cfg.get_value("ai", "mode", DEFAULT_AI_MODE))
 	if ai_mode != AI_ONLINE and ai_mode != AI_OFFLINE:
 		ai_mode = DEFAULT_AI_MODE
+	ui_volume = clampf(float(cfg.get_value("audio", "ui_volume", ui_volume)), 0.0, 1.0)
 	# Legacy renderer config is ignored; the game always uses Compatibility.
 	
 
@@ -128,6 +156,7 @@ func _save() -> void:
 	cfg.set_value("display", "fullscreen", fullscreen)
 	cfg.set_value("display", "artifact_previews", artifact_previews)
 	cfg.set_value("ai", "mode", ai_mode)
+	cfg.set_value("audio", "ui_volume", ui_volume)
 	cfg.save(_config_path)
 
 
