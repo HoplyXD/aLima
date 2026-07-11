@@ -158,6 +158,7 @@ func _ready() -> void:
 	EveningService.interactive = true
 	EventBus.evening_started.connect(_on_evening_started)
 	_evening_screen.closed.connect(_on_evening_closed)
+	_evening_screen.committed.connect(_on_evening_committed)
 	_refresh_ayla_knock()
 
 	# Day 0 (TUT): the tutorial glue presents Yuyu's dialogue and hint arrows on
@@ -981,6 +982,21 @@ func _on_evening_closed() -> void:
 	_hud.set_actions_visible(true)
 	_set_interactables_enabled(true)
 	_refresh_ui()
+
+
+## Ending the day (any day) blacks the screen out, then reloads the shop fresh for
+## the next day — so the player always wakes up in the shop, never at the bench or
+## wherever 20:00 happened to catch them. The day already advanced inside commit_plan;
+## the overlay lives under SpaceManager so it survives the scene reload.
+func _on_evening_committed(_day: int, _plan_id: String) -> void:
+	var overlay := BlackoutOverlay.new()
+	SpaceManager.add_child(overlay)
+	overlay.blacked_out.connect(
+		func() -> void:
+			SpaceManager.reload_current_space()
+			overlay.fade_out()
+	)
+	overlay.begin()
 
 
 # --- Diegetic interactables ---------------------------------------------------

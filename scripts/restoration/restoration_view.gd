@@ -893,6 +893,10 @@ func _build_cursor_tool() -> void:
 	if name_label is Control:
 		(name_label as Control).visible = false
 		(name_label as Control).custom_minimum_size = Vector2.ZERO
+	var name_sep := _cursor_tool.find_child("NameSep", true, false)
+	if name_sep is Control:
+		(name_sep as Control).visible = false
+		(name_sep as Control).custom_minimum_size = Vector2.ZERO
 	_set_subtree_ignore_mouse(_cursor_tool)
 	_cursor_tool.set_spin(false)  # the held tool holds still and orients to the artifact
 

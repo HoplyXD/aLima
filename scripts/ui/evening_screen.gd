@@ -20,7 +20,6 @@ var _owns_pause: bool = false
 var _backdrop: ColorRect
 var _summary_label: RichTextLabel
 var _upkeep_box: VBoxContainer
-var _plan_box: VBoxContainer
 var _status_label: Label
 var _commit_button: Button
 
@@ -86,7 +85,6 @@ func _release_pause_if_owned() -> void:
 func refresh() -> void:
 	_render_summary()
 	_render_upkeep()
-	_render_plan()
 
 
 func _render_summary() -> void:
@@ -168,27 +166,6 @@ func _make_upkeep_row(inst: ToolInstance) -> Control:
 	return row
 
 
-func _render_plan() -> void:
-	for child in _plan_box.get_children():
-		child.queue_free()
-	_plan_box.add_child(_label("Plan for tomorrow", 16))
-	var options: Array = DataRepository.singleton().get_evening_config().get("plan_options", [])
-	if options.is_empty():
-		_plan_box.add_child(_note("Rest up and take the day as it comes."))
-	for opt in options:
-		if not (opt is Dictionary):
-			continue
-		var id := ModelUtils.as_string(opt.get("id"))
-		var label := ModelUtils.as_string(opt.get("label"), id)
-		var button := Button.new()
-		button.toggle_mode = true
-		button.button_pressed = id == _plan_id
-		button.text = ("● " if id == _plan_id else "○ ") + label
-		button.focus_mode = Control.FOCUS_ALL
-		button.pressed.connect(func() -> void: select_plan(id))
-		_plan_box.add_child(button)
-
-
 func _on_repair(uid: String) -> void:
 	var result := EveningService.repair_tool(uid)
 	if result.ok:
@@ -251,10 +228,6 @@ func _build_ui() -> void:
 	_upkeep_box.add_theme_constant_override("separation", 6)
 	col.add_child(_upkeep_box)
 
-	_plan_box = VBoxContainer.new()
-	_plan_box.add_theme_constant_override("separation", 6)
-	col.add_child(_plan_box)
-
 	_status_label = Label.new()
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status_label.add_theme_color_override("font_color", Color(0.8, 0.85, 0.7))
@@ -265,7 +238,7 @@ func _build_ui() -> void:
 	col.add_child(spacer)
 
 	_commit_button = Button.new()
-	_commit_button.text = "Turn in for the night"
+	_commit_button.text = "End Day"
 	_commit_button.custom_minimum_size = Vector2(0, 48)
 	_commit_button.focus_mode = Control.FOCUS_ALL
 	_commit_button.pressed.connect(commit)

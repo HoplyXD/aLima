@@ -11,7 +11,6 @@ const TITLE_SCENE: String = "res://scenes/ui/title_screen.tscn"
 ## pause panel — the player opens Options by clicking its button instead.
 const FRONTEND_SCENES: Array[String] = [
 	"res://scenes/ui/title_screen.tscn",
-	"res://scenes/ui/title_intro.tscn",
 	"res://scenes/ui/splash_screen.tscn",
 ]
 
