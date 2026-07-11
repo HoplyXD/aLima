@@ -32,6 +32,7 @@
       gap: 1rem;
     }
     h1 { margin: 0; font-size: 1.8rem; color: var(--accent); }
+    .controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
     .player-form { display: flex; gap: 0.5rem; align-items: center; }
     input[type="text"] {
       background: var(--bg);
@@ -50,6 +51,17 @@
       cursor: pointer;
       font-weight: bold;
     }
+    button.secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .player-id {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .player-id strong { color: var(--text); }
     main { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
     .status { color: var(--muted); margin-bottom: 1rem; }
     .empty { color: var(--muted); font-style: italic; }
@@ -80,17 +92,25 @@
 <body>
   <header>
     <h1>🏛 aLima Digital Museum</h1>
-    <form class="player-form" onsubmit="return loadGallery()">
-      <label for="playerId">Player ID</label>
-      <input id="playerId" type="text" placeholder="player_001" />
-      <button type="submit">Load</button>
-    </form>
+    <div class="controls">
+      <form class="player-form" onsubmit="return loadGallery()">
+        <label for="playerId">Player ID</label>
+        <input id="playerId" type="text" placeholder="player_001" />
+        <button type="submit" id="loadBtn">Load</button>
+      </form>
+      <button type="button" class="secondary" id="refreshBtn" onclick="return refreshGallery()" disabled>Refresh</button>
+      <button type="button" class="secondary" id="openBtn" onclick="openInBrowser()" disabled>Open Portal</button>
+      <span class="player-id" id="playerDisplay" style="display: none;">Player ID: <strong>-</strong></span>
+    </div>
   </header>
   <main>
     <div id="status" class="status">Enter a Player ID and click Load.</div>
     <div id="cards"></div>
   </main>
   <script>
+    const REQUEST_TIMEOUT_MS = 5000;
+    let currentPlayerId = '';
+
     function getQueryParam(name) {
       const params = new URLSearchParams(window.location.search);
       return params.get(name);
@@ -108,10 +128,39 @@
       return false;
     }
 
+    function refreshGallery() {
+      if (!currentPlayerId) return false;
+      fetchGallery(currentPlayerId);
+      return false;
+    }
+
+    function openInBrowser() {
+      if (!currentPlayerId) return;
+      const url = `${window.location.origin}/?player_id=${encodeURIComponent(currentPlayerId)}`;
+      window.open(url, '_blank');
+    }
+
     function updateStatus(text, isError) {
       const status = document.getElementById('status');
       status.textContent = text;
       status.style.color = isError ? 'var(--fallback)' : 'var(--muted)';
+    }
+
+    function setPlayerId(playerId) {
+      currentPlayerId = playerId;
+      const display = document.getElementById('playerDisplay');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const openBtn = document.getElementById('openBtn');
+      if (playerId) {
+        display.style.display = 'inline';
+        display.querySelector('strong').textContent = playerId;
+        refreshBtn.disabled = false;
+        openBtn.disabled = false;
+      } else {
+        display.style.display = 'none';
+        refreshBtn.disabled = true;
+        openBtn.disabled = true;
+      }
     }
 
     function renderCards(entries) {
@@ -150,9 +199,21 @@
     }
 
     async function fetchGallery(playerId) {
-      updateStatus('Loading...', false);
+      setPlayerId(playerId);
+      updateStatus('Reaching the Portal…', false);
+      const loadBtn = document.getElementById('loadBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+      loadBtn.disabled = true;
+      refreshBtn.disabled = true;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
       try {
-        const res = await fetch(`/museum?player_id=${encodeURIComponent(playerId)}`);
+        const res = await fetch(`/museum?player_id=${encodeURIComponent(playerId)}`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (!res.ok || !data.ok) {
           updateStatus(`Error: ${data.error || res.statusText}`, true);
@@ -162,7 +223,16 @@
         updateStatus(`${data.entries.length} record(s) for ${playerId}`, false);
         renderCards(data.entries);
       } catch (err) {
-        updateStatus(`Network error: ${err.message}`, true);
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+          updateStatus('The Portal took too long to respond. The backend or mock Portal may be down.', true);
+        } else {
+          updateStatus(`Network error: ${err.message}`, true);
+        }
+        renderCards([]);
+      } finally {
+        loadBtn.disabled = false;
+        refreshBtn.disabled = false;
       }
     }
 

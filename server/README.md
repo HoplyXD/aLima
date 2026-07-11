@@ -10,7 +10,7 @@ Godot client only calls `{backend_url}/api/*`.
 Push-Location server
 npm install
 Copy-Item .env.example .env   # edit .env locally; NEVER commit .env
-npm run dev                   # starts on PORT (default 3000)
+npm start                     # starts on PORT (default 3000)
 Pop-Location
 ```
 
@@ -82,7 +82,7 @@ npm test        # runs Jest with --runInBand --forceExit
 Pop-Location
 ```
 
-As of 2026-07-11 the suite passes `33/34`; the single failure is a pre-existing
+As of 2026-07-11 the suite passes `35/36`; the single failure is a pre-existing
 `negotiate.test.js` fallback-flag test that expects `fallback: true` when no API
 key is configured but currently receives `fallback: false`. It is unrelated to
 the museum work.

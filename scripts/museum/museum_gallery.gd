@@ -19,6 +19,7 @@ var _refresh_pending: bool = false
 @onready var _cards_container: VBoxContainer = %CardsContainer
 @onready var _refresh_button: Button = %RefreshButton
 @onready var _close_button: Button = %CloseButton
+@onready var _player_id_label: Label = %PlayerIdLabel
 
 
 func _ready() -> void:
@@ -48,6 +49,7 @@ func open() -> void:
 		REFRESH_TEXT_ONLINE if SettingsService.ai_mode_is_online() else REFRESH_TEXT_OFFLINE
 	)
 	_refresh_button.disabled = not SettingsService.ai_mode_is_online()
+	_player_id_label.text = "Player ID: %s" % GameState.player_id
 	_render_entries()
 	_close_button.grab_focus()
 

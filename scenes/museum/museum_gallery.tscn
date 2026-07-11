@@ -62,6 +62,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Offline mirror — local records"
 
+[node name="PlayerIdLabel" type="Label" parent="Dim/Center/Body/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Player ID: -"
+
 [node name="ScrollContainer" type="ScrollContainer" parent="Dim/Center/Body/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
