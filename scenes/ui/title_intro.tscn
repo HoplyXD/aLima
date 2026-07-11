@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://d2mqky5vvs8uy"]
 
-[ext_resource type="Script" path="res://scripts/ui/title_intro.gd" id="1_intro"]
+[ext_resource type="Script" uid="uid://duqqmvlo4gol8" path="res://scripts/ui/title_intro.gd" id="1_intro"]
 
-[node name="TitleIntro" type="Control"]
+[node name="TitleIntro" type="Control" unique_id=1456493029]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_intro")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=550147528]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,13 +21,12 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.05, 0.03, 0.02, 1)
 
-[node name="Stage" type="Node2D" parent="."]
+[node name="Stage" type="Node2D" parent="." unique_id=1474219737]
 
-[node name="Overlays" type="CanvasLayer" parent="."]
+[node name="Overlays" type="CanvasLayer" parent="." unique_id=1589635303]
 layer = 10
 
-[node name="PostRect" type="ColorRect" parent="Overlays"]
-layout_mode = 1
+[node name="PostRect" type="ColorRect" parent="Overlays" unique_id=1707569927]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -36,9 +35,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
 
-[node name="WipeRect" type="ColorRect" parent="Overlays"]
-visible = false
-layout_mode = 1
+[node name="WipeRect" type="ColorRect" parent="Overlays" unique_id=557635851]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -47,9 +44,9 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
 
-[node name="TitleLayer" type="Control" parent="Overlays"]
+[node name="TitleLayer" type="Control" parent="Overlays" unique_id=2141725703]
 visible = false
-layout_mode = 1
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -57,7 +54,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="TitleGlow" type="TextureRect" parent="Overlays/TitleLayer"]
+[node name="TitleGlow" type="TextureRect" parent="Overlays/TitleLayer" unique_id=933377441]
 layout_mode = 0
 offset_left = 510.0
 offset_top = 200.0
@@ -67,28 +64,24 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="TitleLabel" type="Label" parent="Overlays/TitleLayer"]
+[node name="TitleLabel" type="Label" parent="Overlays/TitleLayer" unique_id=920932651]
 layout_mode = 0
-offset_left = 0.0
 offset_top = 300.0
 offset_right = 1920.0
 offset_bottom = 600.0
-mouse_filter = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SubtitleLabel" type="Label" parent="Overlays/TitleLayer"]
+[node name="SubtitleLabel" type="Label" parent="Overlays/TitleLayer" unique_id=2023446149]
 layout_mode = 0
-offset_left = 0.0
 offset_top = 770.0
 offset_right = 1920.0
 offset_bottom = 860.0
-mouse_filter = 2
+theme_override_font_sizes/font_size = 88
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="FadeRect" type="ColorRect" parent="Overlays"]
-layout_mode = 1
+[node name="FadeRect" type="ColorRect" parent="Overlays" unique_id=1335600380]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -97,6 +90,6 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
-[node name="Music" type="AudioStreamPlayer" parent="."]
+[node name="Music" type="AudioStreamPlayer" parent="." unique_id=701890484]
 
-[node name="Wind" type="AudioStreamPlayer" parent="."]
+[node name="Wind" type="AudioStreamPlayer" parent="." unique_id=955906402]

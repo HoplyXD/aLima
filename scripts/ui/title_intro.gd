@@ -752,9 +752,9 @@ func _default_sequence() -> Array[Dictionary]:
 	var scavenger := {
 		"name": "Ayla",
 		"texture": preload("res://assets/Characters/Scavenger.png"),
-		"region": Rect2(500, 500, 1500, 1700),
+		"region": Rect2(500, 500, 1500, 1900),  # 1700 -> 1900: crop reaches ~her hips (src y≈2400)
 		"scale": 0.40,
-		"cy": 560.0,
+		"cy": 560.0,  # shared with Auntie Shine & Lave so the trio lines up horizontally
 		"push": 0.02,
 		"light_dir": 0,
 		"shadow_strength": 0.22,

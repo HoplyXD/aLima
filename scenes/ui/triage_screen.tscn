@@ -1,13 +1,10 @@
 [gd_scene format=3 uid="uid://bwmj5triq5qvx"]
 
 [ext_resource type="Script" uid="uid://dk260ihakjiyh" path="res://scenes/ui/triage_controller.gd" id="1_triage"]
-[ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="ui_theme"]
-[ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="2_oyyef"]
 [ext_resource type="FontFile" uid="uid://du4umalkc0ppp" path="res://assets/fonts/Creator Genius.ttf" id="2_qrd20"]
+[ext_resource type="FontFile" uid="uid://7gx30v1rvopa" path="res://assets/fonts/The Antique.otf" id="3_fdyf2"]
 [ext_resource type="FontFile" uid="uid://bqossgelp7l5h" path="res://assets/fonts/RomanAntique.ttf" id="4_1vmhu"]
-[ext_resource type="Texture2D" uid="uid://dxr4jmbwn30dm" path="res://assets/UI assets/game/gui/bar/left.png" id="5_cuj4i"]
-[ext_resource type="Texture2D" uid="uid://dprq1wdcmqdih" path="res://assets/UI assets/game/gui/bar/right.png" id="6_7h80y"]
-[ext_resource type="Texture2D" uid="uid://c11csnwuhrll7" path="res://assets/UI assets/game/gui/overlay/confirm.png" id="7_3m4ny"]
+[ext_resource type="Theme" uid="uid://driye332ttd10" path="res://Themes/alima_ui.tres" id="ui_theme"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_table"]
 size = Vector3(20, 0.2, 20)
@@ -123,9 +120,6 @@ shadow_offset = Vector2(0, 4)
 [sub_resource type="LabelSettings" id="LabelSettings_title"]
 font = ExtResource("4_1vmhu")
 font_size = 48
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_q1i8a"]
-texture = ExtResource("5_cuj4i")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxTexture_iv7uq"]
 bg_color = Color(0.42, 0.28, 0.18, 1)
@@ -297,19 +291,22 @@ layer = 2
 [node name="StorageLabel" type="Label" parent="HudLayer" unique_id=275483309]
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 16.0
-offset_bottom = 48.0
+offset_left = -2.0
+offset_top = 84.0
+offset_right = -2.0
+offset_bottom = 183.0
 grow_horizontal = 2
-theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
-theme_override_font_sizes/font_size = 72
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_fdyf2")
+theme_override_font_sizes/font_size = 111
 text = "Storage: 0 / 0 used, 0 available"
 horizontal_alignment = 1
 
 [node name="ValidationLabel" type="Label" parent="HudLayer" unique_id=1393492996]
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 56.0
-offset_bottom = 80.0
+offset_top = 185.0
+offset_bottom = 209.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.8, 0.32, 0.28, 1)
 theme_override_font_sizes/font_size = 16
@@ -442,7 +439,6 @@ theme_override_colors/font_color = Color(0.9, 0.85, 0.74, 1)
 theme_override_colors/font_hover_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_fonts/font = ExtResource("4_1vmhu")
 theme_override_font_sizes/font_size = 41
-theme_override_styles/normal = SubResource("StyleBoxTexture_q1i8a")
 theme_override_styles/hover = SubResource("StyleBoxTexture_iv7uq")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_bcddo")
 disabled = true
