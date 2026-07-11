@@ -424,11 +424,10 @@ func _update_tutorial_pointer() -> void:
 			TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, TutorialService.POINTER_HIDE
 		)
 		return
-	var selling := TutorialService.current_step_id() == "list_and_sell"
-	# Surface the labelled Phone button only for the sell step (the 3D phone prop is a
-	# small, easy-to-miss target); it stays a hidden fallback the rest of the time.
+	# The Phone button is a hidden accessibility fallback only; the arrow points at
+	# the diegetic 3D phone prop on the bench.
 	if _phone_button != null:
-		_phone_button.visible = selling
+		_phone_button.visible = false
 	match TutorialService.current_step_id():
 		"restore_artifact":
 			_update_bench_tools_lesson()
@@ -437,13 +436,9 @@ func _update_tutorial_pointer() -> void:
 				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _scan_button
 			)
 		"list_and_sell":
-			# Point the arrow at the now-visible Phone button (a reliable click target),
-			# falling back to the 3D phone prop's screen position if it is missing.
-			var phone_target: Variant = _bench_phone_screen_pos
-			if _phone_button != null and _phone_button.visible:
-				phone_target = _phone_button
+			# Point the arrow at the 3D phone prop on the bench.
 			TutorialService.set_pointer_claim(
-				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, phone_target
+				TUTORIAL_POINTER_SOURCE, TUTORIAL_POINTER_PRIORITY, _bench_phone_screen_pos
 			)
 		"ride_to_mall":
 			TutorialService.set_pointer_claim(
@@ -1091,8 +1086,9 @@ func clean_blemish(blemish_id: String) -> RestorationService.DecalResult:
 		_feedback_label.text = result.feedback
 		return result
 	# A grime puff plays on every stroke (right tool or wrong); a successful clean adds
-	# the sparkle via remove_blemish.
+	# the sparkle via remove_blemish. The scrub SFX rides the puff.
 	_object.blemish_working_burst(blemish_id)
+	_play_clean_sfx()
 	if result.removed:
 		_object.remove_blemish(blemish_id)
 	_feedback_label.text = result.feedback
@@ -1125,6 +1121,7 @@ func clean_authored_condition(condition_id: String) -> bool:
 		return false
 	# A tool always kicks up a puff where it's worked, right tool or wrong.
 	_object.authored_working_burst(condition_id)
+	_play_clean_sfx()
 	var label := _object.authored_type_id(condition_id).replace("_", " ")
 	var strength := CleaningPower.power(
 		_service.get_repository(), _selected_tool_id, _object.authored_type_id(condition_id)
@@ -1258,6 +1255,7 @@ func commit_stroke(worked_uvs: PackedVector2Array) -> RestorationService.ToolRes
 		if result.ok and result.compatible:
 			for uv in worked_uvs:
 				_object.clean_brush_at_uv(uv)
+			_play_clean_sfx()  # grime is actually lifting — scrub SFX rides the clean
 			if result.reached_clean:
 				_object.set_fully_clean()
 	_log(
@@ -1876,9 +1874,6 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 			_accumulate_decal_stroke(pos)
 		else:
 			_accumulate_stroke(pos)
-		# Debug paint tools (draw/erase grime) aren't "cleaning" — skip the scrub SFX.
-		if not _is_paint_tool(_selected_tool_id):
-			_play_clean_sfx()
 	elif _right_down or (_left_down and _mode == Mode.ROTATE):
 		_object.rotate_view(
 			-event.relative.x * MOUSE_ROTATE_SENSITIVITY,
@@ -2055,6 +2050,7 @@ func _clean_overlay_with_tool(pos: Vector2) -> void:
 		var hit_pt: Variant = result.get("point", null)
 		if hit_pt != null and _object.has_method("clean_burst_at_world"):
 			_object.clean_burst_at_world(hit_pt)
+		_play_clean_sfx()
 		var inst := _service.find_instance_by_id(_selected_uid)
 		var pct: float = _object.overlay_clean_percent()
 		# Track how long the piece has been ≥95% clean this session (-1 once it drops back below).

@@ -623,8 +623,8 @@ func _default_sequence() -> Array[Dictionary]:
 	var scavenger := {
 		"name": "Ayla",
 		"texture": preload("res://assets/Characters/Scavenger.png"),
-		"region": Rect2(0, 0, 2500, 4000),  # full body, same framing as Auntie Shine & Lave
-		"scale": 0.22,  # matches the trio so all three full bodies line up at cy
+		"region": Rect2(0, 0, 2500, 4000),  # full body, matching the rest of the cast
+		"scale": 0.22,
 		"cy": 560.0,  # shared with Auntie Shine & Lave so the trio lines up horizontally
 		"push": 0.02,
 		"light_dir": 0,

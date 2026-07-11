@@ -15,6 +15,10 @@ signal sort_ready(day: int, hour: int)
 const SORT_HOURS: int = 1
 const SORT_STREAM := "ayla_sort"
 
+## Live-play sort length: ~10 in-game minutes (30 real seconds at 3 s/min). This is
+## the fast path; the hour-based ready_index below remains the save/resume fallback.
+const SORT_REAL_SECONDS: float = 30.0
+
 
 func _ready() -> void:
 	EventBus.hour_changed.connect(_on_hour_changed)
@@ -38,8 +42,33 @@ func submit_scrap(selection: Dictionary) -> bool:
 		"active": true,
 	}
 	SaveService.save_game()
+	_start_sort_timer()
 	EventBus.scrap_submitted.emit(selection.duplicate())
 	return true
+
+
+## Live-play fast path: after SORT_REAL_SECONDS of unpaused play, force the pending
+## sort ready and knock. Skipped in headless (tests) and on the instant Day-0 sort,
+## which is already ready. Save/resume falls back to the hour-based ready_index.
+func _start_sort_timer() -> void:
+	if DisplayServer.get_name() == "headless" or not is_inside_tree():
+		return
+	if sort_duration_hours() <= 0:
+		return  # instant sort (Day 0) is ready immediately; no timer needed
+	var timer := get_tree().create_timer(SORT_REAL_SECONDS, false)
+	timer.timeout.connect(_on_sort_real_timeout)
+
+
+func _on_sort_real_timeout() -> void:
+	var pending: Dictionary = GameState.save_state.loop.pending_sort
+	if not pending.get("active", false) or pending.get("ready_notified", false):
+		return
+	pending["ready_notified"] = true
+	# Bring the hour-index forward so is_sort_ready() agrees with the live timer.
+	pending["ready_index"] = _now_index()
+	sort_ready.emit(
+		GameState.save_state.loop.current_day, GameState.save_state.loop.current_hour
+	)
 
 
 ## In-game hours Ayla needs to sort a batch. Day 0 (TUT) shortens this via the
