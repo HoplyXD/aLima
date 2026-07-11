@@ -3,10 +3,8 @@
 [ext_resource type="Script" uid="uid://ctsaxlfrbicto" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
 [ext_resource type="Theme" uid="uid://cfql4ii8qlopa" path="res://Themes/pause_menu.tres" id="2_8uki6"]
 [ext_resource type="Theme" uid="uid://ctwdpy3fslv3e" path="res://Themes/title_screen.tres" id="3_0bnpd"]
-[ext_resource type="Texture2D" uid="uid://df8ooelup3urp" path="res://assets/UI assets/game/gui/frame.png" id="3_4inpj"]
 [ext_resource type="Texture2D" uid="uid://dvon5n1qg4s5o" path="res://assets/UI assets/game/gui/namebox.png" id="4_4inpj"]
 [ext_resource type="Texture2D" uid="uid://fea2iartni8r" path="res://assets/UI assets/game/gui/separator.png" id="6_4inpj"]
-
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=122240877]
 script = ExtResource("1_pause")
@@ -77,7 +75,7 @@ layout_mode = 2
 texture = ExtResource("4_4inpj")
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Root/Center/Panel/Margin/VBox" unique_id=1654097097]
-custom_minimum_size = Vector2(550, 250)
+custom_minimum_size = Vector2(566.76, 250)
 layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer" unique_id=1118288113]
@@ -126,30 +124,30 @@ text = "Fullscreen"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="SeparatorAudio" type="HSeparator" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+[node name="SeparatorAudio" type="HSeparator" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=623447481]
 layout_mode = 2
 size_flags_stretch_ratio = 2.2
 theme_override_constants/separation = 13
 
-[node name="AudioSection" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+[node name="AudioSection" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=413751730]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.8, 0.42, 1)
 theme_override_constants/line_spacing = 73
 theme_override_font_sizes/font_size = 30
 text = "Audio"
 
-[node name="SfxVolumeRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+[node name="SfxVolumeRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=175943821]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/SfxVolumeRow"]
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/SfxVolumeRow" unique_id=1820275761]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "Sound FX"
 
-[node name="SfxVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/SfxVolumeRow"]
+[node name="SfxVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/SfxVolumeRow" unique_id=735962689]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
@@ -159,18 +157,18 @@ max_value = 1.0
 step = 0.01
 value = 1.0
 
-[node name="MusicVolumeRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+[node name="MusicVolumeRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer" unique_id=986272973]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MusicVolumeRow"]
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MusicVolumeRow" unique_id=291019507]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
 text = "BG Music"
 
-[node name="MusicVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MusicVolumeRow"]
+[node name="MusicVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MusicVolumeRow" unique_id=960687366]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
@@ -306,5 +304,5 @@ text = "Exit Game"
 [node name="SkipTutorialConfirm" type="ConfirmationDialog" parent="." unique_id=1240083629]
 unique_name_in_owner = true
 title = "Skip Tutorial"
-dialog_text = "Skip the rest of Day 0? You'll receive the starter tools and wake up on Day 1."
 ok_button_text = "Skip to Day 1"
+dialog_text = "Skip the rest of Day 0? You'll receive the starter tools and wake up on Day 1."

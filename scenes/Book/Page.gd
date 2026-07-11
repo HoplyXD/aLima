@@ -16,8 +16,8 @@ const CONDITION_PAGE_NUMBER: int = 5
 const CONDITION_PAGE_2_NUMBER: int = 6
 const INDEX_PAGE_NUMBER: int = 7  ## Object Archive entry list.
 const FIRST_ENTRY_PAGE_NUMBER: int = 8
-## Categories from index 3 onward render on the second guide page; 0..2 on the first.
-const CONDITION_SECOND_PAGE_FROM: int = 3
+## Categories from index 2 onward render on the second guide page; 0..1 on the first.
+const CONDITION_SECOND_PAGE_FROM: int = 2
 
 ## Placeholder colors for the five fragment slots. These are development stand-ins
 ## for the final fragment art/geometry; see docs/phase-task.md P9.4.
@@ -238,22 +238,22 @@ func _render_condition_page(second_half: bool) -> void:
 	var scroll := ScrollContainer.new()
 	scroll.anchors_preset = Control.PRESET_FULL_RECT
 	scroll.offset_left = 20.0
-	scroll.offset_top = 20.0
+	scroll.offset_top = 12.0
 	scroll.offset_right = -20.0
-	scroll.offset_bottom = -40.0
+	scroll.offset_bottom = -36.0
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_background.add_child(scroll)
 
 	var container := VBoxContainer.new()
 	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	container.add_theme_constant_override("separation", 8)
+	container.add_theme_constant_override("separation", 5)
 	scroll.add_child(container)
 	_slot_container = container
 
 	var title := Label.new()
 	title.text = "Condition Guide" if not second_half else "Condition Guide (cont.)"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color(0.1, 0.05, 0.02))
 	container.add_child(title)
 
@@ -288,7 +288,7 @@ func _render_condition_page(second_half: bool) -> void:
 func _make_category_header(label_text: String) -> Control:
 	var header := Label.new()
 	header.text = label_text
-	header.add_theme_font_size_override("font_size", 18)
+	header.add_theme_font_size_override("font_size", 16)
 	header.add_theme_color_override("font_color", Color(0.35, 0.2, 0.08))
 	return header
 
@@ -301,7 +301,7 @@ func _make_condition_note(condition: SurfaceCondition) -> Control:
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var swatch := ColorRect.new()
-	swatch.custom_minimum_size = Vector2(40, 40)
+	swatch.custom_minimum_size = Vector2(32, 32)
 	swatch.color = condition.to_color()
 	swatch.tooltip_text = "Placeholder swatch — final condition picture pending art."
 	row.add_child(swatch)
