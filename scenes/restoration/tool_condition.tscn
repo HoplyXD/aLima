@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/restoration/tool_condition.gd" id="1_cond"]
 
 [node name="ToolCondition" type="Control"]
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(30, 30)
 layout_mode = 3
 anchors_preset = 0
 mouse_filter = 2
@@ -32,5 +32,5 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(0.97, 0.94, 0.72, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 13
 text = "0"

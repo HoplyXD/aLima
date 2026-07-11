@@ -357,6 +357,7 @@ disabled = true
 text = "Confirm Triage"
 
 [node name="FallbackPanel" type="Panel" parent="HudLayer" unique_id=711396514]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

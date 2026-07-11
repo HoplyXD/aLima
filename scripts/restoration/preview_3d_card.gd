@@ -106,6 +106,10 @@ func _visible_aabb(root: Node3D) -> AABB:
 
 
 func _process(delta: float) -> void:
+	# Off-screen cards cost nothing: the viewport only renders while visible
+	# (UPDATE_WHEN_VISIBLE), so the idle spin can skip hidden cards too.
+	if not is_visible_in_tree():
+		return
 	if _spin and _object != null and is_instance_valid(_object):
 		_object.rotate_y(SPIN_SPEED * delta)
 

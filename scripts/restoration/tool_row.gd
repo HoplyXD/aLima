@@ -12,7 +12,7 @@ signal clicked(tool_id: String)
 
 const PREVIEW_CARD_SCENE := preload("res://scenes/restoration/preview_3d_card.tscn")
 const CONDITION_SCENE := preload("res://scenes/restoration/tool_condition.tscn")
-const MODEL_SIZE := 46
+const MODEL_SIZE := 72
 
 var _tool_id: String = ""
 var _model: Preview3DCard
@@ -40,7 +40,7 @@ func _ready() -> void:
 
 
 ## Drops a compact, still (non-spinning) tool preview into the authored ModelHolder. The
-## Preview3DCard is sized for big cards, so its min sizes are trimmed to fit the small holder.
+## Preview3DCard is sized for big cards, so its min sizes are trimmed to fit the holder.
 func _build_model() -> void:
 	_model = PREVIEW_CARD_SCENE.instantiate()
 	_model.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -51,10 +51,15 @@ func _build_model() -> void:
 	var preview_container := _model.find_child("PreviewContainer", true, false)
 	if preview_container is Control:
 		(preview_container as Control).custom_minimum_size = Vector2(MODEL_SIZE, MODEL_SIZE)
+	# The row shows the tool name in its own header, so the card's name + separator go.
 	var name_label := _model.find_child("NameLabel", true, false)
 	if name_label is Control:
 		(name_label as Control).visible = false
 		(name_label as Control).custom_minimum_size = Vector2.ZERO
+	var name_sep := _model.find_child("NameSep", true, false)
+	if name_sep is Control:
+		(name_sep as Control).visible = false
+		(name_sep as Control).custom_minimum_size = Vector2.ZERO
 	_model.set_spin(false)
 
 
@@ -107,7 +112,7 @@ func _build_conditions(conditions: Array) -> void:
 	if conditions.is_empty():
 		var general := Label.new()
 		general.text = "General use"
-		general.add_theme_font_size_override("font_size", 12)
+		general.add_theme_font_size_override("font_size", 14)
 		general.add_theme_color_override("font_color", Color(0.72, 0.72, 0.72))
 		_conditions.add_child(general)
 		return
