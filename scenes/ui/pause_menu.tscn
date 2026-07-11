@@ -138,18 +138,18 @@ theme_override_constants/line_spacing = 73
 theme_override_font_sizes/font_size = 30
 text = "Audio"
 
-[node name="MasterVolumeRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
+[node name="SfxVolumeRow" type="HBoxContainer" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MasterVolumeRow"]
+[node name="Label" type="Label" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/SfxVolumeRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
-text = "Audio"
+text = "Sound FX"
 
-[node name="MasterVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MasterVolumeRow"]
+[node name="SfxVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/SfxVolumeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
@@ -168,7 +168,7 @@ theme_override_constants/separation = 12
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
-text = "Music"
+text = "BG Music"
 
 [node name="MusicVolumeSlider" type="HSlider" parent="Root/Center/Panel/Margin/VBox/ScrollContainer/VBoxContainer/MusicVolumeRow"]
 unique_name_in_owner = true

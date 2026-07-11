@@ -706,9 +706,8 @@ func _make_dust() -> GPUParticles2D:
 
 
 func _start_music() -> void:
-	# The intro and the main menu share bgm_3; MusicService keeps it playing across
-	# the scene change so the track never restarts on the title card.
-	MusicService.play_track("bgm_3")
+	# bgm_1 is the opening/intro theme; the menu crossfades to bgm_3 on the title card.
+	MusicService.play_track("bgm_1")
 
 
 # --- Composed sequence ---------------------------------------------------------

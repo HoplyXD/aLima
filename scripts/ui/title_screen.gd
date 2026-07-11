@@ -63,8 +63,8 @@ var _pending_player_name: String = ""
 
 
 func _ready() -> void:
-	# The main menu shares bgm_3 with the intro (continuous when arriving from it;
-	# starts it fresh when returning to the title from gameplay).
+	# bgm_3 is the main-menu theme (crossfades from the intro's bgm_1, or starts
+	# fresh when returning to the title from gameplay).
 	MusicService.play_track("bgm_3")
 	_connect_main_menu()
 	_connect_slot_menu()

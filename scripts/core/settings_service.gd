@@ -14,10 +14,12 @@ const AI_ONLINE := "online"
 const AI_OFFLINE := "offline"
 const DEFAULT_AI_MODE := AI_ONLINE
 
-## Audio buses (see default_bus_layout.tres). `ui_volume` trims the UI bus; the
-## master/music sliders trim overall audio and background music respectively.
+## Audio buses (see default_bus_layout.tres). Everything except music routes through
+## SFX (UI and Echo send to it); Music is its own bus. The two settings sliders trim
+## SFX and Music independently, so lowering sound effects never touches the BGM.
+## `ui_volume` is a fixed internal trim keeping UI ticks subtle inside the SFX bus.
 const UI_BUS_NAME := &"UI"
-const MASTER_BUS_NAME := &"Master"
+const SFX_BUS_NAME := &"SFX"
 const MUSIC_BUS_NAME := &"Music"
 
 ## Selectable windowed resolutions.
@@ -37,8 +39,8 @@ var ai_mode: String = DEFAULT_AI_MODE
 ## User trim for UI interaction sounds (0..1). 1.0 leaves hover ≈ -16 dB / press ≈ -10 dB
 ## relative to Master; 0.0 effectively mutes UI audio.
 var ui_volume: float = 1.0
-## Overall audio trim on the Master bus (0..1). 1.0 = unity, 0.0 = silence.
-var master_volume: float = 1.0
+## Sound-effects trim on the SFX bus (0..1) — all non-music audio. 1.0 = unity.
+var sfx_volume: float = 1.0
 ## Background-music trim on the Music bus (0..1). 1.0 = unity, 0.0 = silence.
 var music_volume: float = 1.0
 
@@ -101,9 +103,9 @@ func set_ui_volume(value: float) -> void:
 	apply_audio()
 
 
-## Sets the overall (Master) audio trim (clamped 0..1) and applies it.
-func set_master_volume(value: float) -> void:
-	master_volume = clampf(value, 0.0, 1.0)
+## Sets the sound-effects (SFX bus) trim (clamped 0..1) and applies it.
+func set_sfx_volume(value: float) -> void:
+	sfx_volume = clampf(value, 0.0, 1.0)
 	_save()
 	apply_audio()
 
@@ -120,7 +122,7 @@ func set_music_volume(value: float) -> void:
 ## (effectively silent) since linear_to_db(0) is -inf.
 func apply_audio() -> void:
 	_apply_bus_volume(UI_BUS_NAME, ui_volume)
-	_apply_bus_volume(MASTER_BUS_NAME, master_volume)
+	_apply_bus_volume(SFX_BUS_NAME, sfx_volume)
 	_apply_bus_volume(MUSIC_BUS_NAME, music_volume)
 
 
@@ -173,7 +175,7 @@ func _load() -> void:
 	if ai_mode != AI_ONLINE and ai_mode != AI_OFFLINE:
 		ai_mode = DEFAULT_AI_MODE
 	ui_volume = clampf(float(cfg.get_value("audio", "ui_volume", ui_volume)), 0.0, 1.0)
-	master_volume = clampf(float(cfg.get_value("audio", "master_volume", master_volume)), 0.0, 1.0)
+	sfx_volume = clampf(float(cfg.get_value("audio", "sfx_volume", sfx_volume)), 0.0, 1.0)
 	music_volume = clampf(float(cfg.get_value("audio", "music_volume", music_volume)), 0.0, 1.0)
 	# Legacy renderer config is ignored; the game always uses Compatibility.
 
@@ -186,7 +188,7 @@ func _save() -> void:
 	cfg.set_value("display", "artifact_previews", artifact_previews)
 	cfg.set_value("ai", "mode", ai_mode)
 	cfg.set_value("audio", "ui_volume", ui_volume)
-	cfg.set_value("audio", "master_volume", master_volume)
+	cfg.set_value("audio", "sfx_volume", sfx_volume)
 	cfg.set_value("audio", "music_volume", music_volume)
 	cfg.save(_config_path)
 
