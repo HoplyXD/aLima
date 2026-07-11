@@ -22,6 +22,7 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 const path = require('path');
+const config = require('../config');
 
 const DEFAULT_FALLBACK_FACTS_PATH = path.join(
   __dirname,
@@ -167,14 +168,19 @@ function setCachedResponse(key, response) {
   saveDiskCache(disk);
 }
 
-function getTimeoutMs() {
-  return parseInt(process.env.PORTAL_TIMEOUT_MS || '5000', 10);
+function getPortalHeaders(extraHeaders = {}) {
+  const keyName = process.env.PORTAL_API_KEY_NAME || config.portalApiKeyName;
+  const key = process.env.PORTAL_API_KEY || config.portalApiKey;
+  const headers = { ...extraHeaders };
+  if (key) {
+    headers[keyName] = `Bearer ${key}`;
+  }
+  return headers;
 }
 
 function proxyPostToPortal(urlPath, body) {
   return new Promise((resolve, reject) => {
-    const baseUrl = process.env.PORTAL_BASE_URL || 'http://localhost:3001';
-    const url = new URL(urlPath, baseUrl);
+    const url = new URL(urlPath, config.portalBaseUrl);
     const client = url.protocol === 'https:' ? https : http;
     const postData = JSON.stringify(body);
 
@@ -183,11 +189,11 @@ function proxyPostToPortal(urlPath, body) {
       port: url.port || (url.protocol === 'https:' ? 443 : 80),
       path: url.pathname,
       method: 'POST',
-      headers: {
+      headers: getPortalHeaders({
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData),
-      },
-      timeout: getTimeoutMs(),
+      }),
+      timeout: config.portalTimeoutMs,
     };
 
     const req = client.request(options, (res) => {
@@ -219,8 +225,7 @@ function proxyPostToPortal(urlPath, body) {
 
 function proxyGetFromPortal(urlPathAndQuery) {
   return new Promise((resolve, reject) => {
-    const baseUrl = process.env.PORTAL_BASE_URL || 'http://localhost:3001';
-    const url = new URL(urlPathAndQuery, baseUrl);
+    const url = new URL(urlPathAndQuery, config.portalBaseUrl);
     const client = url.protocol === 'https:' ? https : http;
 
     const options = {
@@ -228,7 +233,8 @@ function proxyGetFromPortal(urlPathAndQuery) {
       port: url.port || (url.protocol === 'https:' ? 443 : 80),
       path: `${url.pathname}${url.search}`,
       method: 'GET',
-      timeout: getTimeoutMs(),
+      headers: getPortalHeaders(),
+      timeout: config.portalTimeoutMs,
     };
 
     const req = client.request(options, (res) => {

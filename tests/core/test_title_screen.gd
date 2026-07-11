@@ -51,9 +51,9 @@ func test_start_new_game_sets_seed_and_saves_to_slot() -> void:
 	_title._start_new_game(0, 55555)
 	assert_true(SaveService.slot_exists(0))
 	assert_eq(GameState.run_seed, 55555)
-	assert_eq(GameState.loop_index, 1)
+	assert_eq(GameState.loop_index, 0)  # a brand-new game is loop 1 (index 0)
 	assert_eq(GameState.save_state.run_seed, 55555)
-	assert_eq(GameState.save_state.loop_index, 1)
+	assert_eq(GameState.save_state.loop_index, 0)
 
 
 func test_parse_player_name_trims_and_rejects_blank() -> void:
@@ -114,7 +114,7 @@ func test_continue_loads_seed_from_slot() -> void:
 	GameState.initialize("someone-else")
 	_title._attempt_continue(1)
 	assert_eq(GameState.run_seed, 77777)
-	assert_eq(GameState.loop_index, 1)
+	assert_eq(GameState.loop_index, 0)  # the new game saved at loop 1 (index 0)
 
 
 func test_attempt_continue_surfaces_load_failure() -> void:

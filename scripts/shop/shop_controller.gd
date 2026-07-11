@@ -139,6 +139,7 @@ func _ready() -> void:
 	_storage_screen.sell_requested.connect(_on_storage_sell_requested)
 	_showcase.closed.connect(_on_showcase_closed)
 	_register_demo_menu_action()
+	_register_museum_demo_action()
 	# The restoration bench opens the same shared journal / marketplace / storage overlays.
 	_restoration_view.set_journal_viewport(_book_viewport)
 	_restoration_view.set_phone(_phone)
@@ -272,7 +273,9 @@ func _show_dialogue_lines(lines: Array) -> void:
 			if speaker == "inner":
 				# The player's inner monologue is labelled with their chosen name.
 				var pname := ModelUtils.as_string(GameState.save_state.persistent.player_name)
-				formatted_lines.append({"name": pname if not pname.is_empty() else "You", "text": text})
+				formatted_lines.append(
+					{"name": pname if not pname.is_empty() else "You", "text": text}
+				)
 			else:
 				formatted_lines.append({"name": speaker, "text": text})
 		else:
@@ -783,6 +786,13 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 		var director := SpawnDirector.new(repo, GameState)
 		director.plan_loop_placements()
 
+	# Capture what was handed to Alya BEFORE the sort is consumed (below), so the
+	# showcase gold -> Oton Death Mask rule can read it.
+	var submitted_gold := 0
+	if not is_free_daily:
+		var submitted := AylaService.get_pending_submitted()
+		submitted_gold = int(submitted.get(ModelEnums.rarity_name(ModelEnums.Rarity.GOLD), 0))
+
 	# Consume the earned scrap sort unless this is the separate daily free drop.
 	if not is_free_daily:
 		AylaService.consume_sort()
@@ -811,12 +821,37 @@ func _generate_and_show_triage(is_free_daily: bool = false) -> void:
 	var extras: Array[ObjectInstance] = []
 	if not tutorial_active:
 		extras = EventDirector.get_injected_delivery_extras(GameState.save_state.loop.current_day)
+	# Handing Alya a gold piece guarantees an Oton Death Mask in the sorted batch.
+	if submitted_gold > 0:
+		extras.append(_make_oton_mask_instance())
 
 	var generator := DeliveryGenerator.new(repo, GameState)
 	var delivery := generator.generate_day_delivery(
 		GameState.save_state.loop.current_day, biased_cfg, extras
 	)
 	_triage_screen.open(delivery, biased_cfg.storage_cap, is_free_daily)
+
+
+## A fresh DIRTY Oton Death Mask instance (its scene carries authored conditions, so
+## no spawned decals are needed). Injected as a delivery extra by the showcase rule.
+func _make_oton_mask_instance() -> ObjectInstance:
+	var template := DataRepository.singleton().get_template("oton_death_mask")
+	var inst := ObjectInstance.new()
+	inst.template_id = "oton_death_mask"
+	inst.uid = (
+		"showcase_mask_%d_%d" % [GameState.loop_index, GameState.save_state.loop.current_day]
+	)
+	inst.condition = 0.0
+	inst.state = ModelEnums.ObjState.DIRTY
+	if template != null:
+		inst.storage_cost = template.storage_cost
+		inst.value = int(template.base_value_range.x)
+		inst.true_value = int(template.base_value_range.y)
+	else:
+		inst.storage_cost = 1
+		inst.value = 200
+		inst.true_value = 400
+	return inst
 
 
 func _on_morning_delivery_pressed() -> void:
@@ -1147,10 +1182,12 @@ func _maybe_open_showcase(route_id: String) -> void:
 		_open_dialogue(
 			[
 				(
-					"[b]Received:[/b] %s. Clean it at the bench, then hand it back to %s"
-					% [item_name, route.display_name]
+					(
+						"[b]Received:[/b] %s. Clean it at the bench, then hand it back to %s"
+						% [item_name, route.display_name]
+					)
+					+ " — they're waiting outside, by the yard gate."
 				)
-				+ " — they're waiting outside, by the yard gate."
 			],
 			false
 		)
@@ -1180,9 +1217,26 @@ func _register_demo_menu_action() -> void:
 		InputMap.action_add_event("demo_menu", ev)
 
 
+func _register_museum_demo_action() -> void:
+	# F8 posts a test museum record and opens the mock Portal gallery in the system
+	# browser. Debug builds only; used for one-button video evidence.
+	if not OS.is_debug_build():
+		return
+	if not InputMap.has_action("museum_demo"):
+		InputMap.add_action("museum_demo")
+		var ev := InputEventKey.new()
+		ev.physical_keycode = KEY_F8
+		InputMap.action_add_event("museum_demo", ev)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not OS.is_debug_build():
 		return
 	if InputMap.has_action("demo_menu") and event.is_action_pressed("demo_menu"):
 		_demo_menu.toggle()
+		get_viewport().set_input_as_handled()
+		return
+	if InputMap.has_action("museum_demo") and event.is_action_pressed("museum_demo"):
+		MuseumDemoHelper.post_test_gold_record()
+		MuseumDemoHelper.open_browser_gallery()
 		get_viewport().set_input_as_handled()

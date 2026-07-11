@@ -1,14 +1,23 @@
 const request = require('supertest');
-const createApp = require('../src/app');
+const { initApp } = require('../src/app');
 const { resetCache } = require('../src/services/fact_service');
+const db = require('../src/db');
 
-const app = createApp();
+let app;
+
+beforeAll(async () => {
+  app = await initApp();
+});
+
+afterAll(async () => {
+  await db.close();
+});
+
+beforeEach(() => {
+  resetCache();
+});
 
 describe('POST /discovery', () => {
-  beforeEach(() => {
-    resetCache();
-  });
-
   test('known fragment returns deterministic fact card', async () => {
     const res = await request(app)
       .post('/discovery')

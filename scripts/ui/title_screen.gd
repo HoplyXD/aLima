@@ -364,7 +364,9 @@ func _start_new_game(slot: int, seed: int) -> void:
 	# tutorial: it runs exactly once per newly created save file (TUT).
 	GameState.save_state.persistent.player_name = _pending_player_name
 	GameState.save_state.persistent.tutorial_completed = false
-	GameState.new_run(seed)
+	# A brand-new game is loop 1 (index 0); don't advance the loop here (initialize()
+	# already set it to 0), or the fresh save would read "Loop 2".
+	GameState.new_run(seed, false)
 	var save_result := SaveService.save_game()
 	if not save_result.ok:
 		_name_status.text = "Save failed: %s" % save_result.get("error", "")

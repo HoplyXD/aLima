@@ -108,6 +108,14 @@ func refresh_gallery() -> void:
 	_client.request_museum_entries(GameState.player_id)
 
 
+## Debug/test seam: send an already-built MuseumRecordRequest through the Portal
+## client without constructing a stand-in game object. Used by MuseumDemoHelper.
+func post_record_request(request: MuseumRecordRequest) -> String:
+	var entry_id := entry_id_for(request.record_id, request.player_id)
+	_client.request_museum_record(request)
+	return entry_id
+
+
 func _build_request(
 	record_id: String,
 	player_id: String,

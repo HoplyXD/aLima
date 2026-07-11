@@ -18,7 +18,9 @@ var _refresh_pending: bool = false
 @onready var _status_label: Label = %StatusLabel
 @onready var _cards_container: VBoxContainer = %CardsContainer
 @onready var _refresh_button: Button = %RefreshButton
+@onready var _open_portal_button: Button = %OpenPortalButton
 @onready var _close_button: Button = %CloseButton
+@onready var _player_id_label: Label = %PlayerIdLabel
 
 
 func _ready() -> void:
@@ -27,6 +29,7 @@ func _ready() -> void:
 	_title_label.add_theme_color_override("font_color", UiPalette.BRASS_BRIGHT)
 	_close_button.pressed.connect(close)
 	_refresh_button.pressed.connect(_on_refresh_pressed)
+	_open_portal_button.pressed.connect(_on_open_portal_pressed)
 	EventBus.museum_gallery_refreshed.connect(_on_gallery_refreshed)
 	EventBus.museum_entry_recorded.connect(_on_museum_entry_recorded)
 
@@ -48,6 +51,8 @@ func open() -> void:
 		REFRESH_TEXT_ONLINE if SettingsService.ai_mode_is_online() else REFRESH_TEXT_OFFLINE
 	)
 	_refresh_button.disabled = not SettingsService.ai_mode_is_online()
+	_open_portal_button.disabled = GameState.player_id.is_empty()
+	_player_id_label.text = "Player ID: %s" % GameState.player_id
 	_render_entries()
 	_close_button.grab_focus()
 
@@ -160,6 +165,14 @@ func _on_refresh_pressed() -> void:
 	_refresh_pending = true
 	_status_label.text = "Reaching the Portal…"
 	MuseumService.refresh_gallery()
+
+
+func _on_open_portal_pressed() -> void:
+	var player_id := GameState.player_id
+	if player_id.is_empty():
+		return
+	var url := "http://localhost:3001/?player_id=%s" % player_id.uri_encode()
+	OS.shell_open(url)
 
 
 func _on_gallery_refreshed(_entries: Array, used_fallback: bool) -> void:

@@ -27,6 +27,15 @@ const SCRAP_KIT_PATH := "res://assets/3d Assets/Scrapyard/scrap_kit.glb"
 const OUTLINE_GROW := 0.07
 const OUTLINE_EMISSION_ENERGY := 4.5
 
+## A gold-tier scrap piece hums a Cultural Echo so the player can hear a valuable find
+## nearby (positional 3D audio on the Echo bus; the fragment hunt is unaffected — this
+## is a plain proximity cue, never the heartbeat band). Louder the closer you get.
+const GOLD_ECHO_STREAM := preload("res://assets/audio/echoes/hum.wav")
+const GOLD_ECHO_BUS := &"Echo"
+const GOLD_ECHO_UNIT_SIZE := 4.0
+const GOLD_ECHO_MAX_DISTANCE := 24.0
+const GOLD_ECHO_VOLUME_DB := -4.0
+
 ## Heap meshes are cached across all scrap items so the kit GLB is only
 ## instantiated once per run.
 static var _heap_meshes: Array[Mesh] = []
@@ -46,11 +55,38 @@ func _ready() -> void:
 	activated.connect(_on_activated)
 	_setup_visual()
 	_apply_rarity_visual()
+	_setup_gold_echo()
 
 
 func set_rarity(value: String) -> void:
 	rarity = value.to_lower()
 	_apply_rarity_visual()
+
+
+var _gold_echo: AudioStreamPlayer3D
+
+
+## Attaches a looping positional Cultural Echo hum to gold-tier scrap so the player can
+## hear a valuable find nearby. No-op for lesser tiers and in headless test runs.
+func _setup_gold_echo() -> void:
+	if rarity != "gold" or DisplayServer.get_name() == "headless":
+		return
+	_gold_echo = AudioStreamPlayer3D.new()
+	_gold_echo.name = "GoldEcho"
+	_gold_echo.stream = GOLD_ECHO_STREAM
+	_gold_echo.bus = GOLD_ECHO_BUS
+	_gold_echo.unit_size = GOLD_ECHO_UNIT_SIZE
+	_gold_echo.max_distance = GOLD_ECHO_MAX_DISTANCE
+	_gold_echo.volume_db = GOLD_ECHO_VOLUME_DB
+	add_child(_gold_echo)
+	_gold_echo.finished.connect(_replay_gold_echo)
+	_gold_echo.play()
+
+
+## Loops the echo hum (WAV streams don't loop on their own here).
+func _replay_gold_echo() -> void:
+	if is_instance_valid(_gold_echo):
+		_gold_echo.play()
 
 
 func _on_activated() -> void:
