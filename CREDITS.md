@@ -54,24 +54,23 @@ per pack). Original Team aLima work is marked as such; everything else is **to c
 | Model / pack (files) | Author | Source | License |
 |---|---|---|---|
 | **Oton Death Mask** | Team aLima (Jorge Maverick Acidre) | original | — (original) |
-| Phone (`Phone.glb`) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Table (`Table.glb`) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Box (`Box/Box.glb`) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Sofa (`Sofa/Sofa.glb`) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Bookcase set (`Bookcase/`: Book Stack, Book, Bookcase with Books, Books (1), Magic book, Short Closet, books, brown book) | _to confirm_ | _to confirm_ | _to confirm_ |
+| Bookcase set (`Bookcase/`: Book Stack, Book, Bookcase with Books, Books (1), Magic book, Short Closet, books, brown book) | **Book Stack** — Danni Bittman; _other books to confirm_ | **Book Stack** — Poly Pizza; _others to confirm_ | **Book Stack** — CC-BY; _others to confirm_ |
 | Paper (`Paper/`: Debris Papers, Envelopes) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Plants (`Plants/Plants - Assorted shelf plants.glb`) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Walls & Floors (`Walls and Floors/`: Door, Floating Shelf, Normal Wall, Wood Floor) | _to confirm_ | _to confirm_ | _to confirm_ |
-| FireLog (`FireLog/`: Fire.glb, trn_Log.fbx) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Apple (`Apple/trn_Apple.fbx`) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Candelabra (`Candelabra/trn_Candelabra.fbx`) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Candle Cup (`CandleCup/trn_CandleCup.fbx`) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Candles (`Candles/`: trn_Candle, trn_CandleFlame, trn_Candle_Half_COL, trn_Candle_full, trn_Candle_half) | _to confirm_ | _to confirm_ | _to confirm_ |
-| Fireplace (`Fireplace/`: trn_Fireplace, trn_Fireplace_Tube) | _to confirm_ | _to confirm_ | _to confirm_ |
+| Plants (`Plants/Plants - Assorted shelf plants.glb`) | Jakers_H | Poly Pizza | CC-BY |
+| Modular Sushi Restaurant Kit | Quaternius | Poly Pizza / https://quaternius.com/packs/sushirestaurantkit.html | CC0 1.0 (public domain) |
+| Walls & Floors (`Walls and Floors/`: Door, Floating Shelf, Normal Wall, Wood Floor) | **Floating Shelf** — Zsky; _Door / Normal Wall / Wood Floor to confirm_ | **Floating Shelf** — Poly Pizza; _others to confirm_ | **Floating Shelf** — CC-BY; _others to confirm_ |
+| FireLog (`FireLog/`: Fire.glb, trn_Log.fbx) | **trn_Log.fbx** — soi; _Fire.glb to confirm_ | **trn_Log.fbx** — [Medieval Interior Asset Pack (itch.io)](https://soi.itch.io/medieval-interior-asset-pack); _Fire.glb to confirm_ | **trn_Log.fbx** — free for any use incl. commercial; _Fire.glb to confirm_ |
+| Apple (`Apple/trn_Apple.fbx`) | soi | [Medieval Interior Asset Pack (itch.io)](https://soi.itch.io/medieval-interior-asset-pack) | Free for any use incl. commercial (itch.io) |
+| Candelabra (`Candelabra/trn_Candelabra.fbx`) | soi | [Medieval Interior Asset Pack (itch.io)](https://soi.itch.io/medieval-interior-asset-pack) | Free for any use incl. commercial (itch.io) |
+| Candle Cup (`CandleCup/trn_CandleCup.fbx`) | soi | [Medieval Interior Asset Pack (itch.io)](https://soi.itch.io/medieval-interior-asset-pack) | Free for any use incl. commercial (itch.io) |
+| Candles (`Candles/`: trn_Candle, trn_CandleFlame, trn_Candle_Half_COL, trn_Candle_full, trn_Candle_half) | soi | [Medieval Interior Asset Pack (itch.io)](https://soi.itch.io/medieval-interior-asset-pack) | Free for any use incl. commercial (itch.io) |
+| Fireplace (`Fireplace/`: trn_Fireplace, trn_Fireplace_Tube) | soi | [Medieval Interior Asset Pack (itch.io)](https://soi.itch.io/medieval-interior-asset-pack) | Free for any use incl. commercial (itch.io) |
 
-> The `trn_*.fbx` models (Apple, Candelabra, Candle Cup, Candles, Log, Fireplace) share a
-> naming prefix and are probably from **one asset pack** — confirming that one source covers
-> all of them at once.
+> The `trn_*.fbx` models (Apple, Candelabra, Candle Cup, Candles, Fire Log, Fireplace) all come
+> from **one asset pack**: the **[Medieval Interior Asset Pack by soi](https://soi.itch.io/medieval-interior-asset-pack)**
+> (itch.io) — its model list matches these files exactly. soi's page states *"free to use for
+> any purpose"* (incl. commercial) rather than a formal CC0 deed, so treat it as free for any
+> use / no attribution required; we credit it here anyway (jam rule + good practice).
 
 ### Incoming itch.io packs (sourced by Jorge, 2026-06 — not yet imported into `assets/`)
 
@@ -99,6 +98,8 @@ bundled `Licence.txt` where present).
 
 | Asset | Author | Source | License |
 |---|---|---|---|
+| Universal UI/Menu Soundpack | Nathan Gibson | https://cyrex-studios.itch.io/universal-ui-soundpack?download#google_vignette | CC BY 4.0 |
+| BGM music | Maharlikang Bahandi (band) | Provided directly by a band member (a teammate's dad) | CC-BY |
 | _(add entries)_ | | | |
 
 ---
@@ -107,6 +108,9 @@ bundled `Licence.txt` where present).
 
 | Font | Author | Source | License |
 |---|---|---|---|
+| Augusta | Dieter Steffmann | https://www.dafont.com/augusta.font | 100% Free (dafont) — personal & commercial use |
+| Cloister Black | Dieter Steffmann | https://www.dafont.com/cloister-black.font | 100% Free (dafont) — personal & commercial use |
+| Roman Antique | Dieter Steffmann | https://www.dafont.com/roman-antique.font | 100% Free (dafont) — personal & commercial use |
 | _(add entries)_ | | | |
 
 ---
