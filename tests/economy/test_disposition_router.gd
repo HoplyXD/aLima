@@ -126,9 +126,10 @@ func test_preserve_disposition_creates_a_museum_record() -> void:
 	var result := DispositionRouter.dispose("g1", DispositionRouter.Disposition.PRESERVE)
 	assert_true(result.ok)
 	assert_false(_inventory_has("g1"), "the preserved item leaves loop inventory")
+	var expected_entry_id := "entry_oton_death_mask_disposition-player"
 	assert_true(
-		GameState.save_state.persistent.museum_entries.has("preserved_oton_death_mask"),
-		"a persistent museum record is created"
+		GameState.save_state.persistent.museum_entries.has(expected_entry_id),
+		"a persistent museum record is created with the deterministic backend id"
 	)
 
 

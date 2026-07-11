@@ -25,6 +25,7 @@ venv/
 # Node.js backend / mock portal
 node_modules/
 server/cache/
+mock-portal/cache/
 
 # Logs and OS cruft
 *.log

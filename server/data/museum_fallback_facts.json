@@ -1,0 +1,26 @@
+{
+  "master_artifact_demo": {
+    "fact_card": "SOURCE VERIFICATION PENDING — the assembled artifact record will be authored from verified sources after the Phase 12 artifact lock.",
+    "photo_ref": "",
+    "timeline_entry": "Assembled-artifact timeline pending source verification.",
+    "regional_story": "Assembled-artifact regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Heirloom Timepiece (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  },
+  "oton_death_mask": {
+    "fact_card": "SOURCE VERIFICATION PENDING — this Gold-tier find's fact card awaits verified historical sources (docs/sources/) before it can be displayed as a museum fact.",
+    "photo_ref": "",
+    "timeline_entry": "Provenance timeline pending source verification.",
+    "regional_story": "Regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Oton Death Mask (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  }
+}

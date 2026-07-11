@@ -50,4 +50,47 @@ function validateDiscoveryRequest(body) {
   return body;
 }
 
-module.exports = { validateDiscoveryRequest };
+const VALID_MUSEUM_RARITIES = new Set(['gold', 'master_artifact']);
+
+function validateMuseumRecordRequest(body) {
+  if (!body || typeof body !== 'object') {
+    const err = new Error('Request body must be a JSON object');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  assertString(body.record_id, 'record_id');
+  assertString(body.player_id, 'player_id');
+  assertString(body.timestamp, 'timestamp');
+
+  if (!VALID_MUSEUM_RARITIES.has(body.rarity)) {
+    const err = new Error("'rarity' must be 'gold' or 'master_artifact'");
+    err.statusCode = 400;
+    err.details = { field: 'rarity' };
+    throw err;
+  }
+
+  if ('condition' in body) {
+    assertNumberInRange(body.condition, 'condition', 0, 100);
+  } else {
+    body.condition = 0;
+  }
+  if (typeof body.discovery_context !== 'string') {
+    body.discovery_context = '';
+  }
+  if (typeof body.display_name !== 'string') {
+    body.display_name = '';
+  }
+
+  const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+  if (!isoRegex.test(body.timestamp)) {
+    const err = new Error("'timestamp' must be a valid ISO-8601 string");
+    err.statusCode = 400;
+    err.details = { field: 'timestamp' };
+    throw err;
+  }
+
+  return body;
+}
+
+module.exports = { validateDiscoveryRequest, validateMuseumRecordRequest };

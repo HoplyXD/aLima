@@ -1,6 +1,7 @@
 const express = require('express');
 const scanRoutes = require('./routes/scan');
 const portalRoutes = require('./routes/portal');
+const museumRoutes = require('./routes/museum');
 const negotiateRoutes = require('./routes/negotiate');
 const errorHandler = require('./middleware/error_handler');
 
@@ -11,6 +12,7 @@ function createApp() {
 
   app.use('/api/scan', scanRoutes);
   app.use('/api/portal', portalRoutes);
+  app.use('/api/portal/museum', museumRoutes);
   app.use('/api/negotiate', negotiateRoutes);
 
   // Health check for orchestration/tests.

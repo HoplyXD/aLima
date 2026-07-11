@@ -173,13 +173,10 @@ func _dispose_preserve(uid: String) -> Dictionary:
 	var found := _find(uid)
 	var inst: ObjectInstance = found["inst"]
 	var template: ScrapObjectTemplate = found["template"]
-	var museum_entry_id := "preserved_%s" % inst.template_id
-	var museum: Dictionary = GameState.save_state.persistent.museum_entries
-	if not museum.has(museum_entry_id):
-		var entry := MuseumEntry.new()
-		entry.artifact_id = inst.template_id
-		entry.fact_card = _preserve_fact_card(template)
-		museum[museum_entry_id] = entry
+	# The museum post is idempotent and persists a local MuseumEntry immediately
+	# so the gallery works offline; the async Portal confirmation updates the
+	# entry later (P16.4, MUS-R2/MUS-R3, DISP-R4).
+	var museum_entry_id := MuseumService.post_gold_discovery(inst, template)
 	MarketplaceService.resolve_listing(uid, MarketplaceListing.Status.WITHDRAWN, 0, "")
 	_remove(uid)
 	_log_disposition(uid, template, Disposition.PRESERVE, museum_entry_id, 0)
@@ -209,24 +206,24 @@ func _dispose_journal(uid: String) -> Dictionary:
 # --- Helpers ------------------------------------------------------------------
 
 
-func _preserve_fact_card(template: ScrapObjectTemplate) -> String:
-	if template == null:
-		return "Preserved in the shop museum."
-	return "Preserved in the shop museum: %s." % template.display_name
-
-
 func _log_disposition(
 	uid: String, template: ScrapObjectTemplate, disposition: int, outcome_id: String, price: int
 ) -> void:
-	GameState.save_state.loop.disposition_log.append(
-		{
-			"uid": uid,
-			"template_id": template.id if template != null else "",
-			"disposition": DISPOSITION_NAMES[disposition],
-			"outcome_id": outcome_id,
-			"price": price,
-			"day": GameState.save_state.loop.current_day,
-		}
+	(
+		GameState
+		. save_state
+		. loop
+		. disposition_log
+		. append(
+			{
+				"uid": uid,
+				"template_id": template.id if template != null else "",
+				"disposition": DISPOSITION_NAMES[disposition],
+				"outcome_id": outcome_id,
+				"price": price,
+				"day": GameState.save_state.loop.current_day,
+			}
+		)
 	)
 
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const discoveryRoutes = require('./routes/discovery');
+const museumRoutes = require('./routes/museum');
 const errorHandler = require('./middleware/error_handler');
 
 function createApp() {
@@ -8,6 +9,7 @@ function createApp() {
   app.use(express.json({ limit: '16kb' }));
 
   app.use('/discovery', discoveryRoutes);
+  app.use('/museum', museumRoutes);
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ ok: true, service: 'alima-mock-portal' });

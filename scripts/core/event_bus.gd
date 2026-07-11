@@ -104,6 +104,13 @@ signal portal_completed(
 	fragment_id: String, museum_entry_id: String, used_fallback: bool, fact_card: String
 )
 signal fragment_seated(fragment_id: String, slot_index: int)
+## Emitted when a museum record is persisted locally (either from a PRESERVE
+## disposition or a Master Artifact post). used_fallback is true when the local
+## record was created without a live Portal response (P16.4, MUS-R2/MUS-R3).
+signal museum_entry_recorded(entry_id: String, record_id: String, used_fallback: bool)
+## Emitted when the museum gallery retrieval finishes. entries is the current
+## persisted set; used_fallback is true when the backend was unreachable.
+signal museum_gallery_refreshed(entries: Array, used_fallback: bool)
 
 
 func _ready() -> void:

@@ -1,0 +1,86 @@
+{
+  "master_artifact_demo": {
+    "fact_card": "MOCK RECORD — SOURCE VERIFICATION PENDING. The assembled artifact record will be authored from verified sources after the Phase 12 artifact lock.",
+    "photo_ref": "",
+    "timeline_entry": "Assembled-artifact timeline pending source verification.",
+    "regional_story": "Assembled-artifact regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Heirloom Timepiece (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  },
+  "oton_death_mask": {
+    "fact_card": "MOCK RECORD — SOURCE VERIFICATION PENDING. This Gold-tier find's fact card awaits verified historical sources (docs/sources/) before it can be displayed as a museum fact.",
+    "photo_ref": "",
+    "timeline_entry": "Provenance timeline pending source verification.",
+    "regional_story": "Regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Oton Death Mask (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  },
+  "gold_discovery_01": {
+    "fact_card": "MOCK RECORD — SOURCE VERIFICATION PENDING. Gold discovery 01 fact card placeholder.",
+    "photo_ref": "",
+    "timeline_entry": "Timeline pending source verification.",
+    "regional_story": "Regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Gold Discovery 01 (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  },
+  "gold_discovery_02": {
+    "fact_card": "MOCK RECORD — SOURCE VERIFICATION PENDING. Gold discovery 02 fact card placeholder.",
+    "photo_ref": "",
+    "timeline_entry": "Timeline pending source verification.",
+    "regional_story": "Regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Gold Discovery 02 (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  },
+  "gold_discovery_03": {
+    "fact_card": "MOCK RECORD — SOURCE VERIFICATION PENDING. Gold discovery 03 fact card placeholder.",
+    "photo_ref": "",
+    "timeline_entry": "Timeline pending source verification.",
+    "regional_story": "Regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Gold Discovery 03 (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  },
+  "gold_discovery_04": {
+    "fact_card": "MOCK RECORD — SOURCE VERIFICATION PENDING. Gold discovery 04 fact card placeholder.",
+    "photo_ref": "",
+    "timeline_entry": "Timeline pending source verification.",
+    "regional_story": "Regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Gold Discovery 04 (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  },
+  "gold_discovery_05": {
+    "fact_card": "MOCK RECORD — SOURCE VERIFICATION PENDING. Gold discovery 05 fact card placeholder.",
+    "photo_ref": "",
+    "timeline_entry": "Timeline pending source verification.",
+    "regional_story": "Regional story pending source verification.",
+    "character_memory_refs": [],
+    "artifact_meta": {
+      "name": "Gold Discovery 05 (placeholder)",
+      "period": "pending verification",
+      "origin": "Western Visayas (pending verification)"
+    }
+  }
+}

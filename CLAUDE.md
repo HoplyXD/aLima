@@ -41,7 +41,7 @@
 alima/
 ├── CLAUDE.md                  ← you are here
 ├── README.md                  ← GDD / narrative and design source
-├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, MarketplaceService, RouteService, SettingsService, PauseMenu, LocalAI, AylaService, DispositionRouter, EveningService, TutorialService
+├── project.godot              ← Godot 4.7 project root; autoloads EventBus, GameState, SaveService, DayClock, FragmentService, LoopController, EchoController, PortalFlowController, SeatingService, JournalService, RouteService, MarketplaceService, SettingsService, PauseMenu, LocalAI, AylaService, DispositionRouter, EveningService, TutorialService, MuseumService
 ├── docs/
 │   ├── PRD.md                 ← build requirements; §12 is the discovery spec
 │   ├── phase-task.md          ← canonical implementation checklist/status
@@ -73,7 +73,7 @@ alima/
 ├── requirements-dev.txt       ← pinned gdtoolkit (gdformat/gdlint)
 ├── server/                    ← Express: LLM proxy + portal client (Phase 8; cached `/api/scan`, `/api/portal/discovery` proxy, `.env.example`, Jest tests)
 ├── mock-portal/               ← mock City-Wide Portal API (Phase 8; deterministic fact cards, Jest tests)
-└── data/                      ← objects, artifacts (+ packets/ artifact-lock), echoes, routes (+ beats/), scanner-cache, delivery, journal, buyers, events, scrap, design (§23 decisions), tutorial/ (day0_script.json + speakers.json — the Day 0 step/dialogue data), travel/ (destinations.json), content-manifest.json, and full-game contract stubs: marketplace, counterfeits, temporal-echoes, evening, museum (JSON; artifact-agnostic)
+└── data/                      ← objects, artifacts (+ packets/ artifact-lock), echoes, routes (+ beats/), scanner-cache, delivery, journal, buyers, events, scrap, design (§23 decisions), tutorial/ (day0_script.json + speakers.json — the Day 0 step/dialogue data), travel/ (destinations.json), museum/ (source-gated records; artifact-agnostic), content-manifest.json, and full-game contract stubs: marketplace, counterfeits, temporal-echoes, evening (JSON)
 ```
 
 **Content manifest (Phase 12+, CLAUDE.md §4-M).** `data/content-manifest.json` is the versioned
@@ -178,8 +178,9 @@ Push-Location server
 npm install
 Copy-Item .env.example .env     # fill in keys locally; NEVER commit .env
 # Required: PORT, PORTAL_BASE_URL, PORTAL_TIMEOUT_MS (see server/.env.example)
+# Museum: MUSEUM_CACHE_PATH, RATE_LIMIT_MUSEUM (see server/.env.example)
 npm run dev                     # run in a dedicated terminal
-npm test                        # 23/24 passing as of 2026-06-26; one pre-existing negotiate fallback-flag test fails when server/.env has a live API key (uses --forceExit due to open Supertest handles)
+npm test                        # 33/34 passing as of 2026-07-11; one pre-existing negotiate fallback-flag test fails when no API key is configured (uses --forceExit due to open Supertest handles)
 Pop-Location
 
 # --- Mock Portal (Phase 8) ---
@@ -187,7 +188,7 @@ Push-Location mock-portal
 npm install
 Copy-Item .env.example .env     # optional; defaults in config
 npm start                       # run in a dedicated terminal
-npm test                        # 4/4 passing as of 2026-06-23
+npm test                        # 11/11 passing as of 2026-07-11 (discovery + museum mirror)
 Pop-Location
 
 # --- Full local end-to-end (run server + mock-portal first) ---
@@ -242,7 +243,7 @@ The 50% gameplay video must show three beats: (a) the artifact spawning in diffe
 
 - **Team:** Francis Gabriel Austria (lead dev/game design), Om Shanti Limpin (dev/design/narrative/artist/UI), Jorge Maverick Acidre (dev/design/3D modeler/character artist). WVSU, Iloilo City.
 - **Artifact:** undecided; frontrunner is the **Heirloom Timepiece** (escapement·dial·hands·gear-train·pendulum). Keep all systems artifact-agnostic until locked (post-workshop, before asset production).
-- **Engine verification:** `project.godot` targets Godot 4.7. Official Godot 4.7 console build is installed at `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` and verified (`--version` → `4.7.stable.official.5b4e0cb0f`). A 4.7 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.7 executable for all verification. The editor import, main-scene startup, complete GUT suite (578/578, 1831 asserts as of 2026-06-26), focused model/core/delivery/restoration/spawn/echo/scanner/portal/journal/scrapyard suites, the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior, Phase RV2-A/B two-space shell and scrap-foraging delivery, and Windows/Web CLI exports pass under 4.7. Backend suites: `server/npm test` → 23/24 (one pre-existing negotiate fallback-flag failure when `server/.env` has a live API key); `mock-portal/npm test` → 4/4. Runtime tasks (including the on-screen forage → hand-off → sort → knock → triage flow, real-time clock observation, restoration mouse/controller/touch flow, journal/case readability, the full Found → Unlock end-to-end observation, and the Web runtime in a browser) still require their own acceptance checks before `[x]`.
+- **Engine verification:** `project.godot` targets Godot 4.7. Official Godot 4.7 console build is installed at `C:\Users\roman\Downloads\Godot_v4.7-stable_win64_console.exe` and verified (`--version` → `4.7.stable.official.5b4e0cb0f`). A 4.7 PATH shim exists at `C:\Users\roman\tools\bin\godot.cmd`, but the bare `godot` command currently resolves to the older 4.5.1 executable at `C:\Users\roman\Desktop\Godot` (`4.5.1.stable.official.f62fdbde1`) because its `godot.exe` appears earlier in the effective PATH. Use the explicit 4.7 executable for all verification. The editor import, main-scene startup, complete GUT suite (798/798 as of 2026-07-11), focused model/core/delivery/restoration/spawn/echo/scanner/portal/journal/scrapyard/economy/museum suites, the Phase 2 `DayClock`/`LoopController` clock-loop-persistence behavior, Phase RV2-A/B two-space shell and scrap-foraging delivery, and Windows/Web CLI exports pass under 4.7. Backend suites: `server/npm test` → 33/34 (one pre-existing negotiate fallback-flag failure when no API key is configured); `mock-portal/npm test` → 11/11. Runtime tasks (including the on-screen forage → hand-off → sort → knock → triage flow, real-time clock observation, restoration mouse/controller/touch flow, journal/case/museum readability, the full Found → Unlock end-to-end observation, and the Web runtime in a browser) still require their own acceptance checks before `[x]`.
 
 ---
 

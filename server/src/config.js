@@ -22,8 +22,13 @@ const config = {
     process.env.PORTAL_CACHE_PATH,
     path.join(__dirname, '..', 'cache', 'portal_cache.json')
   ),
+  museumCachePath: asString(
+    process.env.MUSEUM_CACHE_PATH,
+    path.join(__dirname, '..', 'cache', 'museum_cache.json')
+  ),
   rateLimitScan: asInt(process.env.RATE_LIMIT_SCAN, 30),
   rateLimitPortal: asInt(process.env.RATE_LIMIT_PORTAL, 10),
+  rateLimitMuseum: asInt(process.env.RATE_LIMIT_MUSEUM, 20),
   rateLimitNegotiate: asInt(process.env.RATE_LIMIT_NEGOTIATE, 20),
   // LLM buyer banter (MKT-R3). When no provider is usable the endpoint returns a
   // deterministic fallback so the exhibit never depends on a live model.

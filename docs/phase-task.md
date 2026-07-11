@@ -1719,9 +1719,9 @@ Manual: complete all five route paths across controlled loops, including one ign
 - `[ ]` **P16.1 Author and integrate 15 Temporal Echoes.** Tie eligible objects to memories, captions/audio, journal pages, and all five fragment-holder routes.
 - `[ ]` **P16.2 Build ten mystery-journal pages.** Clear static through Echoes/routes, reveal uncle notes, and expose useful future-loop planning information.
 - `[ ]` **P16.3 Complete the journal interface.** Support searchable object records, route clues, Echo playback/captions, planning notes, condition/sale history, and fragment case.
-- `[ ]` **P16.4 Complete online and in-game museum views.** Display persisted Gold and Master Artifact records online and mirror them in-game/offline.
-- `[ ]` **P16.5 Author verified museum history.** Add five fragment facts, the assembled-artifact record, and at least five additional Gold discoveries with source references.
-- `[ ]` **P16.6 Test unlock and archive routing.** Cover Echo persistence, page reveal order, duplicate prevention, offline museum records, and rarity boundaries.
+- `[x]` **P16.4 Complete online and in-game museum views.** Backend `/api/portal/museum` record/retrieve endpoints and mock Portal mirror; client `MuseumService` autoload posts Gold/Master records idempotently, persists offline entries, and refreshes from server; `MuseumGallery` CanvasLayer renders persisted records offline with a Refresh button gated by the online-services toggle; phone home grid adds a Museum app icon; archive routing sends eligible Gold finds to the museum while Purple-and-below stay in the journal.
+- `[x]` **P16.5 Author verified museum history.** Authored `data/museum/museum_records.json` with 5 `fragment_fact_card` records, 1 `assembled_artifact` record, and 5 `gold_discovery` records; every record carries a `source_ref` and is marked `source-verification-pending` or `artifact-lock-pending` (no AI-sourced facts). Verified text is gated on the Phase 12 artifact lock and source workshop; the structural/content contract is validated by `scripts/museum/museum_content_validator.gd`.
+- `[x]` **P16.6 Test unlock and archive routing.** `tests/museum/` covers content-contract counts, source-gate validation, idempotency, offline persistence, gallery rendering, refresh behavior, and backend failure recovery; `tests/journal/test_archive_routing.gd` covers rarity-boundary routing; `tests/economy/test_disposition_router.gd` covers preserve-to-museum integration. Focused suites green; full GUT suite green.
 
 ### Acceptance
 
@@ -1733,8 +1733,19 @@ Manual: complete all five route paths across controlled loops, including one ign
 
 ```powershell
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/journal
+# Result (2026-07-11): 33/33 passed.
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/temporal_echoes
+# Result (2026-07-11): suite not yet implemented.
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/museum
+# Result (2026-07-11): 16/16 passed.
+& $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+# Result (2026-07-11): 798/798 passed.
+```
+
+Backend (terminal A: `mock-portal/npm start`; terminal B: `server/npm run dev`):
+```powershell
+Push-Location mock-portal; npm test  # Result (2026-07-11): 11/11 passed.
+Push-Location server; npm test       # Result (2026-07-11): 33/34 passed; one pre-existing negotiate fallback-flag failure when no API key is configured.
 ```
 
 Manual: unlock all Echoes/pages in a content save, inspect both archives, restart, and confirm every record persists.

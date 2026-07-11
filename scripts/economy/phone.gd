@@ -11,6 +11,7 @@ extends CanvasLayer
 signal closed
 
 const DIALOGUE_BOX_SCENE := preload("res://dialogue/dialogue_box.tscn")
+const MUSEUM_GALLERY_SCENE := preload("res://scenes/museum/museum_gallery.tscn")
 
 ## Day 0 (TUT): pointer-claim identity for the sell-flow arrow, and the controls
 ## the arrow chains through (Marketplace app -> List -> Message). See
@@ -274,9 +275,10 @@ func _fade_in(node: CanvasItem) -> void:
 ## fresh from DayClock so direct calls (e.g. from open()) stay correct too.
 func _update_status(_day: int = 0, _hour: int = 0) -> void:
 	var day := DayClock.get_day()
-	_status_label.text = "%s · Day %d · %02d:%02d" % [
-		DayClock.weekday_name(day), day, DayClock.get_hour(), DayClock.get_minute()
-	]
+	_status_label.text = (
+		"%s · Day %d · %02d:%02d"
+		% [DayClock.weekday_name(day), day, DayClock.get_hour(), DayClock.get_minute()]
+	)
 
 
 # --- Home screen -------------------------------------------------------------
@@ -290,9 +292,14 @@ func _build_app_grid() -> void:
 	_app_grid.add_child(_market_app_button)
 	# The flashlight is an offline app that works even during a brownout.
 	_app_grid.add_child(_make_app_icon("Flashlight", "flashlight", false))
+	var museum_button := _make_app_icon("Museum", "museum", false)
+	_app_grid.add_child(museum_button)
+	museum_button.pressed.connect(_open_museum_gallery)
 
 
-func _make_app_icon(label: String, app_id: String, disabled: bool) -> Button:
+func _make_app_icon(
+	label: String, app_id: String, disabled: bool, on_pressed: Callable = Callable()
+) -> Button:
 	var button := Button.new()
 	# Sized so three across fit inside the phone body's fixed width, otherwise the home
 	# screen would be wider than the app views and the phone appears to resize on tap.
@@ -324,7 +331,10 @@ func _make_app_icon(label: String, app_id: String, disabled: bool) -> Button:
 	box.add_child(name_label)
 	button.add_child(box)
 	if not disabled:
-		button.pressed.connect(func() -> void: open_app(app_id))
+		if on_pressed.is_valid():
+			button.pressed.connect(on_pressed)
+		else:
+			button.pressed.connect(func() -> void: open_app(app_id))
 	return button
 
 
@@ -336,6 +346,8 @@ func _app_monogram(app_id: String) -> String:
 			return "M"
 		"flashlight":
 			return "F"
+		"museum":
+			return "Mu"
 		_:
 			return "•"
 
@@ -910,6 +922,19 @@ func _back_to_market_home() -> void:
 	_negotiation = null
 	if _current_app == "marketplace":
 		_render_marketplace()
+
+
+func _open_museum_gallery() -> void:
+	if MUSEUM_GALLERY_SCENE == null:
+		push_error("Phone: museum gallery scene not found")
+		return
+	var gallery: MuseumGallery = MUSEUM_GALLERY_SCENE.instantiate() as MuseumGallery
+	if gallery == null:
+		push_error("Phone: could not instantiate museum gallery")
+		return
+	Engine.get_main_loop().root.add_child(gallery)
+	gallery.closed.connect(func() -> void: gallery.queue_free())
+	gallery.open()
 
 
 func _sold_template_id() -> String:

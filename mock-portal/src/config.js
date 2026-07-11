@@ -16,6 +16,14 @@ const config = {
     process.env.FACT_CARDS_PATH,
     path.join(__dirname, '..', 'data', 'fact_cards.json')
   ),
+  museumRecordsPath: asString(
+    process.env.MUSEUM_RECORDS_PATH,
+    path.join(__dirname, '..', 'data', 'museum_records.json')
+  ),
+  museumRegistryPath: asString(
+    process.env.MUSEUM_REGISTRY_PATH,
+    path.join(__dirname, '..', 'cache', 'museum_registry.json')
+  ),
   nodeEnv: asString(process.env.NODE_ENV, 'development'),
 };
 

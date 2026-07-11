@@ -30,6 +30,21 @@ function createPortalRateLimiter() {
   });
 }
 
+function createMuseumRateLimiter() {
+  return rateLimit({
+    windowMs: 60 * 1000,
+    max: () => parseInt(process.env.RATE_LIMIT_MUSEUM || '20', 10),
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        ok: false,
+        error: 'Too many museum requests, please try again later.',
+      });
+    },
+  });
+}
+
 function createNegotiateRateLimiter() {
   return rateLimit({
     windowMs: 60 * 1000,
@@ -48,5 +63,6 @@ function createNegotiateRateLimiter() {
 module.exports = {
   createScanRateLimiter,
   createPortalRateLimiter,
+  createMuseumRateLimiter,
   createNegotiateRateLimiter,
 };
