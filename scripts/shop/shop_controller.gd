@@ -139,6 +139,7 @@ func _ready() -> void:
 	_storage_screen.sell_requested.connect(_on_storage_sell_requested)
 	_showcase.closed.connect(_on_showcase_closed)
 	_register_demo_menu_action()
+	_register_museum_demo_action()
 	# The restoration bench opens the same shared journal / marketplace / storage overlays.
 	_restoration_view.set_journal_viewport(_book_viewport)
 	_restoration_view.set_phone(_phone)
@@ -272,7 +273,9 @@ func _show_dialogue_lines(lines: Array) -> void:
 			if speaker == "inner":
 				# The player's inner monologue is labelled with their chosen name.
 				var pname := ModelUtils.as_string(GameState.save_state.persistent.player_name)
-				formatted_lines.append({"name": pname if not pname.is_empty() else "You", "text": text})
+				formatted_lines.append(
+					{"name": pname if not pname.is_empty() else "You", "text": text}
+				)
 			else:
 				formatted_lines.append({"name": speaker, "text": text})
 		else:
@@ -1179,10 +1182,12 @@ func _maybe_open_showcase(route_id: String) -> void:
 		_open_dialogue(
 			[
 				(
-					"[b]Received:[/b] %s. Clean it at the bench, then hand it back to %s"
-					% [item_name, route.display_name]
+					(
+						"[b]Received:[/b] %s. Clean it at the bench, then hand it back to %s"
+						% [item_name, route.display_name]
+					)
+					+ " — they're waiting outside, by the yard gate."
 				)
-				+ " — they're waiting outside, by the yard gate."
 			],
 			false
 		)
@@ -1212,9 +1217,26 @@ func _register_demo_menu_action() -> void:
 		InputMap.action_add_event("demo_menu", ev)
 
 
+func _register_museum_demo_action() -> void:
+	# F8 posts a test museum record and opens the mock Portal gallery in the system
+	# browser. Debug builds only; used for one-button video evidence.
+	if not OS.is_debug_build():
+		return
+	if not InputMap.has_action("museum_demo"):
+		InputMap.add_action("museum_demo")
+		var ev := InputEventKey.new()
+		ev.physical_keycode = KEY_F8
+		InputMap.action_add_event("museum_demo", ev)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not OS.is_debug_build():
 		return
 	if InputMap.has_action("demo_menu") and event.is_action_pressed("demo_menu"):
 		_demo_menu.toggle()
+		get_viewport().set_input_as_handled()
+		return
+	if InputMap.has_action("museum_demo") and event.is_action_pressed("museum_demo"):
+		MuseumDemoHelper.post_test_gold_record()
+		MuseumDemoHelper.open_browser_gallery()
 		get_viewport().set_input_as_handled()

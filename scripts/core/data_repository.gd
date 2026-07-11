@@ -16,6 +16,14 @@ var scrap_object_templates: Dictionary = {}  ## id -> ScrapObjectTemplate
 var object_instance_fixtures: Dictionary = {}  ## id -> ObjectInstance
 var fragments: Dictionary = {}  ## id -> Fragment
 var master_artifacts: Dictionary = {}  ## id -> MasterArtifact
+## Convenience accessor for the single authored master artifact (P19.5). Returns null
+## when no master artifact is loaded.
+var master_artifact: MasterArtifact:
+	get:
+		if master_artifacts.is_empty():
+			return null
+		return master_artifacts.values()[0]
+
 var echo_sets: Dictionary = {}  ## id -> EchoSet
 var tool_definitions: Dictionary = {}  ## id -> ToolDefinition
 var technique_definitions: Dictionary = {}  ## id -> TechniqueDefinition

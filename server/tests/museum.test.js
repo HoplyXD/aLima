@@ -2,7 +2,8 @@ const request = require('supertest');
 const http = require('http');
 const createApp = require('../src/app');
 const { resetCache } = require('../src/services/museum_service');
-const createMockPortal = require('../../mock-portal/src/app');
+const { initApp } = require('../../mock-portal/src/app');
+const db = require('../../mock-portal/src/db');
 
 const app = createApp();
 
@@ -31,12 +32,15 @@ describe('POST /api/portal/museum', () => {
   let portalPort;
   let originalPortalBaseUrl;
   let originalPortalTimeout;
+  let originalPortalApiKey;
 
   beforeAll(async () => {
     originalPortalBaseUrl = process.env.PORTAL_BASE_URL;
     originalPortalTimeout = process.env.PORTAL_TIMEOUT_MS;
+    originalPortalApiKey = process.env.PORTAL_API_KEY;
+    process.env.PORTAL_API_KEY = '';
 
-    const mockPortal = createMockPortal();
+    const mockPortal = await initApp();
     portalServer = http.createServer(mockPortal);
     await new Promise((resolve) => {
       portalServer.listen(0, '127.0.0.1', () => {
@@ -49,14 +53,17 @@ describe('POST /api/portal/museum', () => {
   afterAll((done) => {
     process.env.PORTAL_BASE_URL = originalPortalBaseUrl;
     process.env.PORTAL_TIMEOUT_MS = originalPortalTimeout;
-    if (portalServer) {
-      if (typeof portalServer.closeAllConnections === 'function') {
-        portalServer.closeAllConnections();
+    process.env.PORTAL_API_KEY = originalPortalApiKey;
+    db.close().then(() => {
+      if (portalServer) {
+        if (typeof portalServer.closeAllConnections === 'function') {
+          portalServer.closeAllConnections();
+        }
+        portalServer.close(done);
+      } else {
+        done();
       }
-      portalServer.close(done);
-    } else {
-      done();
-    }
+    });
   });
 
   beforeEach(() => {
@@ -110,12 +117,15 @@ describe('Museum retrieval (PORT-R6)', () => {
   let portalPort;
   let originalPortalBaseUrl;
   let originalPortalTimeout;
+  let originalPortalApiKey;
 
   beforeAll(async () => {
     originalPortalBaseUrl = process.env.PORTAL_BASE_URL;
     originalPortalTimeout = process.env.PORTAL_TIMEOUT_MS;
+    originalPortalApiKey = process.env.PORTAL_API_KEY;
+    process.env.PORTAL_API_KEY = '';
 
-    const mockPortal = createMockPortal();
+    const mockPortal = await initApp();
     portalServer = http.createServer(mockPortal);
     await new Promise((resolve) => {
       portalServer.listen(0, '127.0.0.1', () => {
@@ -128,14 +138,17 @@ describe('Museum retrieval (PORT-R6)', () => {
   afterAll((done) => {
     process.env.PORTAL_BASE_URL = originalPortalBaseUrl;
     process.env.PORTAL_TIMEOUT_MS = originalPortalTimeout;
-    if (portalServer) {
-      if (typeof portalServer.closeAllConnections === 'function') {
-        portalServer.closeAllConnections();
+    process.env.PORTAL_API_KEY = originalPortalApiKey;
+    db.close().then(() => {
+      if (portalServer) {
+        if (typeof portalServer.closeAllConnections === 'function') {
+          portalServer.closeAllConnections();
+        }
+        portalServer.close(done);
+      } else {
+        done();
       }
-      portalServer.close(done);
-    } else {
-      done();
-    }
+    });
   });
 
   beforeEach(() => {
@@ -228,7 +241,7 @@ describe('Museum fallback (offline mirror)', () => {
 
   test('GET list returns cached records when Portal is down', async () => {
     // Seed the server-side cache by posting through a working proxy first.
-    const working = createMockPortal();
+    const working = await initApp();
     proxyServer = http.createServer(working);
     await new Promise((resolve) => {
       proxyServer.listen(0, '127.0.0.1', () => {
@@ -278,6 +291,76 @@ describe('Museum fallback (offline mirror)', () => {
 
     const testApp = createApp();
     const res = await request(testApp).post('/api/portal/museum').send(MASTER_RECORD);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.used_fallback).toBe(true);
+  });
+});
+
+describe('Museum Portal API key', () => {
+  let portalServer;
+  let portalPort;
+  let originalPortalBaseUrl;
+  let originalPortalTimeout;
+  let originalPortalApiKey;
+  const TEST_KEY = 'video-demo-key';
+
+  beforeAll(async () => {
+    originalPortalBaseUrl = process.env.PORTAL_BASE_URL;
+    originalPortalTimeout = process.env.PORTAL_TIMEOUT_MS;
+    originalPortalApiKey = process.env.PORTAL_API_KEY;
+    process.env.PORTAL_API_KEY = TEST_KEY;
+
+    const mockPortal = await initApp();
+    portalServer = http.createServer(mockPortal);
+    await new Promise((resolve) => {
+      portalServer.listen(0, '127.0.0.1', () => {
+        portalPort = portalServer.address().port;
+        resolve();
+      });
+    });
+  });
+
+  afterAll((done) => {
+    process.env.PORTAL_BASE_URL = originalPortalBaseUrl;
+    process.env.PORTAL_TIMEOUT_MS = originalPortalTimeout;
+    process.env.PORTAL_API_KEY = originalPortalApiKey;
+    db.close().then(() => {
+      if (portalServer) {
+        if (typeof portalServer.closeAllConnections === 'function') {
+          portalServer.closeAllConnections();
+        }
+        portalServer.close(done);
+      } else {
+        done();
+      }
+    });
+  });
+
+  beforeEach(() => {
+    resetCache();
+    process.env.PORTAL_BASE_URL = `http://127.0.0.1:${portalPort}`;
+    process.env.PORTAL_TIMEOUT_MS = '5000';
+    process.env.PORTAL_API_KEY = TEST_KEY;
+  });
+
+  test('backend sends API key and Portal accepts the request', async () => {
+    const res = await request(app).post('/api/portal/museum').send(GOLD_RECORD);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.used_fallback).toBe(false);
+  });
+
+  test('wrong API key causes fallback response', async () => {
+    process.env.PORTAL_API_KEY = 'wrong-key';
+
+    const testApp = createApp();
+    const res = await request(testApp).post('/api/portal/museum').send({
+      ...GOLD_RECORD,
+      record_id: 'oton_death_mask_key_test',
+    });
 
     expect(res.statusCode).toBe(200);
     expect(res.body.ok).toBe(true);

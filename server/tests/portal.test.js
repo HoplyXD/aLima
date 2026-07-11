@@ -2,7 +2,8 @@ const request = require('supertest');
 const http = require('http');
 const createApp = require('../src/app');
 const { resetCache } = require('../src/services/portal_service');
-const createMockPortal = require('../../mock-portal/src/app');
+const { initApp } = require('../../mock-portal/src/app');
+const db = require('../../mock-portal/src/db');
 
 const app = createApp();
 
@@ -11,12 +12,15 @@ describe('POST /api/portal/discovery', () => {
   let portalPort;
   let originalPortalBaseUrl;
   let originalPortalTimeout;
+  let originalPortalApiKey;
 
   beforeAll(async () => {
     originalPortalBaseUrl = process.env.PORTAL_BASE_URL;
     originalPortalTimeout = process.env.PORTAL_TIMEOUT_MS;
+    originalPortalApiKey = process.env.PORTAL_API_KEY;
+    process.env.PORTAL_API_KEY = '';
 
-    const mockPortal = createMockPortal();
+    const mockPortal = await initApp();
     portalServer = http.createServer(mockPortal);
     await new Promise((resolve) => {
       portalServer.listen(0, '127.0.0.1', () => {
@@ -29,14 +33,17 @@ describe('POST /api/portal/discovery', () => {
   afterAll((done) => {
     process.env.PORTAL_BASE_URL = originalPortalBaseUrl;
     process.env.PORTAL_TIMEOUT_MS = originalPortalTimeout;
-    if (portalServer) {
-      if (typeof portalServer.closeAllConnections === 'function') {
-        portalServer.closeAllConnections();
+    process.env.PORTAL_API_KEY = originalPortalApiKey;
+    db.close().then(() => {
+      if (portalServer) {
+        if (typeof portalServer.closeAllConnections === 'function') {
+          portalServer.closeAllConnections();
+        }
+        portalServer.close(done);
+      } else {
+        done();
       }
-      portalServer.close(done);
-    } else {
-      done();
-    }
+    });
   });
 
   beforeEach(() => {

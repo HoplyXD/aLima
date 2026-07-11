@@ -1,9 +1,8 @@
 const fs = require('fs');
-const path = require('path');
 const config = require('../config');
+const db = require('../db');
 
 let museumRecords = null;
-let registry = {}; // player_id -> { entry_id -> record }
 
 function loadMuseumRecords() {
   if (museumRecords) {
@@ -18,56 +17,30 @@ function loadMuseumRecords() {
   return museumRecords;
 }
 
-function getRegistryPath() {
-  return config.museumRegistryPath;
-}
-
-function ensureRegistryDir() {
-  const dir = path.dirname(getRegistryPath());
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
-
-function saveRegistry() {
-  if (!config.museumRegistryPath) {
-    return;
-  }
-  ensureRegistryDir();
-  fs.writeFileSync(config.museumRegistryPath, JSON.stringify(registry, null, 2));
-}
-
-function loadRegistry() {
-  if (!config.museumRegistryPath || !fs.existsSync(config.museumRegistryPath)) {
-    registry = {};
-    return;
-  }
-  try {
-    const raw = fs.readFileSync(config.museumRegistryPath, 'utf8');
-    registry = JSON.parse(raw);
-  } catch (_err) {
-    registry = {};
-  }
+function lookupFact(recordId) {
+  const doc = loadMuseumRecords();
+  const list = Array.isArray(doc.records) ? doc.records : [];
+  return list.find((r) => r.id === recordId || r.subject_ref === recordId) || null;
 }
 
 function generateMuseumEntryId(recordId, playerId) {
   return `entry_${recordId}_${playerId}`;
 }
 
-function lookupFact(recordId) {
-  const records = loadMuseumRecords();
-  return records[recordId] || null;
-}
-
 function buildRecord(recordId, playerId, rarity, displayName) {
   const fact = lookupFact(recordId);
   const meta = fact && fact.artifact_meta ? fact.artifact_meta : {};
 
+  const entryId = generateMuseumEntryId(recordId, playerId);
   return {
     ok: true,
-    museum_entry_id: generateMuseumEntryId(recordId, playerId),
+    museum_entry_id: entryId,
+    player_id: playerId,
+    entry_id: entryId,
     record_id: recordId,
     record_type: rarity === 'master_artifact' ? 'assembled_artifact' : 'museum_discovery',
+    rarity,
+    display_name: displayName || recordId,
     fact_card:
       fact && fact.fact_card
         ? fact.fact_card
@@ -86,42 +59,27 @@ function buildRecord(recordId, playerId, rarity, displayName) {
       period: meta.period || 'pending verification',
       origin: meta.origin || 'Western Visayas (pending verification)',
     },
+    created_at: new Date().toISOString(),
   };
 }
 
-function recordDiscovery(recordId, playerId, rarity, displayName) {
-  if (!registry[playerId]) {
-    registry[playerId] = {};
-  }
-  const entryId = generateMuseumEntryId(recordId, playerId);
+async function recordDiscovery(recordId, playerId, rarity, displayName) {
   const record = buildRecord(recordId, playerId, rarity, displayName);
-  registry[playerId][entryId] = record;
-  saveRegistry();
+  await db.recordDiscovery(record);
   return record;
 }
 
-function listRecords(playerId) {
-  if (!registry[playerId]) {
-    return [];
-  }
-  const entries = Object.values(registry[playerId]);
-  entries.sort((a, b) => (a.museum_entry_id < b.museum_entry_id ? -1 : 1));
-  return entries;
+async function listRecords(playerId) {
+  return db.listRecords(playerId);
 }
 
-function getRecord(playerId, entryId) {
-  if (!registry[playerId]) {
-    return null;
-  }
-  return registry[playerId][entryId] || null;
+async function getRecord(playerId, entryId) {
+  return db.getRecord(playerId, entryId);
 }
 
-function resetRegistry() {
+async function resetRegistry() {
   museumRecords = null;
-  registry = {};
-  if (config.museumRegistryPath && fs.existsSync(config.museumRegistryPath)) {
-    fs.rmSync(config.museumRegistryPath, { force: true });
-  }
+  await db.resetRecords();
 }
 
 module.exports = {

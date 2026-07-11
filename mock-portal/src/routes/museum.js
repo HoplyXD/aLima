@@ -4,10 +4,10 @@ const { recordDiscovery, listRecords, getRecord } = require('../services/museum_
 
 const router = express.Router();
 
-router.post('/', (req, res, next) => {
+router.post('/', async (req, res, next) => {
   try {
     const body = validateMuseumRecordRequest(req.body);
-    const result = recordDiscovery(
+    const result = await recordDiscovery(
       body.record_id,
       body.player_id,
       body.rarity,
@@ -19,25 +19,26 @@ router.post('/', (req, res, next) => {
   }
 });
 
-router.get('/', (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const playerId = req.query.player_id;
     if (typeof playerId !== 'string' || playerId.length === 0) {
       return res.status(400).json({ ok: false, error: "'player_id' query param is required" });
     }
-    res.status(200).json({ ok: true, entries: listRecords(playerId) });
+    const entries = await listRecords(playerId);
+    res.status(200).json({ ok: true, entries });
   } catch (err) {
     next(err);
   }
 });
 
-router.get('/:entry_id', (req, res, next) => {
+router.get('/:entry_id', async (req, res, next) => {
   try {
     const playerId = req.query.player_id;
     if (typeof playerId !== 'string' || playerId.length === 0) {
       return res.status(400).json({ ok: false, error: "'player_id' query param is required" });
     }
-    const record = getRecord(playerId, req.params.entry_id);
+    const record = await getRecord(playerId, req.params.entry_id);
     if (!record) {
       return res.status(404).json({ ok: false, error: 'museum record not found' });
     }

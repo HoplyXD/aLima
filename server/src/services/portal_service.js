@@ -3,6 +3,7 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 const path = require('path');
+const config = require('../config');
 
 const DEFAULT_FALLBACK_FACTS_PATH = path.join(__dirname, '..', '..', 'data', 'fallback_facts.json');
 
@@ -108,16 +109,23 @@ function proxyToPortal(body) {
     const client = url.protocol === 'https:' ? https : http;
     const postData = JSON.stringify(body);
 
+    const keyName = process.env.PORTAL_API_KEY_NAME || config.portalApiKeyName;
+    const key = process.env.PORTAL_API_KEY || config.portalApiKey;
+    const headers = {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(postData),
+    };
+    if (key) {
+      headers[keyName] = `Bearer ${key}`;
+    }
+
     const options = {
       hostname: url.hostname,
       port: url.port || (url.protocol === 'https:' ? 443 : 80),
       path: url.pathname,
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData),
-      },
-      timeout: parseInt(process.env.PORTAL_TIMEOUT_MS || '5000', 10),
+      headers,
+      timeout: config.portalTimeoutMs,
     };
 
     const req = client.request(options, (res) => {

@@ -133,6 +133,26 @@ func request_clear_save() -> void:
 	_set_status("Demo save cleared. Restart the slice to begin a fresh seeded run.")
 
 
+func _post_test_museum_record() -> void:
+	var entry_id := MuseumDemoHelper.post_test_gold_record()
+	_set_status("Posted Gold demo record: %s" % entry_id)
+
+
+func _post_test_master_artifact() -> void:
+	var entry_id := MuseumDemoHelper.post_test_master_artifact()
+	_set_status("Posted Master Artifact demo record: %s" % entry_id)
+
+
+func _refresh_museum_gallery() -> void:
+	MuseumDemoHelper.refresh_gallery()
+	_set_status("Requested museum gallery refresh.")
+
+
+func _open_museum_browser() -> void:
+	MuseumDemoHelper.open_browser_gallery()
+	_set_status("Opened gallery in system browser.")
+
+
 func _plan_placement() -> Dictionary:
 	var director := SpawnDirector.new(DataRepository.singleton(), GameState)
 	director.plan_loop_placements()
@@ -222,6 +242,31 @@ func _build_ui() -> void:
 	release_button.text = "Release Auntie's Fragment (debug)"
 	release_button.pressed.connect(release_route_fragment)
 	col.add_child(release_button)
+
+	var museum_label := Label.new()
+	museum_label.text = "Museum / Portal demo:"
+	museum_label.modulate = Color(0.8, 1.0, 0.8)
+	col.add_child(museum_label)
+
+	var museum_post_button := Button.new()
+	museum_post_button.text = "Post Test Museum Record (Gold)"
+	museum_post_button.pressed.connect(_post_test_museum_record)
+	col.add_child(museum_post_button)
+
+	var museum_master_button := Button.new()
+	museum_master_button.text = "Post Test Master Artifact"
+	museum_master_button.pressed.connect(_post_test_master_artifact)
+	col.add_child(museum_master_button)
+
+	var museum_refresh_button := Button.new()
+	museum_refresh_button.text = "Refresh Museum Gallery"
+	museum_refresh_button.pressed.connect(_refresh_museum_gallery)
+	col.add_child(museum_refresh_button)
+
+	var museum_browser_button := Button.new()
+	museum_browser_button.text = "Open Gallery in Browser"
+	museum_browser_button.pressed.connect(_open_museum_browser)
+	col.add_child(museum_browser_button)
 
 	_clear_button = Button.new()
 	_clear_button.text = "Clear Demo Save"

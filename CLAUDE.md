@@ -178,9 +178,10 @@ Push-Location server
 npm install
 Copy-Item .env.example .env     # fill in keys locally; NEVER commit .env
 # Required: PORT, PORTAL_BASE_URL, PORTAL_TIMEOUT_MS (see server/.env.example)
+# Optional upstream auth: PORTAL_API_KEY_NAME, PORTAL_API_KEY (see server/.env.example)
 # Museum: MUSEUM_CACHE_PATH, RATE_LIMIT_MUSEUM (see server/.env.example)
-npm run dev                     # run in a dedicated terminal
-npm test                        # 33/34 passing as of 2026-07-11; one pre-existing negotiate fallback-flag test fails when no API key is configured (uses --forceExit due to open Supertest handles)
+npm start                       # run in a dedicated terminal
+npm test                        # 35/36 passing as of 2026-07-11; one pre-existing negotiate fallback-flag test fails when no API key is configured (uses --forceExit due to open Supertest handles)
 Pop-Location
 
 # --- Mock Portal (Phase 8) ---
@@ -188,12 +189,12 @@ Push-Location mock-portal
 npm install
 Copy-Item .env.example .env     # optional; defaults in config
 npm start                       # run in a dedicated terminal
-npm test                        # 11/11 passing as of 2026-07-11 (discovery + museum mirror)
+npm test                        # 15/15 passing as of 2026-07-11 (discovery + museum mirror + auth + persistence)
 Pop-Location
 
 # --- Full local end-to-end (run server + mock-portal first) ---
 Push-Location mock-portal; npm start   # terminal A
-Push-Location server; npm run dev      # terminal B (PORTAL_BASE_URL=http://localhost:3001 or mock-portal port)
+Push-Location server; npm start        # terminal B (PORTAL_BASE_URL=http://localhost:3001 or mock-portal port)
 & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/portal -gexit
 ```
 

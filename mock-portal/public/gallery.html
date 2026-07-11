@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aLima Digital Museum</title>
+  <style>
+    :root {
+      --bg: #1a1510;
+      --panel: #2b221a;
+      --text: #e8dcc8;
+      --muted: #a89a84;
+      --accent: #c9a227;
+      --fallback: #c45c3e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      background: var(--panel);
+      padding: 1.5rem;
+      border-bottom: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    h1 { margin: 0; font-size: 1.8rem; color: var(--accent); }
+    .controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+    .player-form { display: flex; gap: 0.5rem; align-items: center; }
+    input[type="text"] {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--muted);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    button {
+      background: var(--accent);
+      color: #1a1510;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button.secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .player-id {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .player-id strong { color: var(--text); }
+    main { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+    .status { color: var(--muted); margin-bottom: 1rem; }
+    .empty { color: var(--muted); font-style: italic; }
+    .card {
+      background: var(--panel);
+      border: 1px solid #3d3126;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 { margin: 0 0 0.5rem; color: var(--accent); font-size: 1.4rem; }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.75rem; }
+    .label {
+      display: inline-block;
+      background: #3d3126;
+      color: var(--accent);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-right: 0.5rem;
+    }
+    .label.fallback { background: var(--fallback); color: #fff; }
+    .field { margin: 0.75rem 0; }
+    .field strong { display: block; color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏛 aLima Digital Museum</h1>
+    <div class="controls">
+      <form class="player-form" onsubmit="event.preventDefault(); loadGallery();">
+        <label for="playerId">Player ID</label>
+        <input id="playerId" type="text" placeholder="player_001" />
+        <button type="submit" id="loadBtn">Load</button>
+      </form>
+      <button type="button" class="secondary" id="refreshBtn" onclick="return refreshGallery()" disabled>Refresh</button>
+      <button type="button" class="secondary" id="openBtn" onclick="openInBrowser()" disabled>Open Portal</button>
+      <span class="player-id" id="playerDisplay" style="display: none;">Player ID: <strong>-</strong></span>
+    </div>
+  </header>
+  <main>
+    <div id="status" class="status">Enter a Player ID and click Load.</div>
+    <div id="cards"></div>
+  </main>
+  <script>
+    const REQUEST_TIMEOUT_MS = 5000;
+    let currentPlayerId = '';
+
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    async function loadGallery() {
+      const input = document.getElementById('playerId');
+      const playerId = input.value.trim();
+      if (!playerId) {
+        updateStatus('Please enter a Player ID.', true);
+        return false;
+      }
+      window.history.replaceState({}, '', `?player_id=${encodeURIComponent(playerId)}`);
+      await fetchGallery(playerId);
+      return false;
+    }
+
+    function refreshGallery() {
+      if (!currentPlayerId) return false;
+      fetchGallery(currentPlayerId);
+      return false;
+    }
+
+    function openInBrowser() {
+      if (!currentPlayerId) return;
+      const url = `${window.location.origin}/?player_id=${encodeURIComponent(currentPlayerId)}`;
+      window.open(url, '_blank');
+    }
+
+    function updateStatus(text, isError) {
+      const status = document.getElementById('status');
+      status.textContent = text;
+      status.style.color = isError ? 'var(--fallback)' : 'var(--muted)';
+    }
+
+    function setPlayerId(playerId) {
+      currentPlayerId = playerId;
+      const display = document.getElementById('playerDisplay');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const openBtn = document.getElementById('openBtn');
+      if (playerId) {
+        display.style.display = 'inline';
+        display.querySelector('strong').textContent = playerId;
+        refreshBtn.disabled = false;
+        openBtn.disabled = false;
+      } else {
+        display.style.display = 'none';
+        refreshBtn.disabled = true;
+        openBtn.disabled = true;
+      }
+    }
+
+    function renderCards(entries) {
+      const container = document.getElementById('cards');
+      container.innerHTML = '';
+      if (!entries || entries.length === 0) {
+        container.innerHTML = '<p class="empty">No museum records found for this player.</p>';
+        return;
+      }
+      for (const entry of entries) {
+        const meta = entry.artifact_meta || {};
+        const fallbackBadge = entry.used_fallback
+          ? '<span class="label fallback">Offline fallback</span>'
+          : '';
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h2>${escapeHtml(meta.name || entry.display_name || entry.record_id)}</h2>
+          <div class="meta">
+            <span class="label">${escapeHtml(entry.record_type)}</span>
+            ${fallbackBadge}
+            <span>${escapeHtml(meta.period || 'period pending')} · ${escapeHtml(meta.origin || 'origin pending')}</span>
+          </div>
+          <div class="field"><strong>Fact card</strong>${escapeHtml(entry.fact_card)}</div>
+          <div class="field"><strong>Timeline</strong>${escapeHtml(entry.timeline_entry)}</div>
+          <div class="field"><strong>Regional story</strong>${escapeHtml(entry.regional_story)}</div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    async function fetchGallery(playerId) {
+      setPlayerId(playerId);
+      updateStatus('Reaching the Portal…', false);
+      const loadBtn = document.getElementById('loadBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+      loadBtn.disabled = true;
+      refreshBtn.disabled = true;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+      try {
+        const res = await fetch(`/museum?player_id=${encodeURIComponent(playerId)}`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          updateStatus(`Error: ${data.error || res.statusText}`, true);
+          renderCards([]);
+          return;
+        }
+        updateStatus(`${data.entries.length} record(s) for ${playerId}`, false);
+        renderCards(data.entries);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+          updateStatus('The Portal took too long to respond. The backend or mock Portal may be down.', true);
+        } else {
+          updateStatus(`Network error: ${err.message}`, true);
+        }
+        renderCards([]);
+      } finally {
+        loadBtn.disabled = false;
+        refreshBtn.disabled = false;
+      }
+    }
+
+    const initialPlayer = getQueryParam('player_id');
+    if (initialPlayer) {
+      document.getElementById('playerId').value = initialPlayer;
+      fetchGallery(initialPlayer);
+    }
+  </script>
+</body>
+</html>
