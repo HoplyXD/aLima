@@ -109,7 +109,7 @@ fit_content = true
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="VBoxContainer" unique_id=621980452]
-custom_minimum_size = Vector2(0, 109.67)
+custom_minimum_size = Vector2(0, 89)
 layout_mode = 2
 
 [node name="MainMenuPlaque" type="Panel" parent="." unique_id=1351648755]
@@ -160,9 +160,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_title_plaque")
 [node name="Margin" type="MarginContainer" parent="SlotMenuPlaque" unique_id=1351648760]
 layout_mode = 2
 theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 20
+theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_bottom = 7
 
 [node name="SlotMenu" type="VBoxContainer" parent="SlotMenuPlaque/Margin" unique_id=1082419698]
 layout_mode = 2
@@ -179,25 +179,25 @@ text = "Choose a Slot"
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
-clip_text = true
-text_overrun_behavior = 3
 text = "Slot 1"
+text_overrun_behavior = 3
+clip_text = true
 
 [node name="Slot1" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=926703688]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
-clip_text = true
-text_overrun_behavior = 3
 text = "Slot 2"
+text_overrun_behavior = 3
+clip_text = true
 
 [node name="Slot2" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=2001389163]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
-clip_text = true
-text_overrun_behavior = 3
 text = "Slot 3"
+text_overrun_behavior = 3
+clip_text = true
 
 [node name="Back" type="Button" parent="SlotMenuPlaque/Margin/SlotMenu" unique_id=2001389164]
 custom_minimum_size = Vector2(0, 70)
