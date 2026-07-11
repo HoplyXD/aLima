@@ -12,26 +12,26 @@
 [ext_resource type="Texture2D" uid="uid://lmfhaj5ef2mc" path="res://assets/artifact_conditions/Tape Residue.png" id="10_tape"]
 [ext_resource type="Texture2D" uid="uid://cnwdlyiwf3ipa" path="res://assets/artifact_conditions/Water Stain.png" id="11_water"]
 [ext_resource type="Texture2D" uid="uid://dfjm4i3j7utu1" path="res://assets/3d Assets/Artifacts/Artifacts Assets/squareishdesignassets/gltf/woodpipe01_castletexture.png" id="12_pipetex"]
-[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Dark Varnish.png" id="ovl_tex_dark_varnish"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Moss.png" id="ovl_tex_moss"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wood Rot.png" id="ovl_tex_wood_rot"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Woodworm.png" id="ovl_tex_woodworm"]
 [ext_resource type="Script" uid="uid://ctnrs25rfmqld" path="res://scripts/restoration/artifact_overlay.gd" id="ovl_script"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
-[ext_resource type="Texture2D" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
+[ext_resource type="Texture2D" uid="uid://le3tretiop8l" path="res://assets/artifact_conditions/Dark Varnish.png" id="ovl_tex_dark_varnish"]
+[ext_resource type="Texture2D" uid="uid://4cssrlk4nsjy" path="res://assets/artifact_conditions/Grease.png" id="ovl_tex_grease"]
+[ext_resource type="Texture2D" uid="uid://c0mlk58yllx3q" path="res://assets/artifact_conditions/Mold.png" id="ovl_tex_mold"]
+[ext_resource type="Texture2D" uid="uid://6dyfp3m8q6px" path="res://assets/artifact_conditions/Moss.png" id="ovl_tex_moss"]
+[ext_resource type="Texture2D" uid="uid://bnc5m82imin7b" path="res://assets/artifact_conditions/Mud.png" id="ovl_tex_mud"]
+[ext_resource type="Texture2D" uid="uid://bceult7ja4piv" path="res://assets/artifact_conditions/Old Paint.png" id="ovl_tex_old_paint"]
+[ext_resource type="Texture2D" uid="uid://dhw2gvncoctwa" path="res://assets/artifact_conditions/Salt Crust.png" id="ovl_tex_salt_crust"]
+[ext_resource type="Texture2D" uid="uid://tktd55hjl4km" path="res://assets/artifact_conditions/Soot.png" id="ovl_tex_soot"]
+[ext_resource type="Texture2D" uid="uid://d3iw7fid2k6t4" path="res://assets/artifact_conditions/Wax.png" id="ovl_tex_wax"]
+[ext_resource type="Texture2D" uid="uid://djj1pgnk81lo6" path="res://assets/artifact_conditions/Woodworm.png" id="ovl_tex_woodworm"]
+[ext_resource type="Texture2D" uid="uid://b41yt2ctqhy7w" path="res://assets/artifact_conditions/Wood Rot.png" id="ovl_tex_wood_rot"]
+[ext_resource type="Script" uid="uid://d1lli70bnhlr1" path="res://scripts/restoration/artifact_scanner_data.gd" id="scannerdata_node"]
 
 [node name="WoodPipe" type="Node3D" unique_id=229666069]
 transform = Transform3D(1, 0, 0, 0, 0.9838437, 0.17902958, 0, -0.17902958, 0.9838437, 0, 0, 0)
 script = ExtResource("1_iah84")
 artifact_rarity = 0
-base_value_min = 40
-base_value_max = 100
+base_value_min = 80
+base_value_max = 130
 randomize_conditions_min = 1
 randomize_conditions_max = 3
 model_mesh = ExtResource("2_4nwjt")
@@ -121,57 +121,79 @@ price_max = 90
 confidence = 2
 uncertainty_notes = "Maker and owner are unknown; dating is from wear and carving style."
 
-[node name="OverlayDarkVarnish" type="Node3D" parent="."]
+[node name="OverlayDarkVarnish" type="Node3D" parent="." unique_id=747210352]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_dark_varnish")
 layer_order = 15
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayGrease" type="Node3D" parent="."]
+[node name="OverlayGrease" type="Node3D" parent="." unique_id=367519771]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_grease")
 layer_order = 24
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayMold" type="Node3D" parent="."]
+[node name="OverlayMold" type="Node3D" parent="." unique_id=1581773964]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mold")
 layer_order = 23
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayMoss" type="Node3D" parent="."]
+[node name="OverlayMoss" type="Node3D" parent="." unique_id=369810250]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_moss")
 layer_order = 21
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayMud" type="Node3D" parent="."]
+[node name="OverlayMud" type="Node3D" parent="." unique_id=851541537]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_mud")
 layer_order = 28
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayOldPaint" type="Node3D" parent="."]
+[node name="OverlayOldPaint" type="Node3D" parent="." unique_id=1231025436]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_old_paint")
 layer_order = 16
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlaySaltCrust" type="Node3D" parent="."]
+[node name="OverlaySaltCrust" type="Node3D" parent="." unique_id=1729762508]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_salt_crust")
 layer_order = 26
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlaySoot" type="Node3D" parent="."]
+[node name="OverlaySoot" type="Node3D" parent="." unique_id=60619850]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_soot")
 layer_order = 27
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayWax" type="Node3D" parent="."]
+[node name="OverlayWax" type="Node3D" parent="." unique_id=975395471]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_wax")
 layer_order = 25
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayWoodRot" type="Node3D" parent="."]
+[node name="OverlayWoodRot" type="Node3D" parent="." unique_id=2083026008]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_wood_rot")
 layer_order = 12
+coverage_min = 0.0
+coverage_max = 0.0
 
-[node name="OverlayWoodworm" type="Node3D" parent="."]
+[node name="OverlayWoodworm" type="Node3D" parent="." unique_id=390228730]
 script = ExtResource("ovl_script")
 condition_texture = ExtResource("ovl_tex_woodworm")
 layer_order = 11
+coverage_min = 0.0
+coverage_max = 0.0
